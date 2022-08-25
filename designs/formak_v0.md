@@ -62,7 +62,8 @@ working at an alpha level
 7. Write up successes, retro of what changed (to include that feedback in future
    designs)
 
-Note 1: This project covers three "languages":
+#### Note 1
+This project covers three "languages":
 - Python
 - C++
 - C++ wrapped in Python
@@ -70,7 +71,8 @@ Note 1: This project covers three "languages":
 This means that most features will have feature tests across the three language
 use cases.
 
-Note 2: Features can track and share their status by referring to these stages
+#### Note 2 
+Features can track and share their status by referring to these stages
 in the development process. This makes it easier to share what features are in
 what stage of the development process over time and for each release.
 
