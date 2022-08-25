@@ -4,7 +4,7 @@ Author: Buck Baskin @bebaskin
 
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 
-Project Status: Design
+Project Status: 2. Feature Tests
 
 ## Overview
 

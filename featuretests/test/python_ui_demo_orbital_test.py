@@ -1,5 +1,3 @@
-import sympy
-
 from collections import defaultdict
 from sympy import symbols, Symbol, diff, simplify
 
@@ -60,7 +58,8 @@ def gravitational_force(m_1, m_2, r):
     return G * (m_1 * m_2) / (r ** 2)
 
 
-def main():
+def test_orbital_example():
+
     vp = vehicle_properties = {k: Symbol(k) for k in ["m", "x", "v", "a"]}
     fuel_burn_rate = Symbol("fuel_burn_rate")
 
@@ -121,5 +120,7 @@ def main():
 
 if __name__ == "__main__":
     import sys
+    import pytest as test_runner
 
-    sys.exit(main())
+    sys.exit(test_orbital_example())
+    # sys.exit(test_runner.main(sys.argv[1:]))

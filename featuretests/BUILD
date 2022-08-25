@@ -23,3 +23,22 @@ load("@pip_deps//:requirements.bzl", "requirement")
 #         requirement("pytest"),
 #     ],
 # )
+
+py_test(
+    name = "python-ui-demo-simple",
+    srcs = ["test/python_ui_demo_simple_test.py"],
+    main = "test/python_ui_demo_simple_test.py",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "python-ui-demo-orbital",
+    srcs = ["test/python_ui_demo_orbital_test.py"],
+    main = "test/python_ui_demo_orbital_test.py",
+    deps = [
+        requirement("pytest"),
+        requirement("sympy"),
+    ],
+)
