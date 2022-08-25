@@ -1,0 +1,60 @@
+build:linux --compiler=clang
+
+# Clang Build
+build:clang --crosstool_top=//toolchain:clang_suite
+build:clang --cpu=k8
+build:clang --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:clang --copt -Wall
+build:clang --copt -Wpedantic
+build:clang --copt -Werror
+
+# Address Sanitizer
+build:asan --strip=never
+build:asan --copt -fsanitize=address
+build:asan --copt -DADDRESS_SANITIZER
+build:asan --copt -Og
+build:asan --copt -g
+build:asan --copt -fno-omit-frame-pointer
+# blacklist -> ignorelist in later clang versions
+# build:asan --copt -fsanitize-blacklist=/home/buck/Github/creative/sanitizer_ignorelist.txt
+build:asan --linkopt -fsanitize=address
+
+# Memory Sanitizer
+build:msan --strip=never
+build:msan --copt -fsanitize=memory
+build:msan --copt -DMEMORY_SANITIZER
+build:msan --copt -O1
+build:msan --copt -g
+build:msan --copt -fno-omit-frame-pointer
+build:msan --copt -fno-optimize-sibling-calls
+build:msan --copt -fsanitize-memory-track-origins=2
+# blacklist -> ignorelist in later clang versions
+# build:msan --copt -fsanitize-blacklist=sanitizer_ignorelist.txt
+build:msan --linkopt -fsanitize=memory
+
+# Thread Sanitizer
+build:tsan --strip=never
+build:tsan --copt -fsanitize=thread
+build:tsan --copt -DTHREAD_SANITIZER
+build:tsan --copt -Og
+build:tsan --copt -g
+# blacklist -> ignorelist in later clang versions
+# build:tsan --copt -fsanitize-blacklist=sanitizer_ignorelist.txt
+build:tsan --linkopt -fsanitize=thread
+
+# Undefined Behavior Sanitizer
+build:ubsan --strip=never
+build:ubsan --copt -fsanitize=undefined
+build:ubsan --copt -DUNDEFINED_BEHAVIOR_SANITIZER
+build:ubsan --copt -Og
+build:ubsan --copt -g
+# blacklist -> ignorelist in later clang versions
+# build:ubsan --copt -fsanitize-blacklist=sanitizer_ignorelist.txt
+build:ubsan --linkopt -fsanitize=undefined
+
+# Clang Tidy
+# Required for bazel_clang_tidy to operate as expected
+build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:clang-tidy --output_groups=report
+# Override the .clang-tidy config file target
+build:clang-tidy --@bazel_clang_tidy//:clang_tidy_config=//:clang_tidy_config
