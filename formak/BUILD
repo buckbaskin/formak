@@ -36,3 +36,13 @@ py_library(
         requirement("sympy"),
     ],
 )
+
+py_test(
+    name = "ui-test-py",
+    srcs = ["test/ui_test.py"],
+    main = "test/ui_test.py",
+    deps = [
+        ":ui",
+        requirement("pytest"),
+    ],
+)
