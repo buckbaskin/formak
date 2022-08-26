@@ -23,3 +23,16 @@ load("@pip_deps//:requirements.bzl", "requirement")
 #         requirement("pytest"),
 #     ],
 # )
+
+py_library(
+    name = "ui",
+    srcs = [
+        "src/formak/__init__.py",
+        "src/formak/ui.py",
+    ],
+    imports = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("sympy"),
+    ],
+)

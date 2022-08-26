@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sympy import symbols, Symbol, diff, simplify
+from formak.ui import *
 
 dt = symbols("dt")  # change in time
 
@@ -81,16 +81,7 @@ def test_orbital_example():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
-    for k in list(state_model.keys()):
-        state_model[k] = simplify(state_model[k])
-
-    assert len(state_model) == len(state)
-    for k in state:
-        try:
-            assert k in state_model
-        except AssertionError:
-            print("%s ( %s ) missing from state model" % (k, type(k)))
-            raise
+    orbital_model = Model(state=state, control=control, state_model=state_model)
 
     initial_state = {
         vp["m"]: Vehicle_Mass_Properties["dry"] + Vehicle_Mass_Properties["consumable"],
@@ -98,18 +89,6 @@ def test_orbital_example():
         vp["v"]: 0.0,
         vp["a"]: 0.0,
     }
-
-    assert len(state_model) == len(state)
-    for k in state:
-        try:
-            assert k in state_model
-        except AssertionError:
-            print("%s ( %s ) missing from state model" % (k, type(k)))
-            raise
-
-    print("State Model")
-    for k in sorted(list(state_model.keys()), key=lambda x: x.name):
-        print("  %s: %s" % (k, state_model[k]))
 
     print("Initial State")
     for k in sorted(list(initial_state.keys()), key=lambda x: x.name):

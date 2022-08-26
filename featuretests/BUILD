@@ -30,6 +30,7 @@ py_test(
     main = "test/python_ui_demo_simple_test.py",
     deps = [
         requirement("pytest"),
+        "//formak:ui",
     ],
 )
 
@@ -39,6 +40,6 @@ py_test(
     main = "test/python_ui_demo_orbital_test.py",
     deps = [
         requirement("pytest"),
-        requirement("sympy"),
+        "//formak:ui",
     ],
 )
