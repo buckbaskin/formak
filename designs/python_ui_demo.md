@@ -4,7 +4,7 @@ Author: Buck Baskin @bebaskin
 
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 
-Project Status: 5. Code Review
+Project Status: Merged
 
 ## Overview
 
@@ -52,3 +52,10 @@ based on pain points testing with example models.
 This feature is specific to the Python interface. There will be two feature tests:
 1. Simple 2D model of a parabolic trajectory
 2. Rocket launch model with thrust, drag and other effects
+
+## Post Merge Review
+
+This feature was ultimately very simple because it leaned on `sympy` quite a
+bit. The primary change from the plan was that there was already demo code to
+borrow from for feature tests which made writing them much quicker.
+

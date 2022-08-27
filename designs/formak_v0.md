@@ -40,7 +40,7 @@ model-definition and C++ implementation levels.
 
 ## Roadmap and Milestones
 
-- [ ] Python UI Demo - defining models
+- [x] Python UI Demo - defining models
 - [ ] Python Models
 - [ ] Python Model Selection with scikit-learn integration
 - [ ] C++ Generation Demo
