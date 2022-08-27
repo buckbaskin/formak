@@ -4,6 +4,9 @@ ci:
 test:
 	bash actions/test.bash
 
+feature_test:
+	bash actions/feature_test.bash
+
 format:
 	bash actions/format.bash
 

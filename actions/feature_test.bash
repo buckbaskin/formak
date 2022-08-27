@@ -1,5 +1,5 @@
 bt() {
-    bazel test --verbose_failures "$@" //formak/...
+    bazel test --verbose_failures "$@" //featuretests/...
     RESULT=$?
     if [ $RESULT -ne 0 ] ; then
         echo " "
