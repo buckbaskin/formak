@@ -1,9 +1,9 @@
 # Python Library for Model Evaluation
 
 Author: Buck Baskin @bebaskin
-Parent Design: Formak V0
-See Also: Python UI Demo
-Status: 1. Design
+Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
+See Also: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
+Status: 2. Feature Tests
 
 ## Overview
 
