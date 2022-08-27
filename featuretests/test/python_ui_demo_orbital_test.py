@@ -1,6 +1,5 @@
-from formak.ui import *
-
 from collections import defaultdict
+from formak.ui import *
 
 dt = symbols("dt")  # change in time
 
@@ -59,7 +58,8 @@ def gravitational_force(m_1, m_2, r):
     return G * (m_1 * m_2) / (r ** 2)
 
 
-def main():
+def test_orbital_example():
+
     vp = vehicle_properties = {k: Symbol(k) for k in ["m", "x", "v", "a"]}
     fuel_burn_rate = Symbol("fuel_burn_rate")
 
@@ -81,7 +81,7 @@ def main():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
-    model = Model(state, control, state_model, debug_print=True)
+    orbital_model = Model(state=state, control=control, state_model=state_model)
 
     initial_state = {
         vp["m"]: Vehicle_Mass_Properties["dry"] + Vehicle_Mass_Properties["consumable"],
@@ -99,5 +99,7 @@ def main():
 
 if __name__ == "__main__":
     import sys
+    import pytest as test_runner
 
-    sys.exit(main())
+    sys.exit(test_orbital_example())
+    # sys.exit(test_runner.main(sys.argv[1:]))
