@@ -1,33 +1,51 @@
 # FormaK V0
 
 Author: Buck Baskin @bebaskin
+Created: 2022-08-24
+Updated: 2022-08-26
 
 ## Overview
 
-FormaK aims to combine symbolic modeling for fast, efficient system modelling
-with code generation to create performant code that is easy to use.
+FormaK provides the tooling so that you can easily derive Python and C++
+implementations for optimal models that best match your data given the
+constraints, models that are fast and models that can be generated with
+automation. FormaK aims to combine symbolic modeling for fast, efficient system
+modelling with code generation to create performant code that is easy to use.
 
-The values (in order) are:
+The values of the FormaK project (in order) are:
 - Easy to use
 - Performant
 
-In line with those values, the intended user experience is as follows. The user
-provides:
+### The Persona
+
+Who is this for? 
+
+The user of FormaK is someone with domain expertise who is looking to take
+their knowledge and their data and quickly (measured in the user's time) create
+a model, either as a project in itself or as part of a larger project.
+
+The user isn't expected to know or have to understand the mechanics of what's
+going on under the hood in order to get value from the library. This means
+things like sane defaults and an easy to use interface that's hard to misuse
+are highly important. The library should encapsulate a collective knowledge
+that, as it improves over time, can improve everyone's work.
+
+On the flip side, a user with more familiarity of the modelling process or the
+FormaK tool should be able to use more advanced features and select
+configuration that better matches their use case.
+
+### The Five Keys
+
+In line with the values and the intended user, the intended user experience is
+as follows. The user provides:
 - Model that describes the physics of the system
 - Execution criteria (e.g. memory usage, execution time)
 - Time series data for for the system
 
-FormaK provides the tooling so that you can easily derive Python and C++
-implementations that are as fast as possible to best match your data given the
-constraints.
-
-### The Five Keys
-
-The Five Key Elements the library provides to achieve this are:
+The Five Key Elements the library provides to achieve this user experience are:
 1. Python Interface to define models
 2. Python implementation of the model and supporting tooling
-3. Integration to scikit-learn to leverage the model selection and parameter
-   tuning functions
+3. Integration to scikit-learn to leverage the model selection and parameter tuning functions
 4. C++ and Python to C++ interoperability for performance
 5. C++ interfaces to support a variety of model uses
 
@@ -118,3 +136,9 @@ implementations.
 - Pure Python and Python wrapping C++ are alternative backends for executing the
   model
 
+## Revisions:
+
+### 2022-08-26
+
+- Add the Persona section
+- Revise some language in the Overview
