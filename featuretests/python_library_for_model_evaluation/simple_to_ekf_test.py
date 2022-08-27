@@ -1,7 +1,6 @@
 import pytest
 
-from formak.ui import *
-from formak.py import compile_to_python, PyExtendedKalmanFilter
+from formak import py, ui
 
 
 def test_UI_simple():
@@ -23,9 +22,9 @@ def test_UI_simple():
 
     model = Model(state=state, control=control, state_model=state_model)
 
-    python_implementation = compile_to_python(model)
+    python_implementation = py.compile(model)
 
-    python_ekf = PyExtendedKalmanFilter(
+    python_ekf = py.ExtendedKalmanFilter(
         state_model=python_implementation, sensor_models={}
     )
 
