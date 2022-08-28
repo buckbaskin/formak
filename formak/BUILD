@@ -5,6 +5,7 @@ py_library(
     name = "ui",
     srcs = [
         "src/formak/__init__.py",
+        "src/formak/py.py",
         "src/formak/ui.py",
     ],
     imports = ["src"],

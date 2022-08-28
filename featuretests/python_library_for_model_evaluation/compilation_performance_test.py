@@ -1,7 +1,7 @@
 import pytest
 
+from formak import py
 from formak.ui import *
-from formak.py import compile_to_python
 
 
 def test_UI_simple():
@@ -23,8 +23,8 @@ def test_UI_simple():
 
     model = Model(state=state, control=control, state_model=state_model)
 
-    pure_implementation = compile_to_python(model, {"compile": False})
-    compiled_implementation = compile_to_python(model, {"compile": True})
+    pure_implementation = py.compile(model, {"compile": False})
+    compiled_implementation = py.compile(model, {"compile": True})
 
     return 0
 
