@@ -7,7 +7,7 @@ py_test(
     main = "python_ui_demo/simple_test.py",
     deps = [
         requirement("pytest"),
-        "//formak:ui",
+        "//formak:user-interface",
     ],
 )
 
@@ -17,7 +17,7 @@ py_test(
     main = "python_ui_demo/orbital_test.py",
     deps = [
         requirement("pytest"),
-        "//formak:ui",
+        "//formak:user-interface",
     ],
 )
 
@@ -25,26 +25,38 @@ py_test(
     name = "python-library-for-model-evaluation-compilation-performance-test",
     srcs = ["python_library_for_model_evaluation/compilation_performance_test.py"],
     main = "python_library_for_model_evaluation/compilation_performance_test.py",
-    deps = ["//formak:ui"],
+    deps = [
+        "//formak:python",
+        "//formak:user-interface",
+    ],
 )
 
 py_test(
     name = "python-library-for-model-evaluation-compilation",
     srcs = ["python_library_for_model_evaluation/simple_compilation_test.py"],
     main = "python_library_for_model_evaluation/simple_compilation_test.py",
-    deps = ["//formak:ui"],
+    deps = [
+        "//formak:python",
+        "//formak:user-interface",
+    ],
 )
 
 py_test(
     name = "python-library-for-model-evaluation-simple",
     srcs = ["python_library_for_model_evaluation/simple_test.py"],
     main = "python_library_for_model_evaluation/simple_test.py",
-    deps = ["//formak:ui"],
+    deps = [
+        "//formak:python",
+        "//formak:user-interface",
+    ],
 )
 
 py_test(
     name = "python-library-for-model-evaluation-ekf",
     srcs = ["python_library_for_model_evaluation/simple_to_ekf_test.py"],
     main = "python_library_for_model_evaluation/simple_to_ekf_test.py",
-    deps = ["//formak:ui"],
+    deps = [
+        "//formak:python",
+        "//formak:user-interface",
+    ],
 )

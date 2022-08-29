@@ -7,6 +7,6 @@ py_binary(
     main = "src/orbital_model.py",
     deps = [
         requirement("sympy"),
-        "//formak:ui",
+        "//formak:user-interface",
     ],
 )

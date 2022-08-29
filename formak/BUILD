@@ -2,10 +2,18 @@ load("@rules_python//python:defs.bzl", "py_binary")
 load("@pip_deps//:requirements.bzl", "requirement")
 
 py_library(
-    name = "ui",
+    name = "base",
     srcs = [
         "src/formak/__init__.py",
-        "src/formak/py.py",
+    ],
+    imports = ["src"],
+    visibility = ["//visibility:private"],
+    deps = [],
+)
+
+py_library(
+    name = "user-interface",
+    srcs = [
         "src/formak/ui.py",
     ],
     imports = ["src"],
@@ -15,12 +23,33 @@ py_library(
     ],
 )
 
+py_library(
+    name = "python",
+    srcs = [
+        "src/formak/python.py",
+    ],
+    imports = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
 py_test(
-    name = "ui-test-py",
+    name = "user-interface-test-py",
     srcs = ["test/ui_test.py"],
     main = "test/ui_test.py",
     deps = [
-        ":ui",
+        ":user-interface",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "py-test-py",
+    srcs = ["test/python_test.py"],
+    main = "test/python_test.py",
+    deps = [
+        ":python",
+        ":user-interface",
         requirement("pytest"),
     ],
 )
