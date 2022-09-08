@@ -7,7 +7,7 @@ load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@py_dev_requirements//:requirements.bzl", "requirement")
 load("//common:defs.bzl", "copy_file")
 load("//py:defs.bzl", "py_test_suite")
-load("//py/private:browsers.bzl", "BROWSERS")
+# load("//py/private:browsers.bzl", "BROWSERS")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - investigate pip deps process:
@@ -56,14 +56,19 @@ py_library(
 
 py_package(
     name = "formak-pkg",
-    packages = ["py.formak", "py.formak.ui", "py.formak.python", "py.formak.cpp"]
+    packages = [
+        "py.formak",
+        "py.formak.cpp",
+        "py.formak.python",
+        "py.formak.ui",
+    ],
     deps = [":formak"],
-        )
+)
 
 # This is taken verbatim from Selenium, %s/selenium/formak/g
 pkg_files(
-name = "formak-sdist-pkg",
-srcs = [
+    name = "formak-sdist-pkg",
+    srcs = [
         "CHANGES",
         "MANIFEST.in",
         "README.rst",
@@ -72,7 +77,6 @@ srcs = [
     ],
     strip_prefix = strip_prefix.from_pkg(),
 )
-        )
 
 # This is taken verbatim from Selenium, %s/selenium/formak/g
 pkg_tar(
@@ -80,7 +84,7 @@ pkg_tar(
     srcs = [":formak-sdist-pkg"],
     extension = "tar.gz",
     mode = "0644",
-    package_file_name = "formak-%s.tar.gz" % SE_VERSION,
+    package_file_name = "formak-%s.tar.gz" % FORMAK_VERSION,
 )
 
 # This is taken verbatim from Selenium
@@ -232,7 +236,7 @@ py_test_suite(
 #         requirement("pytest"),
 #     ],
 # )
-# 
+#
 # py_test(
 #     name = "py-test-py",
 #     srcs = ["test/python_test.py"],
