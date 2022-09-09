@@ -82,8 +82,6 @@ http_archive(
 
 ### Python Dependencies
 
-# load("//common/private:env.bzl", "env")
-
 PYTHON_VERSION = "3.8"
 
 http_archive(
