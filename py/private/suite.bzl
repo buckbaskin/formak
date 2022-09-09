@@ -2,7 +2,7 @@ load("@rules_python//python:defs.bzl", "py_library")
 load("//py/private:pytest.bzl", "pytest_test")
 
 def _is_test(file):
-    return file.startswith("test_") or file.endswith("_tests.py")
+    return file.startswith("test_") or file.endswith("_tests.py") or file.endswith("_test.py")
 
 def py_test_suite(name, srcs, size = None, deps = None, python_version = None, imports = None, visibility = None, **kwargs):
     library_name = "%s-test-lib" % name

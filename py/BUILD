@@ -145,8 +145,8 @@ py_library(
         # "test/formak/webdriver/support/conftest.py",
     ],
     data = [
-        "pytest.ini",
-        "setup.cfg",
+            "//common:pytest.ini",
+            "//common:setup.cfg",
         # "test/formak/webdriver/common/test_file.txt",
         # "test/formak/webdriver/common/test_file2.txt",
     ],
@@ -161,7 +161,7 @@ py_test_suite(
     size = "small",
     srcs = glob([
         "test/unit/**/*.py",
-    ]),
+    ], allow_empty=False),
     # args = [
     #     "--instafail",
     # ],
