@@ -4,7 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
-load("@py_dev_requirements//:requirements.bzl", "requirement")
+load("@pip_deps//:requirements.bzl", "requirement")
 load("//common:defs.bzl", "copy_file")
 load("//py:defs.bzl", "py_test_suite")
 # load("//py/private:browsers.bzl", "BROWSERS")
@@ -44,7 +44,7 @@ TEST_DEPS = [
 py_library(
     name = "formak",
     srcs = glob(
-        "formak/**/*.py",
+        ["formak/**/*.py"],
         exclude = ["generate.py"],
     ),
     imports = ["."],

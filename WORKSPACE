@@ -1,3 +1,5 @@
+workspace(name = "formak")
+
 ### Common
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -80,6 +82,10 @@ http_archive(
 
 ### Python Dependencies
 
+# load("//common/private:env.bzl", "env")
+
+PYTHON_VERSION = "3.8"
+
 http_archive(
     name = "rules_python",
     sha256 = "c03246c11efd49266e8e41e12931090b613e12a59e6f55ba2efd29a7cb8b4258",
@@ -87,10 +93,20 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.11.0.tar.gz",
 )
 
+load("@rules_python//python:repositories.bzl", "python_register_toolchains")
+
+python_register_toolchains(
+    name = "python_toolchain",
+    python_version = PYTHON_VERSION,
+)
+
+load("@python_toolchain//:defs.bzl", "interpreter")
+
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
     name = "pip_deps",
+    python_interpreter_target = interpreter,
     requirements_lock = "//:requirements_lock.txt",
 )
 
