@@ -6,4 +6,3 @@ def test_model_simplification():
     model = Model(set([x]), set(), {x: x * x / x})
 
     assert model.state_model[x] == x
-

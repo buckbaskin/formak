@@ -1,2 +1,4 @@
-exports_files(["pytest.ini", "setup.cfg"
-               ])
+exports_files([
+    "pytest.ini",
+    "setup.cfg",
+])

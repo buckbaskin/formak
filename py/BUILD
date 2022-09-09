@@ -7,14 +7,10 @@ load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
 load("//common:defs.bzl", "copy_file")
 load("//py:defs.bzl", "py_test_suite")
+
 # load("//py/private:browsers.bzl", "BROWSERS")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
-# - investigate pip deps process:
-#   - defining requirements.txt
-#   - version pinning
-#   - defining a dependency
-# - py_test_suite?
 # - exporting as a pip package for non-bazel users
 # - generate py_binary rule
 ## End Selenium-based load
@@ -30,7 +26,7 @@ FORMAK_VERSION = "0.0.1-alpha00"
 # Selenium pattern for specifying common test deps
 TEST_DEPS = [
     requirement("pytest"),
-    requirement("pytest-mock"),  # kinda expect this one to fail in some way because it's not in requirements
+    requirement("pytest-mock"),
 ]
 
 ## Selenium Example: Copy files from other packages to be available here
@@ -66,26 +62,26 @@ py_package(
 )
 
 # This is taken verbatim from Selenium, %s/selenium/formak/g
-pkg_files(
-    name = "formak-sdist-pkg",
-    srcs = [
-        "CHANGES",
-        "MANIFEST.in",
-        "README.rst",
-        "setup.py",
-        ":formak-pkg",
-    ],
-    strip_prefix = strip_prefix.from_pkg(),
-)
+# pkg_files(
+#     name = "formak-sdist-pkg",
+#     srcs = [
+#         "CHANGES.md",
+#         "MANIFEST.in",
+#         "README.md",
+#         "setup.py",
+#         ":formak-pkg",
+#     ],
+#     strip_prefix = strip_prefix.from_pkg(),
+# )
 
 # This is taken verbatim from Selenium, %s/selenium/formak/g
-pkg_tar(
-    name = "formak-sdist",
-    srcs = [":formak-sdist-pkg"],
-    extension = "tar.gz",
-    mode = "0644",
-    package_file_name = "formak-%s.tar.gz" % FORMAK_VERSION,
-)
+# pkg_tar(
+#     name = "formak-sdist",
+#     srcs = [":formak-sdist-pkg"],
+#     extension = "tar.gz",
+#     mode = "0644",
+#     package_file_name = "formak-%s.tar.gz" % FORMAK_VERSION,
+# )
 
 # This is taken verbatim from Selenium
 #   - %s/selenium/formak/g
@@ -145,8 +141,8 @@ py_library(
         # "test/formak/webdriver/support/conftest.py",
     ],
     data = [
-            "//common:pytest.ini",
-            "//common:setup.cfg",
+        "//common:pytest.ini",
+        "//common:setup.cfg",
         # "test/formak/webdriver/common/test_file.txt",
         # "test/formak/webdriver/common/test_file2.txt",
     ],
@@ -159,9 +155,12 @@ py_library(
 py_test_suite(
     name = "unit",
     size = "small",
-    srcs = glob([
-        "test/unit/**/*.py",
-    ], allow_empty=False),
+    srcs = glob(
+        [
+            "test/unit/**/*.py",
+        ],
+        allow_empty = False,
+    ),
     # args = [
     #     "--instafail",
     # ],

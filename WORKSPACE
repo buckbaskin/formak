@@ -101,7 +101,6 @@ python_register_toolchains(
 )
 
 load("@python_toolchain//:defs.bzl", "interpreter")
-
 load("@rules_python//python:pip.bzl", "pip_parse")
 
 pip_parse(
