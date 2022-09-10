@@ -117,3 +117,13 @@ can more specifically focus on compilation.
 7. Add unit testing, etc
 8. Refactor/cleanup
 9. Write up successes, retro of what changed (so I can check for this in future designs)
+
+## Post Review
+
+### 2022-09-10
+
+Selecting `numba` for the Python compiler
+- Pure python written source code
+- Simple Python -> compiled Python syntax
+- Designed for use with numpy
+- SIMD vectorization under the hood

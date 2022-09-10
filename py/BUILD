@@ -40,6 +40,7 @@ py_library(
         requirement("sympy"),
         requirement("scipy"),
         requirement("numpy"),
+        requirement("numba"),
     ],
 )
 

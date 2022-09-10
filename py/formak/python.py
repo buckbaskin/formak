@@ -1,6 +1,8 @@
 from sympy.utilities.lambdify import lambdify
+from numba import njit
 
-MODULES=['scipy', 'numpy', 'math']
+MODULES = ["scipy", "numpy", "math"]
+
 
 class Model(object):
     """Python implementation of the model"""
@@ -25,6 +27,9 @@ class Model(object):
             for a in self.arglist[: len(symbolic_model.state)]
         ]
 
+        if config.compile:
+            self._impl = [njit(i) for i in self._impl]
+
     def _model(self, dt, state, control):
         assert isinstance(dt, float)
         assert isinstance(state, list)
@@ -34,6 +39,8 @@ class Model(object):
             yield impl(*([dt] + state + control))
 
     # TODO(buck): numpy -> numpy if not compiled
+    #   - Given the arglist, refactor expressions to work with state vectors
+    #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
     def model(self, dt, state, control=None):
         if control is None:
             control = []
@@ -76,6 +83,7 @@ class ExtendedKalmanFilter(object):
     def sensor_model(self, state, covariance, sensor):
         # TODO(buck): Implement EKF sensor update
         return state, covariance
+
 
 class Config(object):
     def __init__(self, compile=False, common_subexpression_elimination=True):

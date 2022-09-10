@@ -31,7 +31,9 @@ def test_UI_simple():
     state_variance = []
     control_vector = [0.0]
 
-    state_vector_next = python_ekf.process_model(0.1, state_vector, state_variance, control_vector)
+    state_vector_next = python_ekf.process_model(
+        0.1, state_vector, state_variance, control_vector
+    )
 
     return 0
 
