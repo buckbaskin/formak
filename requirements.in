@@ -3,3 +3,5 @@ pytest-mock
 hypothesis
 
 sympy
+scipy
+numpy

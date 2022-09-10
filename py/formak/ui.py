@@ -2,7 +2,8 @@ from sympy import Symbol, symbols, simplify
 
 
 class Model(object):
-    def __init__(self, state, control, state_model, *, debug_print=False):
+    def __init__(self, dt, state, control, state_model, *, debug_print=False):
+        self.dt = dt
         self.state = state
         self.control = control
         self.state_model = state_model

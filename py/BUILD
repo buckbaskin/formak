@@ -36,7 +36,11 @@ py_library(
     ),
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [requirement("sympy")],
+    deps = [
+        requirement("sympy"),
+        requirement("scipy"),
+        requirement("numpy"),
+    ],
 )
 
 # TODO(buck): Write up the difference between py_library and py_package

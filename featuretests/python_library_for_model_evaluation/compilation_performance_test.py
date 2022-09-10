@@ -33,15 +33,15 @@ def test_UI_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = Model(state=state, control=control, state_model=state_model)
+    model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
     pure_implementation = python.compile(model, config={"compile": False})
     compiled_implementation = python.compile(model, config={"compile": True})
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
 
-    state_vector_next = pure_implementation.model(state_vector)
-    state_vector_next_compiled = compiled_implementation.model(state_vector)
+    state_vector_next = pure_implementation.model(0.1, state_vector)
+    state_vector_next_compiled = compiled_implementation.model(0.1, state_vector)
 
     assert state_vector_next == state_vector_next_compiled
 
@@ -50,13 +50,13 @@ def test_UI_simple():
     pure_timer = Timer()
     with pure_timer:
         for i in range(iters):
-            state_vector_next = pure_implementation.model(state_vector_next)
+            state_vector_next = pure_implementation.model(0.1, state_vector_next)
 
     compiled_timer = Timer()
     with compiled_timer:
         for i in range(iters):
             state_vector_next_compiled = compiled_implementation.model(
-                state_vector_next_compiled
+                0.1, state_vector_next_compiled
             )
 
     assert compiled_timer.elapsed() < (pure_timer.elapsed() / 2.0)

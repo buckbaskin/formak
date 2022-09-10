@@ -20,7 +20,7 @@ def test_UI_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = ui.Model(state=state, control=control, state_model=state_model)
+    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
     python_ekf = python.compile_ekf(
         state_model=model, sensor_models={}, config={"compile": True}
@@ -29,7 +29,7 @@ def test_UI_simple():
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
 
-    state_vector_next = python_ekf.process_model(state_vector)
+    state_vector_next = python_ekf.process_model(0.1, state_vector)
 
     return 0
 

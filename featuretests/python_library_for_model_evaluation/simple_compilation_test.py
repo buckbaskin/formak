@@ -21,13 +21,13 @@ def test_UI_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = Model(state=state, control=control, state_model=state_model)
+    model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
     python_implementation = python.compile(model, config={"compile": True})
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
 
-    state_vector_next = python_implementation.model(state_vector)
+    state_vector_next = python_implementation.model(0.1, state_vector)
 
     return 0
 
