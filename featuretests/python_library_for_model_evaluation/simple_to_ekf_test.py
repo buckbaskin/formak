@@ -22,13 +22,14 @@ def test_UI_simple():
 
     model = ui.Model(state=state, control=control, state_model=state_model)
 
-    python_implementation = python.compile(model)
-    assert isinstance(python_implementation, python.Model)
-
-    python_ekf = python.ExtendedKalmanFilter(
-        state_model=python_implementation, sensor_models={}
+    python_ekf = python.compile_ekf(
+        state_model=model, sensor_models={}, config={"compile": True}
     )
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
+
+    state_vector = [0.0, 0.0, 0.0, 0.0]
+
+    state_vector_next = python_ekf.process_model(state_vector)
 
     return 0
 

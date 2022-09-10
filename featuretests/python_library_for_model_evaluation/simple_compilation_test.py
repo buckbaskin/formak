@@ -23,7 +23,11 @@ def test_UI_simple():
 
     model = Model(state=state, control=control, state_model=state_model)
 
-    python_implementation = python.compile(model, {"compile": True})
+    python_implementation = python.compile(model, config={"compile": True})
+
+    state_vector = [0.0, 0.0, 0.0, 0.0]
+
+    state_vector_next = python_implementation.model(state_vector)
 
     return 0
 
