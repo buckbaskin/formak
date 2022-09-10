@@ -1,5 +1,6 @@
 from sympy.utilities.lambdify import lambdify
 
+MODULES=['scipy', 'numpy', 'math']
 
 class Model(object):
     """Python implementation of the model"""
@@ -18,7 +19,7 @@ class Model(object):
             lambdify(
                 self.arglist,
                 a,
-                modules=["scipy", "numpy", "math"],
+                modules=MODULES,
                 cse=config.common_subexpression_elimination,
             )
             for a in self.arglist[: len(symbolic_model.state)]
@@ -49,6 +50,32 @@ class ExtendedKalmanFilter(object):
         ) + sorted(list(state_model.control), key=lambda x: x.name)
         self.arglist_process = [state_model.dt] + self.arglist_sensor
 
+        self._process_impl = [
+            lambdify(
+                self.arglist_process,
+                a,
+                modules=MODULES,
+                cse=config.common_subexpression_elimination,
+            )
+            for a in self.arglist_process[: len(state_model.state)]
+        ]
+
+    def _process_model(self, dt, state, control):
+        assert isinstance(dt, float)
+        assert isinstance(state, list)
+        assert isinstance(control, list)
+
+        for impl in self._process_impl:
+            yield impl(*([dt] + state + control))
+
+    # TODO(buck): numpy -> numpy if not compiled
+    def process_model(self, dt, state, covariance, control):
+        # TODO(buck): Implement EKF process update variance
+        return list(self._process_model(dt, state, control))
+
+    def sensor_model(self, state, covariance, sensor):
+        # TODO(buck): Implement EKF sensor update
+        return state, covariance
 
 class Config(object):
     def __init__(self, compile=False, common_subexpression_elimination=True):

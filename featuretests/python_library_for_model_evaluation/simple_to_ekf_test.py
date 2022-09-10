@@ -28,9 +28,10 @@ def test_UI_simple():
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
+    state_variance = []
     control_vector = [0.0]
 
-    state_vector_next = python_ekf.process_model(0.1, state_vector, control_vector)
+    state_vector_next = python_ekf.process_model(0.1, state_vector, state_variance, control_vector)
 
     return 0
 
