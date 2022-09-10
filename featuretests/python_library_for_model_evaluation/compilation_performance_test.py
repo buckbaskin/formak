@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timedelta
 
 from formak import python
 from formak.ui import *
@@ -6,14 +7,14 @@ from formak.ui import *
 
 class Timer(object):
     def __enter__(self):
-        self.start = time.clock()
+        self.start = datetime.now()
         return self
 
     def __exit__(self, type, value, traceback):
-        self.end = time.clock()
+        self.end = datetime.now()
 
     def elapsed(self):
-        return self.start - self.end
+        return self.end - self.start
 
 
 def test_UI_simple():
@@ -39,32 +40,30 @@ def test_UI_simple():
     compiled_implementation = python.compile(model, config={"compile": True})
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
+    control_vector = [0.0]
 
-    state_vector_next = pure_implementation.model(0.1, state_vector)
-    state_vector_next_compiled = compiled_implementation.model(0.1, state_vector)
+    state_vector_next = pure_implementation.model(0.1, state_vector, control_vector)
+    state_vector_next_compiled = compiled_implementation.model(
+        0.1, state_vector, control_vector
+    )
 
     assert state_vector_next == state_vector_next_compiled
 
-    iters = 1000
+    iters = 100000
 
     pure_timer = Timer()
     with pure_timer:
         for i in range(iters):
-            state_vector_next = pure_implementation.model(0.1, state_vector_next)
+            state_vector_next = pure_implementation.model(
+                0.1, state_vector_next, control_vector
+            )
 
     compiled_timer = Timer()
     with compiled_timer:
         for i in range(iters):
             state_vector_next_compiled = compiled_implementation.model(
-                0.1, state_vector_next_compiled
+                0.1, state_vector_next_compiled, control_vector
             )
 
+    assert pure_timer.elapsed() > timedelta(seconds=0.1)
     assert compiled_timer.elapsed() < (pure_timer.elapsed() / 2.0)
-
-    return 0
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(test_UI_simple())

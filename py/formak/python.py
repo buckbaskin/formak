@@ -24,13 +24,19 @@ class Model(object):
             for a in self.arglist[: len(symbolic_model.state)]
         ]
 
-    def _model(self, state, dt):
+    def _model(self, dt, state, control):
+        assert isinstance(dt, float)
+        assert isinstance(state, list)
+        assert isinstance(control, list)
+
         for impl in self._impl:
-            yield impl(*([dt] + [state]))
+            yield impl(*([dt] + state + control))
 
     # TODO(buck): numpy -> numpy if not compiled
-    def model(self, state, dt):
-        return list(self._model(state, dt))
+    def model(self, dt, state, control=None):
+        if control is None:
+            control = []
+        return list(self._model(dt, state, control))
 
 
 class ExtendedKalmanFilter(object):

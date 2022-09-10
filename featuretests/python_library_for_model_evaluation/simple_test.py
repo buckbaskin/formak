@@ -26,8 +26,9 @@ def test_UI_simple():
     python_implementation = python.compile(model)
 
     state_vector = [0.0, 0.0, 0.0, 0.0]
+    control_vector = [0.0]
 
-    state_vector_next = python_implementation.model(0.1, state_vector)
+    state_vector_next = python_implementation.model(0.1, state_vector, control_vector)
 
     return 0
 
