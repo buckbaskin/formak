@@ -41,6 +41,7 @@ py_library(
         requirement("scipy"),
         requirement("numpy"),
         requirement("numba"),
+        requirement("hypothesis"),
     ],
 )
 
