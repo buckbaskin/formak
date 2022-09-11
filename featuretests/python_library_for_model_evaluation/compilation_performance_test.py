@@ -1,4 +1,6 @@
+import numpy as np
 import pytest
+
 from datetime import datetime, timedelta
 
 from formak import python
@@ -39,15 +41,15 @@ def test_UI_simple():
     pure_implementation = python.compile(model, config={"compile": False})
     compiled_implementation = python.compile(model, config={"compile": True})
 
-    state_vector = [0.0, 0.0, 0.0, 0.0]
-    control_vector = [0.0]
+    state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
+    control_vector = np.array([[0.0]])
 
     state_vector_next = pure_implementation.model(0.1, state_vector, control_vector)
     state_vector_next_compiled = compiled_implementation.model(
         0.1, state_vector, control_vector
     )
 
-    assert state_vector_next == state_vector_next_compiled
+    assert (state_vector_next == state_vector_next_compiled).all()
 
     iters = 100000
 

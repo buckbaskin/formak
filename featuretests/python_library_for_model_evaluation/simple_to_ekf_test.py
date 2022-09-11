@@ -1,9 +1,9 @@
-import pytest
+import numpy as np
 
 from formak import python, ui
 
 
-def test_UI_simple():
+def test_ekf_simple():
     dt = ui.Symbol("dt")
 
     tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
@@ -27,18 +27,10 @@ def test_UI_simple():
     )
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
 
-    state_vector = [0.0, 0.0, 0.0, 0.0]
-    state_variance = []
-    control_vector = [0.0]
+    state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
+    state_variance = np.eye(4)
+    control_vector = np.array([0.0])
 
-    state_vector_next = python_ekf.process_model(
+    state_vector_next, state_variance_next = python_ekf.process_model(
         0.1, state_vector, state_variance, control_vector
     )
-
-    return 0
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(test_UI_simple())

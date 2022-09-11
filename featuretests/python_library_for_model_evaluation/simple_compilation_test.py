@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from formak.ui import *
@@ -25,8 +26,8 @@ def test_UI_simple():
 
     python_implementation = python.compile(model, config={"compile": True})
 
-    state_vector = [1000.0, 0.0, 10.0, 0.0]
-    control_vector = [200.0]
+    state_vector = np.array([[1000.0, 0.0, 10.0, 0.0]]).transpose()
+    control_vector = np.array([[200.0]])
 
     state_vector_next = python_implementation.model(0.1, state_vector, control_vector)
 
