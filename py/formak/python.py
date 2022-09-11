@@ -57,14 +57,20 @@ class Model(object):
 
 
 class ExtendedKalmanFilter(object):
-    def __init__(self, state_model, sensor_models, config):
+    def __init__(
+        self, state_model, process_noise, sensor_models, sensor_noises, config
+    ):
         assert isinstance(config, Config)
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
 
+        self._construct_process(state_model, process_noise, config)
+        self._construct_sensors(state_model, sensor_models, sensor_noises, config)
+
+    def _construct_process(self, state_model, process_noise, config):
         self.state_model = Model(state_model, config)
-        self.sensor_models = sensor_models
+        self.process_noise = process_noise
 
         process_matrix = Matrix(
             [
@@ -95,6 +101,7 @@ class ExtendedKalmanFilter(object):
             for expr in symbolic_process_jacobian
         ]
         assert len(self._impl_process_jacobian) == self.state_size ** 2
+        # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
             self._impl_process_jacobian = [njit(i) for i in self._impl_process_jacobian]
 
@@ -111,12 +118,46 @@ class ExtendedKalmanFilter(object):
         if config.compile:
             self._impl_control_jacobian = [njit(i) for i in self._impl_control_jacobian]
 
-        # TODO(buck): allow configurable process noise
-        self.process_noise = np.eye(self.control_size)
+    def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
+        assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
+        self.sensor_models = {
+            k: StateModel(model, config) for k, model in sensor_models
+        }
+        self.sensor_noises = sensor_noises
 
-        self.arglist_sensor = sorted(
-            list(state_model.state), key=lambda x: x.name
-        ) + sorted(list(state_model.control), key=lambda x: x.name)
+        self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
+
+        self._impl_sensor_jacobians = {}
+
+        for k, sensor_model in self.sensor_models:
+            sensor_size = len(sensor_model.readings)
+
+            sensor_matrix = Matrix(
+                [sensor_model.sensor_model[r] for r in sensor_model.readings]
+            )
+            symbolic_sensor_jacobian = sensor_matrix.jacobian(self.arglist_sensor)
+            # TODO(buck): This assertion won't necessarily hold if CSE is on across states
+            assert symbolic_sensor_jacobian.shape == (
+                sensor_size,
+                self.state_size,
+            )
+
+            impl_sensor_jacobian = [
+                lambdify(
+                    self.arglist_sensor,
+                    expr,
+                    modules=config.python_modules,
+                    cse=config.common_subexpression_elimination,
+                )
+                for expr in symbolic_sensor_jacobian
+            ]
+            assert len(impl_sensor_jacobian) == sensor_size * self.state_size
+            # TODO(buck): warm jit by calling the compiled functions with a zero state vector
+            # TODO(buck): allow for compiling only process, sensors or list of specific sensors
+            if config.compile:
+                impl_sensor_jacobian = [njit(i) for i in impl_sensor_jacobian]
+
+            self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
@@ -178,9 +219,56 @@ class ExtendedKalmanFilter(object):
         next_state = self.state_model.model(dt, state, control)
         return next_state, next_covariance
 
-    def sensor_model(self, state, covariance, sensor):
-        # TODO(buck): Implement EKF sensor update
-        return state, covariance
+    def sensor_model(self, state, covariance, sensor_key, sensor_reading):
+        model_impl = self.sensor_models[sensor_key]
+        sensor_size = len(model_impl.readings)
+        Q_t = model_noise = self.sensor_noises[sensor_key]
+
+        try:
+            assert isinstance(state, np.ndarray)
+            assert isinstance(covariance, np.ndarray)
+            assert isinstance(sensor_reading, np.ndarray)
+        except AssertionError:
+            print(
+                "sensor_model(state: %s, covariance: %s, sensor_key: %s, sensor_reading: %s)"
+                % (
+                    type(state),
+                    type(covariance),
+                    type(sensor_key),
+                    type(sensor_reading),
+                )
+            )
+            raise
+
+        try:
+            assert state.shape == (self.state_size, 1)
+            assert covariance.shape == (sensor_size, self.state_size)
+            assert sensor_reading.shape == (sensor_size, 1)
+        except AssertionError:
+            print(
+                "sensor_model(state: %s, covariance: %s, sensor_key, sensor_reading: %s)"
+                % (dt, state.shape, covariance.shape, sensor_reading.shape)
+            )
+
+        # TODO(buck): Assert model noise is the correct shape at construction time
+        expected_reading = model_impl.model(state)
+
+        H_t = self.sensor_jacobian(sensor_key, state)
+
+        S_t = sensor_prediction_uncertainty = (
+            np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t
+        )
+        S_inv = np.linalg.inv(S_t)
+
+        K_t = kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
+
+        innovation = sensor_reading - expected_reading
+
+        next_state = state + np.matmul(K_t, innovation)
+
+        next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
+
+        return next_state, next_covariance
 
 
 class Config(object):
@@ -204,10 +292,14 @@ def compile(symbolic_model, *, config=None):
     return Model(symbolic_model, config)
 
 
-def compile_ekf(state_model, sensor_models, *, config=None):
+def compile_ekf(
+    state_model, process_noise, sensor_models, sensor_noises, *, config=None
+):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
-    return ExtendedKalmanFilter(state_model, sensor_models, config)
+    return ExtendedKalmanFilter(
+        state_model, process_noise, sensor_models, sensor_noises, config
+    )

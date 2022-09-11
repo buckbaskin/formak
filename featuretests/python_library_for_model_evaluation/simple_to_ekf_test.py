@@ -23,7 +23,11 @@ def test_ekf_simple():
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
     python_ekf = python.compile_ekf(
-        state_model=model, sensor_models={}, config={"compile": True}
+        state_model=model,
+        process_noise=np.eye(1),
+        sensor_models={},
+        sensor_noises={},
+        config={"compile": True},
     )
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
 
