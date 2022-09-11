@@ -16,6 +16,9 @@ class Model(object):
             config = Config(**config)
         assert isinstance(config, Config)
 
+        self.state_size = len(symbolic_model.state)
+        self.control_size = len(symbolic_model.control)
+
         self.arglist = (
             [symbolic_model.dt]
             + sorted(list(symbolic_model.state), key=lambda x: x.name)
@@ -36,24 +39,28 @@ class Model(object):
         if config.compile:
             self._impl = [njit(i) for i in self._impl]
 
-    def _model(self, dt, state, control):
-        assert isinstance(dt, float)
-        assert isinstance(state, np.ndarray)
-        assert isinstance(control, np.ndarray)
-
+    def _model(self, dt, state_vector, control_vector):
         for impl in self._impl:
-            yield impl(dt, *state, *control)
+            yield impl(dt, *state_vector, *control_vector)
 
     # TODO(buck): numpy -> numpy if not compiled
     #   - Given the arglist, refactor expressions to work with state vectors
     #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
-    def model(self, dt, state, control=None):
-        if control is None:
-            control = []
-        next_state = np.zeros(state.shape)
-        for i, val in enumerate(self._model(dt, state, control)):
-            next_state[i, 0] = val
-        return next_state
+    def model(self, dt, state_vector, control_vector=None):
+        if control_vector is None:
+            control_vector = np.zeros((0, 0))
+
+        assert isinstance(dt, float)
+        assert isinstance(state_vector, np.ndarray)
+        assert isinstance(control_vector, np.ndarray)
+
+        assert state_vector.shape == (self.state_size, 1)
+        assert control_vector.shape == (self.control_size, min(self.control_size, 1))
+
+        next_state_vector = np.zeros(state_vector.shape)
+        for i, val in enumerate(self._model(dt, state_vector, control_vector)):
+            next_state_vector[i, 0] = val
+        return next_state_vector
 
 
 class ExtendedKalmanFilter(object):

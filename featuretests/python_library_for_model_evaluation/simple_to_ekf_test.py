@@ -33,7 +33,7 @@ def test_ekf_simple():
 
     state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
     state_variance = np.eye(4)
-    control_vector = np.array([0.0])
+    control_vector = np.array([[0.0]])
 
     state_vector_next, state_variance_next = python_ekf.process_model(
         0.1, state_vector, state_variance, control_vector

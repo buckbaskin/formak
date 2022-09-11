@@ -30,11 +30,3 @@ def test_UI_simple():
     control_vector = np.array([[0.0]])
 
     state_vector_next = python_implementation.model(0.1, state_vector, control_vector)
-
-    return 0
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(test_UI_simple())
