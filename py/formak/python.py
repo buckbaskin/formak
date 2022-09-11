@@ -63,6 +63,34 @@ class Model(object):
         return next_state
 
 
+class SensorModel(object):
+    def __init__(self, state_model, sensor_model, config):
+        # TODO(buck): parse sensor model to identify if it returns a matrix reading / multiple readings
+        self.readings = sorted(list(sensor_model.keys()))
+        self.sensor_models = sensor_model
+
+        self.sensor_size = len(self.readings)
+        self.state_size = len(state_model.state)
+
+        self.arglist = sorted(list(state_model.state), key=lambda x: x.name)
+
+        self._impl = [
+            lambdify(
+                self.arglist,
+                sensor_model[k],
+                modules=config.python_modules,
+                cse=config.common_subexpression_elimination,
+            )
+            for k in self.readings
+        ]
+
+    def model(self, state):
+        reading = np.zeros((self.sensor_size, 1))
+        for i, impl in enumerate(self._impl):
+            reading[i] = impl(*state)
+        return reading
+
+
 class ExtendedKalmanFilter(object):
     def __init__(
         self, state_model, process_noise, sensor_models, sensor_noises, config
@@ -128,7 +156,8 @@ class ExtendedKalmanFilter(object):
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
         self.sensor_models = {
-            k: StateModel(model, config) for k, model in sensor_models
+            k: SensorModel(state_model, model, config)
+            for k, model in sensor_models.items()
         }
         self.sensor_noises = sensor_noises
 
@@ -136,11 +165,11 @@ class ExtendedKalmanFilter(object):
 
         self._impl_sensor_jacobians = {}
 
-        for k, sensor_model in self.sensor_models:
+        for k, sensor_model in self.sensor_models.items():
             sensor_size = len(sensor_model.readings)
 
             sensor_matrix = Matrix(
-                [sensor_model.sensor_model[r] for r in sensor_model.readings]
+                [sensor_model.sensor_models[r] for r in sensor_model.readings]
             )
             symbolic_sensor_jacobian = sensor_matrix.jacobian(self.arglist_sensor)
             # TODO(buck): This assertion won't necessarily hold if CSE is on across states
@@ -188,6 +217,19 @@ class ExtendedKalmanFilter(object):
                 ](dt, *state, *control)
         return jacobian
 
+    def sensor_jacobian(self, sensor_key, state):
+        sensor_size = self.sensor_models[sensor_key].sensor_size
+        jacobian = np.zeros((sensor_size, self.state_size))
+
+        impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
+
+        for row in range(sensor_size):
+            for col in range(self.state_size):
+                jacobian[row, col] = impl_sensor_jacobian[row * sensor_size + col](
+                    *state
+                )
+        return jacobian
+
     def process_model(self, dt, state, covariance, control):
         try:
             assert isinstance(state, np.ndarray)
@@ -226,7 +268,7 @@ class ExtendedKalmanFilter(object):
         next_state = self.state_model.model(dt, state, control)
         return next_state, next_covariance
 
-    def sensor_model(self, state, covariance, sensor_key, sensor_reading):
+    def sensor_model(self, sensor_key, state, covariance, sensor_reading):
         model_impl = self.sensor_models[sensor_key]
         sensor_size = len(model_impl.readings)
         Q_t = model_noise = self.sensor_noises[sensor_key]
@@ -254,13 +296,14 @@ class ExtendedKalmanFilter(object):
         except AssertionError:
             print(
                 "sensor_model(state: %s, covariance: %s, sensor_key, sensor_reading: %s)"
-                % (dt, state.shape, covariance.shape, sensor_reading.shape)
+                % (state.shape, covariance.shape, sensor_reading.shape)
             )
 
         # TODO(buck): Assert model noise is the correct shape at construction time
         expected_reading = model_impl.model(state)
 
         H_t = self.sensor_jacobian(sensor_key, state)
+        assert H_t.shape == (sensor_size, self.state_size)
 
         S_t = sensor_prediction_uncertainty = (
             np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t

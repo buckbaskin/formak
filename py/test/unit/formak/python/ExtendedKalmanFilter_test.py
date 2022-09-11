@@ -57,7 +57,50 @@ def test_EKF_process_with_control():
     )
 
 
-def test_EKF_jacobian():
+def test_EKF_sensor():
+    config = python.Config()
+    dt = 0.1
+
+    ekf = python.ExtendedKalmanFilter(
+        state_model=ui.Model(
+            ui.Symbol("dt"),
+            set(ui.symbols(["x", "y"])),
+            set(ui.symbols(["a"])),
+            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        ),
+        process_noise=np.eye(1),
+        sensor_models={
+            "simple": {"reading1": ui.Symbol("x")},
+            "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+        },
+        sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
+        config=config,
+    )
+
+    control_vector = np.array([[0.2]])
+    covariance = np.eye(2)
+    reading = 1.0
+    state_vector = np.array([[0.0, 0.0]]).transpose()
+
+    next_state, next_cov = ekf.sensor_model(
+        "simple",
+        state=state_vector,
+        covariance=covariance,
+        sensor_reading=np.array([[reading]]),
+    )
+    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
+
+    next_state, next_cov = ekf.sensor_model(
+        "combined",
+        state=state_vector,
+        covariance=covariance,
+        sensor_reading=np.array([[reading]]),
+    )
+    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
+    assert abs(reading - next_state[1]) < abs(reading - state_vector[1])
+
+
+def test_EKF_process_jacobian():
     config = python.Config()
     dt = 0.1
 
