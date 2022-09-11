@@ -171,3 +171,4 @@ def test_Model_impl_control():
         ).transpose(),
         [[1.0, 1.02]],
     )
+
