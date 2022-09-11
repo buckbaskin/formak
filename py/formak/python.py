@@ -27,7 +27,7 @@ class Model(object):
             lambdify(
                 self.arglist,
                 symbolic_model.state_model[a],
-                modules=MODULES,
+                modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
             )
             for a in self.arglist[1 : 1 + len(symbolic_model.state)]
@@ -89,7 +89,7 @@ class ExtendedKalmanFilter(object):
             lambdify(
                 self.state_model.arglist,
                 expr,
-                modules=MODULES,
+                modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
             )
             for expr in symbolic_process_jacobian
@@ -102,7 +102,7 @@ class ExtendedKalmanFilter(object):
             lambdify(
                 self.state_model.arglist,
                 expr,
-                modules=MODULES,
+                modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
             )
             for expr in symbolic_control_jacobian
@@ -121,6 +121,7 @@ class ExtendedKalmanFilter(object):
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
         # TODO(buck) skip known zeros / sparse bits of the matrix
+        # TODO(buck) Could you precompute all constant parts of the matrix? (e.g. =1.0)
         for row in range(self.state_size):
             for col in range(self.state_size):
                 jacobian[row, col] = self._impl_process_jacobian[
@@ -182,10 +183,15 @@ class ExtendedKalmanFilter(object):
 
 
 class Config(object):
-    def __init__(self, compile=False, common_subexpression_elimination=True):
+    def __init__(
+        self,
+        compile=False,
+        common_subexpression_elimination=True,
+        python_modules=tuple(MODULES),
+    ):
         self.compile = compile
         self.common_subexpression_elimination = common_subexpression_elimination
-        # TODO(buck): introduce config for modules, custom sin implementation, etc.
+        self.python_modules = python_modules
 
 
 def compile(symbolic_model, *, config=None):
