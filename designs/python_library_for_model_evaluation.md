@@ -127,3 +127,11 @@ Selecting `numba` for the Python compiler
 - Simple Python -> compiled Python syntax
 - Designed for use with numpy
 - SIMD vectorization under the hood
+
+Key Features used from Sympy:
+- [lambdify](https://docs.sympy.org/latest/modules/utilities/lambdify.html#sympy.utilities.lambdify.lambdify)
+- [common subexpression elimination](https://docs.sympy.org/latest/modules/simplify/simplify.html#sympy.simplify.cse_main.cse)
+- [jacobian](https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrices.MatrixCalculus.jacobian)
+
+Following the EKF math from Probabilistic Robotics
+- S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.

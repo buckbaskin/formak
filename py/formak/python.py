@@ -162,6 +162,7 @@ class ExtendedKalmanFilter(object):
                 % (dt, state.shape, covariance.shape, control.shape)
             )
 
+        # TODO(buck): CSE across the whole process computation (model, jacobians)
         G_t = self.process_jacobian(dt, state, control)
         V_t = self.control_jacobian(dt, state, control)
 
