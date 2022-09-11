@@ -104,24 +104,16 @@ def test_Model_impl_no_control():
     )
 
     state_vector = np.array([[0.0, 0.0]]).transpose()
-    assert (
-        model.model(dt=dt, state_vector=state_vector).transpose() == [0.0, 0.1]
-    ).all()
+    assert (model.model(dt=dt, state=state_vector).transpose() == [0.0, 0.1]).all()
 
     state_vector = np.array([[0.0, 1.0]]).transpose()
-    assert (
-        model.model(dt=dt, state_vector=state_vector).transpose() == [0.0, 1.1]
-    ).all()
+    assert (model.model(dt=dt, state=state_vector).transpose() == [0.0, 1.1]).all()
 
     state_vector = np.array([[1.0, 0.0]]).transpose()
-    assert (
-        model.model(dt=dt, state_vector=state_vector).transpose() == [0.0, 0.1]
-    ).all()
+    assert (model.model(dt=dt, state=state_vector).transpose() == [0.0, 0.1]).all()
 
     state_vector = np.array([[1.0, 1.0]]).transpose()
-    assert (
-        model.model(dt=dt, state_vector=state_vector).transpose() == [1.0, 1.1]
-    ).all()
+    assert (model.model(dt=dt, state=state_vector).transpose() == [1.0, 1.1]).all()
 
 
 def test_Model_impl_control():
@@ -143,7 +135,7 @@ def test_Model_impl_control():
     state_vector = np.array([[0.0, 0.0]]).transpose()
     assert_almost_equal(
         model.model(
-            dt=dt, state_vector=state_vector, control_vector=control_vector
+            dt=dt, state=state_vector, control_vector=control_vector
         ).transpose(),
         [[0.0, 0.02]],
     )
@@ -151,7 +143,7 @@ def test_Model_impl_control():
     state_vector = np.array([[0.0, 1.0]]).transpose()
     assert_almost_equal(
         model.model(
-            dt=dt, state_vector=state_vector, control_vector=control_vector
+            dt=dt, state=state_vector, control_vector=control_vector
         ).transpose(),
         [[0.0, 1.02]],
     )
@@ -159,7 +151,7 @@ def test_Model_impl_control():
     state_vector = np.array([[1.0, 0.0]]).transpose()
     assert_almost_equal(
         model.model(
-            dt=dt, state_vector=state_vector, control_vector=control_vector
+            dt=dt, state=state_vector, control_vector=control_vector
         ).transpose(),
         [[0.0, 0.02]],
     )
@@ -167,8 +159,7 @@ def test_Model_impl_control():
     state_vector = np.array([[1.0, 1.0]]).transpose()
     assert_almost_equal(
         model.model(
-            dt=dt, state_vector=state_vector, control_vector=control_vector
+            dt=dt, state=state_vector, control_vector=control_vector
         ).transpose(),
         [[1.0, 1.02]],
     )
-
