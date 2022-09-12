@@ -5,7 +5,7 @@ Created: 2022-08-26
 Updated: 2022-08-26
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
-Status: 5. Refactor
+Status: 8. Refactor
 
 ## Overview
 
@@ -135,3 +135,7 @@ Key Features used from Sympy:
 
 Following the EKF math from Probabilistic Robotics
 - S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.
+
+### 2022-09-11
+
+Compilation doesn't do as much to improve performance for a simple example. It doesn't appear to be because of a big JIT step, just that it only slightly improves things.
