@@ -155,10 +155,17 @@ class ExtendedKalmanFilter(object):
 
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
+
         self.sensor_models = {
             k: SensorModel(state_model, model, config)
             for k, model in sensor_models.items()
         }
+        for k in self.sensor_models.keys():
+            assert sensor_noises[k].shape == (
+                self.sensor_models[k].sensor_size,
+                self.sensor_models[k].sensor_size,
+            )
+
         self.sensor_noises = sensor_noises
 
         self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
@@ -301,7 +308,6 @@ class ExtendedKalmanFilter(object):
                 % (state.shape, covariance.shape, sensor_reading.shape)
             )
 
-        # TODO(buck): Assert model noise is the correct shape at construction time
         expected_reading = model_impl.model(state)
 
         H_t = self.sensor_jacobian(sensor_key, state)
