@@ -39,7 +39,9 @@ def test_UI_simple():
     model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
     pure_implementation = python.compile(model, config={"compile": False})
-    compiled_implementation = python.compile(model, config={"compile": True})
+    compiled_implementation = python.compile(
+        model, config={"compile": True, "warm_jit": False}
+    )
 
     state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
     control_vector = np.array([[0.0]])
@@ -53,12 +55,19 @@ def test_UI_simple():
 
     iters = 100000
 
+    checkpoints = [1, 10, 100, 1000, 10000, 100000]
+    pure_states = []
+
     pure_timer = Timer()
     with pure_timer:
         for i in range(iters):
             state_vector_next = pure_implementation.model(
                 0.1, state_vector_next, control_vector
             )
+            if i in checkpoints:
+                pure_states.append((datetime.now() - pure_timer.start) / float(i))
+
+    compile_states = []
 
     compiled_timer = Timer()
     with compiled_timer:
@@ -66,6 +75,18 @@ def test_UI_simple():
             state_vector_next_compiled = compiled_implementation.model(
                 0.1, state_vector_next_compiled, control_vector
             )
+            if i in checkpoints:
+                compile_states.append(
+                    (datetime.now() - compiled_timer.start) / float(i)
+                )
 
     assert pure_timer.elapsed() > timedelta(seconds=0.1)
-    assert compiled_timer.elapsed() < (pure_timer.elapsed() / 2.0)
+    try:
+        assert compiled_timer.elapsed() < pure_timer.elapsed()
+    except AssertionError:
+        print("save states")
+        print("pure")
+        print(pure_states)
+        print("compile")
+        print(compile_states)
+        raise

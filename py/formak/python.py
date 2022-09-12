@@ -39,6 +39,15 @@ class Model(object):
         if config.compile:
             self._impl = [njit(i) for i in self._impl]
 
+            if config.warm_jit:
+                # Pre-warm Jit by calling with known values/structure
+                default_dt = 0.1
+                default_state = np.zeros((self.state_size, 1))
+                default_control = np.zeros((self.control_size, 1))
+                for jit_impl in self._impl:
+                    for i in range(5):
+                        jit_impl(default_dt, *default_state, *default_control)
+
     def _model(self, dt, state, control_vector):
         for impl in self._impl:
             yield impl(dt, *state, *control_vector)
@@ -65,7 +74,6 @@ class Model(object):
 
 class SensorModel(object):
     def __init__(self, state_model, sensor_model, config):
-        # TODO(buck): parse sensor model to identify if it returns a matrix reading / multiple readings
         self.readings = sorted(list(sensor_model.keys()))
         self.sensor_models = sensor_model
 
@@ -140,6 +148,15 @@ class ExtendedKalmanFilter(object):
         if config.compile:
             self._impl_process_jacobian = [njit(i) for i in self._impl_process_jacobian]
 
+            if config.warm_jit:
+                # Pre-warm Jit by calling with known values/structure
+                default_dt = 0.1
+                default_state = np.zeros((self.state_size, 1))
+                default_control = np.zeros((self.control_size, 1))
+                for jit_impl in self._impl_process_jacobian:
+                    for i in range(5):
+                        jit_impl(default_dt, *default_state, *default_control)
+
         self._impl_control_jacobian = [
             lambdify(
                 self.state_model.arglist,
@@ -152,6 +169,15 @@ class ExtendedKalmanFilter(object):
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
         if config.compile:
             self._impl_control_jacobian = [njit(i) for i in self._impl_control_jacobian]
+
+            if config.warm_jit:
+                # Pre-warm Jit by calling with known values/structure
+                default_dt = 0.1
+                default_state = np.zeros((self.state_size, 1))
+                default_control = np.zeros((self.control_size, 1))
+                for jit_impl in self._impl_control_jacobian:
+                    for i in range(5):
+                        jit_impl(default_dt, *default_state, *default_control)
 
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
@@ -195,10 +221,16 @@ class ExtendedKalmanFilter(object):
                 for expr in symbolic_sensor_jacobian
             ]
             assert len(impl_sensor_jacobian) == sensor_size * self.state_size
-            # TODO(buck): warm jit by calling the compiled functions with a zero state vector
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
             if config.compile:
                 impl_sensor_jacobian = [njit(i) for i in impl_sensor_jacobian]
+
+                if config.warm_jit:
+                    # Pre-warm Jit by calling with known values/structure
+                    default_state = np.zeros((self.state_size, 1))
+                    for jit_impl in impl_sensor_jacobian:
+                        for i in range(5):
+                            jit_impl(*default_state)
 
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
@@ -333,10 +365,14 @@ class Config(object):
     def __init__(
         self,
         compile=False,
+        warm_jit=None,
         common_subexpression_elimination=True,
         python_modules=tuple(MODULES),
     ):
+        if warm_jit is None:
+            warm_jit = compile
         self.compile = compile
+        self.warm_jit = warm_jit
         self.common_subexpression_elimination = common_subexpression_elimination
         self.python_modules = python_modules
 
