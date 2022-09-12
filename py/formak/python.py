@@ -195,6 +195,8 @@ class ExtendedKalmanFilter(object):
 
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
+        self.innovations = {}
+
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
         # TODO(buck) skip known zeros / sparse bits of the matrix
@@ -312,7 +314,7 @@ class ExtendedKalmanFilter(object):
 
         K_t = kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
-        innovation = sensor_reading - expected_reading
+        self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
 
         next_state = state + np.matmul(K_t, innovation)
 
