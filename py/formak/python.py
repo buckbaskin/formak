@@ -4,13 +4,15 @@ from sympy import Matrix
 from sympy.utilities.lambdify import lambdify
 from numba import njit
 
-MODULES = ["scipy", "numpy", "math"]
+DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
 class Model(object):
     """Python implementation of the model"""
 
     def __init__(self, symbolic_model, config):
+        # TODO(buck): Enable mypy for type checking
+        # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
         # assert isinstance(symbolic_model, ui.Model)
         if isinstance(config, dict):
             config = Config(**config)
@@ -19,9 +21,10 @@ class Model(object):
         self.state_size = len(symbolic_model.state)
         self.control_size = len(symbolic_model.control)
 
+        self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
         self.arglist = (
             [symbolic_model.dt]
-            + sorted(list(symbolic_model.state), key=lambda x: x.name)
+            + self.arglist_state
             + sorted(list(symbolic_model.control), key=lambda x: x.name)
         )
 
@@ -33,7 +36,7 @@ class Model(object):
                 modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
             )
-            for a in self.arglist[1 : 1 + len(symbolic_model.state)]
+            for a in self.arglist_state
         ]
 
         if config.compile:
@@ -47,10 +50,6 @@ class Model(object):
                 for jit_impl in self._impl:
                     for i in range(5):
                         jit_impl(default_dt, *default_state, *default_control)
-
-    def _model(self, dt, state, control_vector):
-        for impl in self._impl:
-            yield impl(dt, *state, *control_vector)
 
     # TODO(buck): numpy -> numpy if not compiled
     #   - Given the arglist, refactor expressions to work with state vectors
@@ -66,9 +65,9 @@ class Model(object):
         assert state.shape == (self.state_size, 1)
         assert control_vector.shape == (self.control_size, min(self.control_size, 1))
 
-        next_state = np.zeros(state.shape)
-        for i, val in enumerate(self._model(dt, state, control_vector)):
-            next_state[i, 0] = val
+        next_state = np.zeros((self.state_size, 1))
+        for i, impl in enumerate(self._impl):
+            next_state[i, 0] = impl(dt, *state, *control_vector)
         return next_state
 
 
@@ -93,9 +92,12 @@ class SensorModel(object):
         ]
 
     def model(self, state):
+        assert isinstance(state, np.ndarray)
+        assert state.shape == (self.state_size, 1)
+
         reading = np.zeros((self.sensor_size, 1))
         for i, impl in enumerate(self._impl):
-            reading[i] = impl(*state)
+            reading[i, 0] = impl(*state)
         return reading
 
 
@@ -114,6 +116,8 @@ class ExtendedKalmanFilter(object):
     def _construct_process(self, state_model, process_noise, config):
         self.state_model = Model(state_model, config)
         self.process_noise = process_noise
+
+        # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
         process_matrix = Matrix(
             [
@@ -144,6 +148,7 @@ class ExtendedKalmanFilter(object):
             for expr in symbolic_process_jacobian
         ]
         assert len(self._impl_process_jacobian) == self.state_size ** 2
+
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
             self._impl_process_jacobian = [njit(i) for i in self._impl_process_jacobian]
@@ -167,6 +172,7 @@ class ExtendedKalmanFilter(object):
             for expr in symbolic_control_jacobian
         ]
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
+
         if config.compile:
             self._impl_control_jacobian = [njit(i) for i in self._impl_control_jacobian]
 
@@ -221,6 +227,7 @@ class ExtendedKalmanFilter(object):
                 for expr in symbolic_sensor_jacobian
             ]
             assert len(impl_sensor_jacobian) == sensor_size * self.state_size
+
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
             if config.compile:
                 impl_sensor_jacobian = [njit(i) for i in impl_sensor_jacobian]
@@ -292,6 +299,7 @@ class ExtendedKalmanFilter(object):
                 "process_model(dt: %s, state: %s, covariance: %s, control: %s)"
                 % (dt, state.shape, covariance.shape, control.shape)
             )
+            raise
 
         # TODO(buck): CSE across the whole process computation (model, jacobians)
         G_t = self.process_jacobian(dt, state, control)
@@ -299,14 +307,18 @@ class ExtendedKalmanFilter(object):
 
         next_state_covariance = np.matmul(G_t, np.matmul(covariance, G_t.transpose()))
         assert next_state_covariance.shape == covariance.shape
+
         next_control_covariance = np.matmul(
             V_t, np.matmul(self.process_noise, V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
+
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape
 
         next_state = self.state_model.model(dt, state, control)
+        assert next_state.shape == state.shape
+
         return next_state, next_covariance
 
     def sensor_model(self, sensor_key, state, covariance, sensor_reading):
@@ -332,13 +344,15 @@ class ExtendedKalmanFilter(object):
 
         try:
             assert state.shape == (self.state_size, 1)
-            assert covariance.shape == (sensor_size, self.state_size)
+            assert covariance.shape == (self.state_size, self.state_size)
             assert sensor_reading.shape == (sensor_size, 1)
+            assert Q_t.shape == (sensor_size, sensor_size)
         except AssertionError:
             print(
                 "sensor_model(state: %s, covariance: %s, sensor_key, sensor_reading: %s)"
                 % (state.shape, covariance.shape, sensor_reading.shape)
             )
+            raise
 
         expected_reading = model_impl.model(state)
 
@@ -354,9 +368,11 @@ class ExtendedKalmanFilter(object):
 
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
 
-        next_state = state + np.matmul(K_t, innovation)
-
         next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
+        assert next_covariance.shape == covariance.shape
+
+        next_state = state + np.matmul(K_t, innovation)
+        assert next_state.shape == state.shape
 
         return next_state, next_covariance
 
@@ -367,7 +383,7 @@ class Config(object):
         compile=False,
         warm_jit=None,
         common_subexpression_elimination=True,
-        python_modules=tuple(MODULES),
+        python_modules=DEFAULT_MODULES,
     ):
         if warm_jit is None:
             warm_jit = compile

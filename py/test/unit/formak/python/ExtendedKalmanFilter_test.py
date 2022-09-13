@@ -1,6 +1,7 @@
 import numpy as np
 import warnings
 
+from datetime import datetime, timedelta
 from scipy.stats import multivariate_normal
 from hypothesis import given, reject
 from hypothesis.strategies import floats
@@ -292,3 +293,79 @@ def test_EKF_sensor_property(x, y, a):
 
     # state moves towards reading after a sensor update
     assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+
+
+def test_EKF_sensor_property_failing_example():
+    start_time = datetime.now()
+    x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
+    config = {}
+    dt = 0.1
+
+    ui_Model = ui.Model(
+        ui.Symbol("dt"),
+        set(ui.symbols(["x", "y"])),
+        set(ui.symbols(["a"])),
+        {
+            ui.Symbol("x"): ui.Symbol("x") * ui.Symbol("y") + ui.Symbol("x"),
+            ui.Symbol("y"): "y + a * dt",
+        },
+    )
+    ekf = python.compile_ekf(
+        state_model=ui_Model,
+        process_noise=np.eye(1),
+        sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
+        sensor_noises={"simple": np.eye(1)},
+        config=config,
+    )
+
+    control_vector = np.array([[0.2]])
+    covariance = np.eye(2)
+    state_vector = np.array([[0.0, 0.0]]).transpose()
+
+    if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
+        reject()
+    if (np.abs(state_vector) > 1e100).any() or (np.abs(control_vector) > 1e100).any():
+        reject()
+
+    next_state, next_cov = ekf.sensor_model(
+        "simple", state=state_vector, covariance=covariance, sensor_reading=np.eye(1)
+    )
+    first_innovation = ekf.innovations["simple"]
+
+    try:
+        starting_central_probability = multivariate_normal(cov=covariance).pdf(
+            np.zeros_like(state_vector).transpose()
+        )
+        ending_central_probability = multivariate_normal(cov=next_cov).pdf(
+            np.zeros_like(state_vector).transpose()
+        )
+    except np.linalg.LinAlgError:
+        print("starting cov")
+        print(covariance)
+        print("next_cov")
+        print(next_cov)
+        raise
+
+    try:
+        # more confident in state estimate after sensor update
+        assert ending_central_probability > starting_central_probability
+    except AssertionError:
+        print("starting pdf")
+        print(starting_central_probability)
+        print("ending pdf")
+        print(ending_central_probability)
+        raise
+
+    ekf.sensor_model(
+        "simple", state=next_state, covariance=next_cov, sensor_reading=np.eye(1)
+    )
+    second_innovation = ekf.innovations["simple"]
+
+    # state moves towards reading after a sensor update
+    assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+
+    end_time = datetime.now()
+
+    elapsed = end_time - start_time
+
+    assert elapsed < timedelta(seconds=0.1)
