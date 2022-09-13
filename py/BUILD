@@ -1,8 +1,6 @@
 ## Start Selenium-based load
 # https://github.com/SeleniumHQ/selenium/blob/c67d0f1dfc49c7f9f6938ac64ae676a348defebd/py/BUILD.bazel
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
 load("//py:defs.bzl", "py_test_suite")
@@ -47,28 +45,6 @@ py_package(
     ],
     deps = [":formak"],
 )
-
-# This is taken verbatim from Selenium, %s/selenium/formak/g
-# pkg_files(
-#     name = "formak-sdist-pkg",
-#     srcs = [
-#         "CHANGES.md",
-#         "MANIFEST.in",
-#         "README.md",
-#         "setup.py",
-#         ":formak-pkg",
-#     ],
-#     strip_prefix = strip_prefix.from_pkg(),
-# )
-
-# This is taken verbatim from Selenium, %s/selenium/formak/g
-# pkg_tar(
-#     name = "formak-sdist",
-#     srcs = [":formak-sdist-pkg"],
-#     extension = "tar.gz",
-#     mode = "0644",
-#     package_file_name = "formak-%s.tar.gz" % FORMAK_VERSION,
-# )
 
 # This is borrowed from Selenium
 #   - %s/selenium/formak/g
