@@ -81,7 +81,7 @@ def main():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
-    model = Model(state, control, state_model, debug_print=True)
+    model = Model(dt, state, control, state_model, debug_print=True)
 
     initial_state = {
         vp["m"]: Vehicle_Mass_Properties["dry"] + Vehicle_Mass_Properties["consumable"],

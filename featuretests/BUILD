@@ -1,22 +1,29 @@
-load("@rules_python//python:defs.bzl", "py_binary")
 load("@pip_deps//:requirements.bzl", "requirement")
+load("//py:defs.bzl", "py_test_suite")
 
-py_test(
-    name = "python-ui-demo-simple",
-    srcs = ["test/python_ui_demo_simple_test.py"],
-    main = "test/python_ui_demo_simple_test.py",
+FEATURE_TEST_DEPS = [
+    requirement("pytest"),
+]
+
+py_test_suite(
+    name = "python-ui-demo",
+    size = "small",
+    srcs = glob(
+        ["python_ui_demo/*.py"],
+        allow_empty = False,
+    ),
     deps = [
-        requirement("pytest"),
-        "//formak:ui",
-    ],
+        "//py:formak",
+    ] + FEATURE_TEST_DEPS,
 )
 
-py_test(
-    name = "python-ui-demo-orbital",
-    srcs = ["test/python_ui_demo_orbital_test.py"],
-    main = "test/python_ui_demo_orbital_test.py",
+py_test_suite(
+    name = "python-library-for-model-evaluation",
+    srcs = glob(
+        ["python_library_for_model_evaluation/*.py"],
+        allow_empty = False,
+    ),
     deps = [
-        requirement("pytest"),
-        "//formak:ui",
-    ],
+        "//py:formak",
+    ] + FEATURE_TEST_DEPS,
 )

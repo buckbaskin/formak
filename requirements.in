@@ -1,4 +1,12 @@
 pytest
+pytest-mock
 hypothesis
 
 sympy
+scipy
+numpy
+numba
+
+## numba support
+# enables support for color highlighting in backtraces/error messages
+colorama
