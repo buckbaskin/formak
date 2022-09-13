@@ -18,16 +18,6 @@ TEST_DEPS = [
     requirement("pytest-mock"),
 ]
 
-## Selenium Example Rule
-#   - Copy files from other packages to be available here
-# https://github.com/SeleniumHQ/selenium/blob/c67d0f1dfc49c7f9f6938ac64ae676a348defebd/py/BUILD.bazel
-# load("//common:defs.bzl", "copy_file")
-# copy_file(
-#     name = "get-attribute",
-#     src = "//javascript/webdriver/atoms:get-attribute.js",
-#     out = "selenium/webdriver/remote/getAttribute.js",
-# )
-
 py_library(
     name = "formak",
     srcs = glob(
