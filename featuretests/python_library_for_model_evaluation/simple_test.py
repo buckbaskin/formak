@@ -5,7 +5,7 @@ from formak.ui import *
 from formak import python
 
 
-def test_UI_simple():
+def test_python_Model_simple():
     dt = Symbol("dt")
 
     tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}

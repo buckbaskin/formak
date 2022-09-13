@@ -5,7 +5,7 @@ from formak.ui import *
 from formak import python
 
 
-def test_UI_simple():
+def test_python_Model_compilation():
     dt = Symbol("dt")
 
     tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
@@ -34,9 +34,3 @@ def test_UI_simple():
     for i in range(len(python_implementation._impl)):
         print("\ninspect_types %d %s" % (i, python_implementation.arglist[i]))
         python_implementation._impl[i].inspect_types()
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(test_UI_simple())

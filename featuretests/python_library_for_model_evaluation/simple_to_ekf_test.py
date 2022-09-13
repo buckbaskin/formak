@@ -25,8 +25,8 @@ def test_ekf_simple():
     python_ekf = python.compile_ekf(
         state_model=model,
         process_noise=np.eye(1),
-        sensor_models={},
-        sensor_noises={},
+        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        sensor_noises={"simple": np.eye(1)},
         config={"compile": True},
     )
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
@@ -37,4 +37,8 @@ def test_ekf_simple():
 
     state_vector_next, state_variance_next = python_ekf.process_model(
         0.1, state_vector, state_variance, control_vector
+    )
+
+    state_variance_next, state_variance_next = python_ekf.sensor_model(
+        "simple", state_vector, state_variance, np.array([[0.0]])
     )

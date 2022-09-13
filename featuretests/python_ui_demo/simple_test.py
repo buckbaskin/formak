@@ -23,9 +23,3 @@ def test_UI_simple():
     model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
     return 0
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.exit(test_UI_simple())

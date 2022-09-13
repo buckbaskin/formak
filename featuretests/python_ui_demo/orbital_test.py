@@ -93,13 +93,3 @@ def test_orbital_example():
     print("Initial State")
     for k in sorted(list(initial_state.keys()), key=lambda x: x.name):
         print("  %s: %s" % (k, initial_state[k]))
-
-    return 0
-
-
-if __name__ == "__main__":
-    import sys
-    import pytest as test_runner
-
-    sys.exit(test_orbital_example())
-    # sys.exit(test_runner.main(sys.argv[1:]))

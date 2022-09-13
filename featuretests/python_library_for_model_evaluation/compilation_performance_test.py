@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from formak import python
 from formak.ui import *
 
-
+# TODO(buck): move this to a test utils library file
 class Timer(object):
     def __enter__(self):
         self.start = datetime.now()
@@ -19,7 +19,7 @@ class Timer(object):
         return self.end - self.start
 
 
-def test_UI_simple():
+def test_python_Model_compiler_performance():
     dt = Symbol("dt")
 
     tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
