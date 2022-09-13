@@ -2,10 +2,10 @@
 
 Author: Buck Baskin @bebaskin
 Created: 2022-08-26
-Updated: 2022-08-26
+Updated: 2022-09-13
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
-Status: 8. Refactor
+Status: Merged
 
 ## Overview
 
@@ -119,6 +119,10 @@ can more specifically focus on compilation.
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+The big change from the original design was the lack of performance boost from the compiler. It was pitched as an optional feature, but I'll be curious to investigate more over time to see what performance is left on the table.
+
+On a smaller note, more of the logic than I would have liked ended up in the constructors (instead of the compiler functions) for the Model and Extended Kalman Filter. Perhaps this can be moved out in a future refactor.
 
 ### 2022-09-10
 
