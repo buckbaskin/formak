@@ -236,46 +236,53 @@ From scikit-learn: "The [sklearn.inspection](https://scikit-learn.org/stable/mod
 affects them. This can be used to evaluate assumptions and biases of a model,
 design a better model, or to diagnose issues with model performance."
 
-<!-- start here -->
-
 ### Visualizations
 
-From scikit-learn: "[A] a simple API for creating visualizations for machine
+From scikit-learn: "[A] simple API for creating visualizations for machine
 learning"
 
 ### Dataset Transformations
 
 From scikit-learn: "scikit-learn provides a library of transformers, which may
-clean (see Preprocessing data), reduce (see Unsupervised dimensionality
-reduction), expand (see Kernel Approximation) or generate (see Feature
-extraction) feature representations."
+clean (see [Preprocessing
+data](https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing)),
+reduce (see [Unsupervised dimensionality
+reduction](https://scikit-learn.org/stable/modules/unsupervised_reduction.html#data-reduction)),
+expand (see [Kernel
+Approximation](https://scikit-learn.org/stable/modules/kernel_approximation.html#kernel-approximation))
+or generate (see [Feature
+extraction](https://scikit-learn.org/stable/modules/feature_extraction.html#feature-extraction))
+feature representations."
 
 ### Pipelines and Feature Unions
 
-Pipelines form an ordered sequence of tools. Feature Unions allow for combining
-multiples outputs into the input of a single element. Scikit-learn uses the term
-transformer to refer to the generic step in the pipeline.
+[Pipelines](https://scikit-learn.org/stable/modules/compose.html#pipeline) form
+an ordered sequence of tools. [Feature
+Unions](https://scikit-learn.org/stable/modules/compose.html#feature-union)
+allow for combining multiples outputs into the input of a single element.
+Scikit-learn uses the term transformer to refer to the generic step in the
+pipeline.
 
 ### Dataset tools (loading, generating, etc)
 
 Three parts:
-- toy datasets
-- help downloading real world datasets
-- generating datasets
+- [toy datasets](https://scikit-learn.org/stable/datasets/toy_dataset.html)
+- [help downloading real world datasets](https://scikit-learn.org/stable/datasets/real_world.html)
+- [generating datasets](https://scikit-learn.org/stable/datasets/sample_generators.html)
 
 ### Computing (aka Performance)
 
 Three parts:
-- Strategies to scale computationally [for] bigger data
-- Computational Performance
-- Parallelism, resource management, and configuration
+- [Strategies to scale computationally [for] bigger data](https://scikit-learn.org/stable/computing/scaling_strategies.html)
+- [Computational Performance](https://scikit-learn.org/stable/computing/computational_performance.html)
+- [Parallelism, resource management, and configuration](https://scikit-learn.org/stable/computing/parallelism.html)
 
-### Model Persistence
+### [Model Persistence](https://scikit-learn.org/stable/model_persistence.html)
 
 "After training a scikit-learn model, it is desirable to have a way to persist
 the model for future use without having to retrain"
 
-### Best Practices
+### [Best Practices](https://scikit-learn.org/stable/common_pitfalls.html)
 
 "Illustrate some common pitfalls and anti-patterns that occur when using
 scikit-learn"
@@ -293,6 +300,12 @@ The key classes involved are:
 The ui library will likely also need some updates to support the configuration
 of the scikit-learn like behavior.
 
+Keeping the machine learning analogy in mind, the key elements from
+scikit-learn for this design is regression. This will keep the design focused
+and unlock future advances.
+
+## The Road Ahead
+
 I mentioned it above in passing above, but I want to repeat it again for
 emphasis:
 
@@ -305,23 +318,20 @@ machine learning model, where we have one idea of how to approximate the system
 and want to select machine learning models (in a more algorithmic sense of the
 term models) and their parameters to best fit data.
 
-Keeping the machine learning analogy in mind, the key elements from scikit-learn
-for this design are (in rough order of importance):
-1. Regression - fitting a given model to data
-2. Model selection - comparing across multiple models
-3. Dimensionality Reduction and Preprocessing - data compression and augmentation for expanding model selection capabilities
-
-There will be may opportunities to incorporate new features, but these three are
-going to be the top focus for this design.
+As a psuedo-roadmap for future integrations, model selection, dimensionality
+reduction and the preprocessing steps to augment a model with extra features
+are promising for areas where a scikit-learn integration (being able to treat
+the model as yet another scikit-learn regression) could easily yield a lot of
+fruit. This would allow for features like:
+1. Given two models: a complicated model with position/velocity/acceleration/heading and a simple model with position/velocity, match fake data with position, velocity and select to the simpler model (Model selection)
+2. Given a complicated model with position/velocity/acceleration/heading, match fake data with position, velocity and down select to a simpler position/velocity model (Preprocessing/Dimensionality Reduction)
+3. Given a simple model with position/velocity, match fake data with position, velocity and acceleration and augment to the more complicated model (Preprocessing/Model Augmentation)
 
 # Feature Tests
 
 This feature is specific to the Python interface. There will be X feature tests:
 1. Set up a simple scikit-learn pipeline and run it against the code (basic UI)
 2. Generate some fake data for a known model and fit a model to it (Regression)
-3. Given two models: a complicated model with position/velocity/acceleration/heading and a simple model with position/velocity, match fake data with position, velocity and select to the simpler model (Model selection)
-4. Given a complicated model with position/velocity/acceleration/heading, match fake data with position, velocity and down select to a simpler position/velocity model (Preprocessing/Dimensionality Reduction)
-5. Given a simple model with position/velocity, match fake data with position, velocity and acceleration and augment to the more complicated model (Preprocessing/Model Augmentation)
 
 # Road Map and Process
 
