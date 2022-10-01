@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TypeVar, Generic
+from types import GenericAlias
 
 class Symbol(object):
     def __init__(self, name):
@@ -21,11 +22,18 @@ class Symbol(object):
 Meter = TypeVar('Meter')
 Second = TypeVar('Second')
 
-class Unit(Symbol, Generic[Meter, Second]):
+def make_unit_subtype(physics_unit: str, quantity: int):
+    return TypeVar('%s^%d' % (physics_unit, quantity,))
+
+class Unit(Symbol):
+    def __class_getitem__(cls, key: Tuple[int]):
+        cls.meters, cls.seconds = key
+        return GenericAlias(Unit, (make_unit_subtype('Meter', cls.meters), make_unit_subtype('Seconds', cls.seconds)))
+
     def __init__(self, name) -> None:
         super().__init__(name)
 
-    def __add__(self, rhs: Unit[Meter, Second]) -> Unit[Meter, Second]:
+    def __add__(self, rhs: Unit[cls.meters, cls.seconds]) -> Unit[cls.meters, cls.seconds]:
         return super().__add__(rhs)
 
     def __mul__(self, rhs: Unit[Meter, Second]) -> Unit[Meter, Second]:
