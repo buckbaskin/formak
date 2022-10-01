@@ -18,6 +18,11 @@ class UnitImpl():
         self.name = name
 
     def __add__(self, rhs):
+        if (self.meters != rhs.meters):
+            raise ValueError('Mismatch in Meters: %d != %d' % (self.meters, rhs.meters,))
+        if (self.seconds != rhs.seconds):
+            raise ValueError('Mismatch in Seconds: %d != %d' % (self.seconds, rhs.seconds,))
+
         return Unit[self.meters, self.seconds]('%s+%s' % (self.name, rhs.name))
     def __mul__(self, rhs):
         return Unit[self.meters + rhs.meters, self.seconds + rhs.seconds]('%s*%s' % (self.name, rhs.name))
@@ -56,3 +61,5 @@ position = Unit[1,0]('position') # Unit[1,0]
 
 position = vel + position # Expect to fail here (velocity not the same units as position)
 print('position', position)
+assert position.meters == 1
+assert position.seconds == 0
