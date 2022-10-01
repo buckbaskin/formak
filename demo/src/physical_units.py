@@ -1,21 +1,7 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, Tuple
+from typing import Tuple
 from types import GenericAlias
-
-Meter = TypeVar("Meter")
-Second = TypeVar("Second")
-
-
-def make_unit_subtype(physics_unit: str, quantity: int):
-    return TypeVar(
-        "%s^%d"
-        % (
-            physics_unit,
-            quantity,
-        )
-    )
-
 
 class UnitImpl:
     def __repr__(self):
