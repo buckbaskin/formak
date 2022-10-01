@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Tuple
 from types import GenericAlias
 
 Meter = TypeVar('Meter')
@@ -9,17 +9,7 @@ Second = TypeVar('Second')
 def make_unit_subtype(physics_unit: str, quantity: int):
     return TypeVar('%s^%d' % (physics_unit, quantity,))
 
-class Unit():
-    def __class_getitem__(cls, key: Tuple[int]):
-        meters, seconds = key
-        result = GenericAlias(Unit, (make_unit_subtype('Meter', meters), make_unit_subtype('Seconds', seconds)))
-
-        setattr(result, 'meters', meters)
-        result.meters = meters
-        result.seconds = seconds
-
-        return result
-
+class UnitImpl():
     def __repr__(self):
         return 'Unit[%d,%d](%s)' % (self.meters, self.seconds, self.name,)
 
@@ -27,7 +17,7 @@ class Unit():
     def __init__(self, name) -> None:
         self.name = name
 
-    def __add__(self, rhs: Unit[self.meters, self.seconds]) -> Unit[self.meters, self.seconds]:
+    def __add__(self, rhs):
         return Unit[self.meters, self.seconds]('%s+%s' % (self.name, rhs.name))
     def __mul__(self, rhs):
         return Unit[self.meters + rhs.meters, self.seconds + rhs.seconds]('%s*%s' % (self.name, rhs.name))
@@ -38,6 +28,18 @@ class Unit():
             assert not isinstance(rhs, Unit)
             return Unit[self.meters, self.seconds]('%s*%s' % (self.name, rhs))
 
+class UnitMeta(type):
+    def __getitem__(cls, key: Tuple[int, int]):
+        meters, seconds = key
+        env = dict(UnitImpl.__dict__)
+        env['meters'] = meters
+        env['seconds'] = seconds
+        
+        Type = type('Unit', (object,), env)
+        return GenericAlias(Type, key)
+
+class Unit(metaclass=UnitMeta):
+    pass
 
 dt = Unit[0,1]('dt') # Unit[0,1]
 accel = Unit[1,-2]('accel') # Unit[1,-2]
