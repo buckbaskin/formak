@@ -2,7 +2,7 @@ name: CI Unit Tests
 run-name: make ci
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  CI:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
