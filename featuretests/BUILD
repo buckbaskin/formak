@@ -36,6 +36,6 @@ py_test_suite(
     ),
     deps = [
         "//py:formak",
-    requirement("numpy"),
+        requirement("numpy"),
     ] + FEATURE_TEST_DEPS,
 )

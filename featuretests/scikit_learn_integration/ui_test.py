@@ -28,7 +28,7 @@ def test_UI_like_sklearn():
     n_samples, n_features = readings.shape
 
     # Fit the model to data
-    model.fit(readings)
+    assert isinstance(model.fit(readings), Model)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit
@@ -42,11 +42,11 @@ def test_UI_like_sklearn():
     #   - sklearn.manifold.LocallyLinearEmbedding https://scikit-learn.org/stable/modules/generated/sklearn.manifold.LocallyLinearEmbedding.html#sklearn.manifold.LocallyLinearEmbedding
 
     # Transform readings to innovations
-    model.transform(readings)
+    assert model.transform(readings).shape == (n_samples, n_features - len(control))
     # Fit the model to data and transform readings to innovations
-    model.fit_transform(readings)
+    assert model.fit_transform(readings).shape == (n_samples, n_features - len(control))
 
     # Get parameters for this estimator.
-    model.get_params(deep=True)
+    assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    set_params(**params)
+    assert isinstance(model.set_params(x=1.0), Model)

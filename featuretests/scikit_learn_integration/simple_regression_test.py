@@ -23,7 +23,7 @@ def test_like_sklearn_regression():
     model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
     # reading = [thrust, z, v]
-    readings = X = [[10, 0, 0], [10, 0, 1], [9, 1, 2]]
+    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
     n_samples, n_features = readings.shape
 
     unfit_score = model.score(readings)
