@@ -13,6 +13,9 @@ The values of the FormaK project (in order) are:
 
 FormaK is open source and uses the MIT license.
 
+If you'd like to jump in to using FormaK: [Getting Started](getting-started.html)
+The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
+
 ### The Persona
 
 Who is this for?
@@ -89,10 +92,3 @@ python_implementation = python.compile(orbital_model)
 - Generate Python from models
 - (planned) Generate C++ from models
 - (planned) Integrations for model fitting, model selection
-
-## Requirements
-
-- Bazel
-- Clang-12 / C++17
-- Python3
-- pip
