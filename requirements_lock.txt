@@ -30,6 +30,10 @@ iniconfig==1.1.1 \
     --hash=sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3 \
     --hash=sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32
     # via pytest
+joblib==1.2.0 \
+    --hash=sha256:091138ed78f800342968c523bdde947e7a305b8594b910a0fea2ab83c3c6d385 \
+    --hash=sha256:e1cee4a79e4af22881164f218d4311f60074197fb707e082e803b61f6d137018
+    # via scikit-learn
 llvmlite==0.39.1 \
     --hash=sha256:03aee0ccd81735696474dc4f8b6be60774892a2929d6c05d093d17392c237f32 \
     --hash=sha256:1578f5000fdce513712e99543c50e93758a954297575610f48cb1fd71b27c08a \
@@ -126,6 +130,7 @@ numpy==1.23.3 \
     # via
     #   -r requirements.in
     #   numba
+    #   scikit-learn
     #   scipy
 packaging==21.3 \
     --hash=sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb \
@@ -153,6 +158,26 @@ pytest-mock==3.8.2 \
     --hash=sha256:77f03f4554392558700295e05aed0b1096a20d4a60a4f3ddcde58b0c31c8fca2 \
     --hash=sha256:8a9e226d6c0ef09fcf20c94eb3405c388af438a90f3e39687f84166da82d5948
     # via -r requirements.in
+scikit-learn==1.1.2 \
+    --hash=sha256:1c8fecb7c9984d9ec2ea48898229f98aad681a0873e0935f2b7f724fbce4a047 \
+    --hash=sha256:2b8db962360c93554cab7bb3c096c4a24695da394dd4b3c3f13409f409b425bc \
+    --hash=sha256:2f46c6e3ff1054a5ec701646dcfd61d43b8ecac4d416014daed8843cf4c33d4d \
+    --hash=sha256:3e7d1fc817867a350133f937aaebcafbc06192517cbdf0cf7e5774ad4d1adb9f \
+    --hash=sha256:407e9a1cb9e6ba458a539986a9bd25546a757088095b3aab91d465b79a760d37 \
+    --hash=sha256:567417dbbe6a6278399c3e6daf1654414a5a1a4d818d28f251fa7fc28730a1bf \
+    --hash=sha256:589d46f28460469f444b898223b13d99db9463e1038dc581ba698111f612264b \
+    --hash=sha256:5ec3ea40d467966821843210c02117d82b097b54276fdcfb50f4dfb5c60dbe39 \
+    --hash=sha256:6c840f662b5d3377c4ccb8be1fc21bb52cb5d8b8790f8d6bf021739f84e543cf \
+    --hash=sha256:76800652fb6d6bf527bce36ecc2cc25738b28fe1a17bd294a218fff8e8bd6d50 \
+    --hash=sha256:7c22d1305b16f08d57751a4ea36071e2215efb4c09cb79183faa4e8e82a3dbf8 \
+    --hash=sha256:a682ec0f82b6f30fb07486daed1c8001b6683cc66b51877644dfc532bece6a18 \
+    --hash=sha256:a90ca42fe8242fd6ff56cda2fecc5fca586a88a24ab602d275d2d0dcc0b928fb \
+    --hash=sha256:b1e706deca9b2ad87ae27dafd5ac4e8eff01b6db492ed5c12cef4735ec5f21ea \
+    --hash=sha256:bbef6ea1c012ff9f3e6f6e9ca006b8772d8383e177b898091e68fbd9b3f840f9 \
+    --hash=sha256:c33e16e9a165af6012f5be530ccfbb672e2bc5f9b840238a05eb7f6694304e3f \
+    --hash=sha256:d6f232779023c3b060b80b5c82e5823723bc424dcac1d1a148aa2492c54d245d \
+    --hash=sha256:f94c0146bad51daef919c402a3da8c1c6162619653e1c00c92baa168fda292f2
+    # via -r requirements.in
 scipy==1.9.1 \
     --hash=sha256:0419485dbcd0ed78c0d5bf234c5dd63e86065b39b4d669e45810d42199d49521 \
     --hash=sha256:09412eb7fb60b8f00b328037fd814d25d261066ebc43a1e339cdce4f7502877e \
@@ -177,7 +202,9 @@ scipy==1.9.1 \
     --hash=sha256:eb954f5aca4d26f468bbebcdc5448348eb287f7bea536c6306f62ea062f63d9a \
     --hash=sha256:f7c39f7dbb57cce00c108d06d731f3b0e2a4d3a95c66d96bce697684876ce4d4 \
     --hash=sha256:f950a04b33e17b38ff561d5a0951caf3f5b47caa841edd772ffb7959f20a6af0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   scikit-learn
 sortedcontainers==2.4.0 \
     --hash=sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88 \
     --hash=sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0
@@ -186,6 +213,10 @@ sympy==1.10.1 \
     --hash=sha256:5939eeffdf9e152172601463626c022a2c27e75cf6278de8d401d50c9d58787b \
     --hash=sha256:df75d738930f6fe9ebe7034e59d56698f29e85f443f743e51e47df0caccc2130
     # via -r requirements.in
+threadpoolctl==3.1.0 \
+    --hash=sha256:8b99adda265feb6773280df41eece7b2e6561b772d21ffd52e372f999024907b \
+    --hash=sha256:a335baacfaa4400ae1f0d8e3a58d6674d2f8828e3716bb2802c44955ad391380
+    # via scikit-learn
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f

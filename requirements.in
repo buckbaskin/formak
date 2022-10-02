@@ -2,6 +2,7 @@ pytest
 pytest-mock
 hypothesis
 
+scikit-learn
 sympy
 scipy
 numpy
