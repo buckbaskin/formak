@@ -27,3 +27,15 @@ py_test_suite(
         "//py:formak",
     ] + FEATURE_TEST_DEPS,
 )
+
+py_test_suite(
+    name = "scikit-learn-integration",
+    srcs = glob(
+        ["scikit_learn_integration/*.py"],
+        allow_empty = False,
+    ),
+    deps = [
+        "//py:formak",
+    requirement("numpy"),
+    ] + FEATURE_TEST_DEPS,
+)
