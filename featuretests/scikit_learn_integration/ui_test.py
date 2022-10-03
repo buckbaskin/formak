@@ -1,15 +1,15 @@
 import numpy as np
 import pytest
 
-from formak.ui import *
+from formak import ui
 
 
 def test_UI_like_sklearn():
-    dt = Symbol("dt")
+    dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = Symbol("thrust")
+    thrust = ui.Symbol("thrust")
 
     state = set(tp.values())
     control = set([thrust])
@@ -21,14 +21,22 @@ def test_UI_like_sklearn():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = Model(dt=dt, state=state, control=control, state_model=state_model)
+    params = {
+        "process_noise": np.eye(1),
+        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        "sensor_noises": {"simple": np.eye(1)},
+        "compile": True,
+    }
+    model = ui.Model(
+        dt=dt, state=state, control=control, state_model=state_model, **params
+    )
 
     # reading = [thrust, z, v]
     readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
     n_samples, n_features = readings.shape
 
     # Fit the model to data
-    assert isinstance(model.fit(readings), Model)
+    assert isinstance(model.fit(readings), ui.Model)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit
@@ -49,4 +57,4 @@ def test_UI_like_sklearn():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(x=1.0), Model)
+    assert isinstance(model.set_params(**params), ui.Model)
