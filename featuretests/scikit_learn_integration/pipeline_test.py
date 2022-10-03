@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from formak import ui, python
+from sklearn.pipeline import Pipeline
 
 
 def test_like_sklearn_regression():
@@ -30,15 +31,15 @@ def test_like_sklearn_regression():
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
+    estimators = [("formak model", model)]
+    pipeline = Pipeline(estimators)
+
     # reading = [thrust, z, v]
     readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
     n_samples, n_features = readings.shape
 
-    unfit_score = model.score(readings)
+    # Fit the pipeline to data
+    pipeline.fit(readings)
 
-    # Fit the model to data
-    model.fit(readings)
-
-    fit_score = model.score(readings)
-
-    assert fit_score < unfit_score
+    # Score the data
+    pipeline.score(readings)

@@ -437,7 +437,7 @@ class ExtendedKalmanFilter(object):
         return np.zeros(shape)
 
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
-    def score(self, X):
+    def score(self, X, y=None, sample_weight=None):
         # TODO(buck): score
         return 0.0
 
