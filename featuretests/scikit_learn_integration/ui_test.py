@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from formak import ui
+from formak import ui, python
 
 
 def test_UI_like_sklearn():
@@ -25,10 +25,10 @@ def test_UI_like_sklearn():
         "process_noise": np.eye(1),
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         "sensor_noises": {"simple": np.eye(1)},
-        "compile": True,
     }
-    model = ui.Model(
-        dt=dt, state=state, control=control, state_model=state_model, **params
+
+    model = python.compile_ekf(
+        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [thrust, z, v]
@@ -36,7 +36,7 @@ def test_UI_like_sklearn():
     n_samples, n_features = readings.shape
 
     # Fit the model to data
-    assert isinstance(model.fit(readings), ui.Model)
+    assert isinstance(model.fit(readings), python.ExtendedKalmanFilter)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit
@@ -57,4 +57,4 @@ def test_UI_like_sklearn():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), ui.Model)
+    assert isinstance(model.set_params(**params), python.ExtendedKalmanFilter)

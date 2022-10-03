@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from formak import ui
+from formak import ui, python
 
 
 def test_like_sklearn_regression():
@@ -25,10 +25,9 @@ def test_like_sklearn_regression():
         "process_noise": np.eye(1),
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         "sensor_noises": {"simple": np.eye(1)},
-        "compile": True,
     }
-    model = ui.Model(
-        dt=dt, state=state, control=control, state_model=state_model, **params
+    model = python.compile_ekf(
+        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [thrust, z, v]

@@ -1,5 +1,6 @@
 import numpy as np
 
+from scipy.optimize import minimize
 from sympy import Matrix
 from sympy.utilities.lambdify import lambdify
 from numba import njit
@@ -109,13 +110,19 @@ class ExtendedKalmanFilter(object):
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
+        self.params = {
+            "process_noise": process_noise,
+            "sensor_models": sensor_models,
+            "sensor_noises": sensor_noises,
+            "compile": compile,
+        }
 
         self._construct_process(state_model, process_noise, config)
         self._construct_sensors(state_model, sensor_models, sensor_noises, config)
 
     def _construct_process(self, state_model, process_noise, config):
         self.state_model = Model(state_model, config)
-        self.process_noise = process_noise
+        self.params["process_noise"] = process_noise
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
@@ -188,23 +195,23 @@ class ExtendedKalmanFilter(object):
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
 
-        self.sensor_models = {
+        self.params["sensor_models"] = {
             k: SensorModel(state_model, model, config)
             for k, model in sensor_models.items()
         }
-        for k in self.sensor_models.keys():
+        for k in self.params["sensor_models"].keys():
             assert sensor_noises[k].shape == (
-                self.sensor_models[k].sensor_size,
-                self.sensor_models[k].sensor_size,
+                self.params["sensor_models"][k].sensor_size,
+                self.params["sensor_models"][k].sensor_size,
             )
 
-        self.sensor_noises = sensor_noises
+        self.params["sensor_noises"] = sensor_noises
 
         self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
 
         self._impl_sensor_jacobians = {}
 
-        for k, sensor_model in self.sensor_models.items():
+        for k, sensor_model in self.params["sensor_models"].items():
             sensor_size = len(sensor_model.readings)
 
             sensor_matrix = Matrix(
@@ -266,7 +273,7 @@ class ExtendedKalmanFilter(object):
         return jacobian
 
     def sensor_jacobian(self, sensor_key, state):
-        sensor_size = self.sensor_models[sensor_key].sensor_size
+        sensor_size = self.params["sensor_models"][sensor_key].sensor_size
         jacobian = np.zeros((sensor_size, self.state_size))
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
@@ -309,7 +316,7 @@ class ExtendedKalmanFilter(object):
         assert next_state_covariance.shape == covariance.shape
 
         next_control_covariance = np.matmul(
-            V_t, np.matmul(self.process_noise, V_t.transpose())
+            V_t, np.matmul(self.params["process_noise"], V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
 
@@ -322,9 +329,9 @@ class ExtendedKalmanFilter(object):
         return next_state, next_covariance
 
     def sensor_model(self, sensor_key, state, covariance, sensor_reading):
-        model_impl = self.sensor_models[sensor_key]
+        model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
-        Q_t = model_noise = self.sensor_noises[sensor_key]
+        Q_t = model_noise = self.params["sensor_noises"][sensor_key]
 
         try:
             assert isinstance(state, np.ndarray)
@@ -375,6 +382,90 @@ class ExtendedKalmanFilter(object):
         assert next_state.shape == state.shape
 
         return next_state, next_covariance
+
+    ### scikit-learn / sklearn interface ###
+
+    def _flatten_scoring_params(self, params):
+        # "process_noise": np.eye(1),
+        # "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        # "sensor_noises": {"simple": np.eye(1)},
+        flattened = list(np.diagonal(params["process_noise"]))
+        for key in sorted(list(params["sensor_models"])):
+            flattened.extend(np.diagonal(params["sensor_noises"][key]))
+
+    def _inverse_flatten_scoring_params(self, flattened):
+        params = {k: v for k, v in self.params.items()}
+
+        controls, flattened = (
+            flattened[: self.control_size],
+            flattened[self.control_size :],
+        )
+
+        np.fill_diagonal(params["process_noise"], controls)
+
+        for key in sorted(list(sensor_models)):
+            sensor_size = len(np.diagonal(params["sensor_noises"][key]))
+            sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
+            np.fill_diagonal(params["sensor_noises"][key], sensor)
+
+    # Fit the model to data
+    def fit(self, X, y=None):
+
+        assert self.params["process_noise"] is not None
+        assert self.params["sensor_models"] is not None
+        assert self.params["sensor_noises"] is not None
+
+        x0 = self._flatten_scoring_params(self.params)
+        # TODO(buck): implement parameter fitting, y ignored
+        def minimize_this(x):
+            scoring_params = self._inverse_flatten_scoring_params(x)
+            python_ekf = python.compile_ekf(
+                state_model=self,
+                process_noise=scoring_params["process_noise"],
+                sensor_models=scoring_params["sensor_models"],
+                sensor_noises=scoring_params["sensor_noises"],
+                config={"compile": self.params["compile"]},
+            )
+
+        return self
+
+    # Compute the squared Mahalanobis distances of given observations.
+    def mahalanobis(self, X):
+        # TODO(buck): mahalanobis
+        n_samples, n_features = X.shape
+        shape = (n_samples,)
+        return np.zeros(shape)
+
+    # Compute the log-likelihood of X_test under the estimated Gaussian model.
+    def score(self, X):
+        # TODO(buck): score
+        return 0.0
+
+    # Transform readings to innovations
+    def transform(self, X):
+        # TODO(buck): transform
+        n_samples, n_features = X.shape
+        output_features = n_features - self.control_size
+
+        return np.zeros((n_samples, output_features))
+
+    # Fit the model to data and transform readings to innovations
+    def fit_transform(self, X, y=None):
+        # TODO(buck): Implement the combined version (return innovations calculated while fitting)
+        self.fit(X, y)
+        return self.transform(X)
+
+    # Get parameters for this estimator.
+    def get_params(self, deep=True) -> dict:
+        return self.params
+
+    # Set the parameters of this estimator.
+    def set_params(self, **params):
+        for p in params:
+            if p in self.params:
+                self.params[p] = params[p]
+
+        return self
 
 
 class Config(object):
