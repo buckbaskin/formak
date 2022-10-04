@@ -249,6 +249,7 @@ class ExtendedKalmanFilter(object):
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
         self.innovations = {}
+        self.sensor_prediction_uncertainty = {}
 
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
@@ -366,7 +367,7 @@ class ExtendedKalmanFilter(object):
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
 
-        S_t = sensor_prediction_uncertainty = (
+        self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t
         )
         S_inv = np.linalg.inv(S_t)
@@ -374,6 +375,7 @@ class ExtendedKalmanFilter(object):
         K_t = kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
+        # TODO(buck): is innovation normalized by variance?
 
         next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
         assert next_covariance.shape == covariance.shape
@@ -409,7 +411,9 @@ class ExtendedKalmanFilter(object):
             np.fill_diagonal(params["sensor_noises"][key], sensor)
 
     # Fit the model to data
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, sample_weight=None):
+        # TODO(buck): Figure out dt, add it as the first element of X
+        dt = 0.1
 
         assert self.params["process_noise"] is not None
         assert self.params["sensor_models"] is not None
@@ -426,6 +430,32 @@ class ExtendedKalmanFilter(object):
                 sensor_noises=scoring_params["sensor_noises"],
                 config={"compile": self.params["compile"]},
             )
+
+            state, covariance = 1/0
+
+            innovations = []
+
+            for idx in X:
+                controls_input, the_rest = X[idx][self.control_size:], X[idx][:self.control_size]
+
+                state, covariance = python_ekf.process_noise(dt, state, covariance, controls_input)
+
+                innovation = []
+
+                for key in sorted(list(sensor_models)):
+                    sensor_size = len(self.params['sensor_models'][key])
+
+                    sensor_input, the_rest = the_rest[sensor_size:], the_rest[:sensor_size]
+
+                    state, covariance = python_ekf.sensor_model(key, state, covariance, sensor_input)
+                    # Normalized by the uncertainty at the time of the measurement
+                    innovation.append(np.matmul(python_ekf.innovations[key] * np.linalg.inv(self.sensor_prediction_uncertainty)))
+
+                innovations.append(innovation)
+
+
+            # process_model(self, dt, state, covariance, control)
+            # sensor_model(self, sensor_key, state, covariance, sensor_reading):
 
         return self
 
