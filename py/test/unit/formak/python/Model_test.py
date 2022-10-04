@@ -1,7 +1,8 @@
 import numpy as np
 import warnings
 
-from hypothesis import given, reject
+from hypothesis import given, reject, settings
+from datetime import timedelta
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 from formak import ui, python
@@ -171,6 +172,7 @@ def test_Model_impl_control():
 
 
 @given(floats(), floats(), floats())
+@settings(deadline=timedelta(seconds=2))
 def test_Model_impl_property(x, y, a):
     config = {}
     dt = 0.1
