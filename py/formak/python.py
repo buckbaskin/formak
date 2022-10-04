@@ -92,6 +92,9 @@ class SensorModel(object):
             for k in self.readings
         ]
 
+    def __len__(self):
+        return len(self.sensor_models)
+
     def model(self, state):
         assert isinstance(state, np.ndarray)
         assert state.shape == (self.state_size, 1)
@@ -154,7 +157,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size ** 2
+        assert len(self._impl_process_jacobian) == self.state_size**2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
@@ -395,6 +398,8 @@ class ExtendedKalmanFilter(object):
         for key in sorted(list(params["sensor_models"])):
             flattened.extend(np.diagonal(params["sensor_noises"][key]))
 
+        return flattened
+
     def _inverse_flatten_scoring_params(self, flattened):
         params = {k: v for k, v in self.params.items()}
 
@@ -405,10 +410,12 @@ class ExtendedKalmanFilter(object):
 
         np.fill_diagonal(params["process_noise"], controls)
 
-        for key in sorted(list(sensor_models)):
+        for key in sorted(list(self.params["sensor_models"])):
             sensor_size = len(np.diagonal(params["sensor_noises"][key]))
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
             np.fill_diagonal(params["sensor_noises"][key], sensor)
+
+        return params
 
     # Fit the model to data
     def fit(self, X, y=None, sample_weight=None):
@@ -422,40 +429,64 @@ class ExtendedKalmanFilter(object):
         x0 = self._flatten_scoring_params(self.params)
         # TODO(buck): implement parameter fitting, y ignored
         def minimize_this(x):
-            scoring_params = self._inverse_flatten_scoring_params(x)
-            python_ekf = python.compile_ekf(
-                state_model=self,
-                process_noise=scoring_params["process_noise"],
-                sensor_models=scoring_params["sensor_models"],
-                sensor_noises=scoring_params["sensor_noises"],
-                config={"compile": self.params["compile"]},
-            )
+            holdout_params = dict(self.get_params())
 
-            state, covariance = 1/0
+            scoring_params = self._inverse_flatten_scoring_params(x)
+            self.set_params(**scoring_params)
+
+            state = np.zeros((self.state_size, 1))
+            covariance = np.eye(self.state_size)
 
             innovations = []
 
-            for idx in X:
-                controls_input, the_rest = X[idx][self.control_size:], X[idx][:self.control_size]
+            print("X.shape", X.shape)
+            print("control", self.control_size)
+            for key in sorted(list(self.params["sensor_models"])):
+                sensor_size = len(self.params["sensor_models"][key])
+                print("sensor", key, sensor_size)
 
-                state, covariance = python_ekf.process_noise(dt, state, covariance, controls_input)
+            for idx in X:
+                print("idx", idx)
+
+            for idx in X:
+                controls_input, the_rest = (
+                    X[idx][self.control_size :],
+                    X[idx][: self.control_size],
+                )
+
+                state, covariance = self.process_model(
+                    dt, state, covariance, controls_input
+                )
 
                 innovation = []
 
                 for key in sorted(list(sensor_models)):
-                    sensor_size = len(self.params['sensor_models'][key])
+                    sensor_size = len(self.params["sensor_models"][key])
 
-                    sensor_input, the_rest = the_rest[sensor_size:], the_rest[:sensor_size]
+                    sensor_input, the_rest = (
+                        the_rest[sensor_size:],
+                        the_rest[:sensor_size],
+                    )
 
-                    state, covariance = python_ekf.sensor_model(key, state, covariance, sensor_input)
+                    state, covariance = self.sensor_model(
+                        key, state, covariance, sensor_input
+                    )
                     # Normalized by the uncertainty at the time of the measurement
-                    innovation.append(np.matmul(python_ekf.innovations[key] * np.linalg.inv(self.sensor_prediction_uncertainty)))
+                    innovation.append(
+                        np.matmul(
+                            self.innovations[key]
+                            * np.linalg.inv(self.sensor_prediction_uncertainty)
+                        )
+                    )
 
                 innovations.append(innovation)
 
+            self.set_params(**holdout_params)
+            return np.sum(np.square(innovations))
 
-            # process_model(self, dt, state, covariance, control)
-            # sensor_model(self, sensor_key, state, covariance, sensor_reading):
+        minimize_this(x0)
+
+        # TODO(buck): scipy minimize here
 
         return self
 
