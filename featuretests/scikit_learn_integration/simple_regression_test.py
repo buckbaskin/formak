@@ -25,9 +25,9 @@ def test_like_sklearn_regression():
         "process_noise": np.eye(1),
         "sensor_models": {
             "z": {ui.Symbol("z"): ui.Symbol("z")},
-            "v": {ui.Symbol("v"): ui.Symbol("v")}
-            },
-        "sensor_noises": {"z": np.eye(1), 'v': np.eye(1)},
+            "v": {ui.Symbol("v"): ui.Symbol("v")},
+        },
+        "sensor_noises": {"z": np.eye(1), "v": np.eye(1)},
     }
     model = python.compile_ekf(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
@@ -39,14 +39,13 @@ def test_like_sklearn_regression():
 
     unfit_score = model.score(readings)
 
-    print('prefix', unfit_score, model.get_params())
-    assert unfit_score > 0.0 # Don't accidentally start with a perfect model
+    print("prefix", unfit_score, model.get_params())
+    assert unfit_score > 0.0  # Don't accidentally start with a perfect model
 
     # Fit the model to data
     model.fit(readings)
 
     fit_score = model.score(readings)
 
-    print('postfix', fit_score, model.get_params())
+    print("postfix", fit_score, model.get_params())
     assert fit_score < unfit_score
-
