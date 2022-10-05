@@ -39,6 +39,7 @@ def test_like_sklearn_regression():
 
     unfit_score = model.score(readings)
 
+    print('prefix', unfit_score, model.get_params())
     assert unfit_score > 0.0 # Don't accidentally start with a perfect model
 
     # Fit the model to data
@@ -46,4 +47,6 @@ def test_like_sklearn_regression():
 
     fit_score = model.score(readings)
 
+    print('postfix', fit_score, model.get_params())
     assert fit_score < unfit_score
+

@@ -434,55 +434,21 @@ class ExtendedKalmanFilter(object):
             scoring_params = self._inverse_flatten_scoring_params(x)
             self.set_params(**scoring_params)
 
-            state = np.zeros((self.state_size, 1))
-            covariance = np.eye(self.state_size)
-
-            innovations = []
-
-            for key in sorted(list(self.params["sensor_models"])):
-                sensor_size = len(self.params["sensor_models"][key])
-
-            for idx in range(X.shape[0]):
-                controls_input, the_rest = (
-                        X[idx, :self.control_size],
-                        X[idx, self.control_size:],
-                )
-                controls_input = controls_input.reshape((self.control_size, 1))
-
-                state, covariance = self.process_model(
-                    dt, state, covariance, controls_input
-                )
-
-                innovation = []
-
-                for key in sorted(list(self.params['sensor_models'])):
-                    sensor_size = len(self.params["sensor_models"][key])
-
-                    sensor_input, the_rest = (
-                            the_rest[:sensor_size],
-                            the_rest[sensor_size:],
-                    )
-                    sensor_input = sensor_input.reshape((sensor_size, 1))
-
-                    state, covariance = self.sensor_model(
-                        key, state, covariance, sensor_input
-                    )
-                    # Normalized by the uncertainty at the time of the measurement
-                    innovation.append(
-                        np.matmul(
-                            self.innovations[key],
-                            np.linalg.inv(self.sensor_prediction_uncertainty[key])
-                        )
-                    )
-
-                innovations.append(innovation)
+            score = self.score(X, y, sample_weight)
 
             self.set_params(**holdout_params)
-            return np.sum(np.square(innovations))
+            return score
 
         minimize_this(x0)
 
-        # TODO(buck): scipy minimize here
+        result = minimize(minimize_this, x0)
+
+        if (not result.success):
+            print('success', result.success, result.message)
+            assert result.success
+
+        soln_as_params = self._inverse_flatten_scoring_params(result.x)
+        self.set_params(**soln_as_params)
 
         return self
 
