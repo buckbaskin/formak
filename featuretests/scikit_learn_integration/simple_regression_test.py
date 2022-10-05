@@ -36,6 +36,8 @@ def test_like_sklearn_regression():
 
     unfit_score = model.score(readings)
 
+    assert unfit_score > 0.0 # Don't accidentally start with a perfect model
+
     # Fit the model to data
     model.fit(readings)
 
