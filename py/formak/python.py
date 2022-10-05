@@ -459,8 +459,8 @@ class ExtendedKalmanFilter(object):
                     sensor_size = len(self.params["sensor_models"][key])
 
                     sensor_input, the_rest = (
-                        the_rest[sensor_size:],
-                        the_rest[:sensor_size],
+                            the_rest[:sensor_size],
+                            the_rest[sensor_size:],
                     )
                     sensor_input = sensor_input.reshape((sensor_size, 1))
 
@@ -522,8 +522,8 @@ class ExtendedKalmanFilter(object):
                 sensor_size = len(self.params["sensor_models"][key])
 
                 sensor_input, the_rest = (
-                    the_rest[sensor_size:],
-                    the_rest[:sensor_size],
+                        the_rest[:sensor_size],
+                        the_rest[sensor_size:],
                 )
                 sensor_input = sensor_input.reshape((sensor_size, 1))
 
