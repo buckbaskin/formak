@@ -506,7 +506,10 @@ class ExtendedKalmanFilter(object):
 
             innovations.append(innovation)
 
-        return np.sum(np.square(innovations))
+        x = np.sum(np.square(innovations))
+
+        # minima at x = 1, innovations match noise model
+        return (1.0 / x + x) / 2.0
 
     # Transform readings to innovations
     def transform(self, X):
