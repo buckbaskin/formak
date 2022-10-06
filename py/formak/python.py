@@ -157,7 +157,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size**2
+        assert len(self._impl_process_jacobian) == self.state_size ** 2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
