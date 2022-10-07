@@ -35,7 +35,6 @@ def test_like_sklearn_regression():
 
     # reading = [thrust, z, v]
     readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
-    n_samples, n_features = readings.shape
 
     unfit_score = model.score(readings)
 
