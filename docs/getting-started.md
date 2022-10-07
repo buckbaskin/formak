@@ -1,4 +1,8 @@
-# Getting Started
+# Getting Started for Users
+
+Coming soon!
+
+# Getting Started For Developers
 
 ## Installation
 
