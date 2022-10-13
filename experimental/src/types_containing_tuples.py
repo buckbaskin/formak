@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, Union, Type
+from typing import Tuple, Union, Type, Any
 
 
 class Symbol(object):
@@ -9,8 +9,10 @@ class Symbol(object):
 # Meters, Seconds, Kilograms
 BaseUnit = Tuple[int, int, int]
 
+
 def base_unit_cast(u: Union[BaseUnit, Tuple[int, ...]]) -> BaseUnit:
     return (u[0], u[1], u[2])
+
 
 class UnaryOp(object):
     def __init__(self, left: Unit) -> None:
@@ -51,14 +53,13 @@ def type_maker(unit: BaseUnit):
     return TypedSymbolWithUnitImpl
 
 
-Meters = type_maker((1, 0, 0))
-
-# Radians = type_maker((0, 0, 0))
-Meters = type_maker((1, 0, 0))
-Seconds = type_maker((0, 1, 0))
-Kilograms = type_maker((0, 0, 1))
-MetersPerSecond = type_maker((1, -1, 0))
-MetersPerSecondSquared = type_maker((1, -2, 0))
+# TODO(buck): With Python 3.10 support, use TypeAlias instead of Any here
+Radians: Any = type_maker((0, 0, 0))
+Meters: Any = type_maker((1, 0, 0))
+Seconds: Any = type_maker((0, 1, 0))
+Kilograms: Any = type_maker((0, 0, 1))
+MetersPerSecond: Any = type_maker((1, -1, 0))
+MetersPerSecondSquared: Any = type_maker((1, -2, 0))
 
 
 def collapse(unit: Unit) -> BaseUnit:
@@ -66,13 +67,17 @@ def collapse(unit: Unit) -> BaseUnit:
     if isinstance(unit, UnaryOp):
         return collapse(unit.left)
     if isinstance(unit, Mul):
-        return base_unit_cast(tuple(
-            (ul + ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
-        ))
+        return base_unit_cast(
+            tuple(
+                (ul + ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
+            )
+        )
     if isinstance(unit, Div):
-        return base_unit_cast(tuple(
-            (ul - ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
-        ))
+        return base_unit_cast(
+            tuple(
+                (ul - ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
+            )
+        )
     if hasattr(unit, "class_unit"):
         return unit.class_unit()
     raise ValueError("collapse(%s, %s)" % (type(unit), unit))
@@ -93,8 +98,6 @@ def mul(left: Unit, right: Unit) -> Mul:
 def div(left: Unit, right: Unit) -> Div:
     return Div(left, right)
 
-class Radians(type_maker(0,0,0)):
-    pass
 
 def sin(angle: Radians) -> Radians:
     assert class_eq(angle, Radians)
