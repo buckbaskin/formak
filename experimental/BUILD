@@ -21,7 +21,7 @@ cc_test(
     srcs = ["test/hello_test.cpp"],
     deps = [
         ":hello-library",
-        "@gtest//:gtest_main",
+        "@gtest//:main",
     ],
 )
 
@@ -88,7 +88,7 @@ cc_test(
     srcs = ["test/codegen_output_test.cpp"],
     deps = [
         ":codegen-output",
-        "@gtest//:gtest_main",
+        "@gtest//:main",
     ],
 )
 
