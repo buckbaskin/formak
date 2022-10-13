@@ -77,6 +77,7 @@ def test_mahalanobis():
     result = model.mahalanobis(readings)
     assert result.shape == (6,)
 
+    # TODO(buck): Implement mahalanobis
     assert not np.allclose(result, np.zeros_like(result))
     assert np.allclose(result, [2, -2, 1, -1, 0.5, -0.5])
 
@@ -158,29 +159,26 @@ def test_transform():
     assert result.shape == (n_samples, n_features - len(control))
 
     assert not np.allclose(result, np.zeros_like(result))
-    assert np.allclose(result, readings[:, 1])
+    assert np.allclose(result[2:], readings[2:, 1:], atol=0.3)
 
 
 def test_fit_transform():
+    random = default_rng(1)
+
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    x, v = ui.symbols(["x", "v"])
 
-    thrust = ui.Symbol("thrust")
-
-    state = set(tp.values())
-    control = set([thrust])
+    state = set([x])
+    control = set([v])
 
     state_model = {
-        tp["mass"]: tp["mass"],
-        tp["z"]: tp["z"] + dt * tp["v"],
-        tp["v"]: tp["v"] + dt * tp["a"],
-        tp["a"]: -9.81 * tp["mass"] + thrust,
+        x: x + dt * v,
     }
 
     params = {
         "process_noise": np.eye(1),
-        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        "sensor_models": {"simple": {x: x}},
         "sensor_noises": {"simple": np.eye(1)},
     }
 
@@ -188,15 +186,18 @@ def test_fit_transform():
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
-    # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
+    true_variance = 2.0
+
+    # reading = [v, x]
+    readings = X = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
     n_samples, n_features = readings.shape
 
     result = model.fit_transform(readings)
     assert result.shape == (n_samples, n_features - len(control))
 
     assert not np.allclose(result, np.zeros_like(result))
-    assert np.allclose(result, readings[:, 1])
+    assert np.all(np.abs(result[2:]) < np.abs(readings[2:, 1:]))
+    assert np.all((result < 0) == (readings[:,1:] < 0))
 
 
 def test_get_params():

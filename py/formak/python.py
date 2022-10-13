@@ -157,7 +157,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size ** 2
+        assert len(self._impl_process_jacobian) == self.state_size**2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
@@ -468,8 +468,60 @@ class ExtendedKalmanFilter(object):
 
         innovations = []
 
-        for key in sorted(list(self.params["sensor_models"])):
-            sensor_size = len(self.params["sensor_models"][key])
+        for idx in range(X.shape[0]):
+            controls_input, the_rest = (
+                X[idx, : self.control_size],
+                X[idx, self.control_size :],
+            )
+            controls_input = controls_input.reshape((self.control_size, 1))
+
+            state, covariance = self.process_model(
+                dt, state, covariance, controls_input
+            )
+
+            innovation = []
+
+            for key in sorted(list(self.params["sensor_models"])):
+                sensor_size = len(self.params["sensor_models"][key])
+
+                sensor_input, the_rest = (
+                    the_rest[:sensor_size],
+                    the_rest[sensor_size:],
+                )
+                sensor_input = sensor_input.reshape((sensor_size, 1))
+
+                state, covariance = self.sensor_model(
+                    key, state, covariance, sensor_input
+                )
+                # Normalized by the uncertainty at the time of the measurement
+                innovation.append(
+                    float(
+                        np.matmul(
+                            self.innovations[key],
+                            np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                        )
+                    )
+                )
+
+            innovations.append(innovation)
+
+        x = np.sum(np.square(innovations))
+
+        # minima at x = 1, innovations match noise model
+        return (1.0 / x + x) / 2.0
+
+    # Transform readings to innovations
+    def transform(self, X):
+        # TODO(buck): transform
+        n_samples, n_features = X.shape
+        output_features = n_features - self.control_size
+
+        dt = 0.1
+
+        state = np.zeros((self.state_size, 1))
+        covariance = np.eye(self.state_size)
+
+        innovations = []
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
@@ -498,26 +550,21 @@ class ExtendedKalmanFilter(object):
                 )
                 # Normalized by the uncertainty at the time of the measurement
                 innovation.append(
-                    np.matmul(
-                        self.innovations[key],
-                        np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                    float(
+                        np.matmul(
+                            self.innovations[key],
+                            np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                        )
                     )
                 )
 
             innovations.append(innovation)
-
-        x = np.sum(np.square(innovations))
+            assert innovations[-1] is not None
 
         # minima at x = 1, innovations match noise model
-        return (1.0 / x + x) / 2.0
-
-    # Transform readings to innovations
-    def transform(self, X):
-        # TODO(buck): transform
-        n_samples, n_features = X.shape
-        output_features = n_features - self.control_size
-
-        return np.zeros((n_samples, output_features))
+        print("innovations")
+        print(innovations)
+        return np.array(innovations)
 
     # Fit the model to data and transform readings to innovations
     def fit_transform(self, X, y=None):
