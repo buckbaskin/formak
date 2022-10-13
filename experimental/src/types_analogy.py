@@ -10,20 +10,25 @@ class UnaryOp(object):
         self.left = left
 
 
-class BinOp(object):
+class Mul(object):
     def __init__(self, left: Unit, right: Unit) -> None:
         self.left = left
         self.right = right
 
 
-Unit = Union[BaseUnit, UnaryOp, BinOp]
+class Div(object):
+    def __init__(self, left: Unit, right: Unit) -> None:
+        self.left = left
+        self.right = right
+
+
+Unit = Union[BaseUnit, UnaryOp, Mul]
 
 Radians = (0, 0, 0)
 Meters = (1, 0, 0)
 Seconds = (0, 1, 0)
 Kilograms = (0, 0, 1)
 MetersPerSecond = (1, -1, 0)
-MetersPerSecondSquared = (1, -2, 0)
 
 
 def collapse(unit: Unit) -> BaseUnit:
@@ -32,9 +37,13 @@ def collapse(unit: Unit) -> BaseUnit:
         return unit
     if isinstance(unit, UnaryOp):
         return collapse(unit.left)
-    if isinstance(unit, BinOp):
+    if isinstance(unit, Mul):
         return tuple(
             (ul + ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
+        )
+    if isinstance(unit, Div):
+        return tuple(
+            (ul - ur for ul, ur in zip(collapse(unit.left), collapse(unit.right)))
         )
 
 
@@ -42,8 +51,12 @@ def neg(left: Unit) -> UnaryOp:
     return UnaryOp(left)
 
 
-def mul(left: Unit, right: Unit) -> BinOp:
-    return BinOp(left, right)
+def mul(left: Unit, right: Unit) -> Mul:
+    return Mul(left, right)
+
+
+def div(left: Unit, right: Unit) -> Div:
+    return Div(left, right)
 
 
 def sin(angle: Radians) -> Radians:
@@ -61,6 +74,8 @@ def eq(left: Unit, right: Unit) -> None:
 
 
 ### Test Cases ###
+
+MetersPerSecondSquared = div(MetersPerSecond, Seconds)
 
 # F = ma
 Newtons = collapse(mul(Kilograms, MetersPerSecondSquared))
