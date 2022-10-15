@@ -473,6 +473,7 @@ class ExtendedKalmanFilter(object):
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None):
         innovations, states, covariances = self.transform(X, include_states=True)
+        n_samples, n_sensors = innovations.shape
 
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
         step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
