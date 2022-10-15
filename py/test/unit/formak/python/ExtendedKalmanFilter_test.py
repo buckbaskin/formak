@@ -199,28 +199,14 @@ def test_EKF_process_property(x, y, a):
 
         assert_almost_equal(python_version, symbolic_version)
 
-    try:
-        starting_central_probability = multivariate_normal(cov=covariance).pdf(
-            np.zeros_like(state_vector).transpose()
-        )
-        ending_central_probability = multivariate_normal(cov=next_cov).pdf(
-            np.zeros_like(state_vector).transpose()
-        )
-    except np.linalg.LinAlgError:
-        print("starting cov")
-        print(covariance)
-        print("next_cov")
-        print(next_cov)
-        raise
+    starting_central_probability = multivariate_normal(cov=covariance).pdf(
+        np.zeros_like(state_vector).transpose()
+    )
+    ending_central_probability = multivariate_normal(cov=next_cov).pdf(
+        np.zeros_like(state_vector).transpose()
+    )
 
-    try:
-        assert ending_central_probability < starting_central_probability
-    except AssertionError:
-        print("starting pdf")
-        print(starting_central_probability)
-        print("ending pdf")
-        print(ending_central_probability)
-        raise
+    assert ending_central_probability < starting_central_probability
 
 
 @given(floats(), floats(), floats())

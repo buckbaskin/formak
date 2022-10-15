@@ -486,15 +486,17 @@ class ExtendedKalmanFilter(object):
             var = np.sum(mahalanobis_distance_squared * sample_weight)
 
         # TODO(buck): START HERE: compound score: bias->0, variance->1, sum_squared(sensor, process)->0
-        bias_weight = 1.0
+        bias_weight = 1e1
         bias_score = avg
         # variance->1
         # minima at var = 1, innovations match noise model
-        variance_weight = 1.0
+        variance_weight = 1e0
         variance_score = (1.0 / var + var) / 2.0
         # TODO(buck): sum_squared(sensor, process)->0
-        matrix_weight = 1.0
-        matrix_score = 0.0
+        matrix_weight = 1e-2
+        matrix_score = np.sum(np.square(self.params["process_noise"]))
+        for sensor_noise in self.params["sensor_noises"].values():
+            matrix_score += np.sum(np.square(sensor_noise))
         return (
             bias_weight * bias_score
             + variance_weight * variance_score
