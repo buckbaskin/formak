@@ -38,5 +38,5 @@ def test_fit():
     assert isinstance(result, python.ExtendedKalmanFilter)
 
     params = dict(model.get_params())
-    assert params["process_noise"][0, 0] < 1.0
+    assert np.isclose(params["process_noise"][0, 0], 2.0, atol=1e-1)
     assert np.isclose(params["sensor_noises"]["simple"][0, 0], true_variance)
