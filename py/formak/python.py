@@ -476,6 +476,7 @@ class ExtendedKalmanFilter(object):
         n_samples, n_sensors = innovations.shape
 
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+        S_inv = np.linalg.inv(covariances[1:])
         step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
         mahalanobis_distance_squared = np.matmul(step1, innovations)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)

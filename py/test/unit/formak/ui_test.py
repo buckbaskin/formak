@@ -1,4 +1,4 @@
-from formak.ui import *
+from formak.ui import Symbol, Model
 
 
 def test_model_simplification():
