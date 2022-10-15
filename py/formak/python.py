@@ -454,10 +454,21 @@ class ExtendedKalmanFilter(object):
 
     # Compute the squared Mahalanobis distances of given observations.
     def mahalanobis(self, X):
-        # TODO(buck): mahalanobis
-        n_samples, n_features = X.shape
-        shape = (n_samples,)
-        return np.zeros(shape)
+        innovations, states, covariances = self.transform(X, include_states=True)
+        n_samples, n_sensors = innovations.shape
+        S_inv = np.linalg.inv(covariances[1:])
+        assert S_inv.shape == covariances[1:].shape
+            
+        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+
+        # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
+        # for:
+        #   u: predicted sensor readings
+        #   x: sensor readings
+        #   S: predicted sensor variance
+        step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
+        mahalanobis_distance_squared = np.matmul(step1, innovations)
+        return mahalanobis_distance_squared.flatten()
 
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None):
@@ -472,8 +483,7 @@ class ExtendedKalmanFilter(object):
         return (1.0 / x + x) / 2.0
 
     # Transform readings to innovations
-    def transform(self, X):
-        # TODO(buck): transform
+    def transform(self, X, include_states = False):
         n_samples, n_features = X.shape
         output_features = n_features - self.control_size
 
@@ -483,6 +493,8 @@ class ExtendedKalmanFilter(object):
         covariance = np.eye(self.state_size)
 
         innovations = []
+        states = [state]
+        covariances = [covariance]
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
@@ -519,12 +531,15 @@ class ExtendedKalmanFilter(object):
                     )
                 )
 
+            states.append(state)
+            covariances.append(covariance)
             innovations.append(innovation)
             assert innovations[-1] is not None
 
         # minima at x = 1, innovations match noise model
-        print("innovations")
-        print(innovations)
+        if include_states:
+            return np.array(innovations), np.array(states), np.array(covariances)
+
         return np.array(innovations)
 
     # Fit the model to data and transform readings to innovations
