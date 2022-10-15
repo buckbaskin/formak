@@ -458,7 +458,7 @@ class ExtendedKalmanFilter(object):
         n_samples, n_sensors = innovations.shape
         S_inv = np.linalg.inv(covariances[1:])
         assert S_inv.shape == covariances[1:].shape
-            
+
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
         # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
@@ -472,25 +472,38 @@ class ExtendedKalmanFilter(object):
 
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None):
-        innovations = self.transform(X)
+        innovations, states, covariances = self.transform(X, include_states=True)
+
+        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+        step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
+        mahalanobis_distance_squared = np.matmul(step1, innovations)
+        normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
         if sample_weight is None:
-            x = np.sum(np.square(innovations))
+            avg = np.square(np.average(normalized_innovations))
+            var = np.sum(mahalanobis_distance_squared)
         else:
-            x = np.sum(np.square(innovations) * sample_weight)
+            avg = np.square(np.average(normalized_innovations, weights=sample_weight))
+            var = np.sum(mahalanobis_distance_squared * sample_weight)
 
         # TODO(buck): START HERE: compound score: bias->0, variance->1, sum_squared(sensor, process)->0
-        # TODO(buck): bias->0
-        bias_score = 0.0
+        bias_weight = 1.0
+        bias_score = avg
         # variance->1
-        # minima at x = 1, innovations match noise model
-        variance_score = (1.0 / x + x) / 2.0
+        # minima at var = 1, innovations match noise model
+        variance_weight = 1.0
+        variance_score = (1.0 / var + var) / 2.0
         # TODO(buck): sum_squared(sensor, process)->0
+        matrix_weight = 1.0
         matrix_score = 0.0
-        return bias_score + variance_score + matrix_score
+        return (
+            bias_weight * bias_score
+            + variance_weight * variance_score
+            + matrix_weight * matrix_score
+        )
 
     # Transform readings to innovations
-    def transform(self, X, include_states = False):
+    def transform(self, X, include_states=False):
         n_samples, n_features = X.shape
         output_features = n_features - self.control_size
 
