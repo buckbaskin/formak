@@ -56,7 +56,7 @@ def test_score_two_sensor():
 
     params = {
         "process_noise": np.eye(1),
-        "sensor_models": {"position": {x: x}, "velocity": {v, v}},
+        "sensor_models": {"position": {x: x}, "velocity": {v: v}},
         "sensor_noises": {"position": np.eye(1), "velocity": np.eye(1)},
     }
 
