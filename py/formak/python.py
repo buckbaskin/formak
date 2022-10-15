@@ -485,10 +485,12 @@ class ExtendedKalmanFilter(object):
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
         if sample_weight is None:
-            avg = np.square(np.average(normalized_innovations))
+            avg = np.sum(np.square(np.average(normalized_innovations)))
             var = np.sum(mahalanobis_distance_squared)
         else:
-            avg = np.square(np.average(normalized_innovations, weights=sample_weight))
+            avg = np.sum(
+                np.square(np.average(normalized_innovations, weights=sample_weight))
+            )
             var = np.sum(mahalanobis_distance_squared * sample_weight)
 
         # bias->0
