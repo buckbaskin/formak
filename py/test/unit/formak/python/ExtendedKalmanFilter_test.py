@@ -67,7 +67,6 @@ def test_EKF_process_with_control():
 
 def test_EKF_sensor():
     config = python.Config()
-    dt = 0.1
 
     ekf = python.ExtendedKalmanFilter(
         state_model=ui.Model(
@@ -85,7 +84,6 @@ def test_EKF_sensor():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
     covariance = np.eye(2)
     reading = 1.0
     state_vector = np.array([[0.0, 0.0]]).transpose()
@@ -126,7 +124,6 @@ def test_EKF_process_jacobian():
     )
 
     control_vector = np.array([[0.2]])
-    covariance = np.eye(2)
 
     state_vector = np.array([[0.0, 0.0]]).transpose()
     assert_almost_equal(
@@ -175,9 +172,9 @@ def test_EKF_process_property(x, y, a):
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[x, y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         reject()
@@ -229,7 +226,6 @@ def test_EKF_process_property(x, y, a):
 @given(floats(), floats(), floats())
 def test_EKF_sensor_property(x, y, a):
     config = {}
-    dt = 0.1
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -248,9 +244,9 @@ def test_EKF_sensor_property(x, y, a):
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[x, y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         reject()
@@ -299,7 +295,6 @@ def test_EKF_sensor_property_failing_example():
     start_time = datetime.now()
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
     config = {}
-    dt = 0.1
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -318,9 +313,9 @@ def test_EKF_sensor_property_failing_example():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[x, y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         reject()

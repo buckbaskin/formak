@@ -1,13 +1,9 @@
 import numpy as np
-import pytest
 
-from numpy.random import default_rng
 from formak import ui, python
 
 
 def test_transform():
-    random = default_rng(1)
-
     dt = ui.Symbol("dt")
 
     x, v = ui.symbols(["x", "v"])
@@ -29,10 +25,8 @@ def test_transform():
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
-    true_variance = 2.0
-
     # reading = [v, x]
-    readings = X = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
+    readings = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
     n_samples, n_features = readings.shape
 
     result = model.transform(readings)
@@ -43,8 +37,6 @@ def test_transform():
 
 
 def test_transform_kalman_filter_args():
-    random = default_rng(1)
-
     dt = ui.Symbol("dt")
 
     x, v = ui.symbols(["x", "v"])
@@ -65,8 +57,6 @@ def test_transform_kalman_filter_args():
     model = python.compile_ekf(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
-
-    true_variance = 2.0
 
     # reading = [v, x]
     readings = X = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])

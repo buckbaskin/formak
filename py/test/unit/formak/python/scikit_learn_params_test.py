@@ -1,14 +1,12 @@
 import numpy as np
-import pytest
 
-from numpy.random import default_rng
 from formak import ui, python
 
 
 def test_get_params():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
@@ -33,7 +31,7 @@ def test_get_params():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
+    readings = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
     n_samples, n_features = readings.shape
 
     # Get parameters for this estimator.
@@ -45,7 +43,7 @@ def test_get_params():
 def test_set_params():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
@@ -70,7 +68,7 @@ def test_set_params():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
+    readings = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
     n_samples, n_features = readings.shape
 
     # Set the parameters of this estimator.

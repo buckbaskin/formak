@@ -335,7 +335,7 @@ class ExtendedKalmanFilter(object):
     def sensor_model(self, sensor_key, state, covariance, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
-        Q_t = model_noise = self.params["sensor_noises"][sensor_key]
+        Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
 
         try:
             assert isinstance(state, np.ndarray)
@@ -375,7 +375,7 @@ class ExtendedKalmanFilter(object):
         )
         S_inv = np.linalg.inv(S_t)
 
-        K_t = kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
+        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
         # TODO(buck): is innovation normalized by variance?
@@ -419,15 +419,12 @@ class ExtendedKalmanFilter(object):
 
     # Fit the model to data
     def fit(self, X, y=None, sample_weight=None):
-        # TODO(buck): Figure out dt, add it as the first element of X
-        dt = 0.1
-
         assert self.params["process_noise"] is not None
         assert self.params["sensor_models"] is not None
         assert self.params["sensor_noises"] is not None
 
         x0 = self._flatten_scoring_params(self.params)
-        # TODO(buck): implement parameter fitting, y ignored
+
         def minimize_this(x):
             holdout_params = dict(self.get_params())
 
@@ -507,7 +504,6 @@ class ExtendedKalmanFilter(object):
     # Transform readings to innovations
     def transform(self, X, include_states=False):
         n_samples, n_features = X.shape
-        output_features = n_features - self.control_size
 
         dt = 0.1
 

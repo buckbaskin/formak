@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from numpy.random import default_rng
 from formak import ui, python
@@ -32,9 +31,7 @@ def test_fit():
     true_variance = 2.0
 
     # reading = [v, x]
-    readings = X = np.array(
-        [[0, random.normal(scale=true_variance)] for _ in range(20)]
-    )
+    readings = np.array([[0, random.normal(scale=true_variance)] for _ in range(20)])
 
     # Fit the model to data
     result = model.fit(readings)

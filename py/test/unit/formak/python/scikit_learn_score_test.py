@@ -1,13 +1,9 @@
 import numpy as np
-import pytest
 
-from numpy.random import default_rng
 from formak import ui, python
 
 
 def test_score():
-    random = default_rng(1)
-
     dt = ui.Symbol("dt")
 
     x, v = ui.symbols(["x", "v"])
@@ -29,10 +25,8 @@ def test_score():
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
-    true_variance = 2.0
-
     # reading = [v, x]
-    readings = X = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
+    readings = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
 
     score = model.score(readings)
     assert isinstance(score, float)
