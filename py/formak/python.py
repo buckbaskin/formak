@@ -474,7 +474,13 @@ class ExtendedKalmanFilter(object):
 
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
         S_inv = np.linalg.inv(covariances[1:])
-        step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
+        try:
+            step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
+        except ValueError:
+            print("matmul ValueError")
+            print(innovations.shape)
+            print(innovations.transpose(0, 2, 1))
+            print(S_inv.shape)
         mahalanobis_distance_squared = np.matmul(step1, innovations)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
@@ -485,14 +491,16 @@ class ExtendedKalmanFilter(object):
             avg = np.square(np.average(normalized_innovations, weights=sample_weight))
             var = np.sum(mahalanobis_distance_squared * sample_weight)
 
-        # TODO(buck): START HERE: compound score: bias->0, variance->1, sum_squared(sensor, process)->0
+        # bias->0
         bias_weight = 1e1
         bias_score = avg
+
         # variance->1
         # minima at var = 1, innovations match noise model
         variance_weight = 1e0
         variance_score = (1.0 / var + var) / 2.0
-        # TODO(buck): sum_squared(sensor, process)->0
+
+        # prefer smaller matrix terms
         matrix_weight = 1e-2
         matrix_score = np.sum(np.square(self.params["process_noise"]))
         for sensor_noise in self.params["sensor_noises"].values():
