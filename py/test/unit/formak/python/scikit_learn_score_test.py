@@ -45,13 +45,14 @@ def test_score():
 def test_score_two_sensor():
     dt = ui.Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v, a= ui.symbols(["x", "v", 'a'])
 
-    state = set([x])
-    control = set([v])
+    state = set([x, v])
+    control = set([a])
 
     state_model = {
         x: x + dt * v,
+        v: v + dt * a,
     }
 
     params = {

@@ -67,8 +67,15 @@ class Model(object):
         assert control_vector.shape == (self.control_size, min(self.control_size, 1))
 
         next_state = np.zeros((self.state_size, 1))
-        for i, impl in enumerate(self._impl):
-            next_state[i, 0] = impl(dt, *state, *control_vector)
+        for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
+            try:
+                result = impl(dt, *state, *control_vector)
+                next_state[i, 0] = result
+            except TypeError:
+                print('TypeError when trying to process process model for state %s' % (state_id,))
+                print('expected: float')
+                print('found: %s, %s' % (type(result), result))
+                raise
         return next_state
 
 
@@ -92,6 +99,11 @@ class SensorModel(object):
             for k in self.readings
         ]
 
+        ## "Pre-flight" Checks
+
+        # Pre-check model for type errors
+        self.model(np.zeros((self.state_size, 1)))
+
     def __len__(self):
         return len(self.sensor_models)
 
@@ -100,8 +112,15 @@ class SensorModel(object):
         assert state.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
-        for i, impl in enumerate(self._impl):
-            reading[i, 0] = impl(*state)
+        for i, (reading_id, impl) in enumerate(zip(self.readings, self._impl)):
+            try:
+                result = impl(*state)
+                reading[i, 0] = result
+            except TypeError:
+                print('TypeError when trying to process sensor model for reading %s' % (reading_id,))
+                print('expected: float')
+                print('found: %s, %s' % (type(result), result))
+                raise
         return reading
 
 
