@@ -72,9 +72,12 @@ class Model(object):
                 result = impl(dt, *state, *control_vector)
                 next_state[i, 0] = result
             except TypeError:
-                print('TypeError when trying to process process model for state %s' % (state_id,))
-                print('expected: float')
-                print('found: %s, %s' % (type(result), result))
+                print(
+                    "TypeError when trying to process process model for state %s"
+                    % (state_id,)
+                )
+                print("expected: float")
+                print("found: %s, %s" % (type(result), result))
                 raise
         return next_state
 
@@ -117,9 +120,12 @@ class SensorModel(object):
                 result = impl(*state)
                 reading[i, 0] = result
             except TypeError:
-                print('TypeError when trying to process sensor model for reading %s' % (reading_id,))
-                print('expected: float')
-                print('found: %s, %s' % (type(result), result))
+                print(
+                    "TypeError when trying to process sensor model for reading %s"
+                    % (reading_id,)
+                )
+                print("expected: float")
+                print("found: %s, %s" % (type(result), result))
                 raise
         return reading
 
@@ -487,7 +493,7 @@ class ExtendedKalmanFilter(object):
         return mahalanobis_distance_squared.flatten()
 
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
-    def score(self, X, y=None, sample_weight=None):
+    def score(self, X, y=None, sample_weight=None, explain_score=False):
         innovations, states, covariances = self.transform(X, include_states=True)
         n_samples, n_sensors = innovations.shape
 
@@ -526,6 +532,24 @@ class ExtendedKalmanFilter(object):
         matrix_score = np.sum(np.square(self.params["process_noise"]))
         for sensor_noise in self.params["sensor_noises"].values():
             matrix_score += np.sum(np.square(sensor_noise))
+
+        if explain_score:
+            return (
+                (
+                    bias_weight * bias_score
+                    + variance_weight * variance_score
+                    + matrix_weight * matrix_score
+                ),
+                (
+                    bias_weight,
+                    bias_score,
+                    variance_weight,
+                    variance_score,
+                    matrix_weight,
+                    matrix_score,
+                ),
+            )
+
         return (
             bias_weight * bias_score
             + variance_weight * variance_score

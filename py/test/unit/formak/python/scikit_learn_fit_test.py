@@ -33,9 +33,16 @@ def test_fit():
     # reading = [v, x]
     readings = np.array([[0, random.normal(scale=true_variance)] for _ in range(20)])
 
+    pre_score = model.score(readings)
+
     # Fit the model to data
     result = model.fit(readings)
     assert isinstance(result, python.ExtendedKalmanFilter)
+
+    post_score = model.score(readings)
+
+    assert pre_score > post_score
+    assert pre_score < post_score
 
     params = dict(model.get_params())
     assert np.isclose(params["process_noise"][0, 0], 2.0, atol=1e-1)
