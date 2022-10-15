@@ -479,8 +479,15 @@ class ExtendedKalmanFilter(object):
         else:
             x = np.sum(np.square(innovations) * sample_weight)
 
+        # TODO(buck): START HERE: compound score: bias->0, variance->1, sum_squared(sensor, process)->0
+        # TODO(buck): bias->0
+        bias_score = 0.0
+        # variance->1
         # minima at x = 1, innovations match noise model
-        return (1.0 / x + x) / 2.0
+        variance_score = (1.0 / x + x) / 2.0
+        # TODO(buck): sum_squared(sensor, process)->0
+        matrix_score = 0.0
+        return bias_score + variance_score + matrix_score
 
     # Transform readings to innovations
     def transform(self, X, include_states = False):
