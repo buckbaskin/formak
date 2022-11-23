@@ -12,32 +12,22 @@ example_expr = (a + b) * (c + d)
 
 global_id_counter = 0
 
-def visit_sympy_expr(expr, base=None):
+def match_Add(expr):
+    return expr.func == sympy.core.add.Add
+
+def visit_sympy_expr(expr, matcher, base=None):
     if base is None:
         base = []
     print('visiting expr at %s' % (base,))
 
-    if len(expr.args) == 0:
-        if expr.func == sympy.core.symbol.Symbol:
-            print("Symbol doesn't match Add pattern")
-        else:
-            raise ValueError('terminal %s %s' % (expr.func, expr.args,))
-    else:
-        if expr.func == sympy.core.add.Add:
-            # match Add
-            yield base, expr
+    if matcher(expr):
+        yield base, expr
 
-            for idx, arg in enumerate(expr.args):
-                for result in visit_sympy_expr(arg, base + [idx]):
-                    yield result
-        elif expr.func == sympy.core.mul.Mul:
-            for idx, arg in enumerate(expr.args):
-                for result in visit_sympy_expr(arg, base + [idx]):
-                    yield result
-        else:
-            raise ValueError('operator %s %s' % (expr.func, expr.args,))
+    for idx, arg in enumerate(expr.args):
+        for result in visit_sympy_expr(arg, matcher, base + [idx]):
+            yield result
 
-matches = list(visit_sympy_expr(example_expr))
+matches = list(visit_sympy_expr(example_expr, match_Add))
 
 print('Matches')
 print(matches)
