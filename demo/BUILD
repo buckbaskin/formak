@@ -9,4 +9,3 @@ py_binary(
         "//py:formak",
     ],
 )
-
