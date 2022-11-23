@@ -9,3 +9,12 @@ py_binary(
         "//py:formak",
     ],
 )
+
+py_binary(
+    name = "graph-editing",
+    srcs = ["src/graph_editing.py"],
+    main = "src/graph_editing.py",
+    deps = [
+        requirement("sympy"),
+    ],
+)
