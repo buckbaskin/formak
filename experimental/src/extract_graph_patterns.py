@@ -1,16 +1,12 @@
 import sympy
 
-from collections import namedtuple
-from sympy import Matrix, init_printing, pprint, symbols, shape, srepr
-from sympy.matrices.dense import matrix_multiply_elementwise
+from sympy import init_printing, symbols
 
 init_printing(use_unicode=True)
 
 a, b, c, d = symbols(["a", "b", "c", "d"])
 
 example_expr = (a + b) * (c + d)
-
-global_id_counter = 0
 
 
 def match_Add(expr):
