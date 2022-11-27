@@ -125,3 +125,12 @@ py_binary(
         requirement("sympy"),
     ],
 )
+
+py_binary(
+    name = "coffman-graham",
+    srcs = ["src/coffman_graham.py"],
+    main = "src/coffman_graham.py",
+    deps = [
+        requirement("sympy"),
+    ],
+)
