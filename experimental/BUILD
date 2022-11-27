@@ -134,4 +134,3 @@ py_binary(
         requirement("sympy"),
     ],
 )
-
