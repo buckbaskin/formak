@@ -36,7 +36,7 @@ def setup_coffman_graham(graph, matcher):
 def is_dependency_of(left, right):
     left_path, _ = left
     right_path, _ = right
-    print(
+    logger.debug(
         "left: %s , right: %s, left_slice: %s"
         % (left_path, right_path, left_path[: len(right_path)])
     )
@@ -159,6 +159,8 @@ def cg(graph, width, matcher=None):
 def main():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     example_expr = (a + b) * (c + ((a + b) * d))
+
+    print("Expression: %s" % (example_expr,))
 
     print("Visit the expression")
     for idx, val in enumerate(visit_sympy_expr(example_expr, lambda x: True)):
