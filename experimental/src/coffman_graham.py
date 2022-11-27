@@ -3,7 +3,7 @@ import logging
 
 from sympy import symbols
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("coffman_graham")
 logger.setLevel(logging.DEBUG)
 
@@ -152,7 +152,7 @@ def cg(graph, width, matcher=None):
 
 def main():
     a, b, c, d = symbols(["a", "b", "c", "d"])
-    example_expr = (a + b) * (c + d)
+    example_expr = (a + b) * (c + ((a + b) * d))
 
     print("Visit the expression")
     for idx, val in enumerate(visit_sympy_expr(example_expr, lambda x: True)):
