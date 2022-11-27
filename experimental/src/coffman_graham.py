@@ -4,7 +4,7 @@ import logging
 from sympy import symbols
 
 # logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("coffman_graham")
+logger = logging.getLogger("cg")
 logger.setLevel(logging.DEBUG)
 
 
@@ -33,15 +33,20 @@ def setup_coffman_graham(graph, matcher):
     return ordered_nodes, unordered_nodes
 
 
-def is_dependendency(node, maybe_dependency):
-    node_path, _ = node
-    maybe_dep_path, _ = maybe_dependency
-    return maybe_dep_path[: len(node_path)] == node_path
+def is_dependency_of(left, right):
+    left_path, _ = left
+    right_path, _ = right
+    print(
+        "left: %s , right: %s, left_slice: %s"
+        % (left_path, right_path, left_path[: len(right_path)])
+    )
+    return left_path[: len(right_path)] == right_path
 
 
-assert is_dependendency(((1,), "expr"), ((1, 2), "expr"))
-assert not is_dependendency(((2,), "expr"), ((1, 2), "expr"))
-assert not is_dependendency(
+assert is_dependency_of(((1, 2), "expr"), ((1,), "expr"))
+assert not is_dependency_of(((1, 2), "expr"), ((2,), "expr"))
+assert not is_dependency_of(
+    ((1, 2), "expr"),
     (
         (
             1,
@@ -50,8 +55,8 @@ assert not is_dependendency(
         ),
         "expr",
     ),
-    ((1, 2), "expr"),
 )
+assert is_dependency_of(((1, 1, 1), "expr"), ((1,), "expr"))
 
 
 def cg(graph, width, matcher=None):
@@ -59,6 +64,7 @@ def cg(graph, width, matcher=None):
         matcher = lambda x: True
 
     ordered_nodes, unordered_nodes = setup_coffman_graham(graph, matcher)
+    assert len(ordered_nodes) > 0
 
     def coffman_graham_filter_criteria(node):
         path_to_expr, expr = node
@@ -108,18 +114,18 @@ def cg(graph, width, matcher=None):
                 % (node, inv_level_idx, len(level))
             )
             for maybe_dependency in level:
-                if is_dependendency(maybe_dependency, node):
+                if is_dependency_of(node, maybe_dependency):
                     logger.debug(
-                        "point-to dep %s found for node %s at inverse level %d"
-                        % (maybe_dependency, node, inv_level_idx)
+                        "point-to dep: %s is dep of %s at inverse level %d"
+                        % (node, maybe_dependency, inv_level_idx)
                     )
                     min_level = len(levels) - inv_level_idx - 1
                     # need to go to a greater level
                     break
                 else:
                     logger.debug(
-                        "no dep %s found for node %s at inverse level %d"
-                        % (maybe_dependency, node, inv_level_idx)
+                        "no dep: %s is not dep of %s at inverse level %d"
+                        % (node, maybe_dependency, inv_level_idx)
                     )
             if min_level > -1:
                 logger.debug(
@@ -164,7 +170,7 @@ def main():
         print("    %d : %s" % (idx, level))
 
     def match_Add(expr):
-        return expr.func == sympy.core.add.Add
+        return expr.func == sympy.core.add.Add or len(expr.args) == 0
 
     levels = cg(example_expr, 4, match_Add)
     print("End Of Calculation. Levels:")
