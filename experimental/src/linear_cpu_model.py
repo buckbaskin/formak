@@ -31,7 +31,7 @@ SKYLAKE = CpuArchitectureInfo(latency={Add: 4}, throughput={Add: Fraction(1, 2)}
 
 
 def initial_state():
-    return {'available_registers': {}, 'inprogress_registers': {}}
+    return {"available_registers": {}, "inprogress_registers": {}}
 
 
 def cpu_tick(state, instructions, cpu_architecture_info):
@@ -80,7 +80,9 @@ def run_instruction_list(
     cpu_stats = {"ticks": 0}
 
     for i in range(max_iterations):
-        state, remaining_instructions = cpu_tick(state, instructions, cpu_architecture_info)
+        state, remaining_instructions = cpu_tick(
+            state, instructions, cpu_architecture_info
+        )
 
         cpu_stats["ticks"] += 1
 
@@ -89,10 +91,10 @@ def run_instruction_list(
 
 
 def main():
-    instruction_sets = [[Add('A', 'B')]]
+    instruction_sets = [[Add("A", "B")]]
     for idx, instructions in enumerate(instruction_sets):
         stats = run_instruction_list(instructions, cpu_architecture_info=SKYLAKE)
-        print('Stats For Instructions %d:' % (idx,))
+        print("Stats For Instructions %d:" % (idx,))
         print(stats)
 
 
