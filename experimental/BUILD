@@ -134,3 +134,9 @@ py_binary(
         requirement("sympy"),
     ],
 )
+
+py_binary(
+    name = "linear-cpu-model",
+    srcs = ["src/linear_cpu_model.py"],
+    main = "src/linear_cpu_model.py",
+)
