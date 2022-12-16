@@ -478,35 +478,14 @@ class ExtendedKalmanFilter(object):
     def mahalanobis(self, X):
         innovations, states, covariances = self.transform(X, include_states=True)
         n_samples, n_sensors = innovations.shape
-        S_inv = np.linalg.inv(covariances[1:])
-        assert S_inv.shape == covariances[1:].shape
 
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
-        # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
-        # for:
-        #   u: predicted sensor readings
-        #   x: sensor readings
-        #   S: predicted sensor variance
-        step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
-        mahalanobis_distance_squared = np.matmul(step1, innovations)
-        return mahalanobis_distance_squared.flatten()
+        return innovations.flatten()
 
     # Compute the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None, explain_score=False):
-        innovations, states, covariances = self.transform(X, include_states=True)
-        n_samples, n_sensors = innovations.shape
-
-        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
-        S_inv = np.linalg.inv(covariances[1:])
-        try:
-            step1 = np.matmul(innovations.transpose(0, 2, 1), S_inv)
-        except ValueError:
-            print("matmul ValueError")
-            print(innovations.shape)
-            print(innovations.transpose(0, 2, 1))
-            print(S_inv.shape)
-        mahalanobis_distance_squared = np.matmul(step1, innovations)
+        mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
         if sample_weight is None:
@@ -595,12 +574,20 @@ class ExtendedKalmanFilter(object):
                     key, state, covariance, sensor_input
                 )
                 # Normalized by the uncertainty at the time of the measurement
+                # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
+                # for:
+                #   u: predicted sensor readings
+                #   x: sensor readings
+                #   S: predicted sensor variance
                 innovation.append(
                     float(
                         np.matmul(
-                            self.innovations[key],
+                        np.matmul(
+                            self.innovations[key].T,
                             np.linalg.inv(self.sensor_prediction_uncertainty[key]),
-                        )
+                        ),
+                        self.innovations[key])
+
                     )
                 )
 

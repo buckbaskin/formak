@@ -32,8 +32,12 @@ def test_UI_like_sklearn():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2]])
+    readings = X = np.array([[10, 0,], [10, 0,], [9, 1,]])
     n_samples, n_features = readings.shape
+    n_control = len(control)
+    n_readings = len(params['sensor_models'])
+    assert n_features == n_control + n_readings
+
 
     # Fit the model to data
     assert isinstance(model.fit(readings), python.ExtendedKalmanFilter)
@@ -50,9 +54,9 @@ def test_UI_like_sklearn():
     #   - sklearn.manifold.LocallyLinearEmbedding https://scikit-learn.org/stable/modules/generated/sklearn.manifold.LocallyLinearEmbedding.html#sklearn.manifold.LocallyLinearEmbedding
 
     # Transform readings to innovations
-    assert model.transform(readings).shape == (n_samples, n_features - len(control))
+    assert model.transform(readings).shape == (n_samples, n_readings)
     # Fit the model to data and transform readings to innovations
-    assert model.fit_transform(readings).shape == (n_samples, n_features - len(control))
+    assert model.fit_transform(readings).shape == (n_samples, n_readings)
 
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
