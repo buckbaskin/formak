@@ -184,7 +184,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size**2
+        assert len(self._impl_process_jacobian) == self.state_size ** 2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
@@ -584,12 +584,12 @@ class ExtendedKalmanFilter(object):
                 innovation.append(
                     float(
                         np.matmul(
-                        np.matmul(
-                            self.innovations[key].T,
-                            np.linalg.inv(self.sensor_prediction_uncertainty[key]),
-                        ),
-                        self.innovations[key])
-
+                            np.matmul(
+                                self.innovations[key].T,
+                                np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                            ),
+                            self.innovations[key],
+                        )
                     )
                 )
 

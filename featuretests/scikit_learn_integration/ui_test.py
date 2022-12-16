@@ -32,12 +32,26 @@ def test_UI_like_sklearn():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0,], [10, 0,], [9, 1,]])
+    readings = X = np.array(
+        [
+            [
+                10,
+                0,
+            ],
+            [
+                10,
+                0,
+            ],
+            [
+                9,
+                1,
+            ],
+        ]
+    )
     n_samples, n_features = readings.shape
     n_control = len(control)
-    n_readings = len(params['sensor_models'])
+    n_readings = len(params["sensor_models"])
     assert n_features == n_control + n_readings
-
 
     # Fit the model to data
     assert isinstance(model.fit(readings), python.ExtendedKalmanFilter)

@@ -3,7 +3,8 @@ import warnings
 
 from datetime import datetime, timedelta
 from scipy.stats import multivariate_normal
-from hypothesis import given, reject
+from hypothesis import given, reject, settings
+from datetime import timedelta
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 
@@ -151,6 +152,7 @@ def test_EKF_process_jacobian():
 
 
 @given(floats(), floats(), floats())
+@settings(deadline=timedelta(seconds=2))
 def test_EKF_process_property(state_x, state_y, control_a):
     config = {}
     dt = 0.1
@@ -213,11 +215,11 @@ def test_EKF_process_property(state_x, state_y, control_a):
         reject()
 
     try:
-        assert (ending_central_probability < starting_central_probability)
+        assert ending_central_probability < starting_central_probability
     except AssertionError:
-        print('Starting at %f' % (starting_central_probability,))
+        print("Starting at %f" % (starting_central_probability,))
         print(covariance)
-        print('Ending at %f' % (ending_central_probability,))
+        print("Ending at %f" % (ending_central_probability,))
         print(next_cov)
         raise
 

@@ -42,4 +42,3 @@ def test_fit():
     post_score = model.score(readings)
 
     assert pre_score > post_score
-
