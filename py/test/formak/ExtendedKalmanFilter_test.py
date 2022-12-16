@@ -4,7 +4,6 @@ import warnings
 from datetime import datetime, timedelta
 from scipy.stats import multivariate_normal
 from hypothesis import given, reject, settings
-from datetime import timedelta
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 

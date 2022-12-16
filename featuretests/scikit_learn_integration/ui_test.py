@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from formak import ui, python
 
@@ -7,7 +6,7 @@ from formak import ui, python
 def test_UI_like_sklearn():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
@@ -32,7 +31,7 @@ def test_UI_like_sklearn():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array(
+    readings = _X = np.array(
         [
             [
                 10,

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from formak import ui, python
 
@@ -7,7 +6,7 @@ from formak import ui, python
 def test_like_sklearn_regression():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
@@ -34,7 +33,7 @@ def test_like_sklearn_regression():
     )
 
     # reading = [thrust, z, v]
-    readings = X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2], [8, 1, 2], [7, 1, 2]])
+    readings = _X = np.array([[10, 0, 0], [10, 0, 1], [9, 1, 2], [8, 1, 2], [7, 1, 2]])
 
     unfit_score = model.score(readings)
 
