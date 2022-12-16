@@ -42,8 +42,4 @@ def test_fit():
     post_score = model.score(readings)
 
     assert pre_score > post_score
-    assert pre_score < post_score
 
-    params = dict(model.get_params())
-    assert np.isclose(params["process_noise"][0, 0], 2.0, atol=1e-1)
-    assert np.isclose(params["sensor_noises"]["simple"][0, 0], true_variance)

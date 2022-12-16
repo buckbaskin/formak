@@ -116,7 +116,7 @@ py_test_suite(
 
 py_test_suite(
     name = "integration",
-    size = "small",
+    size = "medium",
     srcs = glob([
         "test/formak/**/*.py",
     ]),

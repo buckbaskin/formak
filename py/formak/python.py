@@ -152,6 +152,8 @@ class ExtendedKalmanFilter(object):
         self.state_model = Model(state_model, config)
         self.params["process_noise"] = process_noise
 
+        assert len(process_noise.diagonal()) == self.control_size
+
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
         process_matrix = Matrix(

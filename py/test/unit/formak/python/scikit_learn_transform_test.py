@@ -16,7 +16,7 @@ def test_transform():
     }
 
     params = {
-        "process_noise": np.eye(1),
+        "process_noise": np.eye(1) * 1e-6,
         "sensor_models": {"simple": {x: x}},
         "sensor_noises": {"simple": np.eye(1)},
     }
@@ -33,7 +33,7 @@ def test_transform():
     assert result.shape == (n_samples, n_features - len(control))
 
     assert not np.allclose(result, np.zeros_like(result))
-    assert np.allclose(result[2:], readings[2:, 1:], atol=0.3)
+    assert np.allclose(result[2:], np.square(readings[2:, 1:]), atol=0.3)
 
 
 def test_transform_kalman_filter_args():

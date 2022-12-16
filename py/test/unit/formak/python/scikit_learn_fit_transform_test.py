@@ -34,4 +34,3 @@ def test_fit_transform():
 
     assert not np.allclose(result, np.zeros_like(result))
     assert np.all(np.abs(result[2:]) < np.abs(readings[2:, 1:]))
-    assert np.all((result < 0) == (readings[:, 1:] < 0))

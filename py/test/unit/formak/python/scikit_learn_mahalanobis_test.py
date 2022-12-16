@@ -36,7 +36,5 @@ def test_mahalanobis():
     assert not np.allclose(result, np.zeros_like(result))
 
     for i in range(len(innovations)):
-        x_minus_u, S = innovations[i], covariances[i + 1]
-        S_inv = np.linalg.inv(S)
-        expected_distance_squared = x_minus_u * S_inv * x_minus_u
-        assert np.allclose(expected_distance_squared, result[i])
+        expected_distance = innovations[i]
+        assert np.allclose(expected_distance, result[i])
