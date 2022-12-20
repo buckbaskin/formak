@@ -10,6 +10,9 @@ feature_test:
 format:
 	bash actions/format.bash
 
+lint:
+	bash actions/lint.bash
+
 tidy:
 	bash actions/tidy.bash
 
