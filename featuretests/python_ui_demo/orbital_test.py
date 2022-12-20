@@ -43,7 +43,7 @@ def SaturnVMass():
 
     print("Mass Groups")
     for k, v in sorted(list(mass_groups.items())):
-        print("  %s: %s" % (k, v))
+        print("  {}: {}".format(k, v))
 
     return {"dry": dry, "consumable": consumable}
 
@@ -65,7 +65,7 @@ def test_orbital_example():
 
     state = set(vehicle_properties.values())
 
-    control = set([fuel_burn_rate])  # kg/sec
+    control = {fuel_burn_rate}  # kg/sec
 
     # momentum = mv
     # dmomentum / dt = F = d(mv)/dt
@@ -92,4 +92,4 @@ def test_orbital_example():
 
     print("Initial State")
     for k in sorted(list(initial_state.keys()), key=lambda x: x.name):
-        print("  %s: %s" % (k, initial_state[k]))
+        print("  {}: {}".format(k, initial_state[k]))

@@ -1,7 +1,7 @@
 from sympy import Symbol, simplify, symbols
 
 
-class Model(object):
+class Model:
     def __init__(
         self,
         dt,
@@ -29,10 +29,10 @@ class Model(object):
             try:
                 assert k in state_model
             except AssertionError:
-                print("%s ( %s ) missing from state model" % (k, type(k)))
+                print("{} ( {} ) missing from state model".format(k, type(k)))
                 raise
 
         if debug_print:
             print("State Model")
             for k in sorted(list(state_model.keys()), key=lambda x: x.name):
-                print("  %s: %s" % (k, state_model[k]))
+                print("  {}: {}".format(k, state_model[k]))

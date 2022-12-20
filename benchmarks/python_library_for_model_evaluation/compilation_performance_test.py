@@ -8,7 +8,7 @@ from formak import python
 
 
 # TODO(buck): move this to a test utils library file
-class Timer(object):
+class Timer:
     def __enter__(self):
         self.start = datetime.now()
         return self
@@ -28,7 +28,7 @@ def test_python_Model_compiler_performance():
     thrust = Symbol("thrust")
 
     state = set(tp.values())
-    control = set([thrust])
+    control = {thrust}
 
     state_model = {
         tp["mass"]: tp["mass"],

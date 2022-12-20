@@ -216,9 +216,9 @@ def test_EKF_process_property(state_x, state_y, control_a):
     try:
         assert ending_central_probability < starting_central_probability
     except AssertionError:
-        print("Starting at %f" % (starting_central_probability,))
+        print("Starting at {:f}".format(starting_central_probability))
         print(covariance)
-        print("Ending at %f" % (ending_central_probability,))
+        print("Ending at {:f}".format(ending_central_probability))
         print(next_cov)
         raise
 

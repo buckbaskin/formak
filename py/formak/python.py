@@ -7,7 +7,7 @@ from sympy.utilities.lambdify import lambdify
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
-class Model(object):
+class Model:
     """Python implementation of the model"""
 
     def __init__(self, symbolic_model, config):
@@ -76,12 +76,12 @@ class Model(object):
                     % (state_id,)
                 )
                 print("expected: float")
-                print("found: %s, %s" % (type(result), result))
+                print("found: {}, {}".format(type(result), result))
                 raise
         return next_state
 
 
-class SensorModel(object):
+class SensorModel:
     def __init__(self, state_model, sensor_model, config):
         self.readings = sorted(list(sensor_model.keys()))
         self.sensor_models = sensor_model
@@ -124,12 +124,12 @@ class SensorModel(object):
                     % (reading_id,)
                 )
                 print("expected: float")
-                print("found: %s, %s" % (type(result), result))
+                print("found: {}, {}".format(type(result), result))
                 raise
         return reading
 
 
-class ExtendedKalmanFilter(object):
+class ExtendedKalmanFilter:
     def __init__(
         self, state_model, process_noise, sensor_models, sensor_noises, config
     ):
@@ -622,7 +622,7 @@ class ExtendedKalmanFilter(object):
         return self
 
 
-class Config(object):
+class Config:
     def __init__(
         self,
         compile=False,

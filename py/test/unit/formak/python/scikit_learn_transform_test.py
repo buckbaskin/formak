@@ -8,8 +8,8 @@ def test_transform():
 
     x, v = ui.symbols(["x", "v"])
 
-    state = set([x])
-    control = set([v])
+    state = {x}
+    control = {v}
 
     state_model = {
         x: x + dt * v,
@@ -41,8 +41,8 @@ def test_transform_kalman_filter_args():
 
     x, v = ui.symbols(["x", "v"])
 
-    state = set([x])
-    control = set([v])
+    state = {x}
+    control = {v}
 
     state_model = {
         x: x + dt * v,

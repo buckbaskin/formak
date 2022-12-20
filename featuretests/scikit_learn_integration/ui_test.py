@@ -11,7 +11,7 @@ def test_UI_like_sklearn():
     thrust = ui.Symbol("thrust")
 
     state = set(tp.values())
-    control = set([thrust])
+    control = {thrust}
 
     state_model = {
         tp["mass"]: tp["mass"],

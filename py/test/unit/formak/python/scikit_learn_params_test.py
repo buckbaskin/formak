@@ -11,7 +11,7 @@ def test_get_params():
     thrust = ui.Symbol("thrust")
 
     state = set(tp.values())
-    control = set([thrust])
+    control = {thrust}
 
     state_model = {
         tp["mass"]: tp["mass"],
@@ -48,7 +48,7 @@ def test_set_params():
     thrust = ui.Symbol("thrust")
 
     state = set(tp.values())
-    control = set([thrust])
+    control = {thrust}
 
     state_model = {
         tp["mass"]: tp["mass"],

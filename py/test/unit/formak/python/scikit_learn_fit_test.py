@@ -11,8 +11,8 @@ def test_fit():
 
     x, v = ui.symbols(["x", "v"])
 
-    state = set([x])
-    control = set([v])
+    state = {x}
+    control = {v}
 
     state_model = {
         x: x + dt * v,

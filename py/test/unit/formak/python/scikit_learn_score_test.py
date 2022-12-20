@@ -8,8 +8,8 @@ def test_score():
 
     x, v = ui.symbols(["x", "v"])
 
-    state = set([x])
-    control = set([v])
+    state = {x}
+    control = {v}
 
     state_model = {
         x: x + dt * v,
@@ -47,8 +47,8 @@ def test_score_two_sensor():
 
     x, v, a = ui.symbols(["x", "v", "a"])
 
-    state = set([x, v])
-    control = set([a])
+    state = {x, v}
+    control = {a}
 
     state_model = {
         x: x + dt * v,
@@ -89,8 +89,8 @@ def test_score_two_sensor_explained():
 
     x, v, a = ui.symbols(["x", "v", "a"])
 
-    state = set([x, v])
-    control = set([a])
+    state = {x, v}
+    control = {a}
 
     state_model = {
         x: x + dt * v,
