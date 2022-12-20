@@ -15,3 +15,7 @@ autoflake -i -r py/
 echo "pyupgrade"
 # move to modern patterns
 pyupgrade $(ag --python -g "." py/)
+
+echo "pydocstringformatter"
+# format docstrings
+pydocstringformatter -w $(ag --python -g "." py/)

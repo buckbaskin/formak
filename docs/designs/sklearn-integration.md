@@ -353,6 +353,27 @@ This feature is specific to the Python interface. There will be X feature tests:
 
 ## Post Review
 
+### 2022-12-19
+
+Some thoughts:
+
+It was tough to get myself back into completing the PR (by dates it took more
+than 2 months of mostly not much activity.
+
+That said, fixing the PR just took about 30 min to an hour of debugging and
+re-reading through stuff and being frustrated with past self for mixing things
+up. I'm hoping that some ammount of typing in the future will make it easier to
+sort out these kinds of mistakes with a tool instead of requiring me to look
+through to see where I'd mixed things up myself.
+
+Self reviewing code was a win: I came out with some ideas for improving the
+code that I'd missed when I was heads down writing the code. I'll need to have
+a place to keep track of code review comments I've made but didn't implement.
+
+Adding all the linting tools as part of this PR will make further review more
+burdensome because it's touching lots of files. Probably a net win for
+improving the codebase, but I still haven't gotten to mypy yet.
+
 ### 2022-10-06
 
 #### Interface

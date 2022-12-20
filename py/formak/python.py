@@ -8,7 +8,7 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
 class Model:
-    """Python implementation of the model"""
+    """Python implementation of the model."""
 
     def __init__(self, symbolic_model, config):
         # TODO(buck): Enable mypy for type checking
