@@ -1,10 +1,11 @@
-import numpy as np
-import pytest
-
 from datetime import datetime, timedelta
 
-from formak import python
+import numpy as np
+import pytest
 from formak.ui import *
+
+from formak import python
+
 
 # TODO(buck): move this to a test utils library file
 class Timer(object):

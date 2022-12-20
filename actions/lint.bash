@@ -1,0 +1,1 @@
+bash actions/format.bash

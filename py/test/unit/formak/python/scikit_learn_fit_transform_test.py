@@ -1,6 +1,6 @@
 import numpy as np
 
-from formak import ui, python
+from formak import python, ui
 
 
 def test_fit_transform():

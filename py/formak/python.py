@@ -1,9 +1,8 @@
 import numpy as np
-
+from numba import njit
 from scipy.optimize import minimize
 from sympy import Matrix
 from sympy.utilities.lambdify import lambdify
-from numba import njit
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
@@ -184,7 +183,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size ** 2
+        assert len(self._impl_process_jacobian) == self.state_size**2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:

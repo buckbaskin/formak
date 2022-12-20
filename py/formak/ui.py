@@ -1,4 +1,4 @@
-from sympy import Symbol, symbols, simplify
+from sympy import Symbol, simplify, symbols
 
 
 class Model(object):

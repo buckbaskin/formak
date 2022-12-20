@@ -55,7 +55,7 @@ Vehicle_Mass_Properties = SaturnVMass()
 
 
 def gravitational_force(m_1, m_2, r):
-    return G * (m_1 * m_2) / (r ** 2)
+    return G * (m_1 * m_2) / (r**2)
 
 
 def test_orbital_example():
