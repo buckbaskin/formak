@@ -5,3 +5,4 @@ isort
 autoflake
 pyupgrade
 pydocstringformatter
+bandit
