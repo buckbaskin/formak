@@ -2,7 +2,7 @@
 
 Author: Buck Baskin @bebaskin
 Created: 2022-09-26
-Updated: 2022-10-06
+Updated: 2022-12-21
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
 Status: 7. Unit Testing
@@ -352,6 +352,18 @@ This feature is specific to the Python interface. There will be X feature tests:
 	5. Anything else?
 
 ## Post Review
+
+### 2022-12-21
+
+#### Retro: The Good
+
+- I think the overall idea and borrowing UI design is a helpful place to start
+- Self review provided some good ideas
+
+#### Retro: The Bad
+
+- The delays
+- Mixing in linting with something that was already going slowly
 
 ### 2022-12-19
 
