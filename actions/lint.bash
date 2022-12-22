@@ -22,4 +22,9 @@ echo "pydocstringformatter"
 pydocstringformatter -w $(ag --python -g "." py/)
 
 echo "pre-commit"
+pre-commit --version
 pre-commit run --all-files
+
+echo "interrogate"
+interrogate --version
+interrogate -vv py/formak/

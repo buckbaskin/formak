@@ -1,8 +1,10 @@
 autoflake
 bandit
 black
+build
 flake8
 flake8-bugbear
+interrogate
 isort
 pre-commit
 pydocstringformatter
