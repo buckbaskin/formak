@@ -60,7 +60,7 @@ def test_UI_like_sklearn():
 
     # Compute the squared Mahalanobis distances of given observations.
     assert model.mahalanobis(readings).shape == (n_samples,)
-    # Compute the log-likelihood of X_test under the estimated Gaussian model.
+    # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     assert isinstance(model.score(readings), float)
 
     # Interface based on:

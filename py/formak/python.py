@@ -1,4 +1,5 @@
 import numpy as np
+from formak.exceptions import MinimizationFailure
 from numba import njit
 from scipy.optimize import minimize
 from sympy import Matrix
@@ -404,7 +405,6 @@ class ExtendedKalmanFilter:
         K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
-        # TODO(buck): is innovation normalized by variance?
 
         next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
         assert next_covariance.shape == covariance.shape
@@ -417,9 +417,6 @@ class ExtendedKalmanFilter:
     ### scikit-learn / sklearn interface ###
 
     def _flatten_scoring_params(self, params):
-        # "process_noise": np.eye(1),
-        # "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        # "sensor_noises": {"simple": np.eye(1)},
         flattened = list(np.diagonal(params["process_noise"]))
         for key in sorted(list(params["sensor_models"])):
             flattened.extend(np.diagonal(params["sensor_noises"][key]))
@@ -467,8 +464,7 @@ class ExtendedKalmanFilter:
         result = minimize(minimize_this, x0)
 
         if not result.success:
-            print("success", result.success, result.message)
-            assert result.success
+            raise MinimizationFailure(result)
 
         soln_as_params = self._inverse_flatten_scoring_params(result.x)
         self.set_params(**soln_as_params)
@@ -484,7 +480,7 @@ class ExtendedKalmanFilter:
 
         return innovations.flatten()
 
-    # Compute the log-likelihood of X_test under the estimated Gaussian model.
+    # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None, explain_score=False):
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
