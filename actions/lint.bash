@@ -1,6 +1,7 @@
 bash actions/format.bash
 
 echo "flake8"
+flake8 --version
 # general code checks
 flake8 --config=common/setup.cfg py/ | grep -v "local variable '_"
 
@@ -19,3 +20,6 @@ pyupgrade $(ag --python -g "." py/)
 echo "pydocstringformatter"
 # format docstrings
 pydocstringformatter -w $(ag --python -g "." py/)
+
+echo "pre-commit"
+pre-commit run --all-files

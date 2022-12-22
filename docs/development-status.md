@@ -13,4 +13,3 @@ The Five Key Elements the library provides to achieve this user experience are:
 3. ([In Progress](https://github.com/buckbaskin/formak/pull/3)) Integration to scikit-learn to leverage the model selection and parameter tuning functions
 4. (Planned) C++ and Python to C++ interoperability for performance
 5. (Planned) C++ interfaces to support a variety of model uses
-

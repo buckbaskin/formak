@@ -49,7 +49,7 @@ class Model:
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl:
-                    for i in range(5):
+                    for _i in range(5):
                         jit_impl(default_dt, *default_state, *default_control)
 
     # TODO(buck): numpy -> numpy if not compiled
@@ -196,7 +196,7 @@ class ExtendedKalmanFilter:
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_process_jacobian:
-                    for i in range(5):
+                    for _i in range(5):
                         jit_impl(default_dt, *default_state, *default_control)
 
         self._impl_control_jacobian = [
@@ -219,7 +219,7 @@ class ExtendedKalmanFilter:
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_control_jacobian:
-                    for i in range(5):
+                    for _i in range(5):
                         jit_impl(default_dt, *default_state, *default_control)
 
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
@@ -273,7 +273,7 @@ class ExtendedKalmanFilter:
                     # Pre-warm Jit by calling with known values/structure
                     default_state = np.zeros((self.state_size, 1))
                     for jit_impl in impl_sensor_jacobian:
-                        for i in range(5):
+                        for _i in range(5):
                             jit_impl(*default_state)
 
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian

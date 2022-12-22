@@ -1,8 +1,10 @@
-black
-pylint
-flake8
-isort
 autoflake
-pyupgrade
-pydocstringformatter
 bandit
+black
+flake8
+flake8-bugbear
+isort
+pre-commit
+pydocstringformatter
+pylint
+pyupgrade

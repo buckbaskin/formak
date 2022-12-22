@@ -101,7 +101,6 @@ def run_instruction_list(
 
     cpu_stats = {"ticks": 0, "stalls": 0}
 
-
     for i in range(max_iterations):
         len_starting_instructions = len(instructions)
 
@@ -116,7 +115,10 @@ def run_instruction_list(
         if len(instructions) == 0 and len(state["inprogress_registers"]) == 0:
             break
     else:
-        raise ValueError('Instructions Reached Maximum Iterations %d without terminating' % (max_iterations,))
+        raise ValueError(
+            "Instructions Reached Maximum Iterations %d without terminating"
+            % (max_iterations,)
+        )
 
     return cpu_stats, state
 
