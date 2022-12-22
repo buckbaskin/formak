@@ -41,7 +41,7 @@ To start, the user interface will lean on the
 [`sympy`](https://www.sympy.org/en/index.html) package for symbolic math. Sympy
 shares the value of being easy to use. In addtion, leaning on sympy instead of a
 proprietary interface enables a lot of flexibility and future progress for
-things like code generation based on the model. 
+things like code generation based on the model.
 
 Likely it'll make sense to wrap common sympy operations that are specific and
 repeated in this project, but this kind of tooling will be developed in flight
@@ -58,4 +58,3 @@ This feature is specific to the Python interface. There will be two feature test
 This feature was ultimately very simple because it leaned on `sympy` quite a
 bit. The primary change from the plan was that there was already demo code to
 borrow from for feature tests which made writing them much quicker.
-

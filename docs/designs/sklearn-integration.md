@@ -87,7 +87,7 @@ in the user guide:
 - [Model Persistence](https://scikit-learn.org/stable/model_persistence.html)
 - [Best Practices](https://scikit-learn.org/stable/common_pitfalls.html)
 
-#### Regression 
+#### Regression
 
 From scikit-learn:
 "[Regression](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning):
@@ -145,7 +145,7 @@ deviation). This is also a good form for a Kalman filter and a baseline for
 understanding if a model is likely a good fit (say noise is small and normally
 distributed so likely from random unpredictable processes) or biased in some way
 (an indication that the model is insufficient for describing the data well.
-- There are also non-linear transformations we can leverage such as mapping to a uniform or Gaussian distribution. 
+- There are also non-linear transformations we can leverage such as mapping to a uniform or Gaussian distribution.
 - The preprocessing library has support for generating new [polynomial features](https://scikit-learn.org/stable/modules/preprocessing.html#generating-polynomial-features) from existing features to augment the state. This seems exciting as a way to approximate expected but unknown physical phenomena. If we have a position/velocity model, can we generate expected accelerations or jerk behavior or something like that (e.g. velocity ~= jerk * t^2 + accel * t) and if we have generic polynomial terms we don't need to know the coefficients ahead of time.
 
 #### Unsupervised Learning
@@ -204,7 +204,7 @@ mind. Biclustering tries to find block diagonals that are connected and leave
 the rest as zeros/nearly zero/sparse. This would allow for densely packing
 subsets of the state-vector that depend on the densely packed bit (and would be
 more likely to be shared in cache) and partially ordering the rest that aren't
-connected (by their own connections). 
+connected (by their own connections).
 
 ##### [Covariance estimation](https://scikit-learn.org/stable/modules/covariance.html)
 
@@ -426,7 +426,7 @@ then `python` as one of the ways to fit or run the model.
 
 #### Documentation
 
-Added documentation as a step in the design / PR process. 
+Added documentation as a step in the design / PR process.
 
 Also, adds having a diff in the docs folder (not including the designs) as a
 Github Action. Not required, but will surface if there have been no docs

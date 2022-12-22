@@ -42,6 +42,14 @@ Bazelisk, Python3 and Clang available.
 
 ### Install Clang
 
+### Install Python Developer Tooling
+
+`python3 -m pip install -U -r requirements_dev.txt`
+
+This will install the dependencies necessary for helper scripts like:
+- `make format`
+- `make lint`
+
 ## Running Some Code
 
 To get started running code for the project, try the command

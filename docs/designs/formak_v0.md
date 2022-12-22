@@ -18,7 +18,7 @@ The values of the FormaK project (in order) are:
 
 ### The Persona
 
-Who is this for? 
+Who is this for?
 
 The user of FormaK is someone with domain expertise who is looking to take
 their knowledge and their data and quickly (measured in the user's time) create
@@ -89,7 +89,7 @@ This project covers three "languages":
 This means that most features will have feature tests across the three language
 use cases.
 
-#### Note 2 
+#### Note 2
 Features can track and share their status by referring to these stages
 in the development process. This makes it easier to share what features are in
 what stage of the development process over time and for each release.
