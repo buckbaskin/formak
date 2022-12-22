@@ -1,14 +1,15 @@
 import numpy as np
-
+from formak.exceptions import MinimizationFailure
+from numba import njit
+from scipy.optimize import minimize
 from sympy import Matrix
 from sympy.utilities.lambdify import lambdify
-from numba import njit
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
-class Model(object):
-    """Python implementation of the model"""
+class Model:
+    """Python implementation of the model."""
 
     def __init__(self, symbolic_model, config):
         # TODO(buck): Enable mypy for type checking
@@ -66,12 +67,22 @@ class Model(object):
         assert control_vector.shape == (self.control_size, min(self.control_size, 1))
 
         next_state = np.zeros((self.state_size, 1))
-        for i, impl in enumerate(self._impl):
-            next_state[i, 0] = impl(dt, *state, *control_vector)
+        for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
+            try:
+                result = impl(dt, *state, *control_vector)
+                next_state[i, 0] = result
+            except TypeError:
+                print(
+                    "TypeError when trying to process process model for state %s"
+                    % (state_id,)
+                )
+                print("expected: float")
+                print("found: {}, {}".format(type(result), result))
+                raise
         return next_state
 
 
-class SensorModel(object):
+class SensorModel:
     def __init__(self, state_model, sensor_model, config):
         self.readings = sorted(list(sensor_model.keys()))
         self.sensor_models = sensor_model
@@ -91,17 +102,35 @@ class SensorModel(object):
             for k in self.readings
         ]
 
+        ## "Pre-flight" Checks
+
+        # Pre-check model for type errors
+        self.model(np.zeros((self.state_size, 1)))
+
+    def __len__(self):
+        return len(self.sensor_models)
+
     def model(self, state):
         assert isinstance(state, np.ndarray)
         assert state.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
-        for i, impl in enumerate(self._impl):
-            reading[i, 0] = impl(*state)
+        for i, (reading_id, impl) in enumerate(zip(self.readings, self._impl)):
+            try:
+                result = impl(*state)
+                reading[i, 0] = result
+            except TypeError:
+                print(
+                    "TypeError when trying to process sensor model for reading %s"
+                    % (reading_id,)
+                )
+                print("expected: float")
+                print("found: {}, {}".format(type(result), result))
+                raise
         return reading
 
 
-class ExtendedKalmanFilter(object):
+class ExtendedKalmanFilter:
     def __init__(
         self, state_model, process_noise, sensor_models, sensor_noises, config
     ):
@@ -109,13 +138,21 @@ class ExtendedKalmanFilter(object):
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
+        self.params = {
+            "process_noise": process_noise,
+            "sensor_models": sensor_models,
+            "sensor_noises": sensor_noises,
+            "compile": compile,
+        }
 
         self._construct_process(state_model, process_noise, config)
         self._construct_sensors(state_model, sensor_models, sensor_noises, config)
 
     def _construct_process(self, state_model, process_noise, config):
         self.state_model = Model(state_model, config)
-        self.process_noise = process_noise
+        self.params["process_noise"] = process_noise
+
+        assert len(process_noise.diagonal()) == self.control_size
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
@@ -147,7 +184,7 @@ class ExtendedKalmanFilter(object):
             )
             for expr in symbolic_process_jacobian
         ]
-        assert len(self._impl_process_jacobian) == self.state_size ** 2
+        assert len(self._impl_process_jacobian) == self.state_size**2
 
         # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
         if config.compile:
@@ -188,23 +225,23 @@ class ExtendedKalmanFilter(object):
     def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
 
-        self.sensor_models = {
+        self.params["sensor_models"] = {
             k: SensorModel(state_model, model, config)
             for k, model in sensor_models.items()
         }
-        for k in self.sensor_models.keys():
+        for k in self.params["sensor_models"].keys():
             assert sensor_noises[k].shape == (
-                self.sensor_models[k].sensor_size,
-                self.sensor_models[k].sensor_size,
+                self.params["sensor_models"][k].sensor_size,
+                self.params["sensor_models"][k].sensor_size,
             )
 
-        self.sensor_noises = sensor_noises
+        self.params["sensor_noises"] = sensor_noises
 
         self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
 
         self._impl_sensor_jacobians = {}
 
-        for k, sensor_model in self.sensor_models.items():
+        for k, sensor_model in self.params["sensor_models"].items():
             sensor_size = len(sensor_model.readings)
 
             sensor_matrix = Matrix(
@@ -242,6 +279,7 @@ class ExtendedKalmanFilter(object):
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
         self.innovations = {}
+        self.sensor_prediction_uncertainty = {}
 
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
@@ -266,7 +304,7 @@ class ExtendedKalmanFilter(object):
         return jacobian
 
     def sensor_jacobian(self, sensor_key, state):
-        sensor_size = self.sensor_models[sensor_key].sensor_size
+        sensor_size = self.params["sensor_models"][sensor_key].sensor_size
         jacobian = np.zeros((sensor_size, self.state_size))
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
@@ -309,7 +347,7 @@ class ExtendedKalmanFilter(object):
         assert next_state_covariance.shape == covariance.shape
 
         next_control_covariance = np.matmul(
-            V_t, np.matmul(self.process_noise, V_t.transpose())
+            V_t, np.matmul(self.params["process_noise"], V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
 
@@ -322,9 +360,9 @@ class ExtendedKalmanFilter(object):
         return next_state, next_covariance
 
     def sensor_model(self, sensor_key, state, covariance, sensor_reading):
-        model_impl = self.sensor_models[sensor_key]
+        model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
-        Q_t = model_noise = self.sensor_noises[sensor_key]
+        Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
 
         try:
             assert isinstance(state, np.ndarray)
@@ -359,12 +397,12 @@ class ExtendedKalmanFilter(object):
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
 
-        S_t = sensor_prediction_uncertainty = (
+        self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t
         )
         S_inv = np.linalg.inv(S_t)
 
-        K_t = kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
+        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
 
@@ -376,8 +414,211 @@ class ExtendedKalmanFilter(object):
 
         return next_state, next_covariance
 
+    ### scikit-learn / sklearn interface ###
 
-class Config(object):
+    def _flatten_scoring_params(self, params):
+        flattened = list(np.diagonal(params["process_noise"]))
+        for key in sorted(list(params["sensor_models"])):
+            flattened.extend(np.diagonal(params["sensor_noises"][key]))
+
+        return flattened
+
+    def _inverse_flatten_scoring_params(self, flattened):
+        params = {k: v for k, v in self.params.items()}
+
+        controls, flattened = (
+            flattened[: self.control_size],
+            flattened[self.control_size :],
+        )
+
+        np.fill_diagonal(params["process_noise"], controls)
+
+        for key in sorted(list(self.params["sensor_models"])):
+            sensor_size = len(np.diagonal(params["sensor_noises"][key]))
+            sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
+            np.fill_diagonal(params["sensor_noises"][key], sensor)
+
+        return params
+
+    # Fit the model to data
+    def fit(self, X, y=None, sample_weight=None):
+        assert self.params["process_noise"] is not None
+        assert self.params["sensor_models"] is not None
+        assert self.params["sensor_noises"] is not None
+
+        x0 = self._flatten_scoring_params(self.params)
+
+        def minimize_this(x):
+            holdout_params = dict(self.get_params())
+
+            scoring_params = self._inverse_flatten_scoring_params(x)
+            self.set_params(**scoring_params)
+
+            score = self.score(X, y, sample_weight)
+
+            self.set_params(**holdout_params)
+            return score
+
+        minimize_this(x0)
+
+        result = minimize(minimize_this, x0)
+
+        if not result.success:
+            raise MinimizationFailure(result)
+
+        soln_as_params = self._inverse_flatten_scoring_params(result.x)
+        self.set_params(**soln_as_params)
+
+        return self
+
+    # Compute the squared Mahalanobis distances of given observations.
+    def mahalanobis(self, X):
+        innovations, states, covariances = self.transform(X, include_states=True)
+        n_samples, n_sensors = innovations.shape
+
+        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+
+        return innovations.flatten()
+
+    # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
+    def score(self, X, y=None, sample_weight=None, explain_score=False):
+        mahalanobis_distance_squared = self.mahalanobis(X)
+        normalized_innovations = np.sqrt(mahalanobis_distance_squared)
+
+        if sample_weight is None:
+            avg = np.sum(np.square(np.average(normalized_innovations)))
+            var = np.sum(mahalanobis_distance_squared)
+        else:
+            avg = np.sum(
+                np.square(np.average(normalized_innovations, weights=sample_weight))
+            )
+            var = np.sum(mahalanobis_distance_squared * sample_weight)
+
+        # bias->0
+        bias_weight = 1e1
+        bias_score = avg
+
+        # variance->1
+        # minima at var = 1, innovations match noise model
+        variance_weight = 1e0
+        variance_score = (1.0 / var + var) / 2.0
+
+        # prefer smaller matrix terms
+        matrix_weight = 1e-2
+        matrix_score = np.sum(np.square(self.params["process_noise"]))
+        for sensor_noise in self.params["sensor_noises"].values():
+            matrix_score += np.sum(np.square(sensor_noise))
+
+        if explain_score:
+            return (
+                (
+                    bias_weight * bias_score
+                    + variance_weight * variance_score
+                    + matrix_weight * matrix_score
+                ),
+                (
+                    bias_weight,
+                    bias_score,
+                    variance_weight,
+                    variance_score,
+                    matrix_weight,
+                    matrix_score,
+                ),
+            )
+
+        return (
+            bias_weight * bias_score
+            + variance_weight * variance_score
+            + matrix_weight * matrix_score
+        )
+
+    # Transform readings to innovations
+    def transform(self, X, include_states=False):
+        n_samples, n_features = X.shape
+
+        dt = 0.1
+
+        state = np.zeros((self.state_size, 1))
+        covariance = np.eye(self.state_size)
+
+        innovations = []
+        states = [state]
+        covariances = [covariance]
+
+        for idx in range(X.shape[0]):
+            controls_input, the_rest = (
+                X[idx, : self.control_size],
+                X[idx, self.control_size :],
+            )
+            controls_input = controls_input.reshape((self.control_size, 1))
+
+            state, covariance = self.process_model(
+                dt, state, covariance, controls_input
+            )
+
+            innovation = []
+
+            for key in sorted(list(self.params["sensor_models"])):
+                sensor_size = len(self.params["sensor_models"][key])
+
+                sensor_input, the_rest = (
+                    the_rest[:sensor_size],
+                    the_rest[sensor_size:],
+                )
+                sensor_input = sensor_input.reshape((sensor_size, 1))
+
+                state, covariance = self.sensor_model(
+                    key, state, covariance, sensor_input
+                )
+                # Normalized by the uncertainty at the time of the measurement
+                # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
+                # for:
+                #   u: predicted sensor readings
+                #   x: sensor readings
+                #   S: predicted sensor variance
+                innovation.append(
+                    float(
+                        np.matmul(
+                            np.matmul(
+                                self.innovations[key].T,
+                                np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                            ),
+                            self.innovations[key],
+                        )
+                    )
+                )
+
+            states.append(state)
+            covariances.append(covariance)
+            innovations.append(innovation)
+            assert innovations[-1] is not None
+
+        # minima at x = 1, innovations match noise model
+        if include_states:
+            return np.array(innovations), np.array(states), np.array(covariances)
+
+        return np.array(innovations)
+
+    # Fit the model to data and transform readings to innovations
+    def fit_transform(self, X, y=None):
+        # TODO(buck): Implement the combined version (return innovations calculated while fitting)
+        self.fit(X, y)
+        return self.transform(X)
+
+    # Get parameters for this estimator.
+    def get_params(self, deep=True) -> dict:
+        return self.params
+
+    # Set the parameters of this estimator.
+    def set_params(self, **params):
+        for p in params:
+            if p in self.params:
+                self.params[p] = params[p]
+
+        return self
+
+
+class Config:
     def __init__(
         self,
         compile=False,

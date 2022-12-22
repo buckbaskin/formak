@@ -2,9 +2,10 @@ pytest>=7.2.0
 pytest-mock
 hypothesis
 
+scikit-learn
 sympy
 scipy
-numpy
+numpy==1.23.1
 numba
 
 ## numba support

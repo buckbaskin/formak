@@ -1,13 +1,13 @@
-import numpy as np
 import warnings
-
 from datetime import datetime, timedelta
-from scipy.stats import multivariate_normal
-from hypothesis import given, reject
+
+import numpy as np
+from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
+from scipy.stats import multivariate_normal
 
-from formak import ui, python
+from formak import python, ui
 
 warnings.filterwarnings("error")
 
@@ -67,7 +67,6 @@ def test_EKF_process_with_control():
 
 def test_EKF_sensor():
     config = python.Config()
-    dt = 0.1
 
     ekf = python.ExtendedKalmanFilter(
         state_model=ui.Model(
@@ -85,7 +84,6 @@ def test_EKF_sensor():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
     covariance = np.eye(2)
     reading = 1.0
     state_vector = np.array([[0.0, 0.0]]).transpose()
@@ -126,7 +124,6 @@ def test_EKF_process_jacobian():
     )
 
     control_vector = np.array([[0.2]])
-    covariance = np.eye(2)
 
     state_vector = np.array([[0.0, 0.0]]).transpose()
     assert_almost_equal(
@@ -154,7 +151,8 @@ def test_EKF_process_jacobian():
 
 
 @given(floats(), floats(), floats())
-def test_EKF_process_property(x, y, a):
+@settings(deadline=timedelta(seconds=2))
+def test_EKF_process_property(state_x, state_y, control_a):
     config = {}
     dt = 0.1
 
@@ -163,7 +161,7 @@ def test_EKF_process_property(x, y, a):
         set(ui.symbols(["x", "y"])),
         set(ui.symbols(["a"])),
         {
-            ui.Symbol("x"): ui.Symbol("x") * ui.Symbol("y") + ui.Symbol("x"),
+            ui.Symbol("x"): "x + y * dt",
             ui.Symbol("y"): "y + a * dt",
         },
     )
@@ -175,13 +173,15 @@ def test_EKF_process_property(x, y, a):
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[control_a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[state_x, state_y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
+        # reject infinite / NaN inputs
         reject()
     if (np.abs(state_vector) > 1e100).any() or (np.abs(control_vector) > 1e100).any():
+        # reject poorly sized inputs
         reject()
 
     next_state, next_cov = ekf.process_model(
@@ -202,34 +202,30 @@ def test_EKF_process_property(x, y, a):
 
         assert_almost_equal(python_version, symbolic_version)
 
+    starting_central_probability = multivariate_normal(cov=covariance).pdf(
+        np.zeros_like(state_vector).transpose()
+    )
     try:
-        starting_central_probability = multivariate_normal(cov=covariance).pdf(
-            np.zeros_like(state_vector).transpose()
-        )
         ending_central_probability = multivariate_normal(cov=next_cov).pdf(
             np.zeros_like(state_vector).transpose()
         )
     except np.linalg.LinAlgError:
-        print("starting cov")
-        print(covariance)
-        print("next_cov")
-        print(next_cov)
-        raise
+        # reject inputs leading to poorly conditions covariances
+        reject()
 
     try:
         assert ending_central_probability < starting_central_probability
     except AssertionError:
-        print("starting pdf")
-        print(starting_central_probability)
-        print("ending pdf")
-        print(ending_central_probability)
+        print("Starting at {:f}".format(starting_central_probability))
+        print(covariance)
+        print("Ending at {:f}".format(ending_central_probability))
+        print(next_cov)
         raise
 
 
 @given(floats(), floats(), floats())
 def test_EKF_sensor_property(x, y, a):
     config = {}
-    dt = 0.1
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -248,13 +244,15 @@ def test_EKF_sensor_property(x, y, a):
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[x, y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
+        # reject infinite / NaN inputs
         reject()
     if (np.abs(state_vector) > 1e100).any() or (np.abs(control_vector) > 1e100).any():
+        # reject poorly sized inputs
         reject()
 
     next_state, next_cov = ekf.sensor_model(
@@ -292,14 +290,16 @@ def test_EKF_sensor_property(x, y, a):
     second_innovation = ekf.innovations["simple"]
 
     # state moves towards reading after a sensor update
-    assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+    assert (
+        np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+        or np.linalg.norm(first_innovation) == 0.0
+    )
 
 
 def test_EKF_sensor_property_failing_example():
     start_time = datetime.now()
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
     config = {}
-    dt = 0.1
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -318,13 +318,15 @@ def test_EKF_sensor_property_failing_example():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = np.array([[a]])
     covariance = np.eye(2)
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = np.array([[x, y]]).transpose()
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
+        # reject infinite inputs
         reject()
     if (np.abs(state_vector) > 1e100).any() or (np.abs(control_vector) > 1e100).any():
+        # reject poorly sized inputs
         reject()
 
     next_state, next_cov = ekf.sensor_model(
@@ -362,7 +364,10 @@ def test_EKF_sensor_property_failing_example():
     second_innovation = ekf.innovations["simple"]
 
     # state moves towards reading after a sensor update
-    assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+    assert (
+        np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+        or np.linalg.norm(first_innovation) == 0.0
+    )
 
     end_time = datetime.now()
 

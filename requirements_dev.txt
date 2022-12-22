@@ -1,0 +1,8 @@
+black
+pylint
+flake8
+isort
+autoflake
+pyupgrade
+pydocstringformatter
+bandit

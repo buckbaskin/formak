@@ -1,11 +1,12 @@
-import numpy as np
 import warnings
-
-from hypothesis import given, reject, settings
 from datetime import timedelta
+
+import numpy as np
+from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
-from formak import ui, python
+
+from formak import python, ui
 
 warnings.filterwarnings("error")
 

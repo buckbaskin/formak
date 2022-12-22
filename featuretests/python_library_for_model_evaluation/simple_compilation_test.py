@@ -13,7 +13,7 @@ def test_python_Model_compilation():
     thrust = Symbol("thrust")
 
     state = set(tp.values())
-    control = set([thrust])
+    control = {thrust}
 
     state_model = {
         tp["mass"]: tp["mass"],

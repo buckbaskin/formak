@@ -27,6 +27,7 @@ py_library(
     deps = [
         requirement("sympy"),
         requirement("scipy"),
+        requirement("scikit-learn"),
         requirement("numpy"),
         requirement("numba"),
         requirement("hypothesis"),
@@ -115,7 +116,7 @@ py_test_suite(
 
 py_test_suite(
     name = "integration",
-    size = "small",
+    size = "medium",
     srcs = glob([
         "test/formak/**/*.py",
     ]),
