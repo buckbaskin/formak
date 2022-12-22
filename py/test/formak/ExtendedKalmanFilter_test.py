@@ -290,7 +290,10 @@ def test_EKF_sensor_property(x, y, a):
     second_innovation = ekf.innovations["simple"]
 
     # state moves towards reading after a sensor update
-    assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+    assert (
+        np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+        or np.linalg.norm(first_innovation) == 0.0
+    )
 
 
 def test_EKF_sensor_property_failing_example():
@@ -361,7 +364,10 @@ def test_EKF_sensor_property_failing_example():
     second_innovation = ekf.innovations["simple"]
 
     # state moves towards reading after a sensor update
-    assert np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+    assert (
+        np.linalg.norm(first_innovation) > np.linalg.norm(second_innovation)
+        or np.linalg.norm(first_innovation) == 0.0
+    )
 
     end_time = datetime.now()
 
