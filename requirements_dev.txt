@@ -10,3 +10,4 @@ pre-commit
 pydocstringformatter
 pylint
 pyupgrade
+sphinx

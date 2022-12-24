@@ -38,6 +38,15 @@ py_binary(
     deps = [":hello-library-py"],
 )
 
+py_binary(
+    name = "cpp-gen",
+    srcs = ["src/cpp_gen.py"],
+    main = "src/cpp_gen.py",
+    deps = [
+        requirement("sympy"),
+    ],
+)
+
 py_test(
     name = "hello-test-py",
     srcs = ["test/hello_test.py"],
