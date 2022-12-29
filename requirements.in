@@ -7,6 +7,7 @@ sympy
 scipy
 numpy==1.23.1
 numba
+importlib-metadata==4.12.0
 
 Jinja2
 
