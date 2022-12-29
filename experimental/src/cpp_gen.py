@@ -56,7 +56,7 @@ print("Template Based Custom Insertion")
 
 
 def generate_function_bodies():
-    return {"update_body": "1.0 = elastomerInvalidBody", "getValue_body": "xzero / 0"}
+    return {"update_body": "_state += 1;", "getValue_body": "return _state;"}
 
 
 import sys
