@@ -1,4 +1,5 @@
 from sympy import symbols, Eq, Matrix
+from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 
 x, y, z = symbols(["x", "y", "z"])
 a, b, c, r = symbols(["a", "b", "c", "r"])
@@ -40,3 +41,21 @@ with open("generated/ccodegen_output_cse_True.cpp", "w") as c:
         c,
         prefix,
     )
+
+print("Template Based Custom Insertion")
+
+
+def generate_function_bodies():
+    return {"update_body": "1.0 = elastomerInvalidBody", "getValue_body": "xzero / 0"}
+
+
+env = Environment(loader=FileSystemLoader("templates/"), autoescape=select_autoescape())
+
+template = env.get_template("basic_class.cpp")
+
+inserts = generate_function_bodies()
+
+generated_str = template.render(**inserts)
+
+with open("generated/jinja_basic_class.cpp", "w") as f:
+    f.write(generated_str)

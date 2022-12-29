@@ -8,6 +8,8 @@ scipy
 numpy==1.23.1
 numba
 
+Jinja2
+
 ## numba support
 # enables support for color highlighting in backtraces/error messages
 colorama

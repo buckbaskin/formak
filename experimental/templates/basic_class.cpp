@@ -8,19 +8,15 @@ class Stateful {
   }
 
   void update() {
-    // TODO(buck): clang-format off
-    {
-      {}
-    }
-    // TODO(buck): clang-format on
+    // clang-format off
+    {{update_body}}
+    // clang-format on
   }
 
   double getValue() {
-    // TODO(buck): clang-format off
-    {
-      {}
-    }
-    // TODO(buck): clang-format on
+    // clang-format off
+    {{getValue_body}}
+    // clang-format on
   }
 
  private:
