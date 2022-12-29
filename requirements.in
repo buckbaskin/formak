@@ -6,7 +6,9 @@ scikit-learn
 sympy
 scipy
 numpy==1.23.1
-numba
+numba>=0.56.4
+importlib-metadata==4.12.0
+setuptools>=65.5.1
 
 ## numba support
 # enables support for color highlighting in backtraces/error messages
