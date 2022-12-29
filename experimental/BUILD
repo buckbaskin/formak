@@ -50,9 +50,9 @@ py_binary(
 
 genrule(
     name = "cpp-gen",
-    srcs = [":cpp-gen-impl"],
+    srcs = [":cpp-gen-impl"] + glob(["templates/*.cpp"]),
     outs = ["generated/ccodegen_output_cse_False.cpp"],
-    cmd = "python3 $(location src/cpp_gen.py)",
+    cmd = "python3 $(location src/cpp_gen.py) --template $(location templates/basic_class.cpp) --header $(location generated/ccodegen_output_cse_False.cpp) --source $(location generated/ccodegen_output_cse_False.cpp)",
     tools = ["src/cpp_gen.py"],
 )
 

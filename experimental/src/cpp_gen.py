@@ -1,5 +1,10 @@
+import argparse
+
+from os import mkdir, walk, scandir
+from os.path import dirname
 from sympy import symbols, Eq, Matrix
 from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
+from jinja2.exceptions import TemplateNotFound
 
 x, y, z = symbols(["x", "y", "z"])
 a, b, c, r = symbols(["a", "b", "c", "r"])
@@ -18,6 +23,11 @@ from sympy.utilities.codegen import CCodeGen, make_routine
 
 gen = CCodeGen(project="formaK", cse=False)
 prefix = "prefix"
+
+try:
+    mkdir("generated/")
+except FileExistsError as fee:
+    print("Silencing Error %s" % fee)
 
 with open("generated/ccodegen_output_cse_False.cpp", "w") as f:
     gen.dump_c(
@@ -49,13 +59,49 @@ def generate_function_bodies():
     return {"update_body": "1.0 = elastomerInvalidBody", "getValue_body": "xzero / 0"}
 
 
-env = Environment(loader=FileSystemLoader("templates/"), autoescape=select_autoescape())
+import sys
 
-template = env.get_template("basic_class.cpp")
+print(sys.argv)
+
+parser = argparse.ArgumentParser(prog="cppgen")
+parser.add_argument("--template")
+parser.add_argument("--header")
+parser.add_argument("--source")
+
+args = parser.parse_args()
+print("args")
+print(args.template, args.header, args.source)
+
+templates_base_path = dirname(args.template)
+print("templates_base_path", templates_base_path)
+
+env = Environment(
+    loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
+)
+
+try:
+    template = env.get_template("basic_class.cpp")
+except TemplateNotFound:
+    print("Debugging TemplateNotFound")
+    print("Trying to scandir")
+    with scandir(templates_base_path) as it:
+        if len(list(it)) == 0:
+            print("No Paths in scandir")
+            raise
+
+    print("Walking")
+    for root, dirs, files in walk(templates_base_path):
+        depth = len(root.split("/"))
+        print("{}Root: {!s}".format(" " * depth, root))
+        for filename in files:
+            print("{}  - {!s}".format(" " * depth, filename))
+    print("End Walk")
+    raise
 
 inserts = generate_function_bodies()
 
 generated_str = template.render(**inserts)
 
-with open("generated/jinja_basic_class.cpp", "w") as f:
+with open(args.source, "w") as f:
+    print("Writing source arg %s" % (args.source,))
     f.write(generated_str)
