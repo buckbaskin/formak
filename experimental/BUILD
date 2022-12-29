@@ -39,12 +39,21 @@ py_binary(
 )
 
 py_binary(
-    name = "cpp-gen",
+    name = "cpp-gen-impl",
     srcs = ["src/cpp_gen.py"],
     main = "src/cpp_gen.py",
     deps = [
         requirement("sympy"),
+        requirement("Jinja2"),
     ],
+)
+
+genrule(
+    name = "cpp-gen",
+    srcs = [":cpp-gen-impl"],
+    outs = ["generated/ccodegen_output_cse_False.cpp"],
+    cmd = "python3 $(location src/cpp_gen.py)",
+    tools = ["src/cpp_gen.py"],
 )
 
 py_test(
