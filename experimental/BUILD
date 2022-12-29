@@ -38,6 +38,7 @@ py_binary(
     deps = [":hello-library-py"],
 )
 
+### Start cpp-gen
 py_binary(
     name = "cpp-gen-impl",
     srcs = ["src/cpp_gen.py"],
@@ -51,10 +52,27 @@ py_binary(
 genrule(
     name = "cpp-gen",
     srcs = [":cpp-gen-impl"] + glob(["templates/*.cpp"]),
-    outs = ["generated/ccodegen_output_cse_False.cpp"],
-    cmd = "python3 $(location src/cpp_gen.py) --template $(location templates/basic_class.cpp) --header $(location generated/ccodegen_output_cse_False.cpp) --source $(location generated/ccodegen_output_cse_False.cpp)",
+    outs = ["generated/jinja_basic_class.h"],
+    cmd = "python3 $(location src/cpp_gen.py) --template $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.h)",
     tools = ["src/cpp_gen.py"],
 )
+
+cc_library(
+    name = "cpp-gen-cpp",
+    hdrs = ["generated/jinja_basic_class.h"],
+    strip_include_prefix = "generated",
+    # deps = [":py-to-cpp-codegen"],
+)
+
+cc_test(
+    name = "cpp-gen-cpp-test",
+    srcs = ["test/cpp_gen_test.cpp"],
+    deps = [
+        ":cpp-gen-cpp",
+        "@gtest//:gtest_main",
+    ],
+)
+### End cpp-gen
 
 py_test(
     name = "hello-test-py",
