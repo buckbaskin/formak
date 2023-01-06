@@ -2,7 +2,7 @@ import argparse
 
 from os import mkdir, walk, scandir
 from os.path import dirname
-from sympy import symbols, Eq, Matrix
+from sympy import symbols, Eq, Matrix, ccode
 from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 
@@ -57,10 +57,15 @@ print("Template Based Custom Insertion")
 
 def generate_function_bodies():
     # TODO(buck): replace SympyModel_model_body with sympy model
+    # SympyModel_model_body: x*y + x + y + 1
+    model = x * y + x + y + 1
+
+    ccode_model = ccode(model)
+
     return {
         "update_body": "_state += 1;",
         "getValue_body": "return _state;",
-        "SympyModel_model_body": "return 0.0;",
+        "SympyModel_model_body": "return {};".format(ccode_model),
     }
 
 
@@ -108,5 +113,5 @@ inserts = generate_function_bodies()
 generated_str = template.render(**inserts)
 
 with open(args.source, "w") as f:
-    print("Writing source arg %s" % (args.source,))
+    print("Writing source arg {}".format(args.source))
     f.write(generated_str)
