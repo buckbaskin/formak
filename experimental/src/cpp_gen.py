@@ -56,7 +56,12 @@ print("Template Based Custom Insertion")
 
 
 def generate_function_bodies():
-    return {"update_body": "_state += 1;", "getValue_body": "return _state;"}
+    # TODO(buck): replace SympyModel_model_body with sympy model
+    return {
+        "update_body": "_state += 1;",
+        "getValue_body": "return _state;",
+        "SympyModel_model_body": "return 0.0;",
+    }
 
 
 import sys

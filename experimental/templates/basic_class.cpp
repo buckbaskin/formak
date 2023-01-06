@@ -23,4 +23,13 @@ class Stateful {
   double _state;
 };
 
+class SympyModel {
+ public:
+  double model(double x, double y) {
+    // clang-format off
+    {{SympyModel_model_body}}
+    // clang-format on
+  }
+};
+
 }  // namespace experimental
