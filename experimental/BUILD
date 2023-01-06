@@ -53,7 +53,7 @@ genrule(
     name = "cpp-gen",
     srcs = [":cpp-gen-impl"] + glob(["templates/*.cpp"]),
     outs = ["generated/jinja_basic_class.h"],
-    cmd = "python3 $(location src/cpp_gen.py) --template $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.h)",
+    cmd = "python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.h)",
     tools = ["src/cpp_gen.py"],
 )
 

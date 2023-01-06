@@ -90,7 +90,8 @@ env = Environment(
 )
 
 try:
-    template = env.get_template("basic_class.cpp")
+    header_template = env.get_template("basic_class.h")
+    source_template = env.get_template("basic_class.cpp")
 except TemplateNotFound:
     print("Debugging TemplateNotFound")
     print("Trying to scandir")
@@ -110,8 +111,15 @@ except TemplateNotFound:
 
 inserts = generate_function_bodies()
 
-generated_str = template.render(**inserts)
+header_str = header_template.render(**inserts)
+source_str = source_template.render(**inserts)
 
-with open(args.source, "w") as f:
-    print("Writing source arg {}".format(args.source))
-    f.write(generated_str)
+with open(args.header, "w") as header_file:
+    with open(args.source, "w") as source_file:
+        # Stack indents so an error in either file will write/close both the same way
+
+        print("Writing header arg {}".format(args.header))
+        header_file.write(header_str)
+
+        print("Writing source arg {}".format(args.source))
+        source_file.write(source_str)
