@@ -51,18 +51,25 @@ py_binary(
 
 genrule(
     name = "cpp-gen",
-    srcs = [":cpp-gen-impl"] + glob(["templates/*.cpp"]),
-    outs = ["generated/jinja_basic_class.h"],
-    cmd = "python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.h)",
+    srcs = [":cpp-gen-impl"] + glob([
+        "templates/*.cpp",
+        "templates/*.h",
+    ]),
+    outs = [
+        "generated/jinja_basic_class.h",
+        "generated/jinja_basic_class.cpp",
+    ],
+    cmd = "python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
     tools = ["src/cpp_gen.py"],
 )
 
 cc_library(
     name = "cpp-gen-cpp",
+    srcs = ["generated/jinja_basic_class.cpp"],
     hdrs = ["generated/jinja_basic_class.h"],
     strip_include_prefix = "generated",
-    # deps = [":py-to-cpp-codegen"],
 )
+# TODO(buck): Lump all this together into a macro, so that the end Bazel user/developer doesn't have to make the binary/genrule/cc_library.
 
 cc_test(
     name = "cpp-gen-cpp-test",

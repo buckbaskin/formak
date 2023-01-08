@@ -1,7 +1,7 @@
 import argparse
 
 from os import mkdir, walk, scandir
-from os.path import dirname
+from os.path import dirname, basename
 from sympy import symbols, Eq, Matrix, ccode
 from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
@@ -55,14 +55,18 @@ with open("generated/ccodegen_output_cse_True.cpp", "w") as c:
 print("Template Based Custom Insertion")
 
 
-def generate_function_bodies():
+def generate_function_bodies(header_location):
     # TODO(buck): replace SympyModel_model_body with sympy model
     # SympyModel_model_body: x*y + x + y + 1
     model = x * y + x + y + 1
 
     ccode_model = ccode(model)
 
+    # includes header is a single file name (e.g. abc.h) not in some directory structure (e.g. foo/bar/abc.h)
+    header_include = basename(header_location)
+
     return {
+        "header_include": header_include,
         "update_body": "_state += 1;",
         "getValue_body": "return _state;",
         "SympyModel_model_body": "return {};".format(ccode_model),
@@ -73,16 +77,19 @@ import sys
 
 print(sys.argv)
 
+# python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)
 parser = argparse.ArgumentParser(prog="cppgen")
-parser.add_argument("--template")
+parser.add_argument("--headertemplate")
+parser.add_argument("--sourcetemplate")
 parser.add_argument("--header")
 parser.add_argument("--source")
 
 args = parser.parse_args()
 print("args")
-print(args.template, args.header, args.source)
+print((args.headertemplate, args.header), "\n", (args.sourcetemplate, args.source))
 
-templates_base_path = dirname(args.template)
+templates_base_path = dirname(args.headertemplate)
+assert templates_base_path == dirname(args.sourcetemplate)
 print("templates_base_path", templates_base_path)
 
 env = Environment(
@@ -109,7 +116,7 @@ except TemplateNotFound:
     print("End Walk")
     raise
 
-inserts = generate_function_bodies()
+inserts = generate_function_bodies(args.header)
 
 header_str = header_template.render(**inserts)
 source_str = source_template.render(**inserts)
