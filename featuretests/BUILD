@@ -44,6 +44,13 @@ py_test_suite(
     ] + PY_FEATURE_TEST_DEPS,
 )
 
+py_test(
+    name = "example",
+    srcs = ["cpp_library_for_model_evaluation/generator.py"],
+    main = "cpp_library_for_model_evaluation/generator.py",
+    deps = ['//py:formak', requirement("Jinja2")] + PY_FEATURE_TEST_DEPS,
+)
+
 cc_formak_model(
     name = "cpp-model",
     pydeps = [],

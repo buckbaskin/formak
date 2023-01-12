@@ -1,10 +1,21 @@
 import argparse
-from os import basename, dirname, scandir
-from os.path import walk
+from os import scandir, walk
+from os.path import basename, dirname
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 from sympy import ccode
+
+DEFAULT_MODULES = ("scipy", "numpy", "math")
+
+class Config:
+    def __init__(
+        self,
+        common_subexpression_elimination=True,
+        python_modules=DEFAULT_MODULES,
+    ):
+        self.common_subexpression_elimination = common_subexpression_elimination
+        self.python_modules = python_modules
 
 
 # TODO(buck): data class?
