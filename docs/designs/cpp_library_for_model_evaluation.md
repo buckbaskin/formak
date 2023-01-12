@@ -68,20 +68,11 @@ for a separation of concerns. These two classes will also share an interface
 with the Python implementation as much as is reasonable to provide easier
 interopoeration between the two languages (for Key Element #4)
 
-<!-- TODO(buck): Start Here -->
-
 ## Feature Tests
 
-This feature is specific to the Python interface. There will be four feature
-tests:
-1. UI -> Python: Simple 2D model of a parabolic trajectory converting from `ui.Model` to `py.Model` (no compilation)
-2. Tooling: Simple 2D model of a parabolic trajectory converting from `ui.Model` to `py.ExtendedKalmanFilter`
-3. Compilation: Simple 2D model of a parabolic trajectory converting from `ui.Model` to `py.Model` (compilation)
-4. Compilation: Model converting from `ui.Model` to `py.Model`. Run against a sequence of data and profile. Assert `py.Model` with compilation faster than no compilation (excluding startup time).
-
-For the compilation specifically, if there aren't any performance benefits to
-be demonstrated, then remove it from the PR  in favor of a later design that
-can more specifically focus on compilation.
+This feature is specific to the C++ interface. There will be two feature tests:
+1. UI -> C++: Simple 2D model of a parabolic trajectory converting from `ui.Model` to `cpp.Model`
+2. Tooling: Simple 2D model of a parabolic trajectory converting from `ui.Model` to `cpp.ExtendedKalmanFilter`
 
 ## Road Map and Process
 
@@ -96,27 +87,3 @@ can more specifically focus on compilation.
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
-
-The big change from the original design was the lack of performance boost from the compiler. It was pitched as an optional feature, but I'll be curious to investigate more over time to see what performance is left on the table.
-
-On a smaller note, more of the logic than I would have liked ended up in the constructors (instead of the compiler functions) for the Model and Extended Kalman Filter. Perhaps this can be moved out in a future refactor.
-
-### 2022-09-10
-
-Selecting `numba` for the Python compiler
-- Pure python written source code
-- Simple Python -> compiled Python syntax
-- Designed for use with numpy
-- SIMD vectorization under the hood
-
-Key Features used from Sympy:
-- [lambdify](https://docs.sympy.org/latest/modules/utilities/lambdify.html#sympy.utilities.lambdify.lambdify)
-- [common subexpression elimination](https://docs.sympy.org/latest/modules/simplify/simplify.html#sympy.simplify.cse_main.cse)
-- [jacobian](https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrices.MatrixCalculus.jacobian)
-
-Following the EKF math from Probabilistic Robotics
-- S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.
-
-### 2022-09-11
-
-Compilation doesn't do as much to improve performance for a simple example. It doesn't appear to be because of a big JIT step, just that it only slightly improves things.
