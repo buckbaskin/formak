@@ -7,6 +7,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     CC_LIBRARY_NAME = name
 
     ALWAYS_PY_DEPS = [
+        "//py:formak",
         requirement("sympy"),
         requirement("Jinja2"),
     ]
