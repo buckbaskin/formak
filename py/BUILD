@@ -16,6 +16,18 @@ TEST_DEPS = [
     requirement("pytest-mock"),
 ]
 
+filegroup(
+    name = "templates",
+    srcs = glob(
+        [
+            "formak/templates/*.h",
+            "formak/templates/*.cpp",
+        ],
+        allow_empty = False,
+    ),
+    visibility = ["//visibility:public"],
+)
+
 py_library(
     name = "formak",
     srcs = glob(
