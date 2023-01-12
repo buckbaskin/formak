@@ -1,9 +1,10 @@
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "py_test_suite", "cc_test_suite")
+load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
 
-FEATURE_TEST_DEPS = [
+PY_FEATURE_TEST_DEPS = [
     requirement("pytest"),
 ]
+CC_FEATURE_TEST_DEPS = []
 
 py_test_suite(
     name = "python-ui-demo",
@@ -14,7 +15,7 @@ py_test_suite(
     ),
     deps = [
         "//py:formak",
-    ] + FEATURE_TEST_DEPS,
+    ] + PY_FEATURE_TEST_DEPS,
 )
 
 py_test_suite(
@@ -25,7 +26,7 @@ py_test_suite(
     ),
     deps = [
         "//py:formak",
-    ] + FEATURE_TEST_DEPS,
+    ] + PY_FEATURE_TEST_DEPS,
 )
 
 py_test_suite(
@@ -37,7 +38,16 @@ py_test_suite(
     deps = [
         "//py:formak",
         requirement("numpy"),
-    ] + FEATURE_TEST_DEPS,
+    ] + PY_FEATURE_TEST_DEPS,
+)
+
+cc_formak_model(
+    name = "cpp-model",
+    pymain = "cpp_library_for_model_evaluation/generator.py",
+    pysrcs = glob(
+        ["cpp_library_for_model_evaluation/*.py"],
+        allow_empty = False,
+    ),
 )
 
 cc_test_suite(
@@ -47,6 +57,6 @@ cc_test_suite(
         allow_empty = False,
     ),
     deps = [
-        "//py:formak",
-    ] + FEATURE_TEST_DEPS,
+        ":cpp-model",
+    ] + CC_FEATURE_TEST_DEPS,
 )
