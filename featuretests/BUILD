@@ -1,6 +1,5 @@
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "py_test_suite")
-load("//py:defs.bzl", "cc_test_suite")
+load("//py:defs.bzl", "py_test_suite", "cc_test_suite")
 
 FEATURE_TEST_DEPS = [
     requirement("pytest"),
