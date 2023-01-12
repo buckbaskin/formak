@@ -46,6 +46,7 @@ py_test_suite(
 
 cc_formak_model(
     name = "cpp-model",
+    pydeps = [],
     pymain = "cpp_library_for_model_evaluation/generator.py",
     pysrcs = glob(
         ["cpp_library_for_model_evaluation/*.py"],

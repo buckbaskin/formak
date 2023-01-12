@@ -1,7 +1,8 @@
 load("@pip_deps//:requirements.bzl", "requirement")
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 
-def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, ccdeps = None, visibility = None, **kwargs):
+def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, imports = None, visibility = None, **kwargs):
+    PY_LIBRARY_NAME = name + "py-library-formak-model"
     PY_BINARY_NAME = name + "py-binary-formak-model"
     GENRULE_NAME = name + "genrule-formak-model"
     CC_LIBRARY_NAME = name
@@ -15,11 +16,19 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     if pydeps == None:
         pydeps = []
 
+    py_library(
+        name = PY_LIBRARY_NAME,
+        srcs = pysrcs,
+        deps = pydeps + ALWAYS_PY_DEPS,
+        imports = imports,
+        visibility = ["//visibility:private"],
+    )
+
     py_binary(
         name = PY_BINARY_NAME,
-        srcs = pysrcs,
+        srcs = [pymain],
         main = pymain,
-        deps = pydeps + ALWAYS_PY_DEPS,
+        deps = [PY_LIBRARY_NAME],
         visibility = ["//visibility:private"],
     )
 
@@ -48,6 +57,6 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
         srcs = [OUTPUT_SOURCE],
         hdrs = [OUTPUT_HEADER],
         strip_include_prefix = "generated",
-        deps = ccdeps,
+        deps = [],
         visibility = visibility,
     )

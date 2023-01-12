@@ -1,3 +1,8 @@
+import sys
+
+print("sys.path")
+print(sys.path)
+
 from formak.ui import *
 from formak import cpp
 
