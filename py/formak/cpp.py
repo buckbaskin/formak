@@ -1,10 +1,14 @@
-from jinja2 import Environment, FileSystemLoader, PackageLoader, select_autoescape
+import argparse
+from os import basename, dirname, scandir
+from os.path import walk
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
-from sympy import Eq, Matrix, ccode, symbols
+from sympy import ccode
 
 
 # TODO(buck): data class?
-class CppCompileResult(object):
+class CppCompileResult:
     def __init__(self, success, header_path=None, source_path=None):
         self.success = success
         self.header_path = header_path
@@ -62,7 +66,7 @@ def compile(symbolic_model, *, config=None):
                 raise
 
         print("Walking")
-        for root, dirs, files in walk(templates_base_path):
+        for root, _, files in walk(templates_base_path):
             depth = len(root.split("/"))
             print("{}Root: {!s}".format(" " * depth, root))
             for filename in files:
@@ -86,5 +90,5 @@ def compile(symbolic_model, *, config=None):
             source_file.write(source_str)
 
     return CppCompileResult(
-        success=true, header_path=args.header, source_path=args.source
+        success=True, header_path=args.header, source_path=args.source
     )

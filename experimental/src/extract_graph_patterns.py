@@ -25,14 +25,13 @@ def match_symbolic_Add(expr):
 def visit_sympy_expr(expr, matcher, base=None):
     if base is None:
         base = []
-    print("visiting expr at %s" % (base,))
+    print("visiting expr at {}".format(base))
 
     if matcher(expr):
         yield base, expr
 
     for idx, arg in enumerate(expr.args):
-        for result in visit_sympy_expr(arg, matcher, base + [idx]):
-            yield result
+        yield from visit_sympy_expr(arg, matcher, base + [idx])
 
 
 matches = list(visit_sympy_expr(example_expr, match_symbolic_Add))
