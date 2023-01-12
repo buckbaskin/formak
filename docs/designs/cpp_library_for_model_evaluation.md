@@ -2,7 +2,7 @@
 
 Author: Buck Baskin @bebaskin
 Created: 2023-01-08
-Updated: 2022-01-08
+Updated: 2022-01-12
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
 Status: Design
@@ -67,6 +67,19 @@ to run C++ efficiently; however, they'll remain independent classes to start
 for a separation of concerns. These two classes will also share an interface
 with the Python implementation as much as is reasonable to provide easier
 interopoeration between the two languages (for Key Element #4)
+
+### Sympy
+
+Key Features used from Sympy that should translate across both Python and C++ implementations:
+- [lambdify](https://docs.sympy.org/latest/modules/utilities/lambdify.html#sympy.utilities.lambdify.lambdify)
+- [common subexpression elimination](https://docs.sympy.org/latest/modules/simplify/simplify.html#sympy.simplify.cse_main.cse)
+- [jacobian](https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrices.MatrixCalculus.jacobian)
+
+### Math
+
+Following the EKF math from Probabilistic Robotics
+- S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.
+
 
 ## Feature Tests
 
