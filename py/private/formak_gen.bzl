@@ -22,12 +22,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
         visibility = ["//visibility:private"],
     )
 
-    MODEL_TEMPLATES_HEADER = "templates/formak_model.h"
-    MODEL_TEMPLATES_SOURCE = "templates/formak_model.cpp"
-    MODEL_TEMPLATES = [
-        MODEL_TEMPLATES_SOURCE,
-        MODEL_TEMPLATES_HEADER,
-    ]
+    MODEL_TEMPLATES = "//py:templates"
 
     # TODO(buck): Use name to give these better names, maybe namespace too
     OUTPUT_HEADER = "generated/jinja_basic_class.h"
@@ -42,7 +37,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
         name = GENRULE_NAME,
         srcs = [PY_BINARY_NAME, "//py:templates"],
         outs = OUTPUT_FILES,
-        cmd = "python3 $(location " + pymain + ") --headertemplate " + MODEL_TEMPLATES_HEADER + " --sourcetemplate " + MODEL_TEMPLATES_SOURCE + " --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
+        cmd = "python3 $(location " + pymain + ") --templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
         tools = [pymain],
         visibility = ["//visibility:private"],
     )

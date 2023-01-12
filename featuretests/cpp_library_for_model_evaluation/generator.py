@@ -75,21 +75,24 @@ def generate_function_bodies(header_location):
 
 import sys
 
-print(sys.argv)
+# TODO(buck): Some of this should be split out into FormaK libraries instead of the user script (much of this? all of this? probably everything but the ui.Model creation)
 
-# python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)
+print(sys.argv)
 parser = argparse.ArgumentParser(prog="cppgen")
-parser.add_argument("--headertemplate")
-parser.add_argument("--sourcetemplate")
+parser.add_argument("--templates", nargs=2)
 parser.add_argument("--header")
 parser.add_argument("--source")
 
 args = parser.parse_args()
 print("args")
-print((args.headertemplate, args.header), "\n", (args.sourcetemplate, args.source))
+print(args.templates)
+print(args.header)
+print(args.source)
 
-templates_base_path = dirname(args.headertemplate)
-assert templates_base_path == dirname(args.sourcetemplate)
+header_template, source_template = args.templates
+
+templates_base_path = dirname(header_template)
+assert templates_base_path == dirname(source_template)
 print("templates_base_path", templates_base_path)
 
 env = Environment(
@@ -97,8 +100,8 @@ env = Environment(
 )
 
 try:
-    header_template = env.get_template("basic_class.h")
-    source_template = env.get_template("basic_class.cpp")
+    header_template = env.get_template("formak_model.h")
+    source_template = env.get_template("formak_model.cpp")
 except TemplateNotFound:
     print("Debugging TemplateNotFound")
     print("Trying to scandir")
