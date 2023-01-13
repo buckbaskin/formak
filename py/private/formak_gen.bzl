@@ -55,7 +55,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     run_binary(
         name = GENRULE_NAME,
         tool = PY_BINARY_NAME,
-        args = ["--templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)"],
+        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/jinja_basic_class.h)", "--source", "$(location generated/jinja_basic_class.cpp)"],
         outs = OUTPUT_FILES,
         srcs = ["//py:templates"],
     )

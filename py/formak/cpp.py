@@ -51,13 +51,13 @@ def compile(symbolic_model, *, config=None):
         config = Config(**config)
 
     parser = argparse.ArgumentParser(prog="generator.py")
-    parser.add_argument("--templates", nargs=2)
+    parser.add_argument("--templates")
     parser.add_argument("--header")
     parser.add_argument("--source")
 
     args = parser.parse_args()
 
-    header_template, source_template = args.templates
+    header_template, source_template = args.templates.split(" ")
 
     templates_base_path = dirname(header_template)
     assert templates_base_path == dirname(source_template)
