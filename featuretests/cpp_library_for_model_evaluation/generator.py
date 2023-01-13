@@ -1,7 +1,8 @@
 import sys
+from os.path import basename
 
-print("sys.path")
-print(sys.path)
+print("sys.path matching formak as dep")
+print(list(filter(lambda p: "formak" in basename(p).lower(), list(sys.path))))
 
 from formak.ui import *
 from formak import cpp

@@ -8,6 +8,7 @@ from sympy import ccode
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
+
 class Config:
     def __init__(
         self,

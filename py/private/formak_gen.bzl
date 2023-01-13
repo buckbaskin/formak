@@ -1,5 +1,6 @@
 load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, imports = None, visibility = None, **kwargs):
     PY_LIBRARY_NAME = name + "py-library-formak-model"
@@ -43,13 +44,20 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     ]
 
     # TODO(buck): Parameterize the output command
-    native.genrule(
+    # native.genrule(
+    #     name = GENRULE_NAME,
+    #     srcs = [PY_BINARY_NAME, "//py:templates"],
+    #     outs = OUTPUT_FILES,
+    #     cmd = "python3 $(location " + pymain + ") --templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
+    #     tools = [pymain],
+    #     visibility = ["//visibility:private"],
+    # )
+    run_binary(
         name = GENRULE_NAME,
-        srcs = [PY_BINARY_NAME, "//py:templates"],
+        tool = PY_BINARY_NAME,
+        args = ["--templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)"],
         outs = OUTPUT_FILES,
-        cmd = "python3 $(location " + pymain + ") --templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
-        tools = [pymain],
-        visibility = ["//visibility:private"],
+        srcs = ["//py:templates"],
     )
 
     native.cc_library(
