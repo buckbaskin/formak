@@ -31,6 +31,10 @@ def _generate_function_bodies(header_location, symbolic_model):
     ccode_model = ""
 
     # includes header is a single file name (e.g. abc.h) not in some directory structure (e.g. foo/bar/abc.h)
+    # TODO(buck): This logic is failing, needs a fix
+    # For generated/formak/xyz.h
+    # it selects xyz.h
+    # I want formak/xyz.h , so strip a leading generated prefix if present
     header_include = basename(header_location)
 
     return {

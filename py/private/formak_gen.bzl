@@ -36,8 +36,8 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     MODEL_TEMPLATES = "//py:templates"
 
     # TODO(buck): Use name to give these better names, maybe namespace too
-    OUTPUT_HEADER = "generated/jinja_basic_class.h"
-    OUTPUT_SOURCE = "generated/jinja_basic_class.cpp"
+    OUTPUT_HEADER = "generated/formak/%s.h" % (name,)
+    OUTPUT_SOURCE = "generated/formak/%s.cpp" % (name,)
     OUTPUT_FILES = [
         OUTPUT_HEADER,
         OUTPUT_SOURCE,
@@ -55,7 +55,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     run_binary(
         name = GENRULE_NAME,
         tool = PY_BINARY_NAME,
-        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/jinja_basic_class.h)", "--source", "$(location generated/jinja_basic_class.cpp)"],
+        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/formak/%s.h)" % (name,), "--source", "$(location generated/formak/%s.cpp)" % (name,)],
         outs = OUTPUT_FILES,
         srcs = ["//py:templates"],
     )
