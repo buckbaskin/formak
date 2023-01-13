@@ -1,9 +1,6 @@
 import sys
 from os.path import basename
 
-print("sys.path matching formak as dep")
-print(list(filter(lambda p: "formak" in basename(p).lower(), list(sys.path))))
-
 from formak.ui import *
 from formak import cpp
 
@@ -24,9 +21,6 @@ state_model = {
 }
 
 model = Model(dt=dt, state=state, control=control, state_model=state_model)
-
-# TODO(buck): Some of this should be split out into FormaK libraries instead of the user script (much of this? all of this? probably everything but the ui.Model creation)
-# TODO(buck): It should end up looking like:
 
 cpp_implementation = cpp.compile(model)
 

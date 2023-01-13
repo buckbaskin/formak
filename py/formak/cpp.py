@@ -27,11 +27,8 @@ class CppCompileResult:
         self.source_path = source_path
 
 
-def _generate_function_bodies(header_location):
-    # SympyModel_model_body: x*y + x + y + 1
-    model = x * y + x + y + 1
-
-    ccode_model = ccode(model)
+def _generate_function_bodies(header_location, symbolic_model):
+    ccode_model = ""
 
     # includes header is a single file name (e.g. abc.h) not in some directory structure (e.g. foo/bar/abc.h)
     header_include = basename(header_location)
@@ -86,7 +83,7 @@ def compile(symbolic_model, *, config=None):
         print("End Walk")
         raise
 
-    inserts = generate_function_bodies(args.header)
+    inserts = _generate_function_bodies(args.header, symbolic_model)
 
     header_str = header_template.render(**inserts)
     source_str = source_template.render(**inserts)
