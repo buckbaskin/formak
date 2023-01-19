@@ -44,14 +44,6 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     ]
 
     # TODO(buck): Parameterize the output command
-    # native.genrule(
-    #     name = GENRULE_NAME,
-    #     srcs = [PY_BINARY_NAME, "//py:templates"],
-    #     outs = OUTPUT_FILES,
-    #     cmd = "python3 $(location " + pymain + ") --templates $(locations " + MODEL_TEMPLATES + ") --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
-    #     tools = [pymain],
-    #     visibility = ["//visibility:private"],
-    # )
     run_binary(
         name = GENRULE_NAME,
         tool = PY_BINARY_NAME,

@@ -2,6 +2,7 @@ import argparse
 from os import scandir, walk
 from os.path import basename, dirname
 
+from colorama import init, Fore as cF, Style as cS
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 from sympy import ccode
@@ -30,12 +31,10 @@ class CppCompileResult:
 def _generate_function_bodies(header_location, symbolic_model):
     ccode_model = ""
 
-    # includes header is a single file name (e.g. abc.h) not in some directory structure (e.g. foo/bar/abc.h)
-    # TODO(buck): This logic is failing, needs a fix
-    # For generated/formak/xyz.h
-    # it selects xyz.h
+    # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    header_include = basename(header_location)
+    assert 'generated/' in header_location
+    header_include = header_location.split('generated/')[-1]
 
     return {
         "header_include": header_include,

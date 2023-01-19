@@ -1,4 +1,4 @@
-#include <formak/cpp_model.h>  // Generated
+#include <formak/cpp-model.h>  // Generated
 #include <gtest/gtest.h>
 
 namespace featuretest {
