@@ -1,11 +1,13 @@
 import argparse
 from os import scandir, walk
-from os.path import basename, dirname
+from os.path import dirname
 
-from colorama import init, Fore as cF, Style as cS
+from colorama import Fore as cF
+from colorama import Style as cS
+from colorama import init
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
-from sympy import ccode
+from sympy import ccode, cse
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
@@ -28,19 +30,66 @@ class CppCompileResult:
         self.source_path = source_path
 
 
-def _generate_function_bodies(header_location, symbolic_model):
-    ccode_model = ""
+class Model:
+    """C++ implementation of the model."""
+
+    def __init__(self, symbolic_model, config):
+        # TODO(buck): Enable mypy for type checking
+        # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
+        # assert isinstance(symbolic_model, ui.Model)
+        if isinstance(config, dict):
+            config = Config(**config)
+        assert isinstance(config, Config)
+
+        self.state_size = len(symbolic_model.state)
+        self.control_size = len(symbolic_model.control)
+
+        self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + sorted(list(symbolic_model.control), key=lambda x: x.name)
+        )
+
+        # TODO(buck): Expand state function argument to individual variables?
+        self._prefix = []
+
+        # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
+        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
+        self._impl = [
+            "double {varname} = {expr};".format(
+                varname=a, expr=ccode(symbolic_model.state_model[a])
+            )
+            for a in self.arglist_state
+        ]
+
+        # TODO(buck): Construct new state / model output from calculated variables
+        self._postfix = []
+
+        self._return = "state"
+
+    def ccode_model(self):
+        return "{prefix}\n{impl}\n{postfix}\nreturn {return_};".format(
+            prefix="\n".join(self._prefix),
+            impl="\n".join(self._impl),
+            postfix="\n".join(self._postfix),
+            return_=self._return,
+        )
+
+
+def _generate_function_bodies(header_location, symbolic_model, config):
+    generator = Model(symbolic_model, config)
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    assert 'generated/' in header_location
-    header_include = header_location.split('generated/')[-1]
+    assert "generated/" in header_location
+    header_include = header_location.split("generated/")[-1]
 
     return {
         "header_include": header_include,
         "update_body": "_state += 1;",
         "getValue_body": "return _state;",
-        "SympyModel_model_body": "return {};".format(ccode_model),
+        "SympyModel_model_body": generator.ccode_model(),
     }
 
 
@@ -86,7 +135,7 @@ def compile(symbolic_model, *, config=None):
         print("End Walk")
         raise
 
-    inserts = _generate_function_bodies(args.header, symbolic_model)
+    inserts = _generate_function_bodies(args.header, symbolic_model, config)
 
     header_str = header_template.render(**inserts)
     source_str = source_template.render(**inserts)
