@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@pip_deps//:requirements.bzl", "requirement")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 cc_library(
     name = "hello-library",
@@ -49,18 +50,27 @@ py_binary(
     ],
 )
 
-genrule(
+run_binary(
     name = "cpp-gen",
-    srcs = [":cpp-gen-impl"] + glob([
+    srcs = glob([
         "templates/*.cpp",
         "templates/*.h",
     ]),
     outs = [
-        "generated/jinja_basic_class.h",
         "generated/jinja_basic_class.cpp",
+        "generated/jinja_basic_class.h",
     ],
-    cmd = "python3 $(location src/cpp_gen.py) --headertemplate $(location templates/basic_class.h) --sourcetemplate $(location templates/basic_class.cpp) --header $(location generated/jinja_basic_class.h) --source $(location generated/jinja_basic_class.cpp)",
-    tools = ["src/cpp_gen.py"],
+    args = [
+        "--headertemplate",
+        "$(location templates/basic_class.h)",
+        "--sourcetemplate",
+        "$(location templates/basic_class.cpp)",
+        "--header",
+        "$(location generated/jinja_basic_class.h)",
+        "--source",
+        "$(location generated/jinja_basic_class.cpp)",
+    ],
+    tool = ":cpp-gen-impl",
 )
 
 cc_library(
