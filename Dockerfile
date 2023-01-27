@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:focal-20221130
+FROM ubuntu:jammy-20221130
 CMD ["bash"]
 # required dependencies
 RUN apt-get update  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl autoconf build-essential python3 clang-12
