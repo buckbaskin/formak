@@ -78,8 +78,11 @@ def _impl(ctx):
         features = features,
         cxx_builtin_include_directories = [
             "/usr/lib/llvm-12/lib/clang/12.0.0/include",
+            "/usr/lib/llvm-12/lib/clang/12.0.1/include",
             "/usr/lib/llvm-12/lib/clang/12.0.0/share",
+            "/usr/lib/llvm-12/lib/clang/12.0.1/share",
             "/usr/lib/llvm-12/lib64/clang/12.0.0/include",
+            "/usr/lib/llvm-12/lib64/clang/12.0.1/include",
             "/usr/include",
         ],
         toolchain_identifier = "local",

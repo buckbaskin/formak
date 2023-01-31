@@ -12,6 +12,15 @@ load(
     "new_git_repository",
 )
 
+### C++ Toolchain
+
+load("//toolchain:rules_cc_toolchain_deps.bzl", "rules_cc_toolchain_deps")
+
+rules_cc_toolchain_deps()
+
+# TODO(buck): Figure out what's needed here
+# register_toolchains("//cc_toolchain/...")
+
 ### Buildifier
 
 # buildifier is written in Go and hence needs rules_go to be built.
