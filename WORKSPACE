@@ -10,7 +10,25 @@ load(
 load(
     "@bazel_tools//tools/build_defs/repo:git.bzl",
     "new_git_repository",
+
 )
+
+### C++ hermetic toolchain
+
+# Set up host hermetic host toolchain.
+git_repository(
+    name = "rules_cc_toolchain",
+    commit = "dd9265e3ce0daa444911040430bd716076869b34",
+    remote = "https://github.com/bazelembedded/rules_cc_toolchain.git",
+)
+
+load("@rules_cc_toolchain//:rules_cc_toolchain_deps.bzl", "rules_cc_toolchain_deps")
+
+rules_cc_toolchain_deps()
+
+load("@rules_cc_toolchain//cc_toolchain:cc_toolchain.bzl", "register_cc_toolchains")
+
+register_cc_toolchains()
 
 ### Buildifier
 

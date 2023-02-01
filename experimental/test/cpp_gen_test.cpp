@@ -1,6 +1,19 @@
 #include <gtest/gtest.h>
 #include <jinja_basic_class.h>
 
+namespace compiler {
+
+constexpr bool running_under_clang =
+#ifdef __clang__
+    true;
+#else
+    false;
+#endif
+
+static_assert(running_under_clang, "I want to see things running under clang");
+
+}  // namespace compiler
+
 namespace experimental {
 
 struct TestModelInput {
