@@ -1,0 +1,89 @@
+# Derived from bazelembedded/rules_cc_toolchain
+# https://github.com/bazelembedded/rules_cc_toolchain/blob/8f9de1b0ea47876e3de6b4fc9d9660331139aaa1/LICENSE
+
+load("//cc_toolchain:cc_toolchain_import.bzl", "cc_toolchain_import")
+load("@io_bazel_stardoc//stardoc:stardoc.bzl", "stardoc")
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+alias(
+    name = "libc_multiplexer",
+    actual = select({
+        ":linux_x86_64": "@debian_stretch_amd64_sysroot//:glibc",
+    }),
+)
+
+alias(
+    name = "libunwind_multiplexer",
+    actual = select({
+        # TODO: Explore using llvm-libunwind statically linked.
+        ":linux_x86_64": "@debian_stretch_amd64_sysroot//:gcc",
+    }),
+)
+
+alias(
+    name = "pthread_multiplexer",
+    actual = select({
+        ":linux_x86_64": "@debian_stretch_amd64_sysroot//:pthread",
+    }),
+)
+
+alias(
+    name = "libc++_multiplexer",
+    actual = select({
+        ":linux_x86_64": "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:llvm_libcxx",
+    }),
+)
+
+alias(
+    name = "libc++abi_multiplexer",
+    actual = select({
+        ":linux_x86_64": "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:llvm_libcxx_abi",
+    }),
+)
+
+alias(
+    name = "libclang_rt_multiplexer",
+    actual = select({
+        ":linux_x86_64": "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:llvm_libclang_rt",
+    }),
+)
+
+alias(
+    name = "startup_libs",
+    actual = select({
+        ":linux_x86_64": "@debian_stretch_amd64_sysroot//:startup_libs",
+        "//conditions:default": ":empty",
+    }),
+)
+
+alias(
+    name = "clang_tidy_config_multiplexer",
+    actual = "//tools/clang_tidy:default",
+)
+
+# This is a placeholder to signify an empty dependency.
+cc_toolchain_import(
+    name = "empty",
+)
+
+stardoc(
+    name = "rules_cc_toolchain_config_docs",
+    out = "rules_cc_toolchain_config_docs.md",
+    input = "rules_cc_toolchain_config_repository.bzl",
+)
+
+filegroup(
+    name = "docs",
+    srcs = [":rules_cc_toolchain_config_docs"],
+)
