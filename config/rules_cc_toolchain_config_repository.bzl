@@ -10,7 +10,7 @@ rules_cc_toolchain_config = repository_rule(
     attrs = {
         "build_file": attr.label(
             allow_single_file = True,
-            default = "@rules_cc_toolchain//config:rules_cc_toolchain_config.BUILD",
+            default = "@formak//config:rules_cc_toolchain_config.BUILD",
             doc = "The build file containing the configurations for this toolchain.",
         ),
     },
@@ -21,7 +21,7 @@ To override the default configuration use this rule before calling `rules_cc_too
 
 Example:
 ```python
-load("@rules_cc_toolchain//config:rules_cc_toolchain_config_repository.bzl",
+load("@formak//config:rules_cc_toolchain_config_repository.bzl",
     "rules_cc_toolchain_config")
 
 rules_cc_toolchain_config(

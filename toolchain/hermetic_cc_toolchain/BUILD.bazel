@@ -1,0 +1,176 @@
+# Derived from bazelembedded/rules_cc_toolchain
+# https://github.com/bazelembedded/rules_cc_toolchain/blob/8f9de1b0ea47876e3de6b4fc9d9660331139aaa1/LICENSE
+
+load("@rules_cc//cc:defs.bzl", "cc_toolchain")
+load(":toolchain_config.bzl", "cc_toolchain_config")
+load(
+    "@formak//toolchain/hermetic_cc_toolchain:cc_toolchain_import.bzl",
+    "cc_toolchain_import",
+)
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@io_bazel_stardoc//stardoc:stardoc.bzl", "stardoc")
+
+cc_toolchain_import(
+    name = "all_imports",
+    visibility = ["//visibility:public"],
+    deps = [
+        # buildifier don't sort, allow user to override system libs.
+        # System libs will be found first as the include paths are found.
+        "@formak_config//:user_defined",
+        "@formak_config//:compiler_rt",
+        "@formak_config//:libc",
+        "@formak_config//:libc++",
+        "@formak_config//:libc++abi",
+        "@formak_config//:libunwind",
+    ],
+)
+
+filegroup(
+    name = "all",
+    srcs = [
+        ":all_imports",
+        "//toolchain/hermetic_cc_toolchain/features:startup_libs",
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:all",
+    ],
+)
+
+filegroup(
+    name = "ar_files",
+    srcs = [
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:ar_files",
+    ],
+)
+
+filegroup(
+    name = "compiler_files",
+    srcs = [
+        ":all_imports",
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:compiler_files",
+    ],
+)
+
+filegroup(
+    name = "linker_files",
+    srcs = [
+        ":compiler_files",
+        "//toolchain/hermetic_cc_toolchain/features:startup_libs",
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:linker_files",
+    ],
+)
+
+filegroup(
+    name = "objcopy_files",
+    srcs = [
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:objcopy_files",
+    ],
+)
+
+filegroup(
+    name = "strip_files",
+    srcs = [
+        "//toolchain/hermetic_cc_toolchain/wrappers:all",
+        "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:strip_files",
+    ],
+)
+
+cc_toolchain(
+    name = "linux_x86_64_toolchain",
+    all_files = ":all",
+    ar_files = ":ar_files",
+    compiler_files = ":compiler_files",
+    dwp_files = ":all",
+    linker_files = ":linker_files",
+    objcopy_files = ":objcopy_files",
+    strip_files = ":strip_files",
+    supports_param_files = 0,
+    toolchain_config = ":linux_x86_64_toolchain_config",
+    toolchain_identifier = "linux_x86_64_toolchain",
+)
+
+cc_toolchain_config(
+    name = "linux_x86_64_toolchain_config",
+    archiver = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/llvm-ar",
+    c_compiler = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/clang",
+    cc_compiler = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/clang++",
+    compiler_features = [
+        # Hermetic libraries feature required before import.
+        "//toolchain/hermetic_cc_toolchain/features:hermetic_libraries",
+        "//toolchain/hermetic_cc_toolchain/features:toolchain_import",
+
+        # Toolchain configuration
+        "//toolchain/hermetic_cc_toolchain/features:garbage_collect_symbols",
+        "//toolchain/hermetic_cc_toolchain/features:warnings",
+        "//toolchain/hermetic_cc_toolchain/features:errors",
+        "//toolchain/hermetic_cc_toolchain/features:reproducible",
+        "//toolchain/hermetic_cc_toolchain/features:language",
+        "//toolchain/hermetic_cc_toolchain/features:use_lld",
+        "//toolchain/hermetic_cc_toolchain/features:sysroot",
+        "//toolchain/hermetic_cc_toolchain/features:dbg",
+        "//toolchain/hermetic_cc_toolchain/features:opt",
+        "//toolchain/hermetic_cc_toolchain/features:fastbuild",
+        "//toolchain/hermetic_cc_toolchain/features:position_independent_code",
+        "//toolchain/hermetic_cc_toolchain/features:supports_pic",
+        "//toolchain/hermetic_cc_toolchain/features:startup_libs",
+        "//toolchain/hermetic_cc_toolchain/features:coverage",
+
+        # C++ standard configuration
+        "//toolchain/hermetic_cc_toolchain/features:c++11",
+        "//toolchain/hermetic_cc_toolchain/features:c++14",
+        "//toolchain/hermetic_cc_toolchain/features:c++17",
+        "//toolchain/hermetic_cc_toolchain/features:c++20",
+    ],
+    linker = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/ld.lld",
+    object_dump_tool = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/llvm-objdump",
+    symbol_list_tool = "@clang_llvm_15_00_06_x86_64_linux_gnu_ubuntu_18_04//:bin/llvm-nm",
+)
+
+toolchain(
+    name = "linux_x86_64_cc_toolchain",
+    exec_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+    toolchain = ":linux_x86_64_toolchain",
+    toolchain_type = "@rules_cc//cc:toolchain_type",
+)
+
+STARLARK_SRCS = [
+    "cc_toolchain",
+    "cc_toolchain_import",
+    "sysroot",
+    "toolchain_config",
+]
+
+bzl_library(
+    name = "srcs",
+    srcs = [src + ".bzl" for src in STARLARK_SRCS],
+    visibility = ["//visibility:public"],
+)
+
+[
+    stardoc(
+        name = src + "_doc",
+        out = src + "_doc.md",
+        input = src + ".bzl",
+        deps = [
+            ":srcs",
+            "//third_party:bazel_tools_cc_action_names",
+            "//third_party:rules_cc",
+        ],
+    )
+    for src in STARLARK_SRCS
+]
+
+filegroup(
+    name = "docs",
+    srcs = [":" + src + "_doc" for src in STARLARK_SRCS],
+)

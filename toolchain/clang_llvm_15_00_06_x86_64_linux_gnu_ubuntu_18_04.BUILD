@@ -2,7 +2,7 @@
 # https://github.com/bazelembedded/rules_cc_toolchain/blob/8f9de1b0ea47876e3de6b4fc9d9660331139aaa1/LICENSE
 
 load(
-    "@formak//cc_toolchain:cc_toolchain_import.bzl",
+    "@formak//toolchain/hermetic_cc_toolchain:cc_toolchain_import.bzl",
     "cc_toolchain_import",
 )
 

@@ -18,8 +18,18 @@ load("//toolchain:rules_cc_toolchain_deps.bzl", "rules_cc_toolchain_deps")
 
 rules_cc_toolchain_deps()
 
-# TODO(buck): Figure out what's needed here
-# register_toolchains("//cc_toolchain/...")
+load("@formak//toolchain:cc_toolchain.bzl", "register_cc_toolchains")
+
+register_cc_toolchains()
+
+# Sets up Bazels documentation generator.
+# Required by: rules_cc_toolchain.
+# Required by modules: All
+git_repository(
+    name = "io_bazel_stardoc",
+    commit = "8f6d22452d088b49b13ba2c224af69ccc8ccbc90",
+    remote = "https://github.com/bazelbuild/stardoc.git",
+)
 
 ### Buildifier
 
