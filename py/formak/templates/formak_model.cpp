@@ -1,17 +1,12 @@
 #include <{{header_include}}>
 
-namespace experimental {
+namespace formak {
 
-void Stateful::update() {
+State Model::model(double dt, const State& input_state,
+                   const Control& input_control) {
   // clang-format off
-  {{update_body}}
+  {{Model_model_body}}
   // clang-format on
 }
 
-double SympyModel::model(double x, double y) {
-  // clang-format off
-  {{SympyModel_model_body}}
-  // clang-format on
-}
-
-}  // namespace experimental
+}  // namespace formak

@@ -1,27 +1,23 @@
 #pragma once
 
-namespace experimental {
+namespace formak {
 
-class Stateful {
- public:
-  Stateful() : _state(0.0) {
-  }
-
-  void update();
-
-  double getValue() {
-    // clang-format off
-    {{getValue_body}}
-    // clang-format on
-  }
-
- private:
-  double _state;
+struct State {
+  // clang-format off
+  {{State_members}}
+  // clang-format on
 };
 
-class SympyModel {
- public:
-  double model(double x, double y);
+struct Control {
+  // clang-format off
+  {{Control_members}}
+  // clang-format on
 };
 
-}  // namespace experimental
+class Model {
+ public:
+  State model(double dt, const State& input_state,
+              const Control& input_control);
+};
+
+}  // namespace formak

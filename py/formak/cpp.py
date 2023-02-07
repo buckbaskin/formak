@@ -7,7 +7,7 @@ from colorama import Style as cS
 from colorama import init
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
-from sympy import ccode, cse
+from sympy import Symbol, ccode, cse
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
@@ -45,28 +45,52 @@ class Model:
         self.control_size = len(symbolic_model.control)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
-        self.arglist = (
-            [symbolic_model.dt]
-            + self.arglist_state
-            + sorted(list(symbolic_model.control), key=lambda x: x.name)
+        self.arglist_control = sorted(
+            list(symbolic_model.control), key=lambda x: x.name
         )
+        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
 
         # TODO(buck): Expand state function argument to individual variables?
         self._prefix = []
 
         # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
         # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
-        self._impl = [
-            "double {varname} = {expr};".format(
-                varname=a, expr=ccode(symbolic_model.state_model[a])
-            )
-            for a in self.arglist_state
-        ]
+        self._impl = list(self._translate_impl(symbolic_model))
 
         # TODO(buck): Construct new state / model output from calculated variables
         self._postfix = []
 
-        self._return = "state"
+        self._return = self._translate_return()
+
+    def _translate_impl(self, symbolic_model):
+        subs_set = [
+            (
+                member,
+                Symbol("input_state.{}".format(member)),
+            )
+            for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_control.{}".format(member)),
+            )
+            for member in self.arglist_control
+        ]
+
+        for a in self.arglist_state:
+            expr_before = symbolic_model.state_model[a]
+            expr_after = expr_before.subs(subs_set)
+            cc_expr = ccode(expr_after)
+            yield "double {varname} = {cc_expr};".format(
+                varname=a,
+                cc_expr=cc_expr,
+            )
+
+    def _translate_return(self):
+        content = ", ".join(
+            (".{name}={name}".format(name=name) for name in self.arglist_state)
+        )
+        return "State{" + content + "}"
 
     def ccode_model(self):
         return "{prefix}\n{impl}\n{postfix}\nreturn {return_};".format(
@@ -74,6 +98,16 @@ class Model:
             impl="\n".join(self._impl),
             postfix="\n".join(self._postfix),
             return_=self._return,
+        )
+
+    def state_members(self):
+        return "\n".join(
+            "double {name};".format(name=name) for name in self.arglist_state
+        )
+
+    def control_members(self):
+        return "\n".join(
+            "double {name};".format(name=name) for name in self.arglist_control
         )
 
 
@@ -87,9 +121,9 @@ def _generate_function_bodies(header_location, symbolic_model, config):
 
     return {
         "header_include": header_include,
-        "update_body": "_state += 1;",
-        "getValue_body": "return _state;",
-        "SympyModel_model_body": generator.ccode_model(),
+        "Model_model_body": generator.ccode_model(),
+        "State_members": generator.state_members(),
+        "Control_members": generator.control_members(),
     }
 
 
