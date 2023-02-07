@@ -1,4 +1,5 @@
-build:linux --compiler=clang
+# build --compiler=clang
+build --copt -std=c++17
 
 # Clang Build
 build:clang --crosstool_top=//toolchain:clang_suite
@@ -7,6 +8,7 @@ build:clang --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
 build:clang --copt -Wall
 build:clang --copt -Wpedantic
 build:clang --copt -Werror
+build:clang --copt -stdlib=libc++
 
 # Address Sanitizer
 build:asan --strip=never
