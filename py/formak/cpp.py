@@ -1,6 +1,7 @@
 import argparse
 from os import scandir, walk
 from os.path import dirname
+from typing import Any, List, Tuple
 
 from colorama import Fore as cF
 from colorama import Style as cS
@@ -30,6 +31,26 @@ class CppCompileResult:
         self.source_path = source_path
 
 
+class BasicBlock:
+    def __init__(self, statements: List[Tuple[str, Any]]):
+        # should be Tuple[str, sympy expression]
+        self._statements = statements
+
+    def compile(self):
+        return "\n".join(self._compile_impl())
+
+    def _compile_impl(self):
+        # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
+        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
+        # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
+        for varname, expr in self._statements:
+            cc_expr = ccode(expr)
+            yield "double {varname} = {cc_expr};".format(
+                varname=varname,
+                cc_expr=cc_expr,
+            )
+
+
 class Model:
     """C++ implementation of the model."""
 
@@ -50,15 +71,7 @@ class Model:
         )
         self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
 
-        # TODO(buck): Expand state function argument to individual variables?
-        self._prefix = []
-
-        # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
-        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
-        self._impl = list(self._translate_impl(symbolic_model))
-
-        # TODO(buck): Construct new state / model output from calculated variables
-        self._postfix = []
+        self._impl = BasicBlock(self._translate_impl(symbolic_model))
 
         self._return = self._translate_return()
 
@@ -80,11 +93,7 @@ class Model:
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
             expr_after = expr_before.subs(subs_set)
-            cc_expr = ccode(expr_after)
-            yield "double {varname} = {cc_expr};".format(
-                varname=a,
-                cc_expr=cc_expr,
-            )
+            yield a, expr_after
 
     def _translate_return(self):
         content = ", ".join(
@@ -93,10 +102,8 @@ class Model:
         return "State{" + content + "}"
 
     def ccode_model(self):
-        return "{prefix}\n{impl}\n{postfix}\nreturn {return_};".format(
-            prefix="\n".join(self._prefix),
-            impl="\n".join(self._impl),
-            postfix="\n".join(self._postfix),
+        return "{impl}\nreturn {return_};".format(
+            impl=self._impl.compile(),
             return_=self._return,
         )
 
