@@ -54,6 +54,16 @@ cc_formak_model(
     ),
 )
 
+cc_formak_model(
+    name = "cpp-ekf",
+    pydeps = [],
+    pymain = "cpp_library_for_model_evaluation/generator_ekf.py",
+    pysrcs = glob(
+        ["cpp_library_for_model_evaluation/*.py"],
+        allow_empty = False,
+    ),
+)
+
 cc_test_suite(
     name = "cpp-library-for-model-evaluation",
     srcs = glob(
@@ -62,5 +72,6 @@ cc_test_suite(
     ),
     deps = [
         ":cpp-model",
+        ":cpp-ekf",
     ] + CC_FEATURE_TEST_DEPS,
 )
