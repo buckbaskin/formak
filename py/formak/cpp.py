@@ -1,4 +1,5 @@
 import argparse
+from collections import defaultdict
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
@@ -118,7 +119,7 @@ class Model:
         )
 
 
-def _generate_function_bodies(header_location, symbolic_model, config):
+def _generate_model_function_bodies(header_location, symbolic_model, config):
     generator = Model(symbolic_model, config)
 
     # For .../generated/formak/xyz.h
@@ -134,6 +135,46 @@ def _generate_function_bodies(header_location, symbolic_model, config):
     }
 
 
+def _generate_ekf_function_bodies(header_location, symbolic_model, config):
+    generator = Model(symbolic_model, config)
+
+    # For .../generated/formak/xyz.h
+    # I want formak/xyz.h , so strip a leading generated prefix if present
+    assert "generated/" in header_location
+    header_include = header_location.split("generated/")[-1]
+
+    return {
+        "header_include": header_include,
+        "Model_model_body": generator.ccode_model(),
+        "State_members": generator.state_members(),
+        "Control_members": generator.control_members(),
+    }
+
+
+def _parse_raw_templates(arg):
+    raw_templates = arg.split(" ")
+    templates = defaultdict(dict)
+
+    EXPECT_PREFIX = "py/formak/templates/"
+
+    for template_str in raw_templates:
+        if not template_str.startswith(EXPECT_PREFIX):
+            raise ValueError(
+                f"Template {template_str} did not start with expected prefix {EXPECT_PREFIX}"
+            )
+
+        if template_str.endswith(".cpp"):
+            templates[template_str[len(EXPECT_PREFIX) : -4]][".cpp"] = template_str
+        elif template_str.endswith(".h"):
+            templates[template_str[len(EXPECT_PREFIX) : -2]][".h"] = template_str
+        else:
+            raise ValueError(
+                f"Template {template_str} did not end with expected suffix"
+            )
+
+    return templates
+
+
 def compile(symbolic_model, *, config=None):
     if config is None:
         config = Config()
@@ -147,7 +188,13 @@ def compile(symbolic_model, *, config=None):
 
     args = parser.parse_args()
 
-    header_template, source_template = args.templates.split(" ")
+    templates = _parse_raw_templates(args.templates)
+
+    # TODO(buck): This '.h', '.cpp' feels like it should be a little dataclass
+    # TODO(buck): Then it becomes templates['model']['.h'] -> templates['model'].h
+    # TODO(buck): Which feels like a little bit of a coding pun
+    header_template = templates["formak_model"][".h"]
+    source_template = templates["formak_model"][".cpp"]
 
     templates_base_path = dirname(header_template)
     assert templates_base_path == dirname(source_template)
@@ -176,7 +223,7 @@ def compile(symbolic_model, *, config=None):
         print("End Walk")
         raise
 
-    inserts = _generate_function_bodies(args.header, symbolic_model, config)
+    inserts = _generate_model_function_bodies(args.header, symbolic_model, config)
 
     header_str = header_template.render(**inserts)
     source_str = source_template.render(**inserts)
@@ -195,6 +242,7 @@ def compile(symbolic_model, *, config=None):
         success=True, header_path=args.header, source_path=args.source
     )
 
+
 def compile_ekf(
     state_model, process_noise, sensor_models, sensor_noises, *, config=None
 ):
@@ -210,7 +258,10 @@ def compile_ekf(
 
     args = parser.parse_args()
 
-    header_template, source_template = args.templates.split(" ")
+    templates = _parse_raw_templates(args.templates)
+
+    header_template = templates["formak_ekf"][".h"]
+    source_template = templates["formak_ekf"][".cpp"]
 
     templates_base_path = dirname(header_template)
     assert templates_base_path == dirname(source_template)
