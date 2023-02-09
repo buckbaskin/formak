@@ -2,10 +2,11 @@
 
 namespace formak {
 
-State Model::model(double dt, const State& input_state,
-                   const Control& input_control) {
+StateAndVariance ExtendedKalmanFilter::process_model(
+    double dt, const StateAndVariance& input_state,
+    const Control& input_control) {
   // clang-format off
-  {{Model_model_body}}
+  {{ExtendedKalmanFilter_process_model_body}}
   // clang-format on
 }
 

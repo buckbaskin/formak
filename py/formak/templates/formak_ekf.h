@@ -37,7 +37,7 @@ struct SensorReading {
   ReadingT reading;
 };
 
-class EKF {
+class ExtendedKalmanFilter {
  public:
   StateAndVariance process_model(double dt, const StateAndVariance& input_state,
                                  const Control& input_control);

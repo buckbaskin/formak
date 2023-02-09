@@ -102,13 +102,92 @@ class Model:
         )
         return "State{" + content + "}"
 
-    def ccode_model(self):
+    def model_body(self):
         return "{impl}\nreturn {return_};".format(
             impl=self._impl.compile(),
             return_=self._return,
         )
 
     def state_members(self):
+        return "\n".join(
+            "double {name};".format(name=name) for name in self.arglist_state
+        )
+
+    def control_members(self):
+        return "\n".join(
+            "double {name};".format(name=name) for name in self.arglist_control
+        )
+
+
+class ExtendedKalmanFilter:
+    """C++ implementation of the EKF"""
+
+    def __init__(
+        self, state_model, process_noise, sensor_models, sensor_noises, config
+    ):
+        if isinstance(config, dict):
+            config = Config(**config)
+        assert isinstance(config, Config)
+
+        # TODO(buck): This is lots of duplication with the model
+        self.state_size = len(state_model.state)
+        self.control_size = len(state_model.control)
+
+        self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
+        self.arglist = [state_model.dt] + self.arglist_state + self.arglist_control
+
+        # {{SensorId_members}}
+
+        self._process_model = BasicBlock(self._translate_process_model(state_model))
+
+        self._return = self._translate_return()
+
+    def _translate_process_model(self, symbolic_model):
+        subs_set = [
+            (
+                member,
+                Symbol("input_state.{}".format(member)),
+            )
+            for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_control.{}".format(member)),
+            )
+            for member in self.arglist_control
+        ]
+
+        for a in self.arglist_state:
+            expr_before = symbolic_model.state_model[a]
+            expr_after = expr_before.subs(subs_set)
+            yield a, expr_after
+
+    def _translate_return(self):
+        content = ", ".join(
+            (".{name}={name}".format(name=name) for name in self.arglist_state)
+        )
+        return "State{" + content + "}"
+
+    def process_model_body(self):
+        return "{impl}\nreturn {return_};".format(
+            impl=self._process_model.compile(),
+            return_=self._return,
+        )
+
+    def sensorid_members(self):
+        # TODO(buck): Add a verbose flag option that will print out the generated class members
+        return "\n".join(
+            "double {name};".format(name=name.upper()) for name in self.arglist_state
+        )
+
+    def state_members(self):
+        return "\n".join(
+            "double {name};".format(name=name) for name in self.arglist_state
+        )
+
+    def state_variance_members(self):
+        # TODO(buck): Need to add covariance terms
         return "\n".join(
             "double {name};".format(name=name) for name in self.arglist_state
         )
@@ -129,23 +208,28 @@ def _generate_model_function_bodies(header_location, symbolic_model, config):
 
     return {
         "header_include": header_include,
-        "Model_model_body": generator.ccode_model(),
+        "Model_model_body": generator.model_body(),
         "State_members": generator.state_members(),
         "Control_members": generator.control_members(),
     }
 
 
-def _generate_ekf_function_bodies(header_location, symbolic_model, config):
-    generator = Model(symbolic_model, config)
+def _generate_ekf_function_bodies(
+    header_location, state_model, process_noise, sensor_models, sensor_noises, config
+):
+    generator = ExtendedKalmanFilter(
+        state_model, process_noise, sensor_models, sensor_noises, config
+    )
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
     assert "generated/" in header_location
     header_include = header_location.split("generated/")[-1]
 
+    # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
         "header_include": header_include,
-        "Model_model_body": generator.ccode_model(),
+        "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "State_members": generator.state_members(),
         "Control_members": generator.control_members(),
     }
@@ -263,6 +347,7 @@ def compile_ekf(
     header_template = templates["formak_ekf"][".h"]
     source_template = templates["formak_ekf"][".cpp"]
 
+    # TODO(buck): This won't scale well to organizing templates in folders
     templates_base_path = dirname(header_template)
     assert templates_base_path == dirname(source_template)
 
@@ -271,8 +356,8 @@ def compile_ekf(
     )
 
     try:
-        header_template = env.get_template("formak_model.h")
-        source_template = env.get_template("formak_model.cpp")
+        header_template = env.get_template("formak_ekf.h")
+        source_template = env.get_template("formak_ekf.cpp")
     except TemplateNotFound:
         print("Debugging TemplateNotFound")
         print("Trying to scandir")
@@ -290,7 +375,9 @@ def compile_ekf(
         print("End Walk")
         raise
 
-    inserts = _generate_ekf_function_bodies(args.header, symbolic_model, config)
+    inserts = _generate_ekf_function_bodies(
+        args.header, state_model, process_noise, sensor_models, sensor_noises, config
+    )
 
     header_str = header_template.render(**inserts)
     source_str = source_template.render(**inserts)
