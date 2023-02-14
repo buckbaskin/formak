@@ -137,8 +137,6 @@ class ExtendedKalmanFilter:
         self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
         self.arglist = [state_model.dt] + self.arglist_state + self.arglist_control
 
-        # {{SensorId_members}}
-
         self._process_model = BasicBlock(self._translate_process_model(state_model))
 
         self._return = self._translate_return()
@@ -177,8 +175,8 @@ class ExtendedKalmanFilter:
 
     def sensorid_members(self):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
-        return "\n".join(
-            "double {name};".format(name=name.upper()) for name in self.arglist_state
+        return ",\n".join(
+            "{name}".format(name=name.upper()) for name in self.arglist_state
         )
 
     def state_members(self):
