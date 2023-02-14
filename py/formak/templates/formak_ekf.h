@@ -31,9 +31,9 @@ enum class SensorId {
   // clang-format on
 };
 
-template <size_t ReadingT>
+template <SensorId Identifier, typename ReadingT>
 struct SensorReading {
-  SensorId id;
+  SensorId id = Identifier;
   ReadingT reading;
 };
 
@@ -42,9 +42,10 @@ class ExtendedKalmanFilter {
   StateAndVariance process_model(double dt, const StateAndVariance& input_state,
                                  const Control& input_control);
 
-  template <size_t ReadingT>
-  StateAndVariance sensor_model(const StateAndVariance& input_state,
-                                const SensorReading<ReadingT>& input_reading);
+  template <SensorId Identifier, typename ReadingT>
+  StateAndVariance sensor_model(
+      const StateAndVariance& input_state,
+      const SensorReading<Identifier, ReadingT>& input_reading);
 };
 
 }  // namespace formak
