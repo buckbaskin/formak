@@ -236,11 +236,11 @@ def _generate_ekf_function_bodies(
     # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
         "header_include": header_include,
-        "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
-        "State_members": generator.state_members(),
         "Control_members": generator.control_members(),
         "Covariance_members": generator.covariance_members(),
+        "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "SensorId_members": generator.sensorid_members(),
+        "State_members": generator.state_members(),
     }
 
 

@@ -39,13 +39,15 @@ struct SensorReading {
 
 class ExtendedKalmanFilter {
  public:
-  StateAndVariance process_model(double dt, const StateAndVariance& input_state,
+  StateAndVariance process_model(double dt, const StateAndVariance& input,
                                  const Control& input_control);
 
   template <SensorId Identifier, typename ReadingT>
   StateAndVariance sensor_model(
-      const StateAndVariance& input_state,
-      const SensorReading<Identifier, ReadingT>& input_reading);
+      const StateAndVariance& input,
+      const SensorReading<Identifier, ReadingT>& input_reading) {
+    return ReadingT::SensorModel::sensor_model(input, input_reading);
+  }
 };
 
 }  // namespace formak
