@@ -3,8 +3,7 @@
 namespace formak {
 
 StateAndVariance ExtendedKalmanFilter::process_model(
-    double dt, const StateAndVariance& input_state,
-    const Control& input_control) {
+    double dt, const StateAndVariance& input, const Control& input_control) {
   // clang-format off
   {{ExtendedKalmanFilter_process_model_body}}
   // clang-format on

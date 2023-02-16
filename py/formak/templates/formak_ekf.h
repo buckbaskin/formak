@@ -8,9 +8,9 @@ struct State {
   // clang-format on
 };
 
-struct StateVariance {
+struct Covariance {
   // clang-format off
-  {{StateVariance_members}}
+  {{Covariance_members}}
   // clang-format on
 };
 
@@ -22,7 +22,7 @@ struct Control {
 
 struct StateAndVariance {
   State state;
-  StateVariance covariance;
+  Covariance covariance;
 };
 
 enum class SensorId {

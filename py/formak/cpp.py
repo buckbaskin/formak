@@ -145,7 +145,7 @@ class ExtendedKalmanFilter:
         subs_set = [
             (
                 member,
-                Symbol("input_state.{}".format(member)),
+                Symbol("input.state.{}".format(member)),
             )
             for member in self.arglist_state
         ] + [
@@ -165,7 +165,11 @@ class ExtendedKalmanFilter:
         content = ", ".join(
             (".{name}={name}".format(name=name) for name in self.arglist_state)
         )
-        return "State{" + content + "}"
+        return (
+            "StateAndVariance{.state = State{"
+            + content
+            + "}, .covariance = Covariance{}};"
+        )
 
     def process_model_body(self):
         return "{impl}\nreturn {return_};".format(
