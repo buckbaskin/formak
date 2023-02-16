@@ -139,6 +139,9 @@ class ExtendedKalmanFilter:
 
         self._process_model = BasicBlock(self._translate_process_model(state_model))
 
+        # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
+        self.sensorlist = sorted(list(sensor_models.keys()))
+
         self._return = self._translate_return()
 
     def _translate_process_model(self, symbolic_model):
@@ -180,9 +183,7 @@ class ExtendedKalmanFilter:
     def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
         # TODO(buck): remove the default True in favor of the flag option
-        enum_names = [
-            "{name}".format(name=symbol.name.upper()) for symbol in self.arglist_state
-        ]
+        enum_names = ["{name}".format(name=name.upper()) for name in self.sensorlist]
         if verbose:
             print(f"sensorid_members: enum_names: {enum_names}")
         return ",\n".join(enum_names)
