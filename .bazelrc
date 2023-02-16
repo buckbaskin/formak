@@ -1,13 +1,13 @@
 # build --compiler=clang
 build --copt -std=c++17
+build --copt -Wall
+# build --copt -Wpedantic # disabled for now so I can use designated initializers
+build --copt -Werror
 
 # Clang Build
 build:clang --crosstool_top=//toolchain:clang_suite
 build:clang --cpu=k8
 build:clang --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
-build:clang --copt -Wall
-build:clang --copt -Wpedantic
-build:clang --copt -Werror
 build:clang --copt -stdlib=libc++
 
 # Address Sanitizer
