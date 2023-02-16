@@ -177,21 +177,25 @@ class ExtendedKalmanFilter:
             return_=self._return,
         )
 
-    def sensorid_members(self):
+    def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
-        return ",\n".join(
-            "{name}".format(name=name.upper()) for name in self.arglist_state
-        )
+        # TODO(buck): remove the default True in favor of the flag option
+        enum_names = [
+            "{name}".format(name=symbol.name.upper()) for symbol in self.arglist_state
+        ]
+        if verbose:
+            print(f"sensorid_members: enum_names: {enum_names}")
+        return ",\n".join(enum_names)
 
     def state_members(self):
         return "\n".join(
-            "double {name};".format(name=name) for name in self.arglist_state
+            "double {name};".format(name=symbol.name) for symbol in self.arglist_state
         )
 
-    def state_variance_members(self):
+    def covariance_members(self):
         # TODO(buck): Need to add covariance terms
         return "\n".join(
-            "double {name};".format(name=name) for name in self.arglist_state
+            "double {name};".format(name=symbol.name) for symbol in self.arglist_state
         )
 
     def control_members(self):
@@ -234,6 +238,8 @@ def _generate_ekf_function_bodies(
         "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "State_members": generator.state_members(),
         "Control_members": generator.control_members(),
+        "Covariance_members": generator.covariance_members(),
+        "SensorId_members": generator.sensorid_members(),
     }
 
 
