@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>  // size_t
+
 namespace formak {
 
 struct State {
@@ -43,13 +45,13 @@ struct {{reading_type.typename}}SensorModel;
 
 struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
-  constexpr static size_t = {{reading_type.size}};
+  constexpr static size_t size = {{reading_type.size}};
 
   {{reading_type.members}}
 };
 
 struct {{reading_type.typename}}SensorModel {
-  ReadingT sensor_model(
+    {{reading_type.typename}} sensor_model(
       const StateAndVariance& input,
       const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 };
@@ -66,11 +68,15 @@ class ExtendedKalmanFilter {
   StateAndVariance sensor_model(
       const StateAndVariance& input,
       const SensorReading<Identifier, ReadingT>& input_reading) {
+    const State& state = input.state;
+    const Covariance& covariance = input.covariance;
+
     const ReadingT& reading = input_reading.reading;
     const ReadingT predicted_reading =
         ReadingT::SensorModel::sensor_model(input, input_reading);
 
     // Here be the StateAndVariance math
+    return input;
   }
 };
 

@@ -21,7 +21,8 @@ TEST(CppModel, SimpleEKF) {
 
   double previous_z = next_state.z;
 
-  formak::SensorReading<formak::SensorId::SIMPLE, Reading> zero_sensor_reading;
+  formak::SensorReading<formak::SensorId::SIMPLE, formak::Simple>
+      zero_sensor_reading;
   auto next_state_and_variance = ekf.sensor_model(
       {.state = next_state, .covariance = next_variance}, zero_sensor_reading);
 

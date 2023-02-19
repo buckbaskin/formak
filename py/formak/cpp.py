@@ -212,6 +212,13 @@ class ExtendedKalmanFilter:
             "double {name};".format(name=name) for name in self.arglist_control
         )
 
+    def _translate_sensor_model(self, sensor_model_mapping):
+        for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
+            assignment = predicted_reading.name
+            expr_before = model
+            expr_after = expr_before
+            yield assignment, expr_after
+
     def reading_types(self, verbose=True):
         for name, sensor_model_mapping in self.sensorlist:
             typename = name.title()
@@ -220,6 +227,7 @@ class ExtendedKalmanFilter:
                 "double {name};".format(name=name)
                 for name in sorted(list(sensor_model_mapping.keys()))
             )
+            size = len(members)
             if verbose:
                 print(
                     f"reading_types: name: {name} reading_type: {typename} {identifier} members:\n{members}"
@@ -230,12 +238,13 @@ class ExtendedKalmanFilter:
                 ):
                     print(f"Modeling {predicted_reading} as function of state: {model}")
 
-            # TODO(buck): time for maths
-            SensorModel_sensor_model_body = "return StateAndVariance{};"
-            assert len(typename) > 0
-            1 / 0
+            body = BasicBlock(self._translate_sensor_model(sensor_model_mapping))
+            return_ = "return {};"
+            # TODO(buck): Move this line handling to the template?
+            SensorModel_sensor_model_body = body.compile() + "\n" + return_
             yield ReadingT(
                 typename=typename,
+                size=size,
                 identifier=identifier,
                 members=members,
                 SensorModel_sensor_model_body=SensorModel_sensor_model_body,
