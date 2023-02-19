@@ -11,7 +11,8 @@ struct State {
   // clang-format on
 };
 
-struct Covariance {
+struct Covariance
+    : public Eigen::Matrix<double, {{State_size}}, {{State_size}}> {
   // clang-format off
   {{Covariance_members}}
   // clang-format on
@@ -47,9 +48,9 @@ struct {{reading_type.typename}}SensorModel;
 struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
   using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
-  using SensorJacobianT = size_t;
-  using KalmanGainT = size_t;
-  using InnovationT = size_t;
+  using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
+  using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
+  using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
   constexpr static size_t size = {{reading_type.size}};
 
   {{reading_type.members}}
@@ -64,7 +65,7 @@ struct {{reading_type.typename}}SensorModel {
             const StateAndVariance& input,
             const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 
-    static typename {{reading_type.typename}}::CovarianceT variance(
+    static typename {{reading_type.typename}}::CovarianceT covariance(
             const StateAndVariance& input,
             const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 };
@@ -101,7 +102,7 @@ class ExtendedKalmanFilter {
 
     // S_inv = inverse(S)
     const typename ReadingT::CovarianceT S_inv =
-        sensor_estimate_covariance.inv();
+        sensor_estimate_covariance.inverse();
 
     // Kalman Gain
     // K = Sigma * H.T * S_inv

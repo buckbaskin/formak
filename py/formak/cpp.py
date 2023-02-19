@@ -123,7 +123,13 @@ class Model:
 # size is the size of the reading for the EKF, not the size of the type
 ReadingT = namedtuple(
     "ReadingT",
-    ["typename", "size", "identifier", "members", "SensorModel_sensor_model_body"],
+    [
+        "typename",
+        "size",
+        "identifier",
+        "members",
+        "SensorModel_sensor_model_body",
+    ],
 )
 
 
@@ -220,6 +226,7 @@ class ExtendedKalmanFilter:
             yield assignment, expr_after
 
     def reading_types(self, verbose=True):
+        state_size = len(self.arglist_state)
         for name, sensor_model_mapping in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
@@ -287,6 +294,7 @@ def _generate_ekf_function_bodies(
         "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "SensorId_members": generator.sensorid_members(),
         "State_members": generator.state_members(),
+        "State_size": generator.state_size,
         "reading_types": generator.reading_types(),
     }
 
