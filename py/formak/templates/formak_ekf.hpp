@@ -1,21 +1,22 @@
 #pragma once
 
-#include <Eigen/Core>  // Matrix
-#include <cstddef>     // size_t
+#include <Eigen/Dense>  // Matrix
+#include <cstddef>      // size_t
 
 namespace formak {
 
-struct State : public Eigen::Matrix<double, {{State_size}}, 1> {
+struct State {
   // clang-format off
   {{State_members}}
   // clang-format on
+  Eigen::Matrix<double, {{State_size}}, 1> data;
 };
 
-struct Covariance
-    : public Eigen::Matrix<double, {{State_size}}, {{State_size}}> {
+struct Covariance {
   // clang-format off
   {{Covariance_members}}
   // clang-format on
+  Eigen::Matrix<double, {{State_size}}, {{State_size}}> data;
 };
 
 struct Control {
@@ -47,7 +48,7 @@ struct SensorReading {
 struct {{reading_type.typename}}SensorModel;
 
 // ReadingT
-struct {{reading_type.typename}} : public Eigen::Matrix<double, {{reading_type.size}}, 1> {
+struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
   using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
   using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
@@ -56,6 +57,8 @@ struct {{reading_type.typename}} : public Eigen::Matrix<double, {{reading_type.s
   constexpr static size_t size = {{reading_type.size}};
 
   {{reading_type.members}}
+
+Eigen::Matrix<double, {{reading_type.size}}, 1> data;
 };
 
 struct {{reading_type.typename}}SensorModel {
@@ -99,7 +102,7 @@ class ExtendedKalmanFilter {
     // Project State Noise into Sensor Space
     // S = H * Sigma * H.T + Q_t
     const typename ReadingT::CovarianceT sensor_estimate_covariance =
-        H * covariance * H.transpose() +
+        H * covariance.data * H.transpose() +
         ReadingT::SensorModel::covariance(input, input_reading);
 
     // S_inv = inverse(S)
@@ -109,20 +112,22 @@ class ExtendedKalmanFilter {
     // Kalman Gain
     // K = Sigma * H.T * S_inv
     const typename ReadingT::KalmanGainT kalman_gain =
-        covariance * H.transpose() * S_inv;
+        covariance.data * H.transpose() * S_inv;
 
     // Innovation
     // innovation = z - z_est
-    const typename ReadingT::InnovationT innovation = reading - reading_est;
+    const typename ReadingT::InnovationT innovation =
+        reading.data - reading_est.data;
 
     // Update State Estimate
     // next_state = state + K * innovation
-    const State next_state = state + kalman_gain * innovation;
+    State next_state;
+    next_state.data = state.data + kalman_gain * innovation;
 
     // Update Covariance
     // next_covariance = Sigma - K * H * Sigma
-    const Covariance next_covariance =
-        covariance - kalman_gain * H * covariance;
+    Covariance next_covariance;
+    next_covariance.data = covariance.data - kalman_gain * H * covariance.data;
 
     // TODO(buck): Measurement Likelihood (optional)
 
