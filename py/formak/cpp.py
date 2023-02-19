@@ -1,9 +1,10 @@
 import argparse
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
 
+import jinja2
 from colorama import Fore as cF
 from colorama import Style as cS
 from colorama import init
@@ -119,6 +120,9 @@ class Model:
         )
 
 
+ReadingT = namedtuple("ReadingT", ["typename", "identifier", "members"])
+
+
 class ExtendedKalmanFilter:
     """C++ implementation of the EKF"""
 
@@ -204,6 +208,18 @@ class ExtendedKalmanFilter:
             "double {name};".format(name=name) for name in self.arglist_control
         )
 
+    def reading_types(self, verbose=True):
+        for name in self.sensorlist:
+            typename = name.title()
+            identifier = f"SensorId::{name.upper()}"
+            members = ""
+            if verbose:
+                print(
+                    f"reading_types: name: {name} reading_type: {typename} {identifier} members:\n{members}"
+                )
+            assert len(typename) > 0
+            yield ReadingT(typename=typename, identifier=identifier, members=members)
+
 
 def _generate_model_function_bodies(header_location, symbolic_model, config):
     generator = Model(symbolic_model, config)
@@ -241,6 +257,7 @@ def _generate_ekf_function_bodies(
         "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "SensorId_members": generator.sensorid_members(),
         "State_members": generator.state_members(),
+        "reading_types": generator.reading_types(),
     }
 
 
@@ -293,7 +310,9 @@ def compile(symbolic_model, *, config=None):
     assert templates_base_path == dirname(source_template)
 
     env = Environment(
-        loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
+        loader=FileSystemLoader(templates_base_path),
+        autoescape=select_autoescape(),
+        undefined=jinja2.StrictUndefined,
     )
 
     try:

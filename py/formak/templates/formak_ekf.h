@@ -37,6 +37,26 @@ struct SensorReading {
   ReadingT reading;
 };
 
+// clang-format off
+{% for reading_type in reading_types %}
+struct {{reading_type.typename}}SensorModel;
+
+struct {{reading_type.typename}} {
+  using SensorModel = {{reading_type.typename}}SensorModel;
+  {{reading_type.members}}
+};
+
+struct {{reading_type.typename}}SensorModel {
+  StateAndVariance sensor_model(
+      const StateAndVariance& input,
+      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
+      // TODO(buck): Actual EKF Impl
+  }
+};
+
+{% endfor %}
+// clang-format on
+
 class ExtendedKalmanFilter {
  public:
   StateAndVariance process_model(double dt, const StateAndVariance& input,
