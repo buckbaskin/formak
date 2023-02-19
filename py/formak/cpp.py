@@ -120,7 +120,11 @@ class Model:
         )
 
 
-ReadingT = namedtuple("ReadingT", ["typename", "identifier", "members"])
+# size is the size of the reading for the EKF, not the size of the type
+ReadingT = namedtuple(
+    "ReadingT",
+    ["typename", "size", "identifier", "members", "SensorModel_sensor_model_body"],
+)
 
 
 class ExtendedKalmanFilter:
@@ -144,7 +148,7 @@ class ExtendedKalmanFilter:
         self._process_model = BasicBlock(self._translate_process_model(state_model))
 
         # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
-        self.sensorlist = sorted(list(sensor_models.keys()))
+        self.sensorlist = sorted([(k, v) for k, v in sensor_models.items()])
 
         self._return = self._translate_return()
 
@@ -187,7 +191,7 @@ class ExtendedKalmanFilter:
     def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
         # TODO(buck): remove the default True in favor of the flag option
-        enum_names = ["{name}".format(name=name.upper()) for name in self.sensorlist]
+        enum_names = ["{name}".format(name=name.upper()) for name, _ in self.sensorlist]
         if verbose:
             print(f"sensorid_members: enum_names: {enum_names}")
         return ",\n".join(enum_names)
@@ -209,16 +213,33 @@ class ExtendedKalmanFilter:
         )
 
     def reading_types(self, verbose=True):
-        for name in self.sensorlist:
+        for name, sensor_model_mapping in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
-            members = ""
+            members = "\n".join(
+                "double {name};".format(name=name)
+                for name in sorted(list(sensor_model_mapping.keys()))
+            )
             if verbose:
                 print(
                     f"reading_types: name: {name} reading_type: {typename} {identifier} members:\n{members}"
                 )
+                print("Model:")
+                for predicted_reading, model in sorted(
+                    list(sensor_model_mapping.items())
+                ):
+                    print(f"Modeling {predicted_reading} as function of state: {model}")
+
+            # TODO(buck): time for maths
+            SensorModel_sensor_model_body = "return StateAndVariance{};"
             assert len(typename) > 0
-            yield ReadingT(typename=typename, identifier=identifier, members=members)
+            1 / 0
+            yield ReadingT(
+                typename=typename,
+                identifier=identifier,
+                members=members,
+                SensorModel_sensor_model_body=SensorModel_sensor_model_body,
+            )
 
 
 def _generate_model_function_bodies(header_location, symbolic_model, config):

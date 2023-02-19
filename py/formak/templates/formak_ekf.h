@@ -43,15 +43,15 @@ struct {{reading_type.typename}}SensorModel;
 
 struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
+  constexpr static size_t = {{reading_type.size}};
+
   {{reading_type.members}}
 };
 
 struct {{reading_type.typename}}SensorModel {
-  StateAndVariance sensor_model(
+  ReadingT sensor_model(
       const StateAndVariance& input,
-      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-      // TODO(buck): Actual EKF Impl
-  }
+      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 };
 
 {% endfor %}
@@ -66,7 +66,11 @@ class ExtendedKalmanFilter {
   StateAndVariance sensor_model(
       const StateAndVariance& input,
       const SensorReading<Identifier, ReadingT>& input_reading) {
-    return ReadingT::SensorModel::sensor_model(input, input_reading);
+    const ReadingT& reading = input_reading.reading;
+    const ReadingT predicted_reading =
+        ReadingT::SensorModel::sensor_model(input, input_reading);
+
+    // Here be the StateAndVariance math
   }
 };
 
