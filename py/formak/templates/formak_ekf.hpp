@@ -5,7 +5,7 @@
 
 namespace formak {
 
-struct State {
+struct State : public Eigen::Matrix<double, {{State_size}}, 1> {
   // clang-format off
   {{State_members}}
   // clang-format on
@@ -43,9 +43,11 @@ struct SensorReading {
 
 // clang-format off
 {% for reading_type in reading_types %}
+// ReadingTSensorModel
 struct {{reading_type.typename}}SensorModel;
 
-struct {{reading_type.typename}} {
+// ReadingT
+struct {{reading_type.typename}} : public Eigen::Matrix<double, {{reading_type.size}}, 1> {
   using SensorModel = {{reading_type.typename}}SensorModel;
   using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
   using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
