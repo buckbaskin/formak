@@ -291,13 +291,15 @@ def _generate_ekf_function_bodies(
     }
 
 
-def _parse_raw_templates(arg):
+def _parse_raw_templates(arg, verbose=True):
     raw_templates = arg.split(" ")
     templates = defaultdict(dict)
 
     EXPECT_PREFIX = "py/formak/templates/"
 
     for template_str in raw_templates:
+        if verbose:
+            print(f"Examining template: {template_str}")
         if not template_str.startswith(EXPECT_PREFIX):
             raise ValueError(
                 f"Template {template_str} did not start with expected prefix {EXPECT_PREFIX}"
@@ -307,6 +309,8 @@ def _parse_raw_templates(arg):
             templates[template_str[len(EXPECT_PREFIX) : -4]][".cpp"] = template_str
         elif template_str.endswith(".h"):
             templates[template_str[len(EXPECT_PREFIX) : -2]][".h"] = template_str
+        elif template_str.endswith(".hpp"):
+            templates[template_str[len(EXPECT_PREFIX) : -4]][".hpp"] = template_str
         else:
             raise ValueError(
                 f"Template {template_str} did not end with expected suffix"
@@ -402,7 +406,7 @@ def compile_ekf(
 
     templates = _parse_raw_templates(args.templates)
 
-    header_template = templates["formak_ekf"][".h"]
+    header_template = templates["formak_ekf"][".hpp"]
     source_template = templates["formak_ekf"][".cpp"]
 
     # TODO(buck): This won't scale well to organizing templates in folders
@@ -414,7 +418,7 @@ def compile_ekf(
     )
 
     try:
-        header_template = env.get_template("formak_ekf.h")
+        header_template = env.get_template("formak_ekf.hpp")
         source_template = env.get_template("formak_ekf.cpp")
     except TemplateNotFound:
         print("Debugging TemplateNotFound")

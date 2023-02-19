@@ -21,6 +21,7 @@ filegroup(
     srcs = glob(
         [
             "formak/templates/*.h",
+            "formak/templates/*.hpp",
             "formak/templates/*.cpp",
         ],
         allow_empty = False,
