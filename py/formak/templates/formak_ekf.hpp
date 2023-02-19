@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstddef>  // size_t
+#include <Eigen/Core>  // Matrix
+#include <cstddef>     // size_t
 
 namespace formak {
 
@@ -45,7 +46,7 @@ struct {{reading_type.typename}}SensorModel;
 
 struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
-  using CovarianceT = size_t;
+  using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
   using SensorJacobianT = size_t;
   using KalmanGainT = size_t;
   using InnovationT = size_t;

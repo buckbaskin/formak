@@ -57,6 +57,6 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
         srcs = [OUTPUT_SOURCE],
         hdrs = [OUTPUT_HEADER],
         strip_include_prefix = "generated",
-        deps = [],
+        deps = ["@eigen//:eigen"],
         visibility = visibility,
     )
