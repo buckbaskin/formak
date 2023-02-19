@@ -45,17 +45,25 @@ struct {{reading_type.typename}}SensorModel;
 
 struct {{reading_type.typename}} {
   using SensorModel = {{reading_type.typename}}SensorModel;
+  using CovarianceT = size_t;
+  using SensorJacobianT = size_t;
+  using KalmanGainT = size_t;
+  using InnovationT = size_t;
   constexpr static size_t size = {{reading_type.size}};
 
   {{reading_type.members}}
 };
 
 struct {{reading_type.typename}}SensorModel {
-    static {{reading_type.typename}} sensor_model(
+    static {{reading_type.typename}} model(
       const StateAndVariance& input,
       const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 
-    static typename {{reading_type.typename}} sensor_jacobian(
+    static typename {{reading_type.typename}}::SensorJacobianT jacobian(
+            const StateAndVariance& input,
+            const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+
+    static typename {{reading_type.typename}}::CovarianceT variance(
             const StateAndVariance& input,
             const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
 };
@@ -78,16 +86,17 @@ class ExtendedKalmanFilter {
 
     // z_est = sensor_model()
     const ReadingT reading_est =
-        ReadingT::SensorModel::sensor_model(input, input_reading);  // z_est
+        ReadingT::SensorModel::model(input, input_reading);  // z_est
 
     // H = Jacobian(z_est w.r.t. state)
     const typename ReadingT::SensorJacobianT H =
-        ReadingT::SensorModel::sensor_jacobian(input, input_reading);
+        ReadingT::SensorModel::jacobian(input, input_reading);
 
     // Project State Noise into Sensor Space
     // S = H * Sigma * H.T + Q_t
     const typename ReadingT::CovarianceT sensor_estimate_covariance =
-        H * covariance * H.transpose() + sensor_variance;
+        H * covariance * H.transpose() +
+        ReadingT::SensorModel::covariance(input, input_reading);
 
     // S_inv = inverse(S)
     const typename ReadingT::CovarianceT S_inv =
