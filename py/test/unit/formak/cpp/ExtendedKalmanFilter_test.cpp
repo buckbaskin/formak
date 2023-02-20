@@ -62,4 +62,51 @@ TEST(EKF, process_with_control) {
   }
 }
 
+TEST(EKF, sensor) {
+  //     ekf = python.ExtendedKalmanFilter(
+  //         state_model=ui.Model(
+  //             ui.Symbol("dt"),
+  //             set(ui.symbols(["x", "y"])),
+  //             set(ui.symbols(["a"])),
+  //             {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+  //         ),
+  //         process_noise=np.eye(1),
+  //         sensor_models={
+  //             "simple": {"reading1": ui.Symbol("x")},
+  //             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+  //         },
+  //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
+  //         config=config,
+  //     )
+  ExtendedKalmanFilter ekf;
+  double dt = 0.1;
+
+  Control control{0.2};
+
+  Covariance covariance;
+  SimpleReading reading{1.0};
+  State state({0.0, 0.0});
+
+  SensorReading<SensorId::SIMPLE> sensor_reading{Simple{1.0}};
+  auto next = ekf.sensor_model({state, covariance}, sensor_reading);
+
+  EXPECT_LT(abs(reading - next.state[0, 0]) < abs(reading - state[0, 0]));
+
+  // TODO(buck): Check what this should be
+  SensorReading<SensorReading::COMBINED> combined{Combined{}};
+  next = ekf.sensor_model({state, covariance}, combined);
+
+  EXPECT_LT(abs(reading - next.state[0, 0]), abs(reading - state[0, 0]));
+  EXPECT_LT(abs(reading - next.state[1, 0]), abs(reading - state[1, 0]));
+}
+// def test_EKF_process_jacobian():
+//     config = python.Config()
+//     dt = 0.1
+//
+//     ekf = python.ExtendedKalmanFilter(
+//         state_model=ui.Model(
+//             ui.Symbol("dt"),
+//             set(ui.symbols(["x", "y"])),
+//             set(ui.symbols(["a"])),
+
 }  // namespace unit

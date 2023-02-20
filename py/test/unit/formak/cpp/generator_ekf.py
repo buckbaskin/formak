@@ -10,8 +10,11 @@ cpp_implementation = cpp.compile_ekf(
         {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
     ),
     process_noise=np.eye(1),
-    sensor_models={},
-    sensor_noises={},
+    sensor_models={
+        "simple": {"reading1": ui.Symbol("x")},
+        "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+    },
+    sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
