@@ -128,7 +128,9 @@ ReadingT = namedtuple(
         "size",
         "identifier",
         "members",
-        "SensorModel_sensor_model_body",
+        "SensorModel_model_body",
+        "SensorModel_covariance_body",
+        "SensorModel_jacobian_body",
     ],
 )
 
@@ -219,10 +221,17 @@ class ExtendedKalmanFilter:
         )
 
     def _translate_sensor_model(self, sensor_model_mapping):
+        subs_set = [
+            (
+                member,
+                Symbol("input.state.{}".format(member)),
+            )
+            for member in self.arglist_state
+        ]
         for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
             assignment = predicted_reading.name
             expr_before = model
-            expr_after = expr_before
+            expr_after = expr_before.subs(subs_set)
             yield assignment, expr_after
 
     def reading_types(self, verbose=True):
@@ -246,15 +255,30 @@ class ExtendedKalmanFilter:
                     print(f"Modeling {predicted_reading} as function of state: {model}")
 
             body = BasicBlock(self._translate_sensor_model(sensor_model_mapping))
-            return_ = "return {};"
+            return_ = (
+                "return {"
+                + ", ".join(
+                    (
+                        reading.name
+                        for reading in sorted(list(sensor_model_mapping.keys()))
+                    )
+                )
+                + "};"
+            )
             # TODO(buck): Move this line handling to the template?
-            SensorModel_sensor_model_body = body.compile() + "\n" + return_
+            SensorModel_model_body = body.compile() + "\n" + return_
+            SensorModel_covariance_body = f"return {typename}::CovarianceT::Identity();"
+            SensorModel_jacobian_body = (
+                f"return {typename}::SensorJacobianT::Identity();"
+            )
             yield ReadingT(
                 typename=typename,
                 size=size,
                 identifier=identifier,
                 members=members,
-                SensorModel_sensor_model_body=SensorModel_sensor_model_body,
+                SensorModel_model_body=SensorModel_model_body,
+                SensorModel_jacobian_body=SensorModel_jacobian_body,
+                SensorModel_covariance_body=SensorModel_covariance_body,
             )
 
 
@@ -295,7 +319,7 @@ def _generate_ekf_function_bodies(
         "SensorId_members": generator.sensorid_members(),
         "State_members": generator.state_members(),
         "State_size": generator.state_size,
-        "reading_types": generator.reading_types(),
+        "reading_types": list(generator.reading_types()),
     }
 
 
