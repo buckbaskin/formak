@@ -9,14 +9,16 @@ struct State {
   // clang-format off
   {{State_members}}
   // clang-format on
-  Eigen::Matrix<double, {{State_size}}, 1> data;
+  Eigen::Matrix<double, {{State_size}}, 1> data =
+      Eigen::Matrix<double, {{State_size}}, 1>::Zero();
 };
 
 struct Covariance {
   // clang-format off
   {{Covariance_members}}
   // clang-format on
-  Eigen::Matrix<double, {{State_size}}, {{State_size}}> data;
+  Eigen::Matrix<double, {{State_size}}, {{State_size}}> data =
+      Eigen::Matrix<double, {{State_size}}, {{State_size}}>::Zero();
 };
 
 struct Control {
@@ -58,7 +60,7 @@ struct {{reading_type.typename}} {
 
   {{reading_type.members}}
 
-Eigen::Matrix<double, {{reading_type.size}}, 1> data;
+Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
 };
 
 struct {{reading_type.typename}}SensorModel {

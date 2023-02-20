@@ -206,7 +206,8 @@ class ExtendedKalmanFilter:
 
     def state_members(self):
         return "\n".join(
-            "double {name};".format(name=symbol.name) for symbol in self.arglist_state
+            "double& {name} = data({idx}, 0);".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_state)
         )
 
     def covariance_members(self):

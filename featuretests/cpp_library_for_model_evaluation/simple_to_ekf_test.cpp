@@ -4,7 +4,10 @@
 namespace featuretest {
 
 TEST(CppModel, SimpleEKF) {
-  formak::State state{.v = 1.0};
+  formak::State state;
+  state.v = 1.0;
+  // TODO(buck): Try constructor interface State(StateOptions options)
+  // So the above two lines could look like: formak::State state({.v = 1.0});
   formak::Covariance state_variance;
   formak::Control control;
 
