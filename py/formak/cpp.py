@@ -185,9 +185,9 @@ class ExtendedKalmanFilter:
             (".{name}={name}".format(name=name) for name in self.arglist_state)
         )
         return (
-            "StateAndVariance{.state = State{"
+            "StateAndVariance{.state = State({"
             + content
-            + "}, .covariance = Covariance{}};"
+            + "}), .covariance = Covariance{}};"
         )
 
     def process_model_body(self):
@@ -208,6 +208,17 @@ class ExtendedKalmanFilter:
         return "\n".join(
             "double& {name} = data({idx}, 0);".format(name=symbol.name, idx=idx)
             for idx, symbol in enumerate(self.arglist_state)
+        )
+
+    def stateoptions_members(self):
+        return "\n".join(
+            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_state)
+        )
+
+    def state_options_constructor_initializer_list(self):
+        return (
+            "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
         )
 
     def covariance_members(self):
@@ -318,7 +329,9 @@ def _generate_ekf_function_bodies(
         "Covariance_members": generator.covariance_members(),
         "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
         "SensorId_members": generator.sensorid_members(),
+        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
         "State_members": generator.state_members(),
+        "StateOptions_members": generator.stateoptions_members(),
         "State_size": generator.state_size,
         "reading_types": list(generator.reading_types()),
     }

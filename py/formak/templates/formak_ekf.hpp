@@ -5,7 +5,15 @@
 
 namespace formak {
 
+struct StateOptions {
+  // clang-format off
+  {{ StateOptions_members }}
+  // clang-format on
+};
+
 struct State {
+  State();
+  State(const StateOptions& options);
   // clang-format off
   {{State_members}}
   // clang-format on

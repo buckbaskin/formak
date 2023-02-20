@@ -1,6 +1,11 @@
 #include <{{header_include}}>
 
 namespace formak {
+State::State() : data(Eigen::Matrix<double, {{State_size}}, 1>::Zero()) {
+}
+State::State(const StateOptions& options)
+    : {{State_options_constructor_initializer_list}} {
+}
 
 StateAndVariance ExtendedKalmanFilter::process_model(
     double dt, const StateAndVariance& input, const Control& input_control){
