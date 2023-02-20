@@ -43,4 +43,9 @@ TEST(CppModel, impl_control) {
   }
 }
 
+// TODO(buck): Property testing
+// @given(floats(), floats(), floats())
+// @settings(deadline=timedelta(seconds=2))
+// def test_Model_impl_property(x, y, a):
+
 }  // namespace unit
