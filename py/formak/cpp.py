@@ -221,7 +221,8 @@ class ExtendedKalmanFilter:
     def covariance_members(self):
         # TODO(buck): Need to add covariance terms
         return "\n".join(
-            "double {name};".format(name=symbol.name) for symbol in self.arglist_state
+            "double& {name} = data({idx}, {idx});".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_state)
         )
 
     def control_members(self):
