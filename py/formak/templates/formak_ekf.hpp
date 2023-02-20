@@ -28,7 +28,7 @@ namespace {{namespace}} {
   {{Covariance_members}}
     // clang-format on
     Eigen::Matrix<double, {{State_size}}, {{State_size}}> data =
-        Eigen::Matrix<double, {{State_size}}, {{State_size}}>::Zero();
+        Eigen::Matrix<double, {{State_size}}, {{State_size}}>::Identity();
   };
 
   struct Control {
