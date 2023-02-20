@@ -1,20 +1,22 @@
 #include <{{header_include}}>
 
-namespace formak {
-State::State() : data(Eigen::Matrix<double, {{State_size}}, 1>::Zero()) {
-}
-State::State(const StateOptions& options)
-    : {{State_options_constructor_initializer_list}} {
-}
-
-StateAndVariance ExtendedKalmanFilter::process_model(
-    double dt, const StateAndVariance& input, const Control& input_control){
-    // clang-format off
-  {{ExtendedKalmanFilter_process_model_body}}
-    // clang-format on
-}
-
 // clang-format off
+namespace {{namespace}} {
+// clang-format-on
+  State::State() : data(Eigen::Matrix<double, {{State_size}}, 1>::Zero()) {
+  }
+  State::State(const StateOptions& options)
+      : {{State_options_constructor_initializer_list}} {
+  }
+
+  StateAndVariance ExtendedKalmanFilter::process_model(
+      double dt, const StateAndVariance& input, const Control& input_control){
+      // clang-format off
+  {{ExtendedKalmanFilter_process_model_body}}
+      // clang-format on
+  }
+
+  // clang-format off
 {% for reading_type in reading_types %}
 {{reading_type.typename}} {{reading_type.typename}}SensorModel::model(
       const StateAndVariance& input,
@@ -35,6 +37,6 @@ StateAndVariance ExtendedKalmanFilter::process_model(
 }
 
 {% endfor %}
-// clang-format on
+  // clang-format on
 
-}  // namespace formak
+}  // namespace {{namespace}}

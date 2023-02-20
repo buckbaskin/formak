@@ -313,7 +313,7 @@ class ExtendedKalmanFilter:
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 
-def _generate_model_function_bodies(header_location, symbolic_model, config):
+def _generate_model_function_bodies(header_location, namespace, symbolic_model, config):
     generator = Model(symbolic_model, config)
 
     # For .../generated/formak/xyz.h
@@ -322,6 +322,7 @@ def _generate_model_function_bodies(header_location, symbolic_model, config):
     header_include = header_location.split("generated/")[-1]
 
     return {
+        "namespace": namespace,
         "header_include": header_include,
         "Model_model_body": generator.model_body(),
         "State_members": generator.state_members(),
@@ -330,7 +331,13 @@ def _generate_model_function_bodies(header_location, symbolic_model, config):
 
 
 def _generate_ekf_function_bodies(
-    header_location, state_model, process_noise, sensor_models, sensor_noises, config
+    header_location,
+    namespace,
+    state_model,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    config,
 ):
     generator = ExtendedKalmanFilter(
         state_model, process_noise, sensor_models, sensor_noises, config
@@ -343,6 +350,7 @@ def _generate_ekf_function_bodies(
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
+        "namespace": namespace,
         "header_include": header_include,
         "Control_members": generator.control_members(),
         "Covariance_members": generator.covariance_members(),
@@ -394,6 +402,7 @@ def compile(symbolic_model, *, config=None):
     parser.add_argument("--templates")
     parser.add_argument("--header")
     parser.add_argument("--source")
+    parser.add_argument("--namespace")
 
     args = parser.parse_args()
 
@@ -434,7 +443,9 @@ def compile(symbolic_model, *, config=None):
         print("End Walk")
         raise
 
-    inserts = _generate_model_function_bodies(args.header, symbolic_model, config)
+    inserts = _generate_model_function_bodies(
+        args.header, args.namespace, symbolic_model, config
+    )
 
     header_str = header_template.render(**inserts)
     source_str = source_template.render(**inserts)
@@ -466,6 +477,7 @@ def compile_ekf(
     parser.add_argument("--templates")
     parser.add_argument("--header")
     parser.add_argument("--source")
+    parser.add_argument("--namespace")
 
     args = parser.parse_args()
 
@@ -503,7 +515,13 @@ def compile_ekf(
         raise
 
     inserts = _generate_ekf_function_bodies(
-        args.header, state_model, process_noise, sensor_models, sensor_noises, config
+        args.header,
+        args.namespace,
+        state_model,
+        process_noise,
+        sensor_models,
+        sensor_noises,
+        config,
     )
 
     header_str = header_template.render(**inserts)
