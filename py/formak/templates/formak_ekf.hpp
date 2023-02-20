@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>  // Matrix
 #include <cstddef>      // size_t
+#include <iostream>     // std::cout, debugging
 
 namespace formak {
 
@@ -71,6 +72,11 @@ struct {{reading_type.typename}} {
 Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
 };
 
+std::ostream& operator<<(std::ostream& o, const {{reading_type.typename}}& reading) {
+    o << "Reading(data[{{reading_type.size}}, 1] = " << reading.data << ")";
+    return o;
+}
+
 struct {{reading_type.typename}}SensorModel {
     static {{reading_type.typename}} model(
       const StateAndVariance& input,
@@ -105,6 +111,9 @@ class ExtendedKalmanFilter {
     const ReadingT reading_est =
         ReadingT::SensorModel::model(input, input_reading);  // z_est
 
+    std::cout << "reading " << reading << std::endl;
+    std::cout << "reading_est " << reading_est << std::endl;
+
     // H = Jacobian(z_est w.r.t. state)
     const typename ReadingT::SensorJacobianT H =
         ReadingT::SensorModel::jacobian(input, input_reading);
@@ -128,6 +137,8 @@ class ExtendedKalmanFilter {
     // innovation = z - z_est
     const typename ReadingT::InnovationT innovation =
         reading.data - reading_est.data;
+
+    std::cout << "innovation" << innovation << std::endl;
 
     // Update State Estimate
     // next_state = state + K * innovation

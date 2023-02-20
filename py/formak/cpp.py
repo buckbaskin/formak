@@ -10,7 +10,7 @@ from colorama import Style as cS
 from colorama import init
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
-from sympy import Symbol, ccode, cse
+from sympy import Symbol, ccode, cse, diff
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
@@ -45,12 +45,9 @@ class BasicBlock:
         # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
         # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
         # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
-        for varname, expr in self._statements:
+        for lvalue, expr in self._statements:
             cc_expr = ccode(expr)
-            yield "double {varname} = {cc_expr};".format(
-                varname=varname,
-                cc_expr=cc_expr,
-            )
+            yield f"{lvalue} = {cc_expr};"
 
 
 class Model:
@@ -95,7 +92,7 @@ class Model:
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
             expr_after = expr_before.subs(subs_set)
-            yield a, expr_after
+            yield f"double {a.name}", expr_after
 
     def _translate_return(self):
         content = ", ".join(
@@ -178,7 +175,7 @@ class ExtendedKalmanFilter:
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
             expr_after = expr_before.subs(subs_set)
-            yield a, expr_after
+            yield f"double {a.name}", expr_after
 
     def _translate_return(self):
         content = ", ".join(
@@ -244,7 +241,7 @@ class ExtendedKalmanFilter:
             assignment = predicted_reading.name
             expr_before = model
             expr_after = expr_before.subs(subs_set)
-            yield assignment, expr_after
+            yield f"double {assignment}", expr_after
 
     def reading_types(self, verbose=True):
         state_size = len(self.arglist_state)
@@ -255,7 +252,7 @@ class ExtendedKalmanFilter:
                 "double {name};".format(name=name)
                 for name in sorted(list(sensor_model_mapping.keys()))
             )
-            size = len(members)
+            size = len(sensor_model_mapping)
             if verbose:
                 print(
                     f"reading_types: name: {name} reading_type: {typename} {identifier} members:\n{members}"
@@ -280,8 +277,8 @@ class ExtendedKalmanFilter:
             # TODO(buck): Move this line handling to the template?
             SensorModel_model_body = body.compile() + "\n" + return_
             SensorModel_covariance_body = f"return {typename}::CovarianceT::Identity();"
-            SensorModel_jacobian_body = (
-                f"return {typename}::SensorJacobianT::Identity();"
+            SensorModel_jacobian_body = self._translate_sensor_jacobian(
+                typename, sensor_model_mapping
             )
             yield ReadingT(
                 typename=typename,
@@ -292,6 +289,30 @@ class ExtendedKalmanFilter:
                 SensorModel_jacobian_body=SensorModel_jacobian_body,
                 SensorModel_covariance_body=SensorModel_covariance_body,
             )
+
+    def _translate_sensor_jacobian_impl(self, sensor_model_mapping):
+        subs_set = [
+            (
+                member,
+                Symbol("input.state.{}".format(member)),
+            )
+            for member in self.arglist_state
+        ]
+
+        for reading_idx, (predicted_reading, model) in enumerate(
+            sorted(list(sensor_model_mapping.items()))
+        ):
+            for state_idx, state in enumerate(self.arglist_state):
+                assignment = f"jacobian({reading_idx}, {state_idx})"
+                expr_before = diff(model, state)
+                expr_after = expr_before.subs(subs_set)
+                yield assignment, expr_after
+
+    def _translate_sensor_jacobian(self, typename, sensor_model_mapping):
+        prefix = f"{typename}::SensorJacobianT jacobian;"
+        body = BasicBlock(self._translate_sensor_jacobian_impl(sensor_model_mapping))
+        suffix = "return jacobian;"
+        return prefix + "\n" + body.compile() + "\n" + suffix
 
 
 def _generate_model_function_bodies(header_location, symbolic_model, config):
