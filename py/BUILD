@@ -145,7 +145,8 @@ py_test_suite(
 )
 
 cc_formak_model(
-    name = "unit-cpp-model",
+    name = "simple-model",
+    namespace = "unit",
     pydeps = [],
     pymain = "test/unit/formak/cpp/generator.py",
     pysrcs = glob(
@@ -155,7 +156,8 @@ cc_formak_model(
 )
 
 cc_formak_model(
-    name = "unit-cpp-ekf",
+    name = "simple-ekf",
+    namespace = "unit",
     pydeps = [],
     pymain = "test/unit/formak/cpp/generator_ekf.py",
     pysrcs = glob(
@@ -171,7 +173,7 @@ cc_test_suite(
         allow_empty = False,
     ),
     deps = [
-        ":unit-cpp-model",
-        ":unit-cpp-ekf",
+        ":simple-model",
+        ":simple-ekf",
     ] + CC_TEST_DEPS,
 )

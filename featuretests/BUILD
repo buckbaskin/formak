@@ -46,6 +46,7 @@ py_test_suite(
 
 cc_formak_model(
     name = "cpp-model",
+    namespace = "formak",
     pydeps = [],
     pymain = "cpp_library_for_model_evaluation/generator.py",
     pysrcs = glob(
@@ -56,6 +57,7 @@ cc_formak_model(
 
 cc_formak_model(
     name = "cpp-ekf",
+    namespace = "formak",
     pydeps = [],
     pymain = "cpp_library_for_model_evaluation/generator_ekf.py",
     pysrcs = glob(

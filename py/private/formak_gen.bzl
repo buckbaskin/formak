@@ -2,7 +2,7 @@ load("@pip_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
-def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, imports = None, visibility = None, **kwargs):
+def cc_formak_model(namespace, name, pymain, pysrcs, pydeps = None, python_version = None, imports = None, visibility = None, **kwargs):
     PY_LIBRARY_NAME = name + "py-library-formak-model"
     PY_BINARY_NAME = name + "py-binary-formak-model"
     GENRULE_NAME = name + "genrule-formak-model"
@@ -36,8 +36,8 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     MODEL_TEMPLATES = "//py:templates"
 
     # TODO(buck): Use name to give these better names, maybe namespace too
-    OUTPUT_HEADER = "generated/formak/%s.h" % (name,)
-    OUTPUT_SOURCE = "generated/formak/%s.cpp" % (name,)
+    OUTPUT_HEADER = "generated/%s/%s.h" % (namespace, name)
+    OUTPUT_SOURCE = "generated/%s/%s.cpp" % (namespace, name)
     OUTPUT_FILES = [
         OUTPUT_HEADER,
         OUTPUT_SOURCE,
@@ -47,7 +47,7 @@ def cc_formak_model(name, pymain, pysrcs, pydeps = None, python_version = None, 
     run_binary(
         name = GENRULE_NAME,
         tool = PY_BINARY_NAME,
-        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/formak/%s.h)" % (name,), "--source", "$(location generated/formak/%s.cpp)" % (name,)],
+        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/%s/%s.h)" % (namespace, name), "--source", "$(location generated/%s/%s.cpp)" % (namespace, name)],
         outs = OUTPUT_FILES,
         srcs = ["//py:templates"],
     )

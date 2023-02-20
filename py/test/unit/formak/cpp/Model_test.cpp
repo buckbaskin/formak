@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <unit/simple.h>  // Generated
+#include <unit/simple-model.h>  // Generated
 
 namespace unit {
 

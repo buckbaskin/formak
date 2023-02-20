@@ -1,5 +1,6 @@
 import argparse
 from collections import defaultdict, namedtuple
+from dataclasses import dataclass
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
@@ -15,14 +16,10 @@ from sympy import Symbol, ccode, cse, diff
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
+@dataclass
 class Config:
-    def __init__(
-        self,
-        common_subexpression_elimination=True,
-        python_modules=DEFAULT_MODULES,
-    ):
-        self.common_subexpression_elimination = common_subexpression_elimination
-        self.python_modules = python_modules
+    common_subexpression_elimination: bool = True
+    python_modules: List[str] = DEFAULT_MODULES
 
 
 # TODO(buck): data class?
