@@ -79,25 +79,26 @@ TEST(EKF, sensor) {
   //         config=config,
   //     )
   ExtendedKalmanFilter ekf;
-  double dt = 0.1;
-
-  Control control{0.2};
 
   Covariance covariance;
-  SimpleReading reading{1.0};
   State state({0.0, 0.0});
 
-  SensorReading<SensorId::SIMPLE> sensor_reading{Simple{1.0}};
-  auto next = ekf.sensor_model({state, covariance}, sensor_reading);
+  double reading = 1.0;
 
-  EXPECT_LT(abs(reading - next.state[0, 0]) < abs(reading - state[0, 0]));
+  SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{reading}};
+  auto next = ekf.sensor_model({state, covariance}, simple_reading);
+
+  EXPECT_LT(abs(reading - next.state.data(0, 0)),
+            abs(reading - state.data(0, 0)));
 
   // TODO(buck): Check what this should be
-  SensorReading<SensorReading::COMBINED> combined{Combined{}};
+  SensorReading<(SensorId::COMBINED), Combined> combined{Combined{reading}};
   next = ekf.sensor_model({state, covariance}, combined);
 
-  EXPECT_LT(abs(reading - next.state[0, 0]), abs(reading - state[0, 0]));
-  EXPECT_LT(abs(reading - next.state[1, 0]), abs(reading - state[1, 0]));
+  EXPECT_LT(abs(reading - next.state.data(0, 0)),
+            abs(reading - state.data(0, 0)));
+  EXPECT_LT(abs(reading - next.state.data(1, 0)),
+            abs(reading - state.data(1, 0)));
 }
 // def test_EKF_process_jacobian():
 //     config = python.Config()

@@ -200,7 +200,7 @@ class ExtendedKalmanFilter:
 
     def state_members(self):
         return "\n".join(
-            "double& {name} = data({idx}, 0);".format(name=symbol.name, idx=idx)
+            "double& %s() { return data(%s, 0); }" % (symbol.name, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 
@@ -218,7 +218,7 @@ class ExtendedKalmanFilter:
     def covariance_members(self):
         # TODO(buck): Need to add covariance terms
         return "\n".join(
-            "double& {name} = data({idx}, {idx});".format(name=symbol.name, idx=idx)
+            "double& %s() { return data(%s, %s); }" % (symbol.name, idx, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 
@@ -236,7 +236,7 @@ class ExtendedKalmanFilter:
             for member in self.arglist_state
         ]
         for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
-            assignment = predicted_reading.name
+            assignment = str(predicted_reading)
             expr_before = model
             expr_after = expr_before.subs(subs_set)
             yield f"double {assignment}", expr_after
@@ -266,7 +266,7 @@ class ExtendedKalmanFilter:
                 "return {"
                 + ", ".join(
                     (
-                        reading.name
+                        str(reading)
                         for reading in sorted(list(sensor_model_mapping.keys()))
                     )
                 )

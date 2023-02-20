@@ -50,8 +50,8 @@ namespace {{namespace}} {
 
   template <SensorId Identifier, typename ReadingT>
   struct SensorReading {
-    SensorId id = Identifier;
     ReadingT reading;
+    static constexpr SensorId id = Identifier;
   };
 
   // clang-format off
