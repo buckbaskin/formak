@@ -1,6 +1,12 @@
 # build --compiler=clang
 build --copt -std=c++17
 build --copt -Wall
+build --copt -Wextra
+build --copt -Wdouble-promotion
+build --copt -Wconversion
+build --copt -Wfloat-conversion
+build --copt -Wsign-conversion
+build --copt -Wno-unused-parameter
 # build --copt -Wpedantic # disabled for now so I can use designated initializers
 build --copt -Werror
 

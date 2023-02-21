@@ -100,6 +100,41 @@ TEST(EKF, sensor) {
   EXPECT_LT(abs(reading - next.state.data(1, 0)),
             abs(reading - state.data(1, 0)));
 }
+
+TEST(EKF, sensor_model_detail) {
+  //     ekf = python.ExtendedKalmanFilter(
+  //         state_model=ui.Model(
+  //             ui.Symbol("dt"),
+  //             set(ui.symbols(["x", "y"])),
+  //             set(ui.symbols(["a"])),
+  //             {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+  //         ),
+  //         process_noise=np.eye(1),
+  //         sensor_models={
+  //             "simple": {"reading1": ui.Symbol("x")},
+  //             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+  //         },
+  //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
+  //         config=config,
+  //     )
+  ExtendedKalmanFilter ekf;
+
+  double x = -1.0;
+  double y = 2.0;
+  State state({x, y});
+
+  {
+    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple predicted = Simple::SensorModel::model(state, simple_reading);
+    EXPECT_DOUBLE_EQ(predicted.reading1(), x);
+  }
+
+  {
+    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined predicted = Combined::SensorModel::model(state, combined_reading);
+    EXPECT_DOUBLE_EQ(predicted.reading2(), x + y);
+  }
+}
 // def test_EKF_process_jacobian():
 //     config = python.Config()
 //     dt = 0.1

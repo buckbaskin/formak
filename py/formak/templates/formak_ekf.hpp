@@ -76,11 +76,12 @@ struct {{reading_type.typename}} {
   using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
   using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
   using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
-  constexpr static size_t size = {{reading_type.size}};
 
   {{reading_type.members}}
 
 Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
+
+  constexpr static size_t size = {{reading_type.size}};
 };
 
 std::ostream& operator<<(std::ostream& o, const {{reading_type.typename}}& reading) {
