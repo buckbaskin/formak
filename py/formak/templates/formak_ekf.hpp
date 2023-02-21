@@ -31,10 +31,20 @@ namespace {{namespace}} {
         Eigen::Matrix<double, {{State_size}}, {{State_size}}>::Identity();
   };
 
+  struct ControlOptions {
+    // clang-format off
+  {{ ControlOptions_members }}
+    // clang-format on
+  };
+
   struct Control {
+    Control();
+    Control(const ControlOptions& options);
     // clang-format off
   {{Control_members}}
     // clang-format on
+    Eigen::Matrix<double, {{Control_size}}, 1> data =
+        Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
   };
 
   struct StateAndVariance {

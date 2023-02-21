@@ -14,32 +14,32 @@ TEST(CppModel, impl_control) {
     State state({0.0, 0.0});
     auto result = model.model(dt, state, control);
 
-    EXPECT_DOUBLE_EQ(result.x, 0.0);
-    EXPECT_DOUBLE_EQ(result.y, 0.02);
+    EXPECT_DOUBLE_EQ(result.x(), 0.0);
+    EXPECT_DOUBLE_EQ(result.y(), 0.02);
   }
 
   {
     State state({0.0, 1.0});
     auto result = model.model(dt, state, control);
 
-    EXPECT_DOUBLE_EQ(result.x, 0.0);
-    EXPECT_DOUBLE_EQ(result.y, 1.02);
+    EXPECT_DOUBLE_EQ(result.x(), 0.0);
+    EXPECT_DOUBLE_EQ(result.y(), 1.02);
   }
 
   {
     State state({1.0, 0.0});
     auto result = model.model(dt, state, control);
 
-    EXPECT_DOUBLE_EQ(result.x, 0.0);
-    EXPECT_DOUBLE_EQ(result.y, 0.02);
+    EXPECT_DOUBLE_EQ(result.x(), 0.0);
+    EXPECT_DOUBLE_EQ(result.y(), 0.02);
   }
 
   {
     State state({1.0, 1.0});
     auto result = model.model(dt, state, control);
 
-    EXPECT_DOUBLE_EQ(result.x, 1.0);
-    EXPECT_DOUBLE_EQ(result.y, 1.02);
+    EXPECT_DOUBLE_EQ(result.x(), 1.0);
+    EXPECT_DOUBLE_EQ(result.y(), 1.02);
   }
 }
 

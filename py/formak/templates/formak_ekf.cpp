@@ -9,6 +9,12 @@ namespace {{namespace}} {
       : {{State_options_constructor_initializer_list}} {
   }
 
+  Control::Control() : data(Eigen::Matrix<double, {{Control_size}}, 1>::Zero()) {
+  }
+  Control::Control(const ControlOptions& options)
+      : {{Control_options_constructor_initializer_list}} {
+  }
+
   StateAndVariance ExtendedKalmanFilter::process_model(
       double dt, const StateAndVariance& input, const Control& input_control){
       // clang-format off

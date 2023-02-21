@@ -75,13 +75,13 @@ class Model:
         subs_set = [
             (
                 member,
-                Symbol("input_state.{}".format(member)),
+                Symbol("input_state.{}()".format(member)),
             )
             for member in self.arglist_state
         ] + [
             (
                 member,
-                Symbol("input_control.{}".format(member)),
+                Symbol("input_control.{}()".format(member)),
             )
             for member in self.arglist_control
         ]
@@ -92,10 +92,8 @@ class Model:
             yield f"double {a.name}", expr_after
 
     def _translate_return(self):
-        content = ", ".join(
-            (".{name}={name}".format(name=name) for name in self.arglist_state)
-        )
-        return "State{" + content + "}"
+        content = ", ".join(str(symbol) for symbol in self.arglist_state)
+        return "State({" + content + "})"
 
     def model_body(self):
         return "{impl}\nreturn {return_};".format(
@@ -105,12 +103,40 @@ class Model:
 
     def state_members(self):
         return "\n".join(
-            "double {name};".format(name=name) for name in self.arglist_state
+            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
+            % (name, idx, name, idx)
+            for idx, name in enumerate(self.arglist_state)
         )
 
     def control_members(self):
         return "\n".join(
-            "double {name};".format(name=name) for name in self.arglist_control
+            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
+            % (name, idx, name, idx)
+            for idx, name in enumerate(self.arglist_control)
+        )
+
+    def state_options_constructor_initializer_list(self):
+        return (
+            "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
+        )
+
+    def control_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_control)
+            + ")"
+        )
+
+    def stateoptions_members(self):
+        return "\n".join(
+            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_state)
+        )
+
+    def controloptions_members(self):
+        return "\n".join(
+            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_control)
         )
 
 
@@ -158,13 +184,13 @@ class ExtendedKalmanFilter:
         subs_set = [
             (
                 member,
-                Symbol("input.state.{}".format(member)),
+                Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
         ] + [
             (
                 member,
-                Symbol("input_control.{}".format(member)),
+                Symbol("input_control.{}()".format(member)),
             )
             for member in self.arglist_control
         ]
@@ -200,7 +226,8 @@ class ExtendedKalmanFilter:
 
     def state_members(self):
         return "\n".join(
-            "double& %s() { return data(%s, 0); }" % (symbol.name, idx)
+            "double& %s() { return data(%s, 0); }\ndouble %s() const { return data(%s, 0); }"
+            % (symbol.name, idx, symbol.name, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 
@@ -210,28 +237,44 @@ class ExtendedKalmanFilter:
             for idx, symbol in enumerate(self.arglist_state)
         )
 
+    def controloptions_members(self):
+        return "\n".join(
+            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
+            for idx, symbol in enumerate(self.arglist_control)
+        )
+
     def state_options_constructor_initializer_list(self):
         return (
             "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
         )
 
+    def control_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_control)
+            + ")"
+        )
+
     def covariance_members(self):
         # TODO(buck): Need to add covariance terms
         return "\n".join(
-            "double& %s() { return data(%s, %s); }" % (symbol.name, idx, idx)
+            "double& %s() { return data(%s, %s); }\ndouble %s() const { return data(%s, %s); }"
+            % (symbol.name, idx, idx, symbol.name, idx, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 
     def control_members(self):
         return "\n".join(
-            "double {name};".format(name=name) for name in self.arglist_control
+            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
+            % (name, idx, name, idx)
+            for idx, name in enumerate(self.arglist_control)
         )
 
     def _translate_sensor_model(self, sensor_model_mapping):
         subs_set = [
             (
                 member,
-                Symbol("input.state.{}".format(member)),
+                Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
         ]
@@ -292,7 +335,7 @@ class ExtendedKalmanFilter:
         subs_set = [
             (
                 member,
-                Symbol("input.state.{}".format(member)),
+                Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
         ]
@@ -322,11 +365,17 @@ def _generate_model_function_bodies(header_location, namespace, symbolic_model, 
     header_include = header_location.split("generated/")[-1]
 
     return {
-        "namespace": namespace,
+        "Control_members": generator.control_members(),
+        "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
+        "Control_size": generator.control_size,
+        "ControlOptions_members": generator.controloptions_members(),
         "header_include": header_include,
         "Model_model_body": generator.model_body(),
+        "namespace": namespace,
         "State_members": generator.state_members(),
-        "Control_members": generator.control_members(),
+        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
+        "State_size": generator.state_size,
+        "StateOptions_members": generator.stateoptions_members(),
     }
 
 
@@ -350,17 +399,20 @@ def _generate_ekf_function_bodies(
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
-        "namespace": namespace,
-        "header_include": header_include,
         "Control_members": generator.control_members(),
+        "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
+        "Control_size": generator.control_size,
+        "ControlOptions_members": generator.controloptions_members(),
         "Covariance_members": generator.covariance_members(),
         "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
-        "SensorId_members": generator.sensorid_members(),
-        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
-        "State_members": generator.state_members(),
-        "StateOptions_members": generator.stateoptions_members(),
-        "State_size": generator.state_size,
+        "header_include": header_include,
+        "namespace": namespace,
         "reading_types": list(generator.reading_types()),
+        "SensorId_members": generator.sensorid_members(),
+        "State_members": generator.state_members(),
+        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
+        "State_size": generator.state_size,
+        "StateOptions_members": generator.stateoptions_members(),
     }
 
 
