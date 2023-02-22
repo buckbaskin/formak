@@ -63,21 +63,6 @@ TEST(EKF, process_with_control) {
 }
 
 TEST(EKF, sensor) {
-  //     ekf = python.ExtendedKalmanFilter(
-  //         state_model=ui.Model(
-  //             ui.Symbol("dt"),
-  //             set(ui.symbols(["x", "y"])),
-  //             set(ui.symbols(["a"])),
-  //             {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
-  //         ),
-  //         process_noise=np.eye(1),
-  //         sensor_models={
-  //             "simple": {"reading1": ui.Symbol("x")},
-  //             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
-  //         },
-  //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
-  //         config=config,
-  //     )
   ExtendedKalmanFilter ekf;
 
   Covariance covariance;
@@ -138,6 +123,82 @@ TEST(EKF, sensor_model_detail) {
     EXPECT_DOUBLE_EQ(predicted.reading2(), x + y);
   }
 }
+
+TEST(EKF, sensor_covariances) {
+  //     ekf = python.ExtendedKalmanFilter(
+  //         state_model=ui.Model(
+  //             ui.Symbol("dt"),
+  //             set(ui.symbols(["x", "y"])),
+  //             set(ui.symbols(["a"])),
+  //             {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+  //         ),
+  //         process_noise=np.eye(1),
+  //         sensor_models={
+  //             "simple": {"reading1": ui.Symbol("x")},
+  //             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+  //         },
+  //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1) * 4.0},
+  //         config=config,
+  //     )
+  double x = -1.0;
+  double y = 2.0;
+  State state({x, y});
+  Covariance covariance;
+
+  {
+    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple::CovarianceT out =
+        Simple::SensorModel::covariance({state, covariance}, simple_reading);
+    EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
+  }
+
+  {
+    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined::CovarianceT out = Combined::SensorModel::covariance(
+        {state, covariance}, combined_reading);
+    EXPECT_DOUBLE_EQ(out(0, 0), 4.0);
+  }
+}
+
+TEST(EKF, sensor_jacobian) {
+  //     ekf = python.ExtendedKalmanFilter(
+  //         state_model=ui.Model(
+  //             ui.Symbol("dt"),
+  //             set(ui.symbols(["x", "y"])),
+  //             set(ui.symbols(["a"])),
+  //             {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+  //         ),
+  //         process_noise=np.eye(1),
+  //         sensor_models={
+  //             "simple": {"reading1": ui.Symbol("x")},
+  //             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+  //         },
+  //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1) * 4.0},
+  //         config=config,
+  //     )
+  double x = -1.0;
+  double y = 2.0;
+  State state({x, y});
+  Covariance covariance;
+
+  {
+    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple::SensorJacobianT out =
+        Simple::SensorModel::jacobian({state, covariance}, simple_reading);
+    EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(out(0, 1), 0.0);
+  }
+
+  {
+    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined::SensorJacobianT out =
+        Combined::SensorModel::jacobian({state, covariance}, combined_reading);
+    EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(out(0, 1), 0.0);
+    FAIL();
+  }
+}
+
 // def test_EKF_process_jacobian():
 //     config = python.Config()
 //     dt = 0.1
