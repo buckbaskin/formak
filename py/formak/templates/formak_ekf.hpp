@@ -66,42 +66,49 @@ namespace {{namespace}} {
 
   // clang-format off
 {% for reading_type in reading_types %}
-// ReadingTSensorModel
-struct {{reading_type.typename}}SensorModel;
+  // ReadingTSensorModel
+  struct {{reading_type.typename}}SensorModel;
 
-// ReadingT
-struct {{reading_type.typename}} {
-  using SensorModel = {{reading_type.typename}}SensorModel;
-  using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
-  using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
-  using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
-  using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
+  struct {{reading_type.typename}}Options {
+      {{ reading_type.Options_members }}
+  };
 
-  {{reading_type.members}}
+  // ReadingT
+  struct {{reading_type.typename}} {
+    using SensorModel = {{reading_type.typename}}SensorModel;
+    using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
+    using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
+    using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
+    using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
 
-Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
+    {{reading_type.typename}}();
+    {{reading_type.typename}}(const {{reading_type.typename}}Options& options);
 
-  constexpr static size_t size = {{reading_type.size}};
-};
+    {{reading_type.members}}
 
-std::ostream& operator<<(std::ostream& o, const {{reading_type.typename}}& reading) {
-    o << "Reading(data[{{reading_type.size}}, 1] = " << reading.data << ")";
-    return o;
-}
+  Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
 
-struct {{reading_type.typename}}SensorModel {
-    static {{reading_type.typename}} model(
-      const StateAndVariance& input,
-      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+    constexpr static size_t size = {{reading_type.size}};
+  };
 
-    static typename {{reading_type.typename}}::SensorJacobianT jacobian(
-            const StateAndVariance& input,
-            const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+  std::ostream& operator<<(std::ostream& o, const {{reading_type.typename}}& reading) {
+      o << "Reading(data[{{reading_type.size}}, 1] = " << reading.data << ")";
+      return o;
+  }
 
-    static typename {{reading_type.typename}}::CovarianceT covariance(
-            const StateAndVariance& input,
-            const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
-};
+  struct {{reading_type.typename}}SensorModel {
+      static {{reading_type.typename}} model(
+        const StateAndVariance& input,
+        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+
+      static typename {{reading_type.typename}}::SensorJacobianT jacobian(
+              const StateAndVariance& input,
+              const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+
+      static typename {{reading_type.typename}}::CovarianceT covariance(
+              const StateAndVariance& input,
+              const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+  };
 
 {% endfor %}
   // clang-format on

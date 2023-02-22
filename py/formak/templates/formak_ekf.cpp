@@ -24,23 +24,28 @@ namespace {{namespace}} {
 
   // clang-format off
 {% for reading_type in reading_types %}
-{{reading_type.typename}} {{reading_type.typename}}SensorModel::model(
-      const StateAndVariance& input,
-      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-  {{reading_type.SensorModel_model_body}}
-}
+  {{reading_type.typename}}::{{reading_type.typename}}() : data(Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero()) {
+  }
+  {{reading_type.typename}}::{{reading_type.typename}}(const {{reading_type.typename}}Options& options) : {{reading_type.initializer_list}} {
+  }
 
-{{reading_type.typename}}::CovarianceT {{reading_type.typename}}SensorModel::covariance(
-      const StateAndVariance& input,
-      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-  {{reading_type.SensorModel_covariance_body}}
-}
+  {{reading_type.typename}} {{reading_type.typename}}SensorModel::model(
+        const StateAndVariance& input,
+        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
+    {{reading_type.SensorModel_model_body}}
+  }
 
-{{reading_type.typename}}::SensorJacobianT {{reading_type.typename}}SensorModel::jacobian(
-      const StateAndVariance& input,
-      const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-  {{reading_type.SensorModel_jacobian_body}}
-}
+  {{reading_type.typename}}::CovarianceT {{reading_type.typename}}SensorModel::covariance(
+        const StateAndVariance& input,
+        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
+    {{reading_type.SensorModel_covariance_body}}
+  }
+
+  {{reading_type.typename}}::SensorJacobianT {{reading_type.typename}}SensorModel::jacobian(
+        const StateAndVariance& input,
+        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
+    {{reading_type.SensorModel_jacobian_body}}
+  }
 
 {% endfor %}
   // clang-format on

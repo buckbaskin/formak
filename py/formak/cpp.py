@@ -148,6 +148,8 @@ ReadingT = namedtuple(
         "size",
         "identifier",
         "members",
+        "initializer_list",
+        "Options_members",
         "SensorModel_model_body",
         "SensorModel_covariance_body",
         "SensorModel_jacobian_body",
@@ -290,8 +292,8 @@ class ExtendedKalmanFilter:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
             members = "\n".join(
-                "double {name};".format(name=name)
-                for name in sorted(list(sensor_model_mapping.keys()))
+                "double& %s() { return data(%d, 0); }" % (name, idx)
+                for idx, name in enumerate(sorted(list(sensor_model_mapping.keys())))
             )
             size = len(sensor_model_mapping)
             if verbose:
@@ -306,7 +308,7 @@ class ExtendedKalmanFilter:
 
             body = BasicBlock(self._translate_sensor_model(sensor_model_mapping))
             return_ = (
-                "return {"
+                "return %sOptions{" % (typename,)
                 + ", ".join(
                     (
                         str(reading)
@@ -321,14 +323,30 @@ class ExtendedKalmanFilter:
             SensorModel_jacobian_body = self._translate_sensor_jacobian(
                 typename, sensor_model_mapping
             )
+
+            initializer_list = (
+                "data("
+                + ", ".join(
+                    f"options.{name}"
+                    for name in sorted(list(sensor_model_mapping.keys()))
+                )
+                + ")"
+            )
+            Options_members = "\n".join(
+                "double {name} = 0.0;".format(name=str(symbol), idx=idx)
+                for idx, symbol in enumerate(sorted(list(sensor_model_mapping.keys())))
+            )
+
             yield ReadingT(
-                typename=typename,
-                size=size,
                 identifier=identifier,
+                initializer_list=initializer_list,
                 members=members,
-                SensorModel_model_body=SensorModel_model_body,
-                SensorModel_jacobian_body=SensorModel_jacobian_body,
+                Options_members=Options_members,
                 SensorModel_covariance_body=SensorModel_covariance_body,
+                SensorModel_jacobian_body=SensorModel_jacobian_body,
+                SensorModel_model_body=SensorModel_model_body,
+                size=size,
+                typename=typename,
             )
 
     def _translate_sensor_jacobian_impl(self, sensor_model_mapping):

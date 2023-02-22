@@ -85,14 +85,14 @@ TEST(EKF, sensor) {
 
   double reading = 1.0;
 
-  SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{reading}};
+  SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple({reading})};
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
             abs(reading - state.data(0, 0)));
 
   // TODO(buck): Check what this should be
-  SensorReading<(SensorId::COMBINED), Combined> combined{Combined{reading}};
+  SensorReading<(SensorId::COMBINED), Combined> combined{Combined({reading})};
   next = ekf.sensor_model({state, covariance}, combined);
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
@@ -117,21 +117,24 @@ TEST(EKF, sensor_model_detail) {
   //         sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
   //         config=config,
   //     )
-  ExtendedKalmanFilter ekf;
+  // ExtendedKalmanFilter ekf;
 
   double x = -1.0;
   double y = 2.0;
   State state({x, y});
+  Covariance covariance;
 
   {
     SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
-    Simple predicted = Simple::SensorModel::model(state, simple_reading);
+    Simple predicted =
+        Simple::SensorModel::model({state, covariance}, simple_reading);
     EXPECT_DOUBLE_EQ(predicted.reading1(), x);
   }
 
   {
     SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
-    Combined predicted = Combined::SensorModel::model(state, combined_reading);
+    Combined predicted =
+        Combined::SensorModel::model({state, covariance}, combined_reading);
     EXPECT_DOUBLE_EQ(predicted.reading2(), x + y);
   }
 }
