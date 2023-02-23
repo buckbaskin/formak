@@ -3,7 +3,7 @@ build --copt -std=c++17
 build --copt -Wall
 build --copt -Wextra
 build --copt -Wdouble-promotion
-build --copt -Wconversion
+# build --copt -Wconversion # disabled for an implicit conversion in GTest
 build --copt -Wfloat-conversion
 build --copt -Wsign-conversion
 build --copt -Wno-unused-parameter
