@@ -178,7 +178,9 @@ class ExtendedKalmanFilter:
         self._process_model = BasicBlock(self._translate_process_model(state_model))
 
         # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
-        self.sensorlist = sorted([(k, v) for k, v in sensor_models.items()])
+        self.sensorlist = sorted(
+            [(k, v, sensor_noises[k]) for k, v in sensor_models.items()]
+        )
 
         self._return = self._translate_return()
 
@@ -221,7 +223,9 @@ class ExtendedKalmanFilter:
     def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
         # TODO(buck): remove the default True in favor of the flag option
-        enum_names = ["{name}".format(name=name.upper()) for name, _ in self.sensorlist]
+        enum_names = [
+            "{name}".format(name=name.upper()) for name, _, _ in self.sensorlist
+        ]
         if verbose:
             print(f"sensorid_members: enum_names: {enum_names}")
         return ",\n".join(enum_names)
@@ -288,7 +292,7 @@ class ExtendedKalmanFilter:
 
     def reading_types(self, verbose=True):
         state_size = len(self.arglist_state)
-        for name, sensor_model_mapping in self.sensorlist:
+        for name, sensor_model_mapping, sensor_noise in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
             members = "\n".join(
@@ -319,7 +323,9 @@ class ExtendedKalmanFilter:
             )
             # TODO(buck): Move this line handling to the template?
             SensorModel_model_body = body.compile() + "\n" + return_
-            SensorModel_covariance_body = f"return {typename}::CovarianceT::Identity();"
+            SensorModel_covariance_body = self._translate_sensor_covariance(
+                typename, sensor_noise
+            )
             SensorModel_jacobian_body = self._translate_sensor_jacobian(
                 typename, sensor_model_mapping
             )
@@ -371,6 +377,18 @@ class ExtendedKalmanFilter:
         prefix = f"{typename}::SensorJacobianT jacobian;"
         body = BasicBlock(self._translate_sensor_jacobian_impl(sensor_model_mapping))
         suffix = "return jacobian;"
+        return prefix + "\n" + body.compile() + "\n" + suffix
+
+    def _translate_sensor_covariance_impl(self, covariance):
+        rows, cols = covariance.shape
+        for i in range(rows):
+            for j in range(cols):
+                yield f"covariance({i}, {j})", covariance[i, j]
+
+    def _translate_sensor_covariance(self, typename, covariance):
+        prefix = f"{typename}::CovarianceT covariance;"
+        body = BasicBlock(self._translate_sensor_covariance_impl(covariance))
+        suffix = "return covariance;"
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 

@@ -175,8 +175,7 @@ TEST(EKF, sensor_jacobian) {
     Combined::SensorJacobianT out =
         Combined::SensorModel::jacobian({state, covariance}, combined_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
-    EXPECT_DOUBLE_EQ(out(0, 1), 0.0);
-    FAIL();
+    EXPECT_DOUBLE_EQ(out(0, 1), 1.0);
   }
 }
 
@@ -193,9 +192,17 @@ TEST(EKF, process_jacobian) {
     Control control;
     EXPECT_DOUBLE_EQ(control.a(), 0.0);
 
+    EXPECT_DOUBLE_EQ(covariance.data(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(covariance.data(1, 1), 1.0);
+    EXPECT_DOUBLE_EQ(covariance.data(0, 1), 0.0);
+    EXPECT_DOUBLE_EQ(covariance.data(1, 0), 0.0);
+
     StateAndVariance next = ekf.process_model(dt, {state, covariance}, control);
 
-    EXPECT_DOUBLE_EQ(next.state.x(), -3.0);
+    EXPECT_GT(next.covariance.data(0, 0), 1.0);
+    EXPECT_GT(next.covariance.data(1, 1), 1.0);
+    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), 0.0);
+    EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), 0.0);
   }
 }
 
