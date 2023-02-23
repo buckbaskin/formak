@@ -204,6 +204,24 @@ class ExtendedKalmanFilter:
             expr_after = expr_before.subs(subs_set)
             yield f"double {a.name}", expr_after
 
+    def _translate_process_jacobian_impl(self, sensor_model_mapping):
+        # TODO(buck): Complete the calculation of the jacobian, noise as part of the process_model. Start here
+        subs_set = [
+            (
+                member,
+                Symbol("input.state.{}()".format(member)),
+            )
+            for member in self.arglist_state
+        ]
+
+        for idx, symbol in enumerate(arglist_state):
+            model = symbolic_model.state_model[a]
+            for state_idx, state in enumerate(self.arglist_state):
+                assignment = f"jacobian({idx}, {state_idx})"
+                expr_before = diff(model, state)
+                expr_after = expr_before.subs(subs_set)
+                yield assignment, expr_after
+
     def _translate_return(self):
         content = ", ".join(
             (".{name}={name}".format(name=name) for name in self.arglist_state)
