@@ -17,9 +17,31 @@ namespace {{namespace}} {
 
   StateAndVariance ExtendedKalmanFilter::process_model(
       double dt, const StateAndVariance& input, const Control& input_control){
-      // clang-format off
-  {{ExtendedKalmanFilter_process_model_body}}
+      const State& state = input.state;                 // mu
+      const Covariance& covariance = input.covariance;  // Sigma
+      // G = process_jacobian
+      ExtendedKalmanFilter::ProcessJacobianT G = process_jacobian(input, input_control);
+      // V = control_jacobian
+      ExtendedKalmanFilter::ControlJacobianT V = control_jacobian(input, input_control);
+      // M = process_noise
+      ExtendedKalmanFilter::ProcessNoiseT M = process_noise(input, input_control);
+
+      // Update State Estimate
+      // next_state = process_model(input, input_control)
+      State next_state;
+      next_state.data = ([&]() {
+        // clang-format off
+        {{ExtendedKalmanFilter_process_model_body}}
       // clang-format on
+    })();
+
+    // Update Covariance
+    // Sigma = G * Sigma * G.T + V * M * V.T
+    Covariance next_covariance;
+    next_covariance.data =
+        G * covariance.data * G.transpose() + V * M * V.transpose();
+
+    return {.state = next_state, .covariance = next_covariance};
   }
 
   // clang-format off

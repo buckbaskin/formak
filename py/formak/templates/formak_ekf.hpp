@@ -157,8 +157,6 @@ namespace {{namespace}} {
       const typename ReadingT::InnovationT innovation =
           reading.data - reading_est.data;
 
-      std::cout << "innovation" << innovation << std::endl;
-
       // Update State Estimate
       // next_state = state + K * innovation
       State next_state;
