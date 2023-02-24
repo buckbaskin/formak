@@ -226,11 +226,7 @@ class ExtendedKalmanFilter:
         content = ", ".join(
             (".{name}={name}".format(name=name) for name in self.arglist_state)
         )
-        return (
-            "StateAndVariance{.state = State({"
-            + content
-            + "}), .covariance = Covariance{}};"
-        )
+        return "State({" + content + "});"
 
     def process_model_body(self):
         return "{impl}\nreturn {return_};".format(
@@ -458,7 +454,10 @@ def _generate_ekf_function_bodies(
         "Control_size": generator.control_size,
         "ControlOptions_members": generator.controloptions_members(),
         "Covariance_members": generator.covariance_members(),
-        "ExtendedKalmanFilter_process_model_body": generator.process_model_body(),
+        "ExtendedKalmanFilterProcessModel_model_body": generator.process_model_body(),
+        "ExtendedKalmanFilterProcessModel_process_jacobian_body": generator.process_jacobian_body(),
+        "ExtendedKalmanFilterProcessModel_control_jacobian_body": generator.control_jacobian_body(),
+        "ExtendedKalmanFilterProcessModel_covariance_body": generator.control_covariance_body(),
         "header_include": header_include,
         "namespace": namespace,
         "reading_types": list(generator.reading_types()),

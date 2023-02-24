@@ -75,11 +75,11 @@ namespace {{namespace}} {
 
   // ReadingT
   struct {{reading_type.typename}} {
-    using SensorModel = {{reading_type.typename}}SensorModel;
     using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
-    using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
-    using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
     using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
+    using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
+    using SensorJacobianT = Eigen::Matrix<double, {{reading_type.size}}, {{State_size}}>;
+    using SensorModel = {{reading_type.typename}}SensorModel;
 
     {{reading_type.typename}}();
     {{reading_type.typename}}(const {{reading_type.typename}}Options& options);
@@ -112,9 +112,18 @@ namespace {{namespace}} {
 
 {% endfor %}
   // clang-format on
+  class ExtendedKalmanFilterProcessModel;
 
   class ExtendedKalmanFilter {
    public:
+    using CovarianceT =
+        Eigen::Matrix<double, {{Control_size}}, {{Control_size}}>;
+    using ProcessJacobianT =
+        Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
+    using ControlJacobianT =
+        Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
+    using ProcessModel = ExtendedKalmanFilterProcessModel;
+
     StateAndVariance process_model(double dt, const StateAndVariance& input,
                                    const Control& input_control);
 
@@ -174,6 +183,21 @@ namespace {{namespace}} {
       return StateAndVariance{.state = next_state,
                               .covariance = next_covariance};
     }
+  };
+
+  class ExtendedKalmanFilterProcessModel {
+   public:
+    static State model(double dt, const StateAndVariance& input,
+                       const Control& input_control);
+
+    static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
+        double dt, const StateAndVariance& input, const Control& input_control);
+
+    static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
+        double dt, const StateAndVariance& input, const Control& input_control);
+
+    static typename ExtendedKalmanFilter::CovarianceT covariance(
+        double dt, const StateAndVariance& input, const Control& input_control);
   };
 
 }  // namespace {{namespace}}
