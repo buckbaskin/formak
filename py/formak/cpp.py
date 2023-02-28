@@ -9,6 +9,7 @@ import jinja2
 from colorama import Fore as cF
 from colorama import Style as cS
 from colorama import init
+from formak.exceptions import ModelConstructionError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 from sympy import Symbol, ccode, cse, diff
@@ -342,6 +343,9 @@ class ExtendedKalmanFilter:
 
     def _translate_control_covariance(self, covariance):
         rows, cols = covariance.shape
+        print("covariance.shape")
+        print(rows, cols)
+        1 / 0
         for i in range(rows):
             for j in range(cols):
                 yield f"covariance({i}, {j})", covariance[i, j]
@@ -640,6 +644,12 @@ def compile_ekf(
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
+
+    control_size = len(state_model.control)
+    if process_noise.shape != (control_size, control_size):
+        raise ModelConstructionError(
+            f"Process Noise shape {process_noise.shape} does not match control set {state_model.control} of length {control_size}"
+        )
 
     parser = argparse.ArgumentParser(prog="generator.py")
     parser.add_argument("--templates")

@@ -4,10 +4,10 @@ from formak import cpp, ui
 
 cpp_implementation = cpp.compile_ekf(
     state_model=ui.Model(
-        ui.Symbol("dt"),
-        set(ui.symbols(["x", "y"])),
-        set(ui.symbols(["a"])),
-        {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        dt=ui.Symbol("dt"),
+        state=set(ui.symbols(["x", "y"])),
+        control=set(ui.symbols(["a"])),
+        state_model={ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
     ),
     process_noise=np.eye(2) * 0.5,
     sensor_models={

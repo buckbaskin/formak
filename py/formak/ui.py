@@ -19,6 +19,10 @@ class Model:
         self.state = state
         self.control = control
         self.state_model = state_model
+        # TODO(buck): remove these unused arguments
+        # process_noise=None,
+        # sensor_models=None,
+        # sensor_noises=None,
 
         for k in list(self.state_model.keys()):
             self.state_model[k] = simplify(self.state_model[k])
