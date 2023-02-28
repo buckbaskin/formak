@@ -176,6 +176,16 @@ class ExtendedKalmanFilter:
         self.arglist = [state_model.dt] + self.arglist_state + self.arglist_control
 
         self._process_model = BasicBlock(self._translate_process_model(state_model))
+        self._process_jacobian = BasicBlock(
+            self._translate_process_jacobian(state_model)
+        )
+
+        self._control_jacobian = BasicBlock(
+            self._translate_control_jacobian(state_model)
+        )
+        self._control_covariance = BasicBlock(
+            self._translate_control_covariance(process_noise)
+        )
 
         # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
         self.sensorlist = sorted(
@@ -204,35 +214,75 @@ class ExtendedKalmanFilter:
             expr_after = expr_before.subs(subs_set)
             yield f"double {a.name}", expr_after
 
-    def _translate_process_jacobian_impl(self, sensor_model_mapping):
-        # TODO(buck): Complete the calculation of the jacobian, noise as part of the process_model. Start here
+    def process_model_body(self):
+        return "{impl}\nreturn {return_};".format(
+            impl=self._process_model.compile(),
+            return_=self._return,
+        )
+
+    def _translate_process_jacobian(self, symbolic_model):
         subs_set = [
             (
                 member,
                 Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_control.{}()".format(member)),
+            )
+            for member in self.arglist_control
         ]
 
-        for idx, symbol in enumerate(arglist_state):
-            model = symbolic_model.state_model[a]
+        for idx, symbol in enumerate(self.arglist_state):
+            model = symbolic_model.state_model[symbol]
             for state_idx, state in enumerate(self.arglist_state):
                 assignment = f"jacobian({idx}, {state_idx})"
                 expr_before = diff(model, state)
                 expr_after = expr_before.subs(subs_set)
                 yield assignment, expr_after
 
+    def process_jacobian_body(self):
+        typename = "ExtendedKalmanFilter"
+        prefix = f"{typename}::ProcessJacobianT jacobian;"
+        impl = self._process_jacobian.compile()
+        return f"{prefix}\n{impl}\nreturn jacobian;"
+
+    def _translate_control_jacobian(self, symbolic_model):
+        subs_set = [
+            (
+                member,
+                Symbol("input.state.{}()".format(member)),
+            )
+            for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_control.{}()".format(member)),
+            )
+            for member in self.arglist_control
+        ]
+
+        for idx, symbol in enumerate(self.arglist_state):
+            model = symbolic_model.state_model[symbol]
+            for control_idx, control in enumerate(self.arglist_control):
+                assignment = f"jacobian({idx}, {control_idx})"
+                expr_before = diff(model, control)
+                expr_after = expr_before.subs(subs_set)
+                yield assignment, expr_after
+
+    def control_jacobian_body(self):
+        typename = "ExtendedKalmanFilter"
+        prefix = f"{typename}::ControlJacobianT jacobian;"
+        impl = self._control_jacobian.compile()
+        return f"{prefix}\n{impl}\nreturn jacobian;"
+
     def _translate_return(self):
         content = ", ".join(
             (".{name}={name}".format(name=name) for name in self.arglist_state)
         )
         return "State({" + content + "});"
-
-    def process_model_body(self):
-        return "{impl}\nreturn {return_};".format(
-            impl=self._process_model.compile(),
-            return_=self._return,
-        )
 
     def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
@@ -289,6 +339,19 @@ class ExtendedKalmanFilter:
             % (name, idx, name, idx)
             for idx, name in enumerate(self.arglist_control)
         )
+
+    def _translate_control_covariance(self, covariance):
+        rows, cols = covariance.shape
+        for i in range(rows):
+            for j in range(cols):
+                yield f"covariance({i}, {j})", covariance[i, j]
+
+    def control_covariance_body(self):
+        typename = "ExtendedKalmanFilter"
+        prefix = f"{typename}::CovarianceT covariance;"
+        body = self._control_covariance
+        suffix = "return covariance;"
+        return prefix + "\n" + body.compile() + "\n" + suffix
 
     def _translate_sensor_model(self, sensor_model_mapping):
         subs_set = [
