@@ -201,8 +201,8 @@ TEST(EKF, process_jacobian) {
 
     EXPECT_GT(next.covariance.data(0, 0), 1.0);
     EXPECT_GT(next.covariance.data(1, 1), 1.0);
-    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), 0.0);
-    EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), 0.0);
+    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), state.x());
+    EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), next.covariance.data(0, 1));
   }
 }
 

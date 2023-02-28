@@ -343,9 +343,6 @@ class ExtendedKalmanFilter:
 
     def _translate_control_covariance(self, covariance):
         rows, cols = covariance.shape
-        print("covariance.shape")
-        print(rows, cols)
-        1 / 0
         for i in range(rows):
             for j in range(cols):
                 yield f"covariance({i}, {j})", covariance[i, j]

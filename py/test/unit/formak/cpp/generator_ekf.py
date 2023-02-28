@@ -9,7 +9,7 @@ cpp_implementation = cpp.compile_ekf(
         control=set(ui.symbols(["a"])),
         state_model={ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
     ),
-    process_noise=np.eye(2) * 0.5,
+    process_noise=np.eye(1) * 0.25,
     sensor_models={
         "simple": {"reading1": ui.Symbol("x")},
         "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
