@@ -206,4 +206,45 @@ TEST(EKF, process_jacobian) {
   }
 }
 
+TEST(EKF, process_noise) {
+  double dt = 0.05;
+
+  double x = -1.0;
+  double y = 2.0;
+  {
+    State state({x, y});
+    Covariance covariance;
+    Control control;
+
+    ExtendedKalmanFilter::CovarianceT process_noise =
+        ExtendedKalmanFilter::ProcessModel::covariance(dt, {state, covariance},
+                                                       control);
+
+    EXPECT_EQ(process_noise.rows(), 1);
+    EXPECT_EQ(process_noise.cols(), 1);
+    EXPECT_DOUBLE_EQ(process_noise(0, 0), 0.25);
+  }
+}
+
+TEST(EKF, control_jacobian) {
+  double dt = 0.05;
+
+  double x = -1.0;
+  double y = 2.0;
+  {
+    State state({x, y});
+    Covariance covariance;
+    Control control;
+
+    ExtendedKalmanFilter::ControlJacobianT jacobian =
+        ExtendedKalmanFilter::ProcessModel::control_jacobian(
+            dt, {state, covariance}, control);
+    EXPECT_EQ(jacobian.rows(), 2);
+    EXPECT_EQ(jacobian.cols(), 1);
+
+    EXPECT_DOUBLE_EQ(jacobian(0, 0), 0.0);
+    EXPECT_DOUBLE_EQ(jacobian(1, 0), dt);
+  }
+}
+
 }  // namespace unit
