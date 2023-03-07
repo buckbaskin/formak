@@ -136,8 +136,10 @@ git_repository(
 new_git_repository(
     name = "rapidcheck",
     build_file = "@//:rapidcheck.BUILD",
-    commit = "8fafda42e732164db58003e542196e94a28481f9",
-    remote = "https://github.com/emil-e/rapidcheck.git",
+    # commit = "8fafda42e732164db58003e542196e94a28481f9",
+    # remote = "https://github.com/emil-e/rapidcheck.git",
+    commit = "6cc1113161b89560eec2953fa2b294403317d070",
+    remote = "https://github.com/buckbaskin/rapidcheck.git",
 )
 
 ### Skylib

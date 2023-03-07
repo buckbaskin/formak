@@ -133,7 +133,7 @@ py_test_suite(
 )
 
 py_test_suite(
-    name = "integration",
+    name = "integration-py",
     size = "medium",
     srcs = glob([
         "test/formak/**/*.py",
@@ -170,6 +170,19 @@ cc_test_suite(
     name = "unit-cpp",
     srcs = glob(
         ["test/unit/**/*.cpp"],
+        allow_empty = False,
+    ),
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test_suite(
+    name = "integration-cpp",
+    size = "medium",
+    srcs = glob([
+        "test/formak/**/*.cpp"],
         allow_empty = False,
     ),
     deps = [
