@@ -138,7 +138,7 @@ new_git_repository(
     build_file = "@//:rapidcheck.BUILD",
     # commit = "8fafda42e732164db58003e542196e94a28481f9",
     # remote = "https://github.com/emil-e/rapidcheck.git",
-    commit = "6cc1113161b89560eec2953fa2b294403317d070",
+    commit = "9d4f24b70cc5ed1dc1a87f25048a3a49c55a50a2",
     remote = "https://github.com/buckbaskin/rapidcheck.git",
 )
 
