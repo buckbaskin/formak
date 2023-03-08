@@ -5,7 +5,7 @@ build --copt -Wextra
 build --copt -Wdouble-promotion
 # build --copt -Wconversion # disabled for an implicit conversion in GTest
 build --copt -Wfloat-conversion
-build --copt -Wsign-conversion
+# build --copt -Wsign-conversion # disabled for rapidcheck
 build --copt -Wno-unused-parameter
 # build --copt -Wpedantic # disabled for now so I can use designated initializers
 build --copt -Werror
