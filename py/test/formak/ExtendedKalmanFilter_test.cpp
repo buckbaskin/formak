@@ -1,3 +1,4 @@
+#include <formak/testing/stats.h>
 #include <gtest/gtest.h>
 #include <rapidcheck/gtest.h>
 #include <unit/simple-ekf.h>  // Generated
@@ -21,22 +22,29 @@ RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
   RC_ASSERT(next.state.x() == x * y);
   RC_ASSERT(next.state.y() == y + a * dt);
 
-  FAIL(
-      "Need to check to see if the example I'm building from has more test "
-      "assertions");
+  FAIL() << "Need to check to see if the example I'm building from has more "
+            "test assertions";
 }
 
-RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y, double a)) {
+RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
   // def test_EKF_sensor_property(x, y, a):
   unit::ExtendedKalmanFilter ekf;
   double dt = 0.1;
 
-  unit::Control control({a});
   unit::State state({x, y});
   unit::Covariance covariance;
 
-  RC_PRE(std::isfinite(x) && std::isfinite(y) && std::isfinite(a));
-  RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100 && std::abs(a) < 1e100);
+  RC_PRE(std::isfinite(x) && std::isfinite(y));
+  RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100);
+
+  double reading = 1.0;
+  SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple({reading})};
+  auto next = ekf.sensor_model({state, covariance}, simple_reading);
+
+  //     first_innovation = ekf.innovations["simple"]
+
+  double starting_central_probability =
+      MultivariateNormal(covariance).pdf(state_vector)
 
   // def test_EKF_sensor_property(x, y, a):
   //     config = {}
