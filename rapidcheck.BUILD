@@ -18,6 +18,13 @@ cc_library(
 )
 
 cc_library(
+    name = "extras-gtest",
+    hdrs = ["extras/gtest/include/rapidcheck/gtest.h"],
+    strip_include_prefix = "extras/gtest/include",
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
     name = "src-detail",
     srcs = glob(
         ["src/detail/*.cpp"],
@@ -27,7 +34,10 @@ cc_library(
     ]),
     strip_include_prefix = "src",
     visibility = ["//visibility:private"],
-    deps = [":include-impl"],
+    deps = [
+        "extras-gtest",
+        ":include-impl",
+    ],
 )
 
 cc_library(

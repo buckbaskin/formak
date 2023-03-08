@@ -181,12 +181,15 @@ cc_test_suite(
 cc_test_suite(
     name = "integration-cpp",
     size = "medium",
-    srcs = glob([
-        "test/formak/**/*.cpp"],
+    srcs = glob(
+        [
+            "test/formak/**/*.cpp",
+        ],
         allow_empty = False,
     ),
     deps = [
         ":simple-model",
         ":simple-ekf",
+        "@rapidcheck",
     ] + CC_TEST_DEPS,
 )
