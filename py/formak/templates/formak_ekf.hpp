@@ -1,8 +1,10 @@
 #pragma once
 
-#include <Eigen/Dense>  // Matrix
-#include <cstddef>      // size_t
-#include <iostream>     // std::cout, debugging
+#include <Eigen/Dense>    // Matrix
+#include <cstddef>        // size_t
+#include <iostream>       // std::cout, debugging
+#include <optional>       // optional
+#include <unordered_map>  // unordered_map
 
 // clang-format off
 namespace {{namespace}} {
@@ -14,21 +16,25 @@ namespace {{namespace}} {
   };
 
   struct State {
+    static constexpr size_t rows = {{State_size}};
+    static constexpr size_t cols = 1;
+    using DataT = Eigen::Matrix<double, rows, cols>;
+
     State();
     State(const StateOptions& options);
     // clang-format off
   {{State_members}}
     // clang-format on
-    Eigen::Matrix<double, {{State_size}}, 1> data =
-        Eigen::Matrix<double, {{State_size}}, 1>::Zero();
+    DataT data = DataT::Zero();
   };
 
   struct Covariance {
+    using DataT = Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
+
     // clang-format off
   {{Covariance_members}}
     // clang-format on
-    Eigen::Matrix<double, {{State_size}}, {{State_size}}> data =
-        Eigen::Matrix<double, {{State_size}}, {{State_size}}>::Identity();
+    DataT data = DataT::Identity();
   };
 
   struct ControlOptions {
@@ -38,13 +44,14 @@ namespace {{namespace}} {
   };
 
   struct Control {
+    using DataT = Eigen::Matrix<double, {{Control_size}}, 1>;
+
     Control();
     Control(const ControlOptions& options);
     // clang-format off
-  {{Control_members}}
+    {{Control_members}}
     // clang-format on
-    Eigen::Matrix<double, {{Control_size}}, 1> data =
-        Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
+    DataT data = DataT::Zero();
   };
 
   struct StateAndVariance {
@@ -165,6 +172,7 @@ namespace {{namespace}} {
       // innovation = z - z_est
       const typename ReadingT::InnovationT innovation =
           reading.data - reading_est.data;
+      _innovations[Identifier] = innovation;
 
       // Update State Estimate
       // next_state = state + K * innovation
@@ -183,6 +191,16 @@ namespace {{namespace}} {
       return StateAndVariance{.state = next_state,
                               .covariance = next_covariance};
     }
+
+    std::optional<State::DataT> innovations(SensorId sensorId) {
+      if (_innovations.count(sensorId) > 0) {
+        return _innovations[sensorId];
+      }
+      return {};
+    }
+
+   private:
+    std::unordered_map<SensorId, State::DataT> _innovations;
   };
 
   class ExtendedKalmanFilterProcessModel {

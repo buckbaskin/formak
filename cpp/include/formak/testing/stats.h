@@ -19,14 +19,14 @@ class MultivariateNormal {
   ///
   /// Note: Assumes covariance is positive definite
   double pdf(const StateT& state) {
-    StateT::DataT offset = state.data - _center.data;
-    Covariance::DataT inverse = _covariance.data.inverse();
-    double mahalanobis_like = offset.tranpose() * inverse * offset;
+    typename StateT::DataT offset = state.data - _center.data;
+    typename CovarianceT::DataT inverse = _covariance.data.inverse();
+    double mahalanobis_like = offset.transpose() * inverse * offset;
     double numerator = std::exp(-1 / 2 * mahalanobis_like);
 
     size_t k = state.rows;
-    double determinant = _covariance.determinant();
-    double denominator = std::sqrt(std::pow(2 * pi, k) * determinant);
+    double determinant = _covariance.data.determinant();
+    double denominator = std::sqrt(std::pow(2 * M_PI, k) * determinant);
 
     return numerator / denominator;
   }
