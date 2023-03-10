@@ -197,7 +197,9 @@ TEST_P(CppModelFailureCasesSensor, RerunCases) {
 }
 
 INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCasesSensor,
-                         ::testing::Values(Options{0.0, 0.0}));
+                         ::testing::Values(Options{0.0, 0.0},
+                                           Options{-538778789133922.0,
+                                                   -538778789133922.0}));
 
 }  // namespace ekf_sensor_property_test
 
