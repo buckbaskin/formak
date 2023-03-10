@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-namespace formak::testing::stats {
+namespace formak::utils::stats {
 
 template <typename CovarianceT>
 bool IsPositiveDefinite(const CovarianceT& covariance) {
@@ -43,4 +43,4 @@ class MultivariateNormal {
   CovarianceT _covariance;
 };
 
-}  // namespace formak::testing::stats
+}  // namespace formak::utils::stats

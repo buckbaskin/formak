@@ -1,4 +1,4 @@
-#include <formak/testing/stats.h>
+#include <formak/utils/stats.h>
 #include <gtest/gtest.h>
 #include <rapidcheck/gtest.h>
 #include <unit/simple-ekf.h>  // Generated
@@ -6,8 +6,8 @@
 namespace integration {
 
 namespace ekf_process_property_test {
-using formak::testing::stats::IsPositiveDefinite;
-using formak::testing::stats::MultivariateNormal;
+using formak::utils::stats::IsPositiveDefinite;
+using formak::utils::stats::MultivariateNormal;
 
 RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
   // def test_EKF_process_property(state_x, state_y, control_a):
@@ -95,7 +95,7 @@ INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCasesProcess,
 }  // namespace ekf_process_property_test
 
 namespace ekf_sensor_property_test {
-using formak::testing::stats::MultivariateNormal;
+using formak::utils::stats::MultivariateNormal;
 
 RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
   // def test_EKF_sensor_property(x, y, a):

@@ -190,7 +190,7 @@ cc_test_suite(
     deps = [
         ":simple-model",
         ":simple-ekf",
-        "//cpp:testing-stats",
+        "//cpp:utils-stats",
         "@rapidcheck",
     ] + CC_TEST_DEPS,
 )

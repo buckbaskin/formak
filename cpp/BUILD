@@ -1,7 +1,7 @@
 cc_library(
-    name = "testing-stats",
+    name = "utils-stats",
     hdrs = [
-        "include/formak/testing/stats.h",
+        "include/formak/utils/stats.h",
     ],
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
