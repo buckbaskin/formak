@@ -5,9 +5,11 @@
 
 namespace formak::utils::stats {
 
-template <typename CovarianceT>
-bool IsPositiveDefinite(const CovarianceT& covariance) {
-  Eigen::LLT<typename CovarianceT::DataT> llt(covariance.data);
+template <typename T, int RowsAtCompileTime, int ColsAtCompileTime>
+bool IsPositiveDefinite(
+    const Eigen::Matrix<T, RowsAtCompileTime, ColsAtCompileTime>& covariance) {
+  Eigen::LLT<typename Eigen::Matrix<T, RowsAtCompileTime, ColsAtCompileTime>>
+      llt(covariance);
   return llt.info() == Eigen::Success;
 }
 
