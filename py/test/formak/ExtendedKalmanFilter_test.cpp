@@ -24,7 +24,7 @@ RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
 
   auto next = ekf.process_model(dt, {state, covariance}, control);
 
-  RC_ASSERT(next.state.x() == x * y);
+  RC_ASSERT(next.state.x() == x + y * dt);
   RC_ASSERT(next.state.y() == y + a * dt);
 
   RC_ASSERT(IsPositiveDefinite(next.covariance));
@@ -71,7 +71,7 @@ TEST_P(CppModelFailureCasesProcess, RerunCases) {
 
   auto next = ekf.process_model(dt, {state, covariance}, control);
 
-  EXPECT_EQ(next.state.x(), x * y);
+  EXPECT_EQ(next.state.x(), x + y * dt);
   EXPECT_EQ(next.state.y(), y + a * dt);
 
   ASSERT_TRUE(IsPositiveDefinite(next.covariance));
