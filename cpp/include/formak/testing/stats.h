@@ -1,8 +1,15 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <cmath>
 
 namespace formak::testing::stats {
+
+template <typename CovarianceT>
+bool IsPositiveDefinite(const CovarianceT& covariance) {
+  Eigen::LLT<typename CovarianceT::DataT> llt(covariance.data);
+  return llt.info() == Eigen::Success;
+}
 
 template <typename StateT, typename CovarianceT>
 class MultivariateNormal {

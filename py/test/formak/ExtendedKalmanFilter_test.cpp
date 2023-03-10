@@ -6,6 +6,7 @@
 namespace integration {
 
 namespace ekf_process_property_test {
+using formak::testing::stats::IsPositiveDefinite;
 using formak::testing::stats::MultivariateNormal;
 
 RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
@@ -19,11 +20,14 @@ RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
 
   RC_PRE(std::isfinite(x) && std::isfinite(y) && std::isfinite(a));
   RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100 && std::abs(a) < 1e100);
+  RC_PRE(IsPositiveDefinite(covariance));
 
   auto next = ekf.process_model(dt, {state, covariance}, control);
 
   RC_ASSERT(next.state.x() == x * y);
   RC_ASSERT(next.state.y() == y + a * dt);
+
+  RC_ASSERT(IsPositiveDefinite(next.covariance));
 
   // try
   double starting_central_probability =
@@ -63,11 +67,14 @@ TEST_P(CppModelFailureCasesProcess, RerunCases) {
   // Don't need pre for hand-inspected test cases
   // RC_PRE(std::isfinite(x) && std::isfinite(y) && std::isfinite(a));
   // RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100 && std::abs(a) < 1e100);
+  // RC_PRE(IsPositiveDefinite(covariance));
 
   auto next = ekf.process_model(dt, {state, covariance}, control);
 
   EXPECT_EQ(next.state.x(), x * y);
   EXPECT_EQ(next.state.y(), y + a * dt);
+
+  ASSERT_TRUE(IsPositiveDefinite(next.covariance));
 
   // try
   double starting_central_probability =
