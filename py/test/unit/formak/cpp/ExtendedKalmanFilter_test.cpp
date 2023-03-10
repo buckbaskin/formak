@@ -5,12 +5,18 @@ namespace unit {
 
 TEST(EKF, State_default_initialization_is_zero) {
   State state;
+  EXPECT_EQ(state.data.rows(), 2);
+  EXPECT_EQ(state.data.cols(), 1);
+
   EXPECT_EQ(state.x(), 0.0);
   EXPECT_EQ(state.y(), 0.0);
 }
 
 TEST(EKF, Covariance_default_initialization_is_identity) {
   Covariance covariance;
+  EXPECT_EQ(covariance.data.rows(), 2);
+  EXPECT_EQ(covariance.data.cols(), 2);
+
   EXPECT_EQ(covariance.x(), 1.0);
   EXPECT_EQ(covariance.y(), 1.0);
 
@@ -99,6 +105,9 @@ TEST(EKF, sensor) {
   double reading = 1.0;
 
   SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple({reading})};
+  EXPECT_EQ(simple_reading.data.rows(), 1);
+  EXPECT_EQ(simple_reading.data.cols(), 1);
+
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
@@ -106,6 +115,9 @@ TEST(EKF, sensor) {
 
   // TODO(buck): Check what this should be
   SensorReading<(SensorId::COMBINED), Combined> combined{Combined({reading})};
+  EXPECT_EQ(combined.data.rows(), 1);
+  EXPECT_EQ(combined.data.cols(), 1);
+
   next = ekf.sensor_model({state, covariance}, combined);
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
