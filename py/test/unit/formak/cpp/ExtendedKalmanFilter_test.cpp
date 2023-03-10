@@ -71,7 +71,7 @@ TEST(EKF, process_with_control) {
 
     auto next = ekf.process_model(dt, {state, covariance}, control);
 
-    EXPECT_DOUBLE_EQ(next.state.x(), 0.0);
+    EXPECT_DOUBLE_EQ(next.state.x(), 0.1);
     EXPECT_DOUBLE_EQ(next.state.y(), 1.02);
   }
 
@@ -82,7 +82,7 @@ TEST(EKF, process_with_control) {
 
     auto next = ekf.process_model(dt, {state, covariance}, control);
 
-    EXPECT_DOUBLE_EQ(next.state.x(), 0.0);
+    EXPECT_DOUBLE_EQ(next.state.x(), 1.0);
     EXPECT_DOUBLE_EQ(next.state.y(), 0.02);
   }
 
@@ -91,7 +91,7 @@ TEST(EKF, process_with_control) {
 
     auto next = ekf.process_model(dt, {state, covariance}, control);
 
-    EXPECT_DOUBLE_EQ(next.state.x(), 1.0);
+    EXPECT_DOUBLE_EQ(next.state.x(), 1.1);
     EXPECT_DOUBLE_EQ(next.state.y(), 1.02);
   }
 }
@@ -105,8 +105,8 @@ TEST(EKF, sensor) {
   double reading = 1.0;
 
   SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple({reading})};
-  EXPECT_EQ(simple_reading.data.rows(), 1);
-  EXPECT_EQ(simple_reading.data.cols(), 1);
+  EXPECT_EQ(simple_reading.reading.data.rows(), 1);
+  EXPECT_EQ(simple_reading.reading.data.cols(), 1);
 
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
@@ -115,8 +115,8 @@ TEST(EKF, sensor) {
 
   // TODO(buck): Check what this should be
   SensorReading<(SensorId::COMBINED), Combined> combined{Combined({reading})};
-  EXPECT_EQ(combined.data.rows(), 1);
-  EXPECT_EQ(combined.data.cols(), 1);
+  EXPECT_EQ(combined.reading.data.rows(), 1);
+  EXPECT_EQ(combined.reading.data.cols(), 1);
 
   next = ekf.sensor_model({state, covariance}, combined);
 
@@ -213,7 +213,7 @@ TEST(EKF, process_jacobian) {
 
     EXPECT_GT(next.covariance.data(0, 0), 1.0);
     EXPECT_GT(next.covariance.data(1, 1), 1.0);
-    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), state.x());
+    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), dt);
     EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), next.covariance.data(0, 1));
   }
 }
