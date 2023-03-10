@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>    // Matrix
+#include <any>            // any
 #include <cstddef>        // size_t
 #include <iostream>       // std::cout, debugging
 #include <optional>       // optional
@@ -82,6 +83,7 @@ namespace {{namespace}} {
 
   // ReadingT
   struct {{reading_type.typename}} {
+    using DataT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
     using CovarianceT = Eigen::Matrix<double, {{reading_type.size}}, {{reading_type.size}}>;
     using InnovationT = Eigen::Matrix<double, {{reading_type.size}}, 1>;
     using KalmanGainT = Eigen::Matrix<double, {{State_size}}, {{reading_type.size}}>;
@@ -93,7 +95,7 @@ namespace {{namespace}} {
 
     {{reading_type.members}}
 
-  Eigen::Matrix<double, {{reading_type.size}}, 1> data = Eigen::Matrix<double, {{reading_type.size}}, 1>::Zero();
+    DataT data = DataT::Zero();
 
     constexpr static size_t size = {{reading_type.size}};
   };
@@ -146,9 +148,6 @@ namespace {{namespace}} {
       const ReadingT reading_est =
           ReadingT::SensorModel::model(input, input_reading);  // z_est
 
-      std::cout << "reading " << reading << std::endl;
-      std::cout << "reading_est " << reading_est << std::endl;
-
       // H = Jacobian(z_est w.r.t. state)
       const typename ReadingT::SensorJacobianT H =
           ReadingT::SensorModel::jacobian(input, input_reading);
@@ -192,15 +191,17 @@ namespace {{namespace}} {
                               .covariance = next_covariance};
     }
 
-    std::optional<State::DataT> innovations(SensorId sensorId) {
-      if (_innovations.count(sensorId) > 0) {
-        return _innovations[sensorId];
+    template <SensorId Identifier, typename ReadingT>
+    std::optional<typename ReadingT::InnovationT> innovations() {
+      if (_innovations.count(Identifier) > 0) {
+        return std::any_cast<typename ReadingT::InnovationT>(
+            _innovations[Identifier]);
       }
       return {};
     }
 
    private:
-    std::unordered_map<SensorId, State::DataT> _innovations;
+    std::unordered_map<SensorId, std::any> _innovations;
   };
 
   class ExtendedKalmanFilterProcessModel {
