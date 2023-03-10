@@ -44,10 +44,11 @@ struct Options {
   double a;
 };
 
-class CppModelFailureCases : public ::testing::Test,
-                             public ::testing::WithParamInterface<Options> {};
+class CppModelFailureCasesProcess
+    : public ::testing::Test,
+      public ::testing::WithParamInterface<Options> {};
 
-TEST_P(CppModelFailureCases, RerunCases) {
+TEST_P(CppModelFailureCasesProcess, RerunCases) {
   double a = GetParam().a;
   double x = GetParam().x;
   double y = GetParam().y;
@@ -81,14 +82,15 @@ TEST_P(CppModelFailureCases, RerunCases) {
   EXPECT_LT(ending_central_probability, starting_central_probability);
 }
 
-INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCases,
+INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCasesProcess,
                          ::testing::Values(Options{0.0, 0.0, 0.0}));
 
 }  // namespace ekf_process_property_test
 
-RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
-  using formak::testing::stats::MultivariateNormal;
+namespace ekf_sensor_property_test {
+using formak::testing::stats::MultivariateNormal;
 
+RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
   // def test_EKF_sensor_property(x, y, a):
   unit::ExtendedKalmanFilter ekf;
 
@@ -130,5 +132,66 @@ RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
   RC_ASSERT(first_innovation.norm() > second_innovation.norm() ||
             first_innovation.norm() == 0.0);
 }
+
+struct Options {
+  double x;
+  double y;
+};
+
+class CppModelFailureCasesSensor
+    : public ::testing::Test,
+      public ::testing::WithParamInterface<Options> {};
+
+TEST_P(CppModelFailureCasesSensor, RerunCases) {
+  double x = GetParam().x;
+  double y = GetParam().y;
+
+  // def test_EKF_sensor_property(x, y, a):
+  unit::ExtendedKalmanFilter ekf;
+
+  unit::State state({x, y});
+  unit::Covariance covariance;
+
+  // Don't need pre for hand-inspected test cases
+  // RC_PRE(std::isfinite(x) && std::isfinite(y));
+  // RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100);
+
+  double reading = 1.0;
+  unit::SensorReading<(unit::SensorId::SIMPLE), unit::Simple> simple_reading{
+      unit::Simple({reading})};
+  auto next = ekf.sensor_model({state, covariance}, simple_reading);
+
+  auto maybe_first_innovation =
+      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  ASSERT_TRUE(maybe_first_innovation.has_value());
+  typename unit::Simple::InnovationT first_innovation =
+      maybe_first_innovation.value();
+
+  // try
+  double starting_central_probability =
+      MultivariateNormal(unit::State{}, covariance).pdf(unit::State{});
+  double ending_central_probability =
+      MultivariateNormal(unit::State{}, next.covariance).pdf(unit::State{});
+  //     except np.linalg.LinAlgError:
+
+  RC_ASSERT(ending_central_probability > starting_central_probability);
+
+  // Run this to get a second innovation
+  [[maybe_unused]] auto next2 = ekf.sensor_model(next, simple_reading);
+
+  auto maybe_second_innovation =
+      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  ASSERT_TRUE(maybe_second_innovation.has_value());
+  typename unit::Simple::InnovationT second_innovation =
+      maybe_second_innovation.value();
+
+  EXPECT_TRUE(first_innovation.norm() > second_innovation.norm() ||
+              first_innovation.norm() == 0.0);
+}
+
+INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCasesSensor,
+                         ::testing::Values(Options{0.0, 0.0}));
+
+}  // namespace ekf_sensor_property_test
 
 }  // namespace integration
