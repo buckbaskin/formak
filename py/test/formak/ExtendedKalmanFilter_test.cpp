@@ -5,6 +5,9 @@
 
 namespace integration {
 
+namespace ekf_process_property_test {
+using formak::testing::stats::MultivariateNormal;
+
 RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
   // def test_EKF_process_property(state_x, state_y, control_a):
   unit::ExtendedKalmanFilter ekf;
@@ -22,9 +25,66 @@ RC_GTEST_PROP(CppModel, EKF_process_property, (double x, double y, double a)) {
   RC_ASSERT(next.state.x() == x * y);
   RC_ASSERT(next.state.y() == y + a * dt);
 
-  FAIL() << "Need to check to see if the example I'm building from has more "
-            "test assertions";
+  // try
+  double starting_central_probability =
+      MultivariateNormal(unit::State{}, covariance).pdf(unit::State{});
+  double ending_central_probability =
+      MultivariateNormal(unit::State{}, next.covariance).pdf(unit::State{});
+  //     except np.linalg.LinAlgError:
+
+  std::cout << "next.covariance" << std::endl;
+  std::cout << next.covariance.data << std::endl;
+
+  RC_ASSERT(ending_central_probability < starting_central_probability);
 }
+
+struct Options {
+  double x;
+  double y;
+  double a;
+};
+
+class CppModelFailureCases : public ::testing::Test,
+                             public ::testing::WithParamInterface<Options> {};
+
+TEST_P(CppModelFailureCases, RerunCases) {
+  double a = GetParam().a;
+  double x = GetParam().x;
+  double y = GetParam().y;
+
+  unit::ExtendedKalmanFilter ekf;
+  double dt = 0.1;
+
+  unit::Control control({a});
+  unit::State state({x, y});
+  unit::Covariance covariance;
+
+  // Don't need pre for hand-inspected test cases
+  // RC_PRE(std::isfinite(x) && std::isfinite(y) && std::isfinite(a));
+  // RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100 && std::abs(a) < 1e100);
+
+  auto next = ekf.process_model(dt, {state, covariance}, control);
+
+  EXPECT_EQ(next.state.x(), x * y);
+  EXPECT_EQ(next.state.y(), y + a * dt);
+
+  // try
+  double starting_central_probability =
+      MultivariateNormal(unit::State{}, covariance).pdf(unit::State{});
+  double ending_central_probability =
+      MultivariateNormal(unit::State{}, next.covariance).pdf(unit::State{});
+  //     except np.linalg.LinAlgError:
+
+  std::cout << "next.covariance" << std::endl;
+  std::cout << next.covariance.data << std::endl;
+
+  EXPECT_LT(ending_central_probability, starting_central_probability);
+}
+
+INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCases,
+                         ::testing::Values(Options{0.0, 0.0, 0.0}));
+
+}  // namespace ekf_process_property_test
 
 RC_GTEST_PROP(CppModel, EKF_sensor_property, (double x, double y)) {
   using formak::testing::stats::MultivariateNormal;
