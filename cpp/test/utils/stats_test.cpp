@@ -23,7 +23,7 @@ TEST(IsPositiveDefiniteTest, Positive) {
 
 TEST(IsPositiveDefiniteTest, Negative) {
   ExampleT asymmetric = ExampleT::Identity();
-  asymmetric(3, 0) = 1.0;
+  asymmetric(2, 0) = 1.0;
 
   EXPECT_FALSE(IsPositiveDefinite(asymmetric));
 
@@ -32,7 +32,7 @@ TEST(IsPositiveDefiniteTest, Negative) {
   EXPECT_FALSE(IsPositiveDefinite(zero));
 
   ExampleT negative = ExampleT::Identity();
-  negative(1, 1) = -1;
+  negative(1, 1) = -1.0;
 
   EXPECT_FALSE(IsPositiveDefinite(negative));
 }
