@@ -156,5 +156,48 @@ TEST(MultivariteNormalPdfTest, AcrossVariance) {
   EXPECT_GT(middleVariance, moreVariance);
 }
 
+TEST(MultivariteNormalPdfTest, GoldenValues) {
+  // >>> from scipy.stats import multivariate_normal
+  // >>> import numpy as np
+  // >>> cov = np.eye(2)
+  // >>> cov[0,0] = 2.5e-7
+  // >>> cov[1,0] = 2.5e-5
+  // >>> cov[0,1] = 2.5e-5
+  // >>> cov[1,1] = 1.0025
+  // >>> multivariate_normal(cov=cov).pdf(np.array([[0,0]]))
+  // 318.309886183791
+  struct TestState {
+    const size_t rows = 2;
+    using DataT = Eigen::Matrix<double, 2, 1>;
+
+    DataT data = DataT::Zero();
+  };
+  struct TestCovariance {
+    const size_t rows = 2;
+    using DataT = Eigen::Matrix<double, 2, 2>;
+
+    DataT data = DataT::Identity();
+  };
+
+  TestState zero;
+  TestCovariance cov;
+  cov.data(0, 0) = 2.5e-7;
+  cov.data(1, 0) = 2.5e-5;
+  cov.data(0, 1) = 2.5e-5;
+  cov.data(1, 1) = 1.0025;
+
+  EXPECT_NEAR(MultivariateNormal(zero, cov).pdf(zero), 318.309886183791, 1e-12);
+
+  // >>> from scipy.stats import multivariate_normal
+  // >>> import numpy as np
+  // >>> cov = np.eye(2)
+  // >>> multivariate_normal(cov=cov).pdf(np.array([[0,0]]))
+  // 0.15915494309189535
+
+  cov.data = TestCovariance::DataT::Identity();
+  EXPECT_NEAR(MultivariateNormal(zero, cov).pdf(zero), 0.15915494309189535,
+              1e-12);
+}
+
 }  // namespace multivariate_normal_pdf_test
 }  // namespace formak::utils::stats

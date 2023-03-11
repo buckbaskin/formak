@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 
 import numpy as np
 from numpy.testing import assert_almost_equal
-from scipy.stats import multivariate_normal
 
 from formak import python, ui
 
