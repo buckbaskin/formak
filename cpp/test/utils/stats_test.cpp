@@ -51,7 +51,7 @@ struct TestCovariance {
   DataT data = DataT::Identity();
 };
 
-TEST(MultivariteNormalPdfTest, Basic) {
+TEST(MultivariteNormalPdfTest, BasicInDistribution) {
   TestState s;
   TestCovariance c;
 
@@ -63,6 +63,58 @@ TEST(MultivariteNormalPdfTest, Basic) {
   double offCenterPdf = distribution.pdf(s);
 
   EXPECT_GT(centeredPdf, offCenterPdf);
+}
+
+TEST(MultivariteNormalPdfTest, BasicInDistributionWithMoreVariance) {
+  TestState s;
+  TestCovariance c;
+  c.data *= 2;
+
+  MultivariateNormal distribution(s, c);
+
+  double centeredPdf = distribution.pdf(s);
+
+  s.data[0] = 1.0;
+  double offCenterPdf = distribution.pdf(s);
+
+  EXPECT_GT(centeredPdf, offCenterPdf);
+}
+
+TEST(MultivariteNormalPdfTest, BasicInDistributionWithLessVariance) {
+  TestState s;
+  TestCovariance c;
+  c.data *= 0.5;
+
+  MultivariateNormal distribution(s, c);
+
+  double centeredPdf = distribution.pdf(s);
+
+  s.data[0] = 1.0;
+  double offCenterPdf = distribution.pdf(s);
+
+  EXPECT_GT(centeredPdf, offCenterPdf);
+}
+
+TEST(MultivariteNormalPdfTest, AcrossVariance) {
+  TestState s;
+
+  double lessVariance = ([&s]() {
+    TestCovariance c;
+    c.data *= 0.5;
+    return MultivariateNormal(s, c).pdf(s);
+  })();
+  double middleVariance = ([&s]() {
+    TestCovariance c;
+    return MultivariateNormal(s, c).pdf(s);
+  })();
+  double moreVariance = ([&s]() {
+    TestCovariance c;
+    c.data *= 2.0;
+    return MultivariateNormal(s, c).pdf(s);
+  })();
+
+  EXPECT_GT(lessVariance, middleVariance);
+  EXPECT_GT(middleVariance, moreVariance);
 }
 
 }  // namespace multivariate_normal_pdf_test
