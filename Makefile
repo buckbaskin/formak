@@ -11,7 +11,24 @@ format:
 	bash actions/format.bash
 
 lint:
-	bash actions/lint.bash
+	bash actions/format.bash
+	# general code checks
+	flake8 --version
+	flake8 --config=common/setup.cfg py/ | grep -v "local variable '_"
+	# security oriented checks
+	bandit -c common/bandit.yaml -r py/
+	# remove unused
+	autoflake -i -r py/
+	# move to modern patterns
+	pyupgrade $(ag --python -g "." py/ experimental/)
+	# format docstrings
+	pydocstringformatter -w $(ag --python -g "." py/)
+	# pre-commit
+	pre-commit --version
+	pre-commit run --all-files
+	# interrogate
+	interrogate --version
+	interrogate -vv py/formak/
 
 tidy:
 	bash actions/tidy.bash

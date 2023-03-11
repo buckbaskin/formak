@@ -6,13 +6,10 @@ from os.path import dirname
 from typing import Any, List, Tuple
 
 import jinja2
-from colorama import Fore as cF
-from colorama import Style as cS
-from colorama import init
 from formak.exceptions import ModelConstructionError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
-from sympy import Symbol, ccode, cse, diff
+from sympy import Symbol, ccode, diff
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
@@ -130,14 +127,12 @@ class Model:
 
     def stateoptions_members(self):
         return "\n".join(
-            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
-            for idx, symbol in enumerate(self.arglist_state)
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
     def controloptions_members(self):
         return "\n".join(
-            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
-            for idx, symbol in enumerate(self.arglist_control)
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
         )
 
 
@@ -159,7 +154,7 @@ ReadingT = namedtuple(
 
 
 class ExtendedKalmanFilter:
-    """C++ implementation of the EKF"""
+    """C++ implementation of the EKF."""
 
     def __init__(
         self, state_model, process_noise, sensor_models, sensor_noises, config
@@ -281,7 +276,7 @@ class ExtendedKalmanFilter:
 
     def _translate_return(self):
         content = ", ".join(
-            (".{name}={name}".format(name=name) for name in self.arglist_state)
+            ".{name}={name}".format(name=name) for name in self.arglist_state
         )
         return "State({" + content + "});"
 
@@ -304,14 +299,12 @@ class ExtendedKalmanFilter:
 
     def stateoptions_members(self):
         return "\n".join(
-            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
-            for idx, symbol in enumerate(self.arglist_state)
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
     def controloptions_members(self):
         return "\n".join(
-            "double {name} = 0.0;".format(name=symbol.name, idx=idx)
-            for idx, symbol in enumerate(self.arglist_control)
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
         )
 
     def state_options_constructor_initializer_list(self):
@@ -369,7 +362,6 @@ class ExtendedKalmanFilter:
             yield f"double {assignment}", expr_after
 
     def reading_types(self, verbose=True):
-        state_size = len(self.arglist_state)
         for name, sensor_model_mapping, sensor_noise in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
@@ -390,12 +382,10 @@ class ExtendedKalmanFilter:
 
             body = BasicBlock(self._translate_sensor_model(sensor_model_mapping))
             return_ = (
-                "return %sOptions{" % (typename,)
+                "return {}Options{{".format(typename)
                 + ", ".join(
-                    (
-                        str(reading)
-                        for reading in sorted(list(sensor_model_mapping.keys()))
-                    )
+                    str(reading)
+                    for reading in sorted(list(sensor_model_mapping.keys()))
                 )
                 + "};"
             )
@@ -417,8 +407,8 @@ class ExtendedKalmanFilter:
                 + ")"
             )
             Options_members = "\n".join(
-                "double {name} = 0.0;".format(name=str(symbol), idx=idx)
-                for idx, symbol in enumerate(sorted(list(sensor_model_mapping.keys())))
+                f"double {str(symbol)} = 0.0;"
+                for symbol in sorted(list(sensor_model_mapping.keys()))
             )
 
             yield ReadingT(
@@ -442,7 +432,7 @@ class ExtendedKalmanFilter:
             for member in self.arglist_state
         ]
 
-        for reading_idx, (predicted_reading, model) in enumerate(
+        for reading_idx, (_predicted_reading, model) in enumerate(
             sorted(list(sensor_model_mapping.items()))
         ):
             for state_idx, state in enumerate(self.arglist_state):
