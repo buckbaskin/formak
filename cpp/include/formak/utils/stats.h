@@ -32,7 +32,7 @@ class MultivariateNormal {
     typename StateT::DataT offset = state.data - _center.data;
     typename CovarianceT::DataT inverse = _covariance.data.inverse();
     double mahalanobis_like = offset.transpose() * inverse * offset;
-    double numerator = std::exp(-1 / 2 * mahalanobis_like);
+    double numerator = std::exp(-1.0 / 2.0 * mahalanobis_like);
 
     size_t k = state.rows;
     double determinant = _covariance.data.determinant();

@@ -53,14 +53,53 @@ struct TestCovariance {
 
 TEST(MultivariteNormalPdfTest, BasicInDistribution) {
   TestState s;
+  TestState _center = s;
   TestCovariance c;
 
   MultivariateNormal distribution(s, c);
 
   double centeredPdf = distribution.pdf(s);
 
-  s.data[0] = 1.0;
+  {
+    typename TestState::DataT offset = s.data - _center.data;
+    std::cout << "offset 1 " << std::endl << offset << std::endl;
+    typename TestCovariance::DataT inverse = c.data.inverse();
+    double mahalanobis_like = offset.transpose() * inverse * offset;
+
+    std::cout << "mahalanobis_like " << mahalanobis_like << std::endl;
+    double numerator = std::exp(-0.5 * mahalanobis_like);
+
+    std::cout << "numerator " << numerator << std::endl;
+
+    size_t k = s.rows;
+    double determinant = c.data.determinant();
+    double denominator = std::sqrt(std::pow(2 * M_PI, k) * determinant);
+
+    std::cout << "result " << (numerator / denominator) << std::endl;
+  }
+
+  s.data(0, 0) = 1.0;
   double offCenterPdf = distribution.pdf(s);
+
+  {
+    typename TestState::DataT offset = s.data - _center.data;
+    std::cout << "offset 2 " << std::endl
+              << (s.data - _center.data) << std::endl;
+    typename TestCovariance::DataT inverse = c.data.inverse();
+    double mahalanobis_like = offset.transpose() * inverse * offset;
+
+    std::cout << "mahalanobis_like " << mahalanobis_like << std::endl;
+
+    double numerator = std::exp(-0.5 * mahalanobis_like);
+
+    std::cout << "numerator " << numerator << std::endl;
+
+    size_t k = s.rows;
+    double determinant = c.data.determinant();
+    double denominator = std::sqrt(std::pow(2 * M_PI, k) * determinant);
+
+    std::cout << "result " << (numerator / denominator) << std::endl;
+  }
 
   EXPECT_GT(centeredPdf, offCenterPdf);
 }
