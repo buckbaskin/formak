@@ -37,4 +37,33 @@ TEST(IsPositiveDefiniteTest, Negative) {
   EXPECT_FALSE(IsPositiveDefinite(negative));
 }
 }  // namespace is_positive_definite_test
+
+namespace multivariate_normal_pdf_test {
+struct TestState {
+  static constexpr size_t rows = 3;
+  using DataT = Eigen::Matrix<double, rows, 1>;
+
+  DataT data = DataT::Zero();
+};
+struct TestCovariance {
+  using DataT = Eigen::Matrix<double, 3, 3>;
+
+  DataT data = DataT::Identity();
+};
+
+TEST(MultivariteNormalPdfTest, Basic) {
+  TestState s;
+  TestCovariance c;
+
+  MultivariateNormal distribution(s, c);
+
+  double centeredPdf = distribution.pdf(s);
+
+  s.data[0] = 1.0;
+  double offCenterPdf = distribution.pdf(s);
+
+  EXPECT_GT(centeredPdf, offCenterPdf);
+}
+
+}  // namespace multivariate_normal_pdf_test
 }  // namespace formak::utils::stats
