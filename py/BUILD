@@ -166,12 +166,18 @@ cc_formak_model(
     ),
 )
 
-cc_test_suite(
-    name = "unit-cpp",
-    srcs = glob(
-        ["test/unit/**/*.cpp"],
-        allow_empty = False,
-    ),
+cc_test(
+    name = "unit-cpp-extended-kalman-filter-test",
+    srcs = ["test/unit/formak/cpp/ExtendedKalmanFilter_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-model-test",
+    srcs = ["test/unit/formak/cpp/Model_test.cpp"],
     deps = [
         ":simple-model",
         ":simple-ekf",

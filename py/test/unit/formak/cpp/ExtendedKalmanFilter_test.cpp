@@ -3,7 +3,7 @@
 
 namespace unit {
 
-TEST(EKF, State_default_initialization_is_zero) {
+TEST(EKF, StateDefaultInitializationIsZero) {
   State state;
   EXPECT_EQ(state.data.rows(), 2);
   EXPECT_EQ(state.data.cols(), 1);
@@ -12,7 +12,7 @@ TEST(EKF, State_default_initialization_is_zero) {
   EXPECT_EQ(state.y(), 0.0);
 }
 
-TEST(EKF, Covariance_default_initialization_is_identity) {
+TEST(EKF, CovarianceDefaultInitializationIsIdentity) {
   Covariance covariance;
   EXPECT_EQ(covariance.data.rows(), 2);
   EXPECT_EQ(covariance.data.cols(), 2);
@@ -24,7 +24,7 @@ TEST(EKF, Covariance_default_initialization_is_identity) {
   EXPECT_EQ(covariance.data(0, 1), 0.0);
 }
 
-TEST(EKF, Control_constructor) {
+TEST(EKF, ControlConstructor) {
   {
     Control control;
     EXPECT_DOUBLE_EQ(control.a(), 0.0);
@@ -36,7 +36,7 @@ TEST(EKF, Control_constructor) {
   }
 }
 
-TEST(EKF, State_constructor) {
+TEST(EKF, StateConstructor) {
   {
     State state;
     EXPECT_DOUBLE_EQ(state.x(), 0.0);
@@ -50,53 +50,43 @@ TEST(EKF, State_constructor) {
   }
 }
 
-TEST(EKF, process_with_control) {
+namespace process_with_control_test {
+struct Options {
+  double xStart;
+  double yStart;
+
+  double xEnd;
+  double yEnd;
+};
+
+class ProcessWithControlTest : public ::testing::Test,
+                               public ::testing::WithParamInterface<Options> {};
+
+TEST_P(ProcessWithControlTest, Test) {
   ExtendedKalmanFilter ekf;
   double dt = 0.1;
 
   Control control({0.2});
 
   Covariance covariance;
-  {
-    State state({0.0, 0.0});
 
-    auto next = ekf.process_model(dt, {state, covariance}, control);
+  State state({GetParam().xStart, GetParam().yStart});
 
-    EXPECT_DOUBLE_EQ(next.state.x(), 0.0);
-    EXPECT_DOUBLE_EQ(next.state.y(), 0.02);
-  }
+  auto next = ekf.process_model(dt, {state, covariance}, control);
 
-  {
-    State state({0.0, 1.0});
-
-    auto next = ekf.process_model(dt, {state, covariance}, control);
-
-    EXPECT_DOUBLE_EQ(next.state.x(), 0.1);
-    EXPECT_DOUBLE_EQ(next.state.y(), 1.02);
-  }
-
-  {
-    State state({1.0, 0.0});
-    EXPECT_DOUBLE_EQ(state.x(), 1.0);
-    EXPECT_DOUBLE_EQ(state.y(), 0.0);
-
-    auto next = ekf.process_model(dt, {state, covariance}, control);
-
-    EXPECT_DOUBLE_EQ(next.state.x(), 1.0);
-    EXPECT_DOUBLE_EQ(next.state.y(), 0.02);
-  }
-
-  {
-    State state({1.0, 1.0});
-
-    auto next = ekf.process_model(dt, {state, covariance}, control);
-
-    EXPECT_DOUBLE_EQ(next.state.x(), 1.1);
-    EXPECT_DOUBLE_EQ(next.state.y(), 1.02);
-  }
+  EXPECT_DOUBLE_EQ(next.state.x(), GetParam().xEnd);
+  EXPECT_DOUBLE_EQ(next.state.y(), GetParam().yEnd);
 }
 
-TEST(EKF, sensor) {
+INSTANTIATE_TEST_SUITE_P(StateTestCases, ProcessWithControlTest,
+                         ::testing::Values(Options{0.0, 0.0, 0.0, 0.02},
+                                           Options{0.0, 1.0, 0.1, 1.02},
+                                           Options{1.0, 0.0, 1.0, 0.02},
+                                           Options{1.0, 1.0, 1.1, 1.02}));
+}  // namespace process_with_control_test
+
+namespace ekf_sensor_test {
+TEST(EKF, SensorSimple) {
   ExtendedKalmanFilter ekf;
 
   Covariance covariance;
@@ -112,21 +102,29 @@ TEST(EKF, sensor) {
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
             abs(reading - state.data(0, 0)));
+}
+TEST(EKF, SensorCombined) {
+  ExtendedKalmanFilter ekf;
 
-  // TODO(buck): Check what this should be
+  Covariance covariance;
+  State state({0.0, 0.0});
+
+  double reading = 1.0;
+
   SensorReading<(SensorId::COMBINED), Combined> combined{Combined({reading})};
   EXPECT_EQ(combined.reading.data.rows(), 1);
   EXPECT_EQ(combined.reading.data.cols(), 1);
 
-  next = ekf.sensor_model({state, covariance}, combined);
+  auto next = ekf.sensor_model({state, covariance}, combined);
 
   EXPECT_LT(abs(reading - next.state.data(0, 0)),
             abs(reading - state.data(0, 0)));
   EXPECT_LT(abs(reading - next.state.data(1, 0)),
             abs(reading - state.data(1, 0)));
 }
+}  // namespace ekf_sensor_test
 
-TEST(EKF, sensor_model_detail) {
+TEST(EKF, SensorModelDetail) {
   double x = -1.0;
   double y = 2.0;
   State state({x, y});
@@ -147,7 +145,7 @@ TEST(EKF, sensor_model_detail) {
   }
 }
 
-TEST(EKF, sensor_covariances) {
+TEST(EKF, SensorCovariances) {
   double x = -1.0;
   double y = 2.0;
   State state({x, y});
@@ -168,7 +166,7 @@ TEST(EKF, sensor_covariances) {
   }
 }
 
-TEST(EKF, sensor_jacobian) {
+TEST(EKF, SensorJacobian) {
   double x = -1.0;
   double y = 2.0;
   State state({x, y});
@@ -191,34 +189,28 @@ TEST(EKF, sensor_jacobian) {
   }
 }
 
-TEST(EKF, process_jacobian) {
+TEST(EKF, ProcessJacobian) {
   ExtendedKalmanFilter ekf;
 
   double dt = 0.05;
 
   double x = -1.0;
   double y = 2.0;
-  {
-    State state({x, y});
-    Covariance covariance;
-    Control control;
-    EXPECT_DOUBLE_EQ(control.a(), 0.0);
 
-    EXPECT_DOUBLE_EQ(covariance.data(0, 0), 1.0);
-    EXPECT_DOUBLE_EQ(covariance.data(1, 1), 1.0);
-    EXPECT_DOUBLE_EQ(covariance.data(0, 1), 0.0);
-    EXPECT_DOUBLE_EQ(covariance.data(1, 0), 0.0);
+  State state({x, y});
+  // Assumes default initialization of covariance (identity) and control (0)
+  Covariance covariance;
+  Control control;
 
-    StateAndVariance next = ekf.process_model(dt, {state, covariance}, control);
+  StateAndVariance next = ekf.process_model(dt, {state, covariance}, control);
 
-    EXPECT_GT(next.covariance.data(0, 0), 1.0);
-    EXPECT_GT(next.covariance.data(1, 1), 1.0);
-    EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), dt);
-    EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), next.covariance.data(0, 1));
-  }
+  EXPECT_GT(next.covariance.data(0, 0), 1.0);
+  EXPECT_GT(next.covariance.data(1, 1), 1.0);
+  EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), dt);
+  EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), next.covariance.data(0, 1));
 }
 
-TEST(EKF, process_noise) {
+TEST(EKF, ProcessNoise) {
   double dt = 0.05;
 
   double x = -1.0;
@@ -238,7 +230,7 @@ TEST(EKF, process_noise) {
   }
 }
 
-TEST(EKF, control_jacobian) {
+TEST(EKF, ControlJacobian) {
   double dt = 0.05;
 
   double x = -1.0;

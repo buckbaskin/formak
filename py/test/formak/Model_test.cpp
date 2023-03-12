@@ -4,7 +4,7 @@
 
 namespace integration {
 
-RC_GTEST_PROP(CppModel, Model_impl_property, (double x, double y, double a)) {
+RC_GTEST_PROP(CppModel, ModelImplProperty, (double x, double y, double a)) {
   // def test_Model_impl_property(x, y, a):
   unit::Model model;
   double dt = 0.1;

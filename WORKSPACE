@@ -74,9 +74,9 @@ http_archive(
 
 http_archive(
     name = "gtest",
-    sha256 = "ce7366fe57eb49928311189cb0e40e0a8bf3d3682fca89af30d884c25e983786",
-    strip_prefix = "googletest-release-1.12.0",
-    url = "https://github.com/google/googletest/archive/release-1.12.0.zip",
+    sha256 = "ffa17fbc5953900994e2deec164bb8949879ea09b411e07f215bfbb1f87f4632",
+    strip_prefix = "googletest-1.13.0",
+    url = "https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip",
 )
 
 ### Python Dependencies
