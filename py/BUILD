@@ -3,7 +3,7 @@
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
+load("//py:defs.bzl", "cc_formak_model", "py_test_suite")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - exporting as a pip package for non-bazel users
@@ -184,15 +184,20 @@ cc_test(
     ] + CC_TEST_DEPS,
 )
 
-cc_test_suite(
-    name = "integration-cpp",
-    size = "medium",
-    srcs = glob(
-        [
-            "test/formak/**/*.cpp",
-        ],
-        allow_empty = False,
-    ),
+cc_test(
+    name = "integration-cpp-model-test",
+    srcs = ["test/formak/Model_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+        "//cpp:utils-stats",
+        "@rapidcheck",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "integration-cpp-extended-kalman-filter-test",
+    srcs = ["test/formak/ExtendedKalmanFilter_test.cpp"],
     deps = [
         ":simple-model",
         ":simple-ekf",

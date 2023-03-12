@@ -71,7 +71,7 @@ TEST(MultivariteNormalPdfTest, BasicInDistribution) {
 
     std::cout << "numerator " << numerator << std::endl;
 
-    size_t k = s.rows;
+    size_t k = TestState::rows;
     double determinant = c.data.determinant();
     double denominator = std::sqrt(std::pow(2 * M_PI, k) * determinant);
 
@@ -94,7 +94,7 @@ TEST(MultivariteNormalPdfTest, BasicInDistribution) {
 
     std::cout << "numerator " << numerator << std::endl;
 
-    size_t k = s.rows;
+    size_t k = TestState::rows;
     double determinant = c.data.determinant();
     double denominator = std::sqrt(std::pow(2 * M_PI, k) * determinant);
 
