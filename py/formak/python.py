@@ -1,3 +1,5 @@
+from itertools import product
+
 import numpy as np
 from formak.exceptions import MinimizationFailure
 from numba import njit
@@ -135,9 +137,14 @@ class ExtendedKalmanFilter:
         self, state_model, process_noise, sensor_models, sensor_noises, config
     ):
         assert isinstance(config, Config)
+        assert isinstance(process_noise, dict)
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
+
+        raise NotImplementedError(
+            "Translate dict -> matrix for insertion into process_noise param"
+        )
         self.params = {
             "process_noise": process_noise,
             "sensor_models": sensor_models,
@@ -650,6 +657,19 @@ def compile_ekf(
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
+
+    assert isinstance(process_noise, dict)
+    allowed_keys = set(
+        list(state_model.control)
+        + [
+            (x, y)
+            for x, y in product(state_model.control, state_model.control)
+            if x != y
+        ]
+    )
+    for key in process_noise:
+        if key not in allowed_keys:
+            raise ValueError(f"Key {key} not in allowlist {allowed_keys}")
 
     return ExtendedKalmanFilter(
         state_model, process_noise, sensor_models, sensor_noises, config

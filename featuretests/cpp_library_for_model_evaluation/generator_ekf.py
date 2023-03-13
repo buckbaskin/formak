@@ -24,7 +24,7 @@ model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
 cpp_implementation = cpp.compile_ekf(
     state_model=model,
-    process_noise=np.eye(1),
+    process_noise={thrust: 1.0},
     sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
     sensor_noises={"simple": np.eye(1)},
 )

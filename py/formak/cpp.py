@@ -1,6 +1,7 @@
 import argparse
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
+from itertools import product
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
@@ -162,6 +163,7 @@ class ExtendedKalmanFilter:
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)
+        assert isinstance(process_noise, dict)
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
@@ -335,10 +337,17 @@ class ExtendedKalmanFilter:
         )
 
     def _translate_control_covariance(self, covariance):
-        rows, cols = covariance.shape
-        for i in range(rows):
-            for j in range(cols):
-                yield f"covariance({i}, {j})", covariance[i, j]
+        for i, ikey in enumerate(self.arglist_control):
+            for j, jkey in enumerate(self.arglist_control):
+                if (ikey, jkey) in covariance:
+                    value = covariance[(ikey, jkey)]
+                elif (jkey, ikey) in covariance:
+                    value = covariance[(jkey, ikey)]
+                elif i == j and ikey in covariance:
+                    value = covariance[ikey]
+                else:
+                    value = 0.0
+                yield f"covariance({i}, {j})", value
 
     def control_covariance_body(self):
         typename = "ExtendedKalmanFilter"
@@ -632,11 +641,18 @@ def compile_ekf(
     elif isinstance(config, dict):
         config = Config(**config)
 
-    control_size = len(state_model.control)
-    if process_noise.shape != (control_size, control_size):
-        raise ModelConstructionError(
-            f"Process Noise shape {process_noise.shape} does not match control set {state_model.control} of length {control_size}"
-        )
+    assert isinstance(process_noise, dict)
+    allowed_keys = set(
+        list(state_model.control)
+        + [
+            (x, y)
+            for x, y in product(state_model.control, state_model.control)
+            if x != y
+        ]
+    )
+    for key in process_noise:
+        if key not in allowed_keys:
+            raise ModelConstructionError(f"Key {key} not in allowlist {allowed_keys}")
 
     parser = argparse.ArgumentParser(prog="generator.py")
     parser.add_argument("--templates")
