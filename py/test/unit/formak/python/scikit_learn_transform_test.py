@@ -16,7 +16,7 @@ def test_transform():
     }
 
     params = {
-        "process_noise": np.eye(1) * 1e-6,
+        "process_noise": {v: 1e-6},
         "sensor_models": {"simple": {x: x}},
         "sensor_noises": {"simple": np.eye(1)},
     }
@@ -49,7 +49,7 @@ def test_transform_kalman_filter_args():
     }
 
     params = {
-        "process_noise": np.eye(1),
+        "process_noise": {v: 1.0},
         "sensor_models": {"simple": {x: x}},
         "sensor_noises": {"simple": np.eye(1)},
     }

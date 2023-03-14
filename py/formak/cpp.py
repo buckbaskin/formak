@@ -337,17 +337,18 @@ class ExtendedKalmanFilter:
         )
 
     def _translate_control_covariance(self, covariance):
-        for i, ikey in enumerate(self.arglist_control):
-            for j, jkey in enumerate(self.arglist_control):
-                if (ikey, jkey) in covariance:
-                    value = covariance[(ikey, jkey)]
-                elif (jkey, ikey) in covariance:
-                    value = covariance[(jkey, ikey)]
-                elif i == j and ikey in covariance:
-                    value = covariance[ikey]
+        for i, iKey in enumerate(self.arglist_control):
+            for j, jKey in enumerate(self.arglist_control):
+                if (iKey, jKey) in covariance:
+                    value = covariance[(iKey, jKey)]
+                elif (jKey, iKey) in covariance:
+                    value = covariance[(jKey, iKey)]
+                elif i == j and iKey in covariance:
+                    value = covariance[iKey]
                 else:
                     value = 0.0
                 yield f"covariance({i}, {j})", value
+                yield f"covariance({j}, {i})", value
 
     def control_covariance_body(self):
         typename = "ExtendedKalmanFilter"

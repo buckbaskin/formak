@@ -16,7 +16,7 @@ def test_fit_transform():
     }
 
     params = {
-        "process_noise": np.eye(1),
+        "process_noise": {v: 1.0},
         "sensor_models": {"simple": {x: x}},
         "sensor_noises": {"simple": np.eye(1)},
     }

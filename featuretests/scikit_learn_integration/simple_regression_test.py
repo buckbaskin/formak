@@ -21,7 +21,7 @@ def test_like_sklearn_regression():
     }
 
     params = {
-        "process_noise": {"thrust": 1.0},
+        "process_noise": {ui.Symbol("thrust"): 1.0},
         "sensor_models": {
             "z": {ui.Symbol("z"): ui.Symbol("z")},
             "v": {ui.Symbol("v"): ui.Symbol("v")},

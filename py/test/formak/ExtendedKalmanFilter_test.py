@@ -30,7 +30,7 @@ def test_EKF_process_property(state_x, state_y, control_a):
     )
     ekf = python.compile_ekf(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={},
         sensor_noises={},
         config=config,
@@ -102,7 +102,7 @@ def test_EKF_sensor_property(x, y, a):
     )
     ekf = python.compile_ekf(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
         sensor_noises={"simple": np.eye(1)},
         config=config,
@@ -176,7 +176,7 @@ def test_EKF_sensor_property_failing_example():
     )
     ekf = python.compile_ekf(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
         sensor_noises={"simple": np.eye(1)},
         config=config,

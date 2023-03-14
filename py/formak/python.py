@@ -1,10 +1,11 @@
 from itertools import product
+from typing import Dict
 
 import numpy as np
-from formak.exceptions import MinimizationFailure
+from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numba import njit
 from scipy.optimize import minimize
-from sympy import Matrix
+from sympy import Matrix, Symbol
 from sympy.utilities.lambdify import lambdify
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
@@ -25,11 +26,10 @@ class Model:
         self.control_size = len(symbolic_model.control)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
-        self.arglist = (
-            [symbolic_model.dt]
-            + self.arglist_state
-            + sorted(list(symbolic_model.control), key=lambda x: x.name)
+        self.arglist_control = sorted(
+            list(symbolic_model.control), key=lambda x: x.name
         )
+        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
 
         # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
         self._impl = [
@@ -134,7 +134,12 @@ class SensorModel:
 
 class ExtendedKalmanFilter:
     def __init__(
-        self, state_model, process_noise, sensor_models, sensor_noises, config
+        self,
+        state_model,
+        process_noise: Dict[Symbol, float],
+        sensor_models,
+        sensor_noises,
+        config,
     ):
         assert isinstance(config, Config)
         assert isinstance(process_noise, dict)
@@ -142,11 +147,8 @@ class ExtendedKalmanFilter:
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
 
-        raise NotImplementedError(
-            "Translate dict -> matrix for insertion into process_noise param"
-        )
         self.params = {
-            "process_noise": process_noise,
+            "process_noise": None,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
             "compile": compile,
@@ -157,20 +159,32 @@ class ExtendedKalmanFilter:
 
     def _construct_process(self, state_model, process_noise, config):
         self.state_model = Model(state_model, config)
-        self.params["process_noise"] = process_noise
+        assert len(process_noise) == self.control_size
 
-        assert len(process_noise.diagonal()) == self.control_size
+        process_noise_matrix = np.eye(self.state_model.control_size)
+
+        for iIdx, iSymbol in enumerate(self.state_model.arglist_control):
+            for jIdx, jSymbol in enumerate(self.state_model.arglist_control):
+                if (iSymbol, jSymbol) in process_noise:
+                    value = process_noise[(iSymbol, jSymbol)]
+                elif (jSymbol, iSymbol) in process_noise:
+                    value = process_noise[(jSymbol, iSymbol)]
+                elif iSymbol == jSymbol and iSymbol in process_noise:
+                    value = process_noise[iSymbol]
+                else:
+                    value = 0.0
+                process_noise_matrix[iIdx, jIdx] = value
+                process_noise_matrix[jIdx, iIdx] = value
+
+        self.params["process_noise"] = process_noise_matrix
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
         process_matrix = Matrix(
-            [
-                state_model.state_model[a]
-                for a in self.state_model.arglist[1 : 1 + self.state_size]
-            ]
+            [state_model.state_model[a] for a in self.state_model.arglist_state]
         )
         symbolic_process_jacobian = process_matrix.jacobian(
-            self.state_model.arglist[1 : 1 + self.state_size]
+            self.state_model.arglist_state
         )
         # TODO(buck): This assertion won't necessarily hold if CSE is on across states
         assert symbolic_process_jacobian.shape == (
@@ -179,7 +193,7 @@ class ExtendedKalmanFilter:
         )
 
         symbolic_control_jacobian = process_matrix.jacobian(
-            self.state_model.arglist[-self.control_size :]
+            self.state_model.arglist_control
         )
 
         self._impl_process_jacobian = [
@@ -668,8 +682,15 @@ def compile_ekf(
         ]
     )
     for key in process_noise:
+        if not isinstance(key, Symbol):
+            raise ModelConstructionError(
+                f"Key {key} needs to be type Symbol, found type {type(key)}"
+            )
         if key not in allowed_keys:
-            raise ValueError(f"Key {key} not in allowlist {allowed_keys}")
+            render = ", ".join([f"{k} {type(k)}" for k in allowed_keys])
+            raise ModelConstructionError(
+                f'Key {key} {type(key)} not in allow"list" [{render}]'
+            )
 
     return ExtendedKalmanFilter(
         state_model, process_noise, sensor_models, sensor_noises, config
