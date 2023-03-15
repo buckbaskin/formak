@@ -101,10 +101,11 @@ class Model:
         )
 
     def state_members(self):
-        return "\n".join(
-            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
-            % (name, idx, name, idx)
-            for idx, name in enumerate(self.arglist_state)
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
+            % (symbol.name, idx, indent, symbol.name, idx)
+            for idx, symbol in enumerate(self.arglist_state)
         )
 
     def control_members(self):
@@ -127,7 +128,8 @@ class Model:
         )
 
     def stateoptions_members(self):
-        return "\n".join(
+        indent = " " * 4
+        return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
@@ -293,9 +295,10 @@ class ExtendedKalmanFilter:
         return ",\n".join(enum_names)
 
     def state_members(self):
-        return "\n".join(
-            "double& %s() { return data(%s, 0); }\ndouble %s() const { return data(%s, 0); }"
-            % (symbol.name, idx, symbol.name, idx)
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
+            % (symbol.name, idx, indent, symbol.name, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 

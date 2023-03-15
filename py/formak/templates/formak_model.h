@@ -7,7 +7,7 @@ namespace {{namespace}} {
 // clang-format-on
   struct StateOptions {
     // clang-format off
-  {{ StateOptions_members }}
+    {{ StateOptions_members }}
     // clang-format on
   };
 
@@ -15,7 +15,7 @@ namespace {{namespace}} {
     State();
     State(const StateOptions& options);
     // clang-format off
-  {{State_members}}
+    {{State_members}}
     // clang-format on
     Eigen::Matrix<double, {{State_size}}, 1> data =
         Eigen::Matrix<double, {{State_size}}, 1>::Zero();
