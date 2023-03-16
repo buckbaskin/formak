@@ -12,7 +12,7 @@ namespace {{namespace}} {
 // clang-format-on
   struct StateOptions {
     // clang-format off
-  {{ StateOptions_members }}
+    {{ StateOptions_members }}
     // clang-format on
   };
 
@@ -24,7 +24,7 @@ namespace {{namespace}} {
     State();
     State(const StateOptions& options);
     // clang-format off
-  {{State_members}}
+    {{State_members}}
     // clang-format on
     DataT data = DataT::Zero();
   };
@@ -33,14 +33,14 @@ namespace {{namespace}} {
     using DataT = Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
 
     // clang-format off
-  {{Covariance_members}}
+    {{Covariance_members}}
     // clang-format on
     DataT data = DataT::Identity();
   };
 
   struct ControlOptions {
     // clang-format off
-  {{ ControlOptions_members }}
+    {{ ControlOptions_members }}
     // clang-format on
   };
 
@@ -78,7 +78,7 @@ namespace {{namespace}} {
   struct {{reading_type.typename}}SensorModel;
 
   struct {{reading_type.typename}}Options {
-      {{ reading_type.Options_members }}
+    {{ reading_type.Options_members }}
   };
 
   // ReadingT

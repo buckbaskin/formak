@@ -292,12 +292,13 @@ class ExtendedKalmanFilter:
     def sensorid_members(self, verbose=True):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
         # TODO(buck): remove the default True in favor of the flag option
+        indent = " " * 4
         enum_names = [
             "{name}".format(name=name.upper()) for name, _, _ in self.sensorlist
         ]
         if verbose:
             print(f"sensorid_members: enum_names: {enum_names}")
-        return ",\n".join(enum_names)
+        return f",\n{indent}".join(enum_names)
 
     def state_members(self):
         indent = " " * 4
@@ -308,7 +309,8 @@ class ExtendedKalmanFilter:
         )
 
     def stateoptions_members(self):
-        return "\n".join(
+        indent = " " * 4
+        return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
@@ -331,10 +333,10 @@ class ExtendedKalmanFilter:
         )
 
     def covariance_members(self):
-        # TODO(buck): Need to add covariance terms
-        return "\n".join(
-            "double& %s() { return data(%s, %s); }\ndouble %s() const { return data(%s, %s); }"
-            % (symbol.name, idx, idx, symbol.name, idx, idx)
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() { return data(%s, %s); }\n%sdouble %s() const { return data(%s, %s); }"
+            % (symbol.name, idx, idx, indent, symbol.name, idx, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
 
