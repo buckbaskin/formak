@@ -109,9 +109,10 @@ class Model:
         )
 
     def control_members(self):
-        return "\n".join(
-            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
-            % (name, idx, name, idx)
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
+            % (name, idx, indent, name, idx)
             for idx, name in enumerate(self.arglist_control)
         )
 
@@ -134,7 +135,8 @@ class Model:
         )
 
     def controloptions_members(self):
-        return "\n".join(
+        indent = " " * 4
+        return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
         )
 
@@ -308,7 +310,8 @@ class ExtendedKalmanFilter:
         )
 
     def controloptions_members(self):
-        return "\n".join(
+        indent = " " * 4
+        return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
         )
 
@@ -333,9 +336,10 @@ class ExtendedKalmanFilter:
         )
 
     def control_members(self):
-        return "\n".join(
-            "double& %s() {return data(%s, 0); }\ndouble %s() const {return data(%s, 0); }"
-            % (name, idx, name, idx)
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
+            % (name, idx, indent, name, idx)
             for idx, name in enumerate(self.arglist_control)
         )
 

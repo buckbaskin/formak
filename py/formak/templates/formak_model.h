@@ -23,7 +23,7 @@ namespace {{namespace}} {
 
   struct ControlOptions {
     // clang-format off
-  {{ ControlOptions_members }}
+    {{ ControlOptions_members }}
     // clang-format on
   };
 
@@ -31,7 +31,7 @@ namespace {{namespace}} {
     Control();
     Control(const ControlOptions& options);
     // clang-format off
-  {{Control_members}}
+    {{Control_members}}
     // clang-format on
     Eigen::Matrix<double, {{Control_size}}, 1> data =
         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
