@@ -12,10 +12,9 @@ warnings.filterwarnings("error")
 
 def test_EKF_model_collapse():
     config = python.Config()
-    dt = 0.1
 
     with pytest.raises(ModelConstructionError):
-        ekf = python.compile_ekf(
+        python.compile_ekf(
             state_model=ui.Model(
                 ui.Symbol("dt"),
                 set(ui.symbols(["x", "y"])),

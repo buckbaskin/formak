@@ -6,10 +6,9 @@ from formak import cpp, ui
 
 def test_EKF_model_collapse():
     config = cpp.Config()
-    dt = 0.1
 
     with pytest.raises(ModelConstructionError):
-        ekf = cpp.compile_ekf(
+        cpp.compile_ekf(
             state_model=ui.Model(
                 ui.Symbol("dt"),
                 set(ui.symbols(["x", "y"])),
