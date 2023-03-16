@@ -1,6 +1,8 @@
 import warnings
 
 import numpy as np
+import pytest
+from formak.exceptions import ModelConstructionError
 from numpy.testing import assert_almost_equal
 
 from formak import python, ui
@@ -12,20 +14,19 @@ def test_EKF_model_collapse():
     config = python.Config()
     dt = 0.1
 
-    ekf = python.compile_ekf(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
-        ),
-        process_noise={ui.Symbol("a"): 1.0},
-        sensor_models={},
-        sensor_noises={},
-        config=config,
-    )
-
-    1 / 0
+    with pytest.raises(ModelConstructionError):
+        ekf = python.compile_ekf(
+            state_model=ui.Model(
+                ui.Symbol("dt"),
+                set(ui.symbols(["x", "y"])),
+                set(ui.symbols(["a"])),
+                {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+            ),
+            process_noise={ui.Symbol("a"): 1.0},
+            sensor_models={},
+            sensor_noises={},
+            config=config,
+        )
 
 
 def test_EKF_process_with_control():

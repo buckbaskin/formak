@@ -693,28 +693,14 @@ def compile_ekf(
                 f'Key {key} {type(key)} not in allow"list" [{render}]'
             )
 
-    print("state_model")
-    for k, v in state_model.state_model.items():
-        print(k, v)
-
     symbols_to_solve_for = list(state_model.state) + list(state_model.control)
-
     equations_to_solve = [
         diff(model, symbol)
         for model, symbol in product(
             state_model.state_model.values(), state_model.state
         )
     ]
-    print("solve for:")
-    print(equations_to_solve)
-
     results_set = nonlinsolve(equations_to_solve, symbols_to_solve_for)
-    print("results_set")
-    print(results_set)
-    print("solutions")
-    for solution in results_set:
-        print(dict(zip(symbols_to_solve_for, solution)))
-
     if len(results_set) > 0:
         solutions = [
             dict(zip(symbols_to_solve_for, solution))
@@ -723,7 +709,6 @@ def compile_ekf(
         raise ModelConstructionError(
             f"Model has solutions in state space where covariance will collapse to zero. Example Solutions: {solutions[:3]}"
         )
-    1 / 0
 
     return ExtendedKalmanFilter(
         state_model, process_noise, sensor_models, sensor_noises, config

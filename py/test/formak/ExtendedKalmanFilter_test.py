@@ -163,7 +163,7 @@ def test_EKF_sensor_property(x, y, a):
 def test_EKF_sensor_property_failing_example():
     start_time = datetime.now()
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
-    config = {}
+    config = python.Config()
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -174,7 +174,7 @@ def test_EKF_sensor_property_failing_example():
             ui.Symbol("y"): "y + a * dt",
         },
     )
-    ekf = python.compile_ekf(
+    ekf = python.ExtendedKalmanFilter(
         state_model=ui_Model,
         process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},

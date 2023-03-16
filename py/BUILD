@@ -49,6 +49,7 @@ py_library(
         requirement("numba"),
         requirement("colorama"),
         requirement("hypothesis"),
+        requirement("Jinja2"),
     ],
 )
 
