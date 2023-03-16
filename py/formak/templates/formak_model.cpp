@@ -18,7 +18,7 @@ namespace {{namespace}} {
   State Model::model(double dt, const State& input_state,
                      const Control& input_control) {
     // clang-format off
-  {{Model_model_body}}
+{{Model_model_body}}
     // clang-format on
   }
 

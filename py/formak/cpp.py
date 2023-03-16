@@ -30,9 +30,10 @@ class CppCompileResult:
 
 
 class BasicBlock:
-    def __init__(self, statements: List[Tuple[str, Any]]):
+    def __init__(self, statements: List[Tuple[str, Any]], indent=0):
         # should be Tuple[str, sympy expression]
         self._statements = statements
+        self._indent = indent
 
     def compile(self):
         return "\n".join(self._compile_impl())
@@ -43,7 +44,7 @@ class BasicBlock:
         # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
         for lvalue, expr in self._statements:
             cc_expr = ccode(expr)
-            yield f"{lvalue} = {cc_expr};"
+            yield f"{' ' * self._indent}{lvalue} = {cc_expr};"
 
 
 class Model:
@@ -66,7 +67,7 @@ class Model:
         )
         self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
 
-        self._impl = BasicBlock(self._translate_impl(symbolic_model))
+        self._impl = BasicBlock(self._translate_impl(symbolic_model), indent=4)
 
         self._return = self._translate_return()
 
@@ -95,8 +96,10 @@ class Model:
         return "State({" + content + "})"
 
     def model_body(self):
-        return "{impl}\nreturn {return_};".format(
+        indent = " " * 4
+        return "{impl}\n{indent}return {return_};".format(
             impl=self._impl.compile(),
+            indent=indent,
             return_=self._return,
         )
 
