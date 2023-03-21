@@ -16,9 +16,6 @@ class Model:
     """Python implementation of the model."""
 
     def __init__(self, symbolic_model, config):
-        # TODO(buck): Enable mypy for type checking
-        # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
-        # assert isinstance(symbolic_model, ui.Model)
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)
@@ -305,8 +302,6 @@ class ExtendedKalmanFilter:
 
     def process_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.state_size))
-        # TODO(buck) skip known zeros / sparse bits of the matrix
-        # TODO(buck) Could you precompute all constant parts of the matrix? (e.g. =1.0)
         for row in range(self.state_size):
             for col in range(self.state_size):
                 jacobian[row, col] = self._impl_process_jacobian[
@@ -316,8 +311,6 @@ class ExtendedKalmanFilter:
 
     def control_jacobian(self, dt, state, control):
         jacobian = np.zeros((self.state_size, self.control_size))
-        # TODO(buck) skip known zeros / sparse bits of the matrix
-        # TODO(buck) Could you precompute all constant parts of the matrix? (e.g. =1.0)
         for row in range(self.state_size):
             for col in range(self.control_size):
                 jacobian[row, col] = self._impl_control_jacobian[

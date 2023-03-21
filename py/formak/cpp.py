@@ -21,12 +21,11 @@ class Config:
     python_modules: List[str] = DEFAULT_MODULES
 
 
-# TODO(buck): data class?
+@dataclass
 class CppCompileResult:
-    def __init__(self, success, header_path=None, source_path=None):
-        self.success = success
-        self.header_path = header_path
-        self.source_path = source_path
+    success: bool
+    header_path: str = None
+    source_path: str = None
 
 
 class BasicBlock:
@@ -45,6 +44,28 @@ class BasicBlock:
         for lvalue, expr in self._statements:
             cc_expr = ccode(expr)
             yield f"{' ' * self._indent}{lvalue} = {cc_expr};"
+
+
+class StateStruct:
+    def __init__(self, arglist):
+        self.arglist = arglist
+
+    def members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
+            % (symbol.name, idx, indent, symbol.name, idx)
+            for idx, symbol in enumerate(self.arglist)
+        )
+
+    def state_options_constructor_initializer_list(self):
+        return "data(" + ", ".join(f"options.{name}" for name in self.arglist) + ")"
+
+    def stateoptions_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist
+        )
 
 
 class Model:
@@ -67,11 +88,13 @@ class Model:
         )
         self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
 
-        self._impl = BasicBlock(self._translate_impl(symbolic_model), indent=4)
+        self.state_generator = StateStruct(self.arglist_state)
+
+        self._model = BasicBlock(self._translate_model(symbolic_model), indent=4)
 
         self._return = self._translate_return()
 
-    def _translate_impl(self, symbolic_model):
+    def _translate_model(self, symbolic_model):
         subs_set = [
             (
                 member,
@@ -98,17 +121,9 @@ class Model:
     def model_body(self):
         indent = " " * 4
         return "{impl}\n{indent}return {return_};".format(
-            impl=self._impl.compile(),
+            impl=self._model.compile(),
             indent=indent,
             return_=self._return,
-        )
-
-    def state_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
-            % (symbol.name, idx, indent, symbol.name, idx)
-            for idx, symbol in enumerate(self.arglist_state)
         )
 
     def control_members(self):
@@ -119,22 +134,11 @@ class Model:
             for idx, name in enumerate(self.arglist_control)
         )
 
-    def state_options_constructor_initializer_list(self):
-        return (
-            "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
-        )
-
     def control_options_constructor_initializer_list(self):
         return (
             "data("
             + ", ".join(f"options.{name}" for name in self.arglist_control)
             + ")"
-        )
-
-    def stateoptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
     def controloptions_members(self):
@@ -512,10 +516,10 @@ def _generate_model_function_bodies(header_location, namespace, symbolic_model, 
         "header_include": header_include,
         "Model_model_body": generator.model_body(),
         "namespace": namespace,
-        "State_members": generator.state_members(),
-        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
+        "State_members": generator.state_generator.members(),
+        "State_options_constructor_initializer_list": generator.state_generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
-        "StateOptions_members": generator.stateoptions_members(),
+        "StateOptions_members": generator.state_generator.stateoptions_members(),
     }
 
 
