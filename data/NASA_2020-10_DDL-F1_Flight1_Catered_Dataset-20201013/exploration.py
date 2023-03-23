@@ -24,8 +24,10 @@ print(lidar_data)
 for i in range(0, 4):
     plt.plot(
         lidar_data["TIME_NANOSECONDS_TAI"] * 1e-9,
-        lidar_data["OMPS_Range_M[%d]" % (i + 1)],
+        lidar_data["OMPS_DopplerSpeed_MpS[%d]" % (i + 1)],
         label="Range[%d]" % (i + 1),
     )
+plt.xlabel('seconds')
+plt.ylabel('meters per second')
 plt.legend()
 plt.show()
