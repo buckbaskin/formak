@@ -39,16 +39,11 @@ UPDATE_RATE_HZ = 50
 for i in range(0, 3):
     plt.plot(
         imu_data["TIME_NANOSECONDS_TAI"] * 1e-9,
-        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)] * UPDATE_RATE_HZ,
+        imu_data["DATA_DELTA_ANGLE[%d]" % (i + 1)] * UPDATE_RATE_HZ,
         label="%d" % (i + 1),
     )
 
-plt.plot(
-    imu_data["TIME_NANOSECONDS_TAI"] * 1e-9,
-    total_imu * UPDATE_RATE_HZ,
-    label="total magnitude delta v",
-)
 plt.xlabel("seconds")
-plt.ylabel("meters / sec2 (approx, from delta v)")
+plt.ylabel("delta angle")
 plt.legend()
 plt.show()
