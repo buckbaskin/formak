@@ -12,9 +12,9 @@ bt() {
 }
 
 bt
-bt --config=clang
-bt --config=clang --config=asan
+# bt --config=clang
+# bt --config=clang --config=asan
 # Need to work on ignoring GTest
 # bt --config=clang --config=msan
-bt --config=clang --config=tsan
-bt --config=clang --config=ubsan
+# bt --config=clang --config=tsan
+# bt --config=clang --config=ubsan
