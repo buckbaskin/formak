@@ -3,26 +3,12 @@ from sympy import Symbol, simplify, symbols
 
 class Model:
     def __init__(
-        self,
-        dt,
-        state,
-        control,
-        state_model,
-        process_noise=None,
-        sensor_models=None,
-        sensor_noises=None,
-        compile=False,
-        *,
-        debug_print=False
+        self, dt, state, control, state_model, compile=False, *, debug_print=False
     ):
         self.dt = dt
         self.state = state
         self.control = control
         self.state_model = state_model
-        # TODO(buck): remove these unused arguments
-        # process_noise=None,
-        # sensor_models=None,
-        # sensor_noises=None,
 
         for k in list(self.state_model.keys()):
             self.state_model[k] = simplify(self.state_model[k])

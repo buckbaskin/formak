@@ -36,14 +36,55 @@ print(imu_data)
 
 UPDATE_RATE_HZ = 50
 
+preignition_imu_mask = imu_data["TIME_NANOSECONDS_TAI"] < 0
+ignition_imu_mask = (imu_data["TIME_NANOSECONDS_TAI"] >= 0) & (
+    imu_data["TIME_NANOSECONDS_TAI"] < 7.26e9
+)
+
 for i in range(0, 3):
+    print("pre-ignition")
+    print(
+        f"{i + 1} mean",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][preignition_imu_mask].mean(),
+    )
+    print(
+        f"{i + 1} median",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][preignition_imu_mask].median(),
+    )
+    print(
+        f"{i + 1} std",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][preignition_imu_mask].std(),
+    )
+    print("ignition")
+    print(
+        f"{i + 1} mean",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][ignition_imu_mask].mean(),
+    )
+    print(
+        f"{i + 1} median",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][ignition_imu_mask].median(),
+    )
+    print(
+        f"{i + 1} std",
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)][ignition_imu_mask].std(),
+    )
     plt.plot(
         imu_data["TIME_NANOSECONDS_TAI"] * 1e-9,
-        imu_data["DATA_DELTA_ANGLE[%d]" % (i + 1)] * UPDATE_RATE_HZ,
+        imu_data["DATA_DELTA_VEL[%d]" % (i + 1)],
         label="%d" % (i + 1),
     )
+plt.plot(
+    imu_data["TIME_NANOSECONDS_TAI"][preignition_imu_mask] * 1e-9,
+    total_imu[preignition_imu_mask],
+    label="total pre ignition",
+)
+plt.plot(
+    imu_data["TIME_NANOSECONDS_TAI"][ignition_imu_mask] * 1e-9,
+    total_imu[ignition_imu_mask],
+    label="total ignition",
+)
 
 plt.xlabel("seconds")
-plt.ylabel("delta angle")
+plt.ylabel("acceleration m/s2")
 plt.legend()
 plt.show()

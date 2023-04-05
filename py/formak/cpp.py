@@ -299,7 +299,7 @@ class ExtendedKalmanFilter:
         )
         return "State({" + content + "});"
 
-    def sensorid_members(self, verbose=True):
+    def sensorid_members(self, verbose=False):
         # TODO(buck): Add a verbose flag option that will print out the generated class members
         # TODO(buck): remove the default True in favor of the flag option
         indent = " " * 4
@@ -394,7 +394,7 @@ class ExtendedKalmanFilter:
             expr_after = expr_before.subs(subs_set)
             yield f"double {assignment}", expr_after
 
-    def reading_types(self, verbose=True):
+    def reading_types(self, verbose=False):
         for name, sensor_model_mapping, sensor_noise in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
@@ -563,7 +563,7 @@ def _generate_ekf_function_bodies(
     }
 
 
-def _parse_raw_templates(arg, verbose=True):
+def _parse_raw_templates(arg, verbose=False):
     raw_templates = arg.split(" ")
     templates = defaultdict(dict)
 
