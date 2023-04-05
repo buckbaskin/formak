@@ -2,7 +2,7 @@
 
 Author: Buck Baskin @bebaskin
 Created: 2023-01-08
-Updated: 2022-01-12
+Updated: 2023-04-05
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
 Status: Feature Tests
@@ -100,3 +100,40 @@ This feature is specific to the C++ interface. There will be two feature tests:
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2023-04-05
+
+This deisgn took way longer to implement than I'd hoped. I'm going to instead
+aim for designs that should take about a month and then review after the fact.
+In this case, I'm off by a factor of 3...
+
+#### Design Changes - Code
+
+- Complete rewrite of C++ interface for EKF
+- Implementation patterns for EKF
+- Iterated on multiple code patterns for generating C++
+- Long list of TODOs for internal improvements but shipping for now
+- C++ stats header
+- Not using common subexpression elimination yet for C++ generation
+- Skipped EKF math for probability of each reading
+- Added new checks for "model collapse" to zero covariance with sympy solve (nonlinsolve)
+- Changed of process noise definition to match process definition with keys instead of indexing
+- Refactored for common functions across py/cpp, model/EKF
+- Spent lots of time making generated whitespace look nicer
+- Never found a satisfying mix of Jinja template vs Python codegen
+
+#### Design Changes - Tooling
+
+- docs diff for Github Actions
+- precommit as a tool
+- bazel rule to automate C++ generation
+- py modernize tooling
+	- format strings
+	- yield from
+
+#### Some Things I Learned I Didn't Know
+
+- C++ toolchains in bazel
+- Managing Docker containers and cleanup doing edit-run-observe-kill loop
+- clang-tidy in bazel
+- Mental model of bazel
