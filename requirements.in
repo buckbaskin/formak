@@ -1,17 +1,17 @@
-pytest>=7.2.0
-pytest-mock
-hypothesis
+pytest==7.2.0
+pytest-mock==3.8.2
+hypothesis==6.47.5
 
-scikit-learn
-sympy
-scipy
+scikit-learn==1.1.2
+sympy==1.10.1
+scipy==1.9.1
 numpy==1.23.1
 numba>=0.56.4
 importlib-metadata==4.12.0
 
-Jinja2
+jinja2==3.1.2
 setuptools>=65.5.1
 
 ## numba support
 # enables support for color highlighting in backtraces/error messages
-colorama
+colorama==0.4.5
