@@ -77,3 +77,15 @@ cc_test_suite(
         ":cpp-ekf",
     ] + CC_FEATURE_TEST_DEPS,
 )
+
+py_test_suite(
+    name = "rocket-model",
+    srcs = glob(
+        ["rocket_model/*.py"],
+        allow_empty = False,
+    ),
+    deps = [
+        "//py:formak",
+        requirement("numpy"),
+    ] + PY_FEATURE_TEST_DEPS,
+)
