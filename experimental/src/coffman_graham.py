@@ -16,8 +16,7 @@ def visit_sympy_expr(expr, matcher, base=None):
         yield base, expr
 
     for idx, arg in enumerate(expr.args):
-        for result in visit_sympy_expr(arg, matcher, base + (idx,)):
-            yield result
+        yield from visit_sympy_expr(arg, matcher, base + (idx,))
 
 
 def setup_coffman_graham(graph, matcher):
@@ -160,7 +159,7 @@ def main():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     example_expr = (a + b) * (c + ((a + b) * d))
 
-    print("Expression: %s" % (example_expr,))
+    print("Expression: {}".format(example_expr))
 
     print("Visit the expression")
     for idx, val in enumerate(visit_sympy_expr(example_expr, lambda x: True)):

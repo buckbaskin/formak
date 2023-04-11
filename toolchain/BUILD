@@ -6,7 +6,10 @@ filegroup(name = "empty")
 
 cc_toolchain_suite(
     name = "clang_suite",
-    toolchains = {"k8": ":k8_toolchain"},
+    toolchains = {
+        "k8": ":k8_toolchain",
+        "k8 | clang": ":k8_toolchain",
+    },
 )
 
 cc_toolchain(

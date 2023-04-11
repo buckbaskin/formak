@@ -21,7 +21,7 @@ def test_get_params():
     }
 
     params = {
-        "process_noise": np.eye(1),
+        "process_noise": {thrust: 1.0},
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         "sensor_noises": {"simple": np.eye(1)},
     }
@@ -58,7 +58,7 @@ def test_set_params():
     }
 
     params = {
-        "process_noise": np.eye(1),
+        "process_noise": {thrust: 1.0},
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         "sensor_noises": {"simple": np.eye(1)},
     }

@@ -74,10 +74,9 @@ http_archive(
 
 http_archive(
     name = "gtest",
-    build_file = "@//:gtest.BUILD",
-    sha256 = "ce7366fe57eb49928311189cb0e40e0a8bf3d3682fca89af30d884c25e983786",
-    strip_prefix = "googletest-release-1.12.0",
-    url = "https://github.com/google/googletest/archive/release-1.12.0.zip",
+    sha256 = "ffa17fbc5953900994e2deec164bb8949879ea09b411e07f215bfbb1f87f4632",
+    strip_prefix = "googletest-1.13.0",
+    url = "https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip",
 )
 
 ### Python Dependencies
@@ -139,4 +138,29 @@ new_git_repository(
     build_file = "@//:rapidcheck.BUILD",
     commit = "8fafda42e732164db58003e542196e94a28481f9",
     remote = "https://github.com/emil-e/rapidcheck.git",
+)
+
+### Skylib
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "74d544d96f4a5bb630d465ca8bbcfe231e3594e5aae57e1edbf17a6eb3ca2506",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+### Eigen
+
+http_archive(
+    name = "eigen",
+    build_file = "//:eigen.BUILD",
+    sha256 = "8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72",
+    strip_prefix = "eigen-3.4.0",
+    url = "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz",
 )

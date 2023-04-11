@@ -3,17 +3,7 @@ from sympy import Symbol, simplify, symbols
 
 class Model:
     def __init__(
-        self,
-        dt,
-        state,
-        control,
-        state_model,
-        process_noise=None,
-        sensor_models=None,
-        sensor_noises=None,
-        compile=False,
-        *,
-        debug_print=False
+        self, dt, state, control, state_model, compile=False, *, debug_print=False
     ):
         self.dt = dt
         self.state = state

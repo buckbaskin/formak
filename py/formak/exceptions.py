@@ -14,3 +14,7 @@ class MinimizationFailure(FormakBaseException):
             self.success,
             self.message,
         )
+
+
+class ModelConstructionError(FormakBaseException):
+    pass

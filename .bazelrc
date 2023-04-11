@@ -1,12 +1,20 @@
-build:linux --compiler=clang
+# build --compiler=clang
+build --copt -std=c++17
+build --copt -Wall
+build --copt -Wextra
+build --copt -Wdouble-promotion
+# build --copt -Wconversion # disabled for an implicit conversion in GTest
+build --copt -Wfloat-conversion
+# build --copt -Wsign-conversion # disabled for rapidcheck
+build --copt -Wno-unused-parameter
+# build --copt -Wpedantic # disabled for now so I can use designated initializers
+build --copt -Werror
 
 # Clang Build
 build:clang --crosstool_top=//toolchain:clang_suite
 build:clang --cpu=k8
 build:clang --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
-build:clang --copt -Wall
-build:clang --copt -Wpedantic
-build:clang --copt -Werror
+build:clang --copt -stdlib=libc++
 
 # Address Sanitizer
 build:asan --strip=never

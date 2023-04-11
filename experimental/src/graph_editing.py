@@ -47,7 +47,7 @@ def expr_to_3addr(expr, counter=0):
             counter += 1
             yield Assign("tempname%d" % (counter,), Symbol(expr.name))
         else:
-            raise ValueError("terminal %s %s" % (expr.func, expr.args))
+            raise ValueError("terminal {} {}".format(expr.func, expr.args))
     else:
         last_child_generated = {}
         for idx, arg in enumerate(expr.args):
@@ -68,7 +68,7 @@ def expr_to_3addr(expr, counter=0):
 
             yield final_op
         else:
-            raise ValueError("operator %s" % (expr.func,))
+            raise ValueError("operator {}".format(expr.func))
 
 
 def sympy_matrix_to_compute_graph(m):

@@ -11,4 +11,5 @@ bt() {
     fi
 }
 
-bt --config=clang
+bt
+# bt --config=clang

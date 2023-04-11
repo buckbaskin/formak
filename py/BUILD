@@ -3,7 +3,7 @@
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "py_test_suite")
+load("//py:defs.bzl", "cc_formak_model", "py_test_suite")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - exporting as a pip package for non-bazel users
@@ -11,10 +11,27 @@ load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 FORMAK_VERSION = "0.0.1-alpha00"
 
-TEST_DEPS = [
+PY_TEST_DEPS = [
     requirement("pytest"),
     requirement("pytest-mock"),
 ]
+
+CC_TEST_DEPS = [
+    "@gtest//:gtest_main",
+]
+
+filegroup(
+    name = "templates",
+    srcs = glob(
+        [
+            "formak/templates/*.h",
+            "formak/templates/*.hpp",
+            "formak/templates/*.cpp",
+        ],
+        allow_empty = False,
+    ),
+    visibility = ["//visibility:public"],
+)
 
 py_library(
     name = "formak",
@@ -30,7 +47,9 @@ py_library(
         requirement("scikit-learn"),
         requirement("numpy"),
         requirement("numba"),
+        requirement("colorama"),
         requirement("hypothesis"),
+        requirement("Jinja2"),
     ],
 )
 
@@ -100,7 +119,7 @@ py_library(
 )
 
 py_test_suite(
-    name = "unit",
+    name = "unit-py",
     size = "small",
     srcs = glob(
         [
@@ -111,11 +130,11 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":formak",
-    ] + TEST_DEPS,
+    ] + PY_TEST_DEPS,
 )
 
 py_test_suite(
-    name = "integration",
+    name = "integration-py",
     size = "medium",
     srcs = glob([
         "test/formak/**/*.py",
@@ -123,5 +142,67 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":formak",
-    ] + TEST_DEPS,
+    ] + PY_TEST_DEPS,
+)
+
+cc_formak_model(
+    name = "simple-model",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/formak/cpp/generator.py",
+    pysrcs = glob(
+        ["test/unit/formak/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "simple-ekf",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/formak/cpp/generator_ekf.py",
+    pysrcs = glob(
+        ["test/unit/formak/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_test(
+    name = "unit-cpp-extended-kalman-filter-test",
+    srcs = ["test/unit/formak/cpp/ExtendedKalmanFilter_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-model-test",
+    srcs = ["test/unit/formak/cpp/Model_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "integration-cpp-model-test",
+    srcs = ["test/formak/Model_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+        "//cpp:utils-stats",
+        "@rapidcheck",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "integration-cpp-extended-kalman-filter-test",
+    srcs = ["test/formak/ExtendedKalmanFilter_test.cpp"],
+    deps = [
+        ":simple-model",
+        ":simple-ekf",
+        "//cpp:utils-stats",
+        "@rapidcheck",
+    ] + CC_TEST_DEPS,
 )

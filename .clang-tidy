@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,clang-analyzer-*,abseil-*,boost-*,bugprone-*,cert-*,concurrency-*,cppcoreguidelines-*,google-*,hicpp-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-modernize-use-trailing-return-typ*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,clang-analyzer-*,abseil-*,boost-*,bugprone-*,cert-*,concurrency-*,cppcoreguidelines-*,google-*,hicpp-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-modernize-use-trailing-return-typ*,-cert-err58-cpp,-cppcoreguidelines-avoid-non-const-global-variables,-cppcoreguidelines-owning-memory,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

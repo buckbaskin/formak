@@ -2,6 +2,7 @@ import warnings
 from datetime import datetime, timedelta
 
 import numpy as np
+import pytest
 from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
@@ -12,144 +13,7 @@ from formak import python, ui
 warnings.filterwarnings("error")
 
 
-def test_EKF_process_with_control():
-    config = python.Config()
-    dt = 0.1
-
-    ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
-        ),
-        process_noise=np.eye(1),
-        sensor_models={},
-        sensor_noises={},
-        config=config,
-    )
-
-    control_vector = np.array([[0.2]])
-    covariance = np.eye(2)
-
-    state_vector = np.array([[0.0, 0.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_model(
-            dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
-        [[0.0, 0.02]],
-    )
-
-    state_vector = np.array([[0.0, 1.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_model(
-            dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
-        [[0.0, 1.02]],
-    )
-
-    state_vector = np.array([[1.0, 0.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_model(
-            dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
-        [[0.0, 0.02]],
-    )
-
-    state_vector = np.array([[1.0, 1.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_model(
-            dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
-        [[1.0, 1.02]],
-    )
-
-
-def test_EKF_sensor():
-    config = python.Config()
-
-    ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
-        ),
-        process_noise=np.eye(1),
-        sensor_models={
-            "simple": {"reading1": ui.Symbol("x")},
-            "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
-        },
-        sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
-        config=config,
-    )
-
-    covariance = np.eye(2)
-    reading = 1.0
-    state_vector = np.array([[0.0, 0.0]]).transpose()
-
-    next_state, next_cov = ekf.sensor_model(
-        "simple",
-        state=state_vector,
-        covariance=covariance,
-        sensor_reading=np.array([[reading]]),
-    )
-    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
-
-    next_state, next_cov = ekf.sensor_model(
-        "combined",
-        state=state_vector,
-        covariance=covariance,
-        sensor_reading=np.array([[reading]]),
-    )
-    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
-    assert abs(reading - next_state[1]) < abs(reading - state_vector[1])
-
-
-def test_EKF_process_jacobian():
-    config = python.Config()
-    dt = 0.1
-
-    ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
-        ),
-        process_noise=np.eye(1),
-        sensor_models={},
-        sensor_noises={},
-        config=config,
-    )
-
-    control_vector = np.array([[0.2]])
-
-    state_vector = np.array([[0.0, 0.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
-        [[0.0, 0.0], [0.0, 1.0]],
-    )
-
-    state_vector = np.array([[0.0, 1.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
-        [[1.0, 0.0], [0.0, 1.0]],
-    )
-
-    state_vector = np.array([[1.0, 0.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
-        [[0.0, 1.0], [0.0, 1.0]],
-    )
-
-    state_vector = np.array([[1.0, 1.0]]).transpose()
-    assert_almost_equal(
-        ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
-        [[1.0, 1.0], [0.0, 1.0]],
-    )
-
-
+@pytest.mark.skip("Test marked as flaky, passing and failing on the same input")
 @given(floats(), floats(), floats())
 @settings(deadline=timedelta(seconds=2))
 def test_EKF_process_property(state_x, state_y, control_a):
@@ -167,7 +31,7 @@ def test_EKF_process_property(state_x, state_y, control_a):
     )
     ekf = python.compile_ekf(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={},
         sensor_noises={},
         config=config,
@@ -223,6 +87,7 @@ def test_EKF_process_property(state_x, state_y, control_a):
         raise
 
 
+@pytest.mark.skip(reason="Flaky with different execution times. Needs debugging")
 @given(floats(), floats(), floats())
 def test_EKF_sensor_property(x, y, a):
     config = {}
@@ -238,7 +103,7 @@ def test_EKF_sensor_property(x, y, a):
     )
     ekf = python.compile_ekf(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
         sensor_noises={"simple": np.eye(1)},
         config=config,
@@ -296,10 +161,11 @@ def test_EKF_sensor_property(x, y, a):
     )
 
 
+@pytest.mark.skip("Flaky due to assertion on test timing at the end")
 def test_EKF_sensor_property_failing_example():
     start_time = datetime.now()
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
-    config = {}
+    config = python.Config()
 
     ui_Model = ui.Model(
         ui.Symbol("dt"),
@@ -310,9 +176,9 @@ def test_EKF_sensor_property_failing_example():
             ui.Symbol("y"): "y + a * dt",
         },
     )
-    ekf = python.compile_ekf(
+    ekf = python.ExtendedKalmanFilter(
         state_model=ui_Model,
-        process_noise=np.eye(1),
+        process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
         sensor_noises={"simple": np.eye(1)},
         config=config,

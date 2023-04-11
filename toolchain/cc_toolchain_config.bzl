@@ -21,11 +21,11 @@ def _impl(ctx):
     tool_paths = [
         tool_path(
             name = "gcc",
-            path = "/usr/bin/clang++-12",
+            path = "/usr/bin/clang-12",
         ),
         tool_path(
             name = "ld",
-            path = "/usr/bin/ld",
+            path = "/usr/lib/llvm-12/bin/lld",
         ),
         tool_path(
             name = "ar",
@@ -33,7 +33,7 @@ def _impl(ctx):
         ),
         tool_path(
             name = "cpp",
-            path = "/bin/falseC",
+            path = "/usr/bin/clang++-12",
         ),
         tool_path(
             name = "gcov",
@@ -80,6 +80,10 @@ def _impl(ctx):
             "/usr/lib/llvm-12/lib/clang/12.0.0/include",
             "/usr/lib/llvm-12/lib/clang/12.0.0/share",
             "/usr/lib/llvm-12/lib64/clang/12.0.0/include",
+            "/usr/lib/llvm-12/lib/clang/12.0.1/include",
+            "/usr/lib/llvm-12/lib/clang/12.0.1/share",
+            "/usr/lib/llvm-12/lib64/clang/12.0.1/include",
+            "/usr/lib/llvm-12/include/c++/v1",
             "/usr/include",
         ],
         toolchain_identifier = "local",

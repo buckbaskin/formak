@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@pip_deps//:requirements.bzl", "requirement")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 cc_library(
     name = "hello-library",
@@ -21,7 +22,7 @@ cc_test(
     srcs = ["test/hello_test.cpp"],
     deps = [
         ":hello-library",
-        "@gtest//:main",
+        "@gtest//:gtest_main",
     ],
 )
 
@@ -37,6 +38,58 @@ py_binary(
     main = "src/hello_world.py",
     deps = [":hello-library-py"],
 )
+
+### Start cpp-gen
+py_binary(
+    name = "cpp-gen-impl",
+    srcs = ["src/cpp_gen.py"],
+    main = "src/cpp_gen.py",
+    deps = [
+        requirement("sympy"),
+        requirement("Jinja2"),
+    ],
+)
+
+run_binary(
+    name = "cpp-gen",
+    srcs = glob([
+        "templates/*.cpp",
+        "templates/*.h",
+    ]),
+    outs = [
+        "generated/jinja_basic_class.cpp",
+        "generated/jinja_basic_class.h",
+    ],
+    args = [
+        "--headertemplate",
+        "$(location templates/basic_class.h)",
+        "--sourcetemplate",
+        "$(location templates/basic_class.cpp)",
+        "--header",
+        "$(location generated/jinja_basic_class.h)",
+        "--source",
+        "$(location generated/jinja_basic_class.cpp)",
+    ],
+    tool = ":cpp-gen-impl",
+)
+
+cc_library(
+    name = "cpp-gen-cpp",
+    srcs = ["generated/jinja_basic_class.cpp"],
+    hdrs = ["generated/jinja_basic_class.h"],
+    strip_include_prefix = "generated",
+)
+# TODO(buck): Lump all this together into a macro, so that the end Bazel user/developer doesn't have to make the binary/genrule/cc_library.
+
+cc_test(
+    name = "cpp-gen-cpp-test",
+    srcs = ["test/cpp_gen_test.cpp"],
+    deps = [
+        ":cpp-gen-cpp",
+        "@gtest//:gtest_main",
+    ],
+)
+### End cpp-gen
 
 py_test(
     name = "hello-test-py",
@@ -88,7 +141,7 @@ cc_test(
     srcs = ["test/codegen_output_test.cpp"],
     deps = [
         ":codegen-output",
-        "@gtest//:main",
+        "@gtest//:gtest_main",
     ],
 )
 

@@ -73,7 +73,7 @@ def cpu_tick(state, instructions, cpu_architecture_info):
         return state, instructions
 
     # Data Available, Process Intruction
-    logger.debug("Processing Instruction %s" % (next_instruction,))
+    logger.debug("Processing Instruction {}".format(next_instruction))
 
     # Note: Ignores throughput (for better and worse)
     state["inprogress_registers"][next_instruction.target] = (
