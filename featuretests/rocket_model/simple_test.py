@@ -2,6 +2,7 @@ import sys
 from os.path import basename
 
 from functools import reduce
+from itertools import repeat
 from formak import ui, python
 import numpy as np
 from sympy import sin, cos
@@ -43,50 +44,53 @@ def model_definition():
     print(CON_orientation_in_global_frame)
 
     # Note: Needs body-fixed / moving frame math
-    CON_velocity_in_CON_frame = named_translation("CON_vel")
+    CON_velocity_in_global_frame = named_translation("CON_vel")
 
     # Note: Needs body-fixed / moving frame math
-    orientation_rate_states, CON_orientation_rates_in_CON_frame = named_rotation(
+    orientation_rate_states, CON_orientation_rates_in_global_frame = named_rotation(
         "CON_orate"
     )
-    CON_acceleration_in_CON_frame = named_translation("CON_acc")
+    CON_acceleration_in_global_frame = named_translation("CON_acc")
 
     state = reduce(
         lambda x, y: x | y.free_symbols,
         [
             CON_position_in_global_frame,
             CON_orientation_in_global_frame,
-            CON_velocity_in_CON_frame,
+            CON_velocity_in_global_frame,
         ],
         set(),
     )
     control = reduce(
         lambda x, y: x | y.free_symbols,
         [
-            CON_orientation_rates_in_CON_frame,
-            CON_acceleration_in_CON_frame,
+            CON_orientation_rates_in_global_frame,
+            CON_acceleration_in_global_frame,
         ],
         set(),
     )
 
-    CON_velocity_in_global_frame = (
-        CON_orientation_in_global_frame * CON_velocity_in_CON_frame
+    CON_velocity_in_CON_frame = (
+        CON_orientation_in_global_frame.transpose() * CON_velocity_in_global_frame
     )
 
-    CON_orientation_rates_in_global_frame = (
-        CON_orientation_in_global_frame * CON_orientation_rates_in_CON_frame
+    CON_orientation_rates_in_CON_frame = (
+        CON_orientation_in_global_frame.transpose()
+        * CON_orientation_rates_in_global_frame
     )
 
     # Note: this is probably incorrect, ignores motion of frame
-    CON_acceleration_in_global_frame = (
-        CON_orientation_in_global_frame * CON_acceleration_in_CON_frame
+    CON_acceleration_in_CON_frame = (
+        CON_orientation_in_global_frame.transpose() * CON_acceleration_in_global_frame
     )
 
     next_position = CON_position_in_global_frame + (dt * CON_velocity_in_global_frame)
     # next_orientation = (
     #     dt * CON_orientation_rates_in_global_frame
     # ) * CON_orientation_in_global_frame
-    next_velocity = CON_velocity_in_CON_frame + (dt * CON_acceleration_in_CON_frame)
+    next_velocity = CON_velocity_in_global_frame + (
+        dt * CON_acceleration_in_global_frame
+    )
 
     def state_model_composer():
         for p in zip(CON_position_in_global_frame.free_symbols, next_position):
@@ -96,7 +100,7 @@ def model_definition():
             orientation_states, orientation_states + dt * orientation_rate_states
         ):
             yield o
-        for v in zip(CON_velocity_in_CON_frame.free_symbols, next_velocity):
+        for v in zip(CON_velocity_in_global_frame.free_symbols, next_velocity):
             yield v
 
     print("state model")
@@ -110,10 +114,37 @@ def model_definition():
     return model
 
 
-def test_python_Model_simple():
+def test_python_Model():
     model = model_definition()
 
     python_implementation = python.compile(model)
+
+    state_vector = np.zeros((9, 1))
+    control_vector = np.zeros((6, 1))
+
+    state_vector_next = python_implementation.model(0.01, state_vector, control_vector)
+
+
+def test_python_EKF():
+    model = model_definition()
+
+    orientation_rate_states, CON_orientation_rates_in_global_frame = named_rotation(
+        "CON_orate"
+    )
+    acceleration_states = named_translation("CON_acc").free_symbols
+    process_noise = {
+        k: v
+        for k, v in list(zip(orientation_rate_states, repeat(0.1)))
+        + list(zip(acceleration_states, repeat(1.0)))
+    }
+
+    python_implementation = python.compile_ekf(
+        state_model=model,
+        process_noise=process_noise,
+        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        sensor_noises={"simple": np.eye(1)},
+        config={"compile": True},
+    )
 
     state_vector = np.zeros((9, 1))
     control_vector = np.zeros((6, 1))
