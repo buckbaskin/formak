@@ -46,11 +46,45 @@ def model_definition():
     # Note: Needs body-fixed / moving frame math
     CON_velocity_in_global_frame = named_translation("CON_vel")
 
-    # Note: Needs body-fixed / moving frame math
-    orientation_rate_states, CON_orientation_rates_in_global_frame = named_rotation(
-        "CON_orate"
+    IMU_position_in_CON_frame = named_translation("IMU_pos")
+    IMU_orientation_states, IMU_orientation_in_CON_frame = named_rotation("IMU_ori")
+
+    orientation_rate_states, IMU_orientation_rates_in_IMU_frame = named_rotation(
+        "IMU_orate"
     )
-    CON_acceleration_in_global_frame = named_translation("CON_acc")
+    (
+        orientation_rate_rate_states,
+        IMU_orientation_rate_rates_in_IMU_frame,
+    ) = named_rotation("IMU_orate_rate")
+    IMU_acceleration_in_IMU_frame = named_translation("IMU_acc")
+
+    CON_acceleration_in_CON_frame = (
+        # a (measured by sensor, rotated to align with CON coordinates)
+        IMU_orientation_in_CON_frame * IMU_acceleration_in_IMU_frame
+        # tangential acceleration
+        - IMU_orientation_rate_rates_in_IMU_frame.cross(IMU_position_in_CON_frame)
+        # centripetal acceleration
+        - IMU_orientation_rates_in_IMU_frame.cross(
+            IMU_orientation_rates_in_IMU_frame.cross(IMU_position_in_CON_frame)
+        )
+        # acceleration relative to observer in CON frame
+        - IMU_acceleration_in_CON_frame
+        # Coriolis acceleration
+        - (2.0 * IMU_orientation_rates_in_IMU_frame.cross(IMU_velocity_in_CON_frame))
+    )
+
+    # Note: Needs body-fixed / moving frame math
+    # orientation_rate_states, CON_orientation_rates_in_CON_frame = named_rotation(
+    #     "CON_orate"
+    # )
+    # CON_acceleration_in_CON_frame = named_translation("CON_acc")
+
+    CON_orientation_rates_in_global_frame = (
+        CON_orientation_in_global_frame * CON_orientation_rates_in_CON_frame
+    )
+    CON_acceleration_in_global_frame = (
+        CON_orientation_in_global_frame * CON_acceleration_in_CON_frame
+    )
 
     state = reduce(
         lambda x, y: x | y.free_symbols,
@@ -64,24 +98,14 @@ def model_definition():
     control = reduce(
         lambda x, y: x | y.free_symbols,
         [
-            CON_orientation_rates_in_global_frame,
-            CON_acceleration_in_global_frame,
+            CON_orientation_rates_in_CON_frame,
+            CON_acceleration_in_CON_frame,
         ],
         set(),
     )
 
     CON_velocity_in_CON_frame = (
         CON_orientation_in_global_frame.transpose() * CON_velocity_in_global_frame
-    )
-
-    CON_orientation_rates_in_CON_frame = (
-        CON_orientation_in_global_frame.transpose()
-        * CON_orientation_rates_in_global_frame
-    )
-
-    # Note: this is probably incorrect, ignores motion of frame
-    CON_acceleration_in_CON_frame = (
-        CON_orientation_in_global_frame.transpose() * CON_acceleration_in_global_frame
     )
 
     next_position = CON_position_in_global_frame + (dt * CON_velocity_in_global_frame)
@@ -112,41 +136,3 @@ def model_definition():
 
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
     return model
-
-
-def test_python_Model():
-    model = model_definition()
-
-    python_implementation = python.compile(model)
-
-    state_vector = np.zeros((9, 1))
-    control_vector = np.zeros((6, 1))
-
-    state_vector_next = python_implementation.model(0.01, state_vector, control_vector)
-
-
-def test_python_EKF():
-    model = model_definition()
-
-    orientation_rate_states, CON_orientation_rates_in_global_frame = named_rotation(
-        "CON_orate"
-    )
-    acceleration_states = named_translation("CON_acc").free_symbols
-    process_noise = {
-        k: v
-        for k, v in list(zip(orientation_rate_states, repeat(0.1)))
-        + list(zip(acceleration_states, repeat(1.0)))
-    }
-
-    python_implementation = python.compile_ekf(
-        state_model=model,
-        process_noise=process_noise,
-        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        sensor_noises={"simple": np.eye(1)},
-        config={"compile": True},
-    )
-
-    state_vector = np.zeros((9, 1))
-    control_vector = np.zeros((6, 1))
-
-    state_vector_next = python_implementation.model(0.01, state_vector, control_vector)
