@@ -15,10 +15,20 @@ class Model:
         self.state_model = state_model
 
         print(f"pre simplify {datetime.now() - start_time}")
-        for idx, k in enumerate(sorted(list(self.state_model.keys()))):
+        for idx, k in enumerate(
+            sorted(list(self.state_model.keys()), key=lambda x: x.name)
+        ):
+            pre = self.state_model[k]
             self.state_model[k] = simplify(self.state_model[k])
             print(f"{idx} {k} {datetime.now() - start_time}")
-            if idx >= 5:
+            if idx >= 7:
+                post = self.state_model[k]
+                print("\n===\n\nBefore Simplification")
+                print(len(str(pre)))
+                print(pre)
+                print("After Simplification")
+                print(len(str(post)))
+                print(post)
                 1 / 0
 
         print(f"post simplify {datetime.now() - start_time}")

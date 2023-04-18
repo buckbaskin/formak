@@ -63,6 +63,8 @@ def named_acceleration(name):
 def model_definition():
     start_time = datetime.now()
 
+    ## Define Model
+
     dt = ui.Symbol("dt")
 
     # CON: Center Of Navigation
@@ -74,7 +76,7 @@ def model_definition():
     # Note: Needs body-fixed / moving frame math
     CON_velocity_in_global_frame = named_velocity("CON")
 
-    IMU_position_in_CON_frame = named_translation("IMU_pos")
+    IMU_position_in_CON_frame = named_translation("IMU")
     IMU_orientation_states, IMU_orientation_in_CON_frame = named_rotation("IMU_ori")
 
     (
@@ -88,8 +90,6 @@ def model_definition():
     IMU_acceleration_in_IMU_frame = named_acceleration("IMU_reading")
     IMU_velocity_in_CON_frame = named_velocity("IMU_in_CON")
     IMU_acceleration_in_CON_frame = named_acceleration("IMU_in_CON")
-
-    print(f"Defining lots of symbols: {datetime.now() - start_time}")
 
     CON_acceleration_in_CON_frame = (
         # a (measured by sensor, rotated to align with CON coordinates)
@@ -105,8 +105,6 @@ def model_definition():
         # Coriolis acceleration
         - (2.0 * IMU_orientation_rates_in_IMU_frame.cross(IMU_velocity_in_CON_frame))
     )
-
-    print(f"CON_acceleration_in_CON_frame: {datetime.now() - start_time}")
 
     (
         IMU_orientation_rate_states,
@@ -124,8 +122,6 @@ def model_definition():
     CON_acceleration_in_global_frame = (
         CON_orientation_in_global_frame * CON_acceleration_in_CON_frame
     )
-
-    print(f"pre state assembly: {datetime.now() - start_time}")
 
     state = reduce(
         lambda x, y: x | y.free_symbols,
@@ -147,8 +143,6 @@ def model_definition():
         ],
         set(),
     )
-
-    print(f"post state assembly: {datetime.now() - start_time}")
 
     CON_velocity_in_CON_frame = (
         CON_orientation_in_global_frame.transpose() * CON_velocity_in_global_frame
@@ -180,13 +174,22 @@ def model_definition():
         ):
             yield v
 
-    print(f"pre state_model_composer: {datetime.now() - start_time}")
-
     for k, v in state_model_composer():
         print(" - ", k, " : ", v)
 
     state_model = {k: v for k, v in state_model_composer()}
     assert len(state_model) == 9
+
+    ## Simplifying Assumptions
+
+    simplifications = []  # List[Tuple(Symbol, Symbol)]
+    # Rigid Body Assumption
+    simplifications += [(s, 0.0) for s in IMU_acceleration_in_CON_frame.free_symbols]
+    simplifications += [(s, 0.0) for s in IMU_velocity_in_CON_frame.free_symbols]
+    # Constant rotation rates for each update
+    simplifications += [(s, 0.0) for s in orientation_rate_rate_states]
+
+    state_model = {k: v.subs(simplifications) for k, v in state_model.items()}
 
     print(f"pre ui.Model: {datetime.now() - start_time}")
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
