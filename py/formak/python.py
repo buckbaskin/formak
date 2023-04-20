@@ -1,7 +1,7 @@
 from typing import Dict
 
 import numpy as np
-from formak.exceptions import MinimizationFailure
+from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numba import njit
 from scipy.optimize import minimize
 from sympy import Matrix, Symbol
@@ -15,21 +15,59 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 class Model:
     """Python implementation of the model."""
 
-    def __init__(self, symbolic_model, config):
+    def __init__(self, symbolic_model, calibration_map, config):
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)
 
         self.state_size = len(symbolic_model.state)
         self.calibration_size = len(symbolic_model.calibration)
-        1 / 0
         self.control_size = len(symbolic_model.control)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(
             list(symbolic_model.control), key=lambda x: x.name
         )
-        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        self.calibration_vector = np.zeros((0, 0))
+        if self.calibration_size > 0:
+            if calibration_map is None:
+                map_lite = ", ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(symbolic_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    symbolic_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"Missing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"Extra: {extra_from_map}"
+                raise ModelConstructionError(
+                    f"Mismatched Calibration:\n{missing}\n{extra}"
+                )
+        self.calibration_vector = np.array(
+            [calibration_map[k] for k in self.arglist_calibration]
+        )
 
         # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
         self._impl = [
@@ -71,7 +109,7 @@ class Model:
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
             try:
-                result = impl(dt, *state, *control_vector)
+                result = impl(dt, *state, *self.calibration_vector, *control_vector)
                 next_state[i, 0] = result
             except TypeError:
                 print(
@@ -139,6 +177,7 @@ class ExtendedKalmanFilter:
         process_noise: Dict[Symbol, float],
         sensor_models,
         sensor_noises,
+        calibration_map,
         config,
     ):
         assert isinstance(config, Config)
@@ -146,19 +185,34 @@ class ExtendedKalmanFilter:
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
+        self.calibration_size = len(state_model.calibration)
 
         self.params = {
             "process_noise": None,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
+            "calibration_map": calibration_map,
             "compile": compile,
         }
 
-        self._construct_process(state_model, process_noise, config)
-        self._construct_sensors(state_model, sensor_models, sensor_noises, config)
+        self._construct_process(
+            state_model=state_model,
+            process_noise=process_noise,
+            calibration_map=calibration_map,
+            config=config,
+        )
+        self._construct_sensors(
+            state_model=state_model,
+            sensor_models=sensor_models,
+            sensor_noises=sensor_noises,
+            calibration_map=calibration_map,
+            config=config,
+        )
 
-    def _construct_process(self, state_model, process_noise, config):
-        self.state_model = Model(state_model, config)
+    def _construct_process(self, state_model, process_noise, calibration_map, config):
+        self.state_model = Model(
+            symbolic_model=state_model, calibration_map=calibration_map, config=config
+        )
         assert len(process_noise) == self.control_size
 
         process_noise_matrix = np.eye(self.state_model.control_size)
@@ -651,25 +705,44 @@ class Config:
         self.python_modules = python_modules
 
 
-def compile(symbolic_model, *, config=None):
+def compile(symbolic_model, calibration_map=None, *, config=None):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
-    return Model(symbolic_model, config)
+    if calibration_map is None:
+        calibration_map = {}
+
+    return Model(
+        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
+    )
 
 
 def compile_ekf(
-    state_model, process_noise, sensor_models, sensor_noises, *, config=None
+    state_model,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    calibration_map=None,
+    *,
+    config=None,
 ):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
+    if calibration_map is None:
+        calibration_map = {}
+
     common.model_validation(state_model, process_noise)
 
     return ExtendedKalmanFilter(
-        state_model, process_noise, sensor_models, sensor_noises, config
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )

@@ -10,5 +10,8 @@ def test_python_Model():
 
     state_vector = np.zeros((9, 1))
     control_vector = np.zeros((6, 1))
+    calibration_vector = np.zeros((6, 1))
 
-    state_vector_next = python_implementation.model(0.01, state_vector, control_vector)
+    state_vector_next = python_implementation.model(
+        0.01, state_vector, calibration_vector, control_vector
+    )

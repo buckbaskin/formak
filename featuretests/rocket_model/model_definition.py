@@ -3,7 +3,6 @@ from datetime import datetime
 from os.path import basename
 
 from functools import reduce
-from itertools import repeat
 from formak import ui, python
 import numpy as np
 from sympy import sin, cos

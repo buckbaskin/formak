@@ -1,24 +1,22 @@
-from formak import python
-from model_definition import model_definition
+from formak import ui, python
+from itertools import repeat
+from model_definition import model_definition, named_rotation_rate, named_acceleration
 import numpy as np
 
 
 def test_python_EKF():
     model = model_definition()
 
-    1 / 0
-
-    orientation_rate_states, CON_orientation_rates_in_global_frame = named_rotation(
-        "CON_orate"
+    (reading_orientation_rate_states, _) = named_rotation_rate("IMU_reading")
+    reading_acceleration_states = sorted(
+        named_acceleration("IMU_reading").free_symbols, key=lambda x: x.name
     )
-    acceleration_states = named_translation("CON_acc").free_symbols
+
     process_noise = {
         k: v
-        for k, v in list(zip(orientation_rate_states, repeat(0.1)))
-        + list(zip(acceleration_states, repeat(1.0)))
+        for k, v in list(zip(reading_orientation_rate_states, repeat(0.1)))
+        + list(zip(reading_acceleration_states, repeat(1.0)))
     }
-
-    1 / 0
 
     python_implementation = python.compile_ekf(
         state_model=model,
