@@ -24,7 +24,7 @@ def rotation(roll, pitch, yaw):
 
 def named_rotation(name):
     s = ui.symbols([f"{name}_roll", f"{name}_pitch", f"{name}_yaw"])
-    return ui.Matrix(s).transpose(), rotation(*s)
+    return ui.Matrix(s), rotation(*s)
 
 
 def rotation_rate(roll, pitch, yaw):
@@ -33,7 +33,7 @@ def rotation_rate(roll, pitch, yaw):
 
 def named_rotation_rate(name):
     s = ui.symbols([f"{name}_roll_rate", f"{name}_pitch_rate", f"{name}_yaw_rate"])
-    return ui.Matrix(s).transpose(), rotation_rate(*s)
+    return ui.Matrix(s), rotation_rate(*s)
 
 
 def translation(x, y, z):
@@ -126,12 +126,17 @@ def model_definition():
     state = reduce(
         lambda x, y: x | y.free_symbols,
         [
-            IMU_position_in_CON_frame,
-            IMU_orientation_in_CON_frame,
-            IMU_velocity_in_CON_frame,
             CON_position_in_global_frame,
             CON_orientation_in_global_frame,
             CON_velocity_in_global_frame,
+        ],
+        set(),
+    )
+    calibration = reduce(
+        lambda x, y: x | y.free_symbols,
+        [
+            IMU_position_in_CON_frame,
+            IMU_orientation_in_CON_frame,
         ],
         set(),
     )
@@ -149,9 +154,11 @@ def model_definition():
     )
 
     next_position = CON_position_in_global_frame + (dt * CON_velocity_in_global_frame)
-    # next_orientation = (
-    #     dt * CON_orientation_rates_in_global_frame
-    # ) * CON_orientation_in_global_frame
+    next_orientation = orientation_states + dt * (
+        IMU_orientation_in_CON_frame * reading_orientation_rate_states
+    )
+    assert len(next_orientation) == 3
+
     next_velocity = CON_velocity_in_global_frame + (
         dt * CON_acceleration_in_global_frame
     )
@@ -163,10 +170,7 @@ def model_definition():
         ):
             yield p
         # Note: I know this is incorrect, but first order it's ok
-        for o in zip(
-            orientation_states,
-            orientation_states + dt * reading_orientation_rate_states,
-        ):
+        for o in zip(orientation_states, next_orientation):
             yield o
         for v in zip(
             sorted(CON_velocity_in_global_frame.free_symbols, key=lambda x: x.name),
@@ -192,7 +196,12 @@ def model_definition():
     state_model = {k: v.subs(simplifications) for k, v in state_model.items()}
 
     print(f"pre ui.Model: {datetime.now() - start_time}")
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = ui.Model(
+        dt=dt,
+        state=state,
+        calibration=calibration,
+        control=control,
+        state_model=state_model,
+    )
     print(f"post ui.Model: {datetime.now() - start_time}")
-    1 / 0
     return model

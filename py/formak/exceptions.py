@@ -16,5 +16,11 @@ class MinimizationFailure(FormakBaseException):
         )
 
 
+# UI Model
+class ModelDefinitionError(FormakBaseException):
+    pass
+
+
+# Python / C++ Compiled Model
 class ModelConstructionError(FormakBaseException):
     pass

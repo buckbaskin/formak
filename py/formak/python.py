@@ -21,6 +21,8 @@ class Model:
         assert isinstance(config, Config)
 
         self.state_size = len(symbolic_model.state)
+        self.calibration_size = len(symbolic_model.calibration)
+        1 / 0
         self.control_size = len(symbolic_model.control)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
