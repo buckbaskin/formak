@@ -4,7 +4,8 @@ import numpy as np
 
 
 def test_python_Model():
-    model = model_definition()
+    definition = model_definition()
+    model = definition["model"]
 
     python_implementation = python.compile(model)
 

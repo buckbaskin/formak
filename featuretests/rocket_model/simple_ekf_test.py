@@ -5,7 +5,20 @@ import numpy as np
 
 
 def test_python_EKF():
-    model = model_definition()
+    definition = model_definition()
+    model = definition["model"]
+
+    calibration = {
+        # orientation would need to invert a rotation matrix
+        "IMU_ori_pitch": 0.0,
+        "IMU_ori_roll": 0.0,
+        "IMU_ori_yaw": 0.0,
+        # pos_IMU_from_CON_in_CON     [m]     [-0.08035, 0.28390, -1.42333 ]
+        "IMU_pos_x": -0.08035,
+        "IMU_pos_y": 0.28390,
+        "IMU_pos_z": -1.42333,
+    }
+    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
 
     (reading_orientation_rate_states, _) = named_rotation_rate("IMU_reading")
     reading_acceleration_states = sorted(
@@ -23,7 +36,8 @@ def test_python_EKF():
         process_noise=process_noise,
         sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         sensor_noises={"simple": np.eye(1)},
-        config={"compile": True},
+        calibration_map=calibration_map,
+        config={"compile": True, "warm_jit": True},
     )
 
     1 / 0

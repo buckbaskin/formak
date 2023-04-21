@@ -58,13 +58,11 @@ class Model:
                 )
                 missing = ""
                 if len(missing_from_map) > 0:
-                    missing = f"Missing: {missing_from_map}"
+                    missing = f"\nMissing: {missing_from_map}"
                 extra = ""
                 if len(extra_from_map) > 0:
-                    extra = f"Extra: {extra_from_map}"
-                raise ModelConstructionError(
-                    f"Mismatched Calibration:\n{missing}\n{extra}"
-                )
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
         self.calibration_vector = np.array(
             [calibration_map[k] for k in self.arglist_calibration]
         )
@@ -88,9 +86,15 @@ class Model:
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 for jit_impl in self._impl:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
     # TODO(buck): numpy -> numpy if not compiled
     #   - Given the arglist, refactor expressions to work with state vectors
@@ -269,10 +273,16 @@ class ExtendedKalmanFilter:
                 # Pre-warm Jit by calling with known values/structure
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_process_jacobian:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
         self._impl_control_jacobian = [
             lambdify(
@@ -292,12 +302,20 @@ class ExtendedKalmanFilter:
                 # Pre-warm Jit by calling with known values/structure
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_control_jacobian:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
-    def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
+    def _construct_sensors(
+        self, state_model, sensor_models, sensor_noises, calibration_map, config
+    ):
         assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
 
         self.params["sensor_models"] = {

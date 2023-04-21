@@ -203,4 +203,9 @@ def model_definition():
         state_model=state_model,
     )
     print(f"post ui.Model: {datetime.now() - start_time}")
-    return model
+    return {
+        "model": model,
+        "state": state,
+        "calibration": calibration,
+        "control": control,
+    }
