@@ -1,6 +1,11 @@
 from formak import ui, python
 from itertools import repeat
-from model_definition import model_definition, named_rotation_rate, named_acceleration
+from model_definition import (
+    model_definition,
+    named_rotation_rate,
+    named_acceleration,
+    named_translation,
+)
 import numpy as np
 
 
@@ -31,20 +36,23 @@ def test_python_EKF():
         + list(zip(reading_acceleration_states, repeat(1.0)))
     }
 
+    CON_position_in_global_frame = named_translation("CON_pos")
+
     python_implementation = python.compile_ekf(
         state_model=model,
         process_noise=process_noise,
-        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_models={
+            "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
+        },
+        sensor_noises={"altitude": np.eye(1)},
         calibration_map=calibration_map,
         config={"compile": True, "warm_jit": True},
     )
 
-    1 / 0
-
     state_vector = np.zeros((9, 1))
+    state_covariance = np.eye(9)
     control_vector = np.zeros((6, 1))
 
-    1 / 0
-
-    state_vector_next = python_implementation.model(0.01, state_vector, control_vector)
+    state_vector_next = python_implementation.process_model(
+        dt=0.01, state=state_vector, covariance=state_covariance, control=control_vector
+    )

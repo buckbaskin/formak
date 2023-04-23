@@ -5,7 +5,7 @@ from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 
 
-def model_validation(state_model, process_noise, verbose=True):
+def model_validation(state_model, process_noise, sensor_models, verbose=True):
     assert isinstance(process_noise, dict)
     allowed_keys = set(
         list(state_model.control)
@@ -25,6 +25,16 @@ def model_validation(state_model, process_noise, verbose=True):
             raise ModelConstructionError(
                 f'Key {key} {type(key)} not in allow"list" [{render}]'
             )
+
+    # Check if sensor models depend on values outside the state, calibration [and map]
+    allowed_symbols = set(state_model.state) | set(state_model.calibration)
+    for k, model in sensor_models.items():
+        for k2, model in model.items():
+            if not set(model.free_symbols).issubset(allowed_symbols):
+                extra_symbols = sorted(list(set(model.free_symbols) - allowed_symbols))
+                raise ModelConstructionError(
+                    f"Sensor Model[{k}][{k2}] has symbols not in state, calibration: {extra_symbols}"
+                )
 
     extra_validation = False
     # Note: flagging this off for now because it was running into performance issues

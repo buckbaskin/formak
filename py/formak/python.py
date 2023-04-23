@@ -219,6 +219,8 @@ class ExtendedKalmanFilter:
         )
         assert len(process_noise) == self.control_size
 
+        self.calibration_vector = self.state_model.calibration_vector
+
         process_noise_matrix = np.eye(self.state_model.control_size)
 
         for iIdx, iSymbol in enumerate(self.state_model.arglist_control):
@@ -316,7 +318,7 @@ class ExtendedKalmanFilter:
     def _construct_sensors(
         self, state_model, sensor_models, sensor_noises, calibration_map, config
     ):
-        assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
+        assert set(sensor_models.keys()) == set(sensor_noises.keys())
 
         self.params["sensor_models"] = {
             k: SensorModel(state_model, model, config)
@@ -380,7 +382,7 @@ class ExtendedKalmanFilter:
             for col in range(self.state_size):
                 jacobian[row, col] = self._impl_process_jacobian[
                     row * self.state_size + col
-                ](dt, *state, *control)
+                ](dt, *state, *self.calibration_vector, *control)
         return jacobian
 
     def control_jacobian(self, dt, state, control):
@@ -389,7 +391,7 @@ class ExtendedKalmanFilter:
             for col in range(self.control_size):
                 jacobian[row, col] = self._impl_control_jacobian[
                     row * self.control_size + col
-                ](dt, *state, *control)
+                ](dt, *state, *self.calibration_vector, *control)
         return jacobian
 
     def sensor_jacobian(self, sensor_key, state):
@@ -754,7 +756,7 @@ def compile_ekf(
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(state_model, process_noise)
+    common.model_validation(state_model, process_noise, sensor_models)
 
     return ExtendedKalmanFilter(
         state_model=state_model,
