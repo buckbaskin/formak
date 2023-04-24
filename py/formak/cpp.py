@@ -679,7 +679,7 @@ def compile_ekf(
     elif isinstance(config, dict):
         config = Config(**config)
 
-    common.model_validation(state_model, process_noise)
+    common.model_validation(state_model, process_noise, sensor_models)
 
     args = _compile_argparse()
 

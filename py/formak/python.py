@@ -15,10 +15,13 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 class Model:
     """Python implementation of the model."""
 
-    def __init__(self, symbolic_model, calibration_map, config):
+    def __init__(self, symbolic_model, config, calibration_map=None):
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)
+
+        if calibration_map is None:
+            calibration_map = {}
 
         self.state_size = len(symbolic_model.state)
         self.calibration_size = len(symbolic_model.calibration)
@@ -40,7 +43,7 @@ class Model:
 
         self.calibration_vector = np.zeros((0, 0))
         if self.calibration_size > 0:
-            if calibration_map is None:
+            if len(calibration_map) == 0:
                 map_lite = ", ".join(
                     [f"{k}: ..." for k in self.arglist_calibration[:3]]
                 )
@@ -181,11 +184,15 @@ class ExtendedKalmanFilter:
         process_noise: Dict[Symbol, float],
         sensor_models,
         sensor_noises,
-        calibration_map,
         config,
+        calibration_map=None,
     ):
+        if calibration_map is None:
+            calibration_map = {}
+
         assert isinstance(config, Config)
         assert isinstance(process_noise, dict)
+        assert isinstance(calibration_map, dict)
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)

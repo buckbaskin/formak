@@ -2,6 +2,7 @@ from datetime import datetime
 
 from formak.exceptions import ModelDefinitionError
 from sympy import Matrix, Symbol, simplify, symbols
+from sympy.parsing.sympy_parser import parse_expr
 
 
 class Model:
@@ -9,21 +10,27 @@ class Model:
         self,
         dt,
         state,
-        calibration,
         control,
         state_model,
+        calibration=None,
         compile=False,
         *,
         proactive_simplify=False,
         debug_print=False,
     ):
+        if calibration is None:
+            calibration = set()
+
         start_time = datetime.now()
 
         self.dt = dt
         self.state = state
         self.calibration = calibration
         self.control = control
-        self.state_model = state_model
+        self.state_model = {
+            k: parse_expr(v) if isinstance(v, str) else v
+            for k, v in state_model.items()
+        }
 
         if not set(self.state).isdisjoint(set(self.calibration)):
             raise ModelDefinitionError(
