@@ -1,4 +1,5 @@
 import argparse
+import logging
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from os import scandir, walk
@@ -13,6 +14,8 @@ from sympy import Symbol, ccode, diff
 from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,7 +75,7 @@ class StateStruct:
 class Model:
     """C++ implementation of the model."""
 
-    def __init__(self, symbolic_model, config):
+    def __init__(self, symbolic_model, calibration_map, config):
         # TODO(buck): Enable mypy for type checking
         # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
         # assert isinstance(symbolic_model, ui.Model)
@@ -82,12 +85,48 @@ class Model:
 
         self.state_size = len(symbolic_model.state)
         self.control_size = len(symbolic_model.control)
+        self.calibration_size = len(symbolic_model.calibration)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(
             list(symbolic_model.control), key=lambda x: x.name
         )
-        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        if self.calibration_size > 0:
+            if len(calibration_map) == 0:
+                map_lite = ", ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(symbolic_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    symbolic_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"\nMissing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
+
+        raise NotImplementedError("Calibration generation for C++ code")
 
         self.state_generator = StateStruct(self.arglist_state)
 
@@ -179,11 +218,47 @@ class ExtendedKalmanFilter:
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
+        self.calibration_size = len(symbolic_model.calibration)
         self.control_size = len(state_model.control)
 
         self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
-        self.arglist = [state_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [state_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        if self.calibration_size > 0:
+            if len(calibration_map) == 0:
+                map_lite = ", ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(symbolic_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    symbolic_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"\nMissing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
+
+        raise NotImplementedError("Calibration generation for C++ code")
 
         self._process_model = BasicBlock(
             self._translate_process_model(state_model), indent=4
@@ -501,8 +576,10 @@ class ExtendedKalmanFilter:
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 
-def _generate_model_function_bodies(header_location, namespace, symbolic_model, config):
-    generator = Model(symbolic_model, config)
+def _generate_model_function_bodies(
+    header_location, namespace, symbolic_model, calibration_map, config
+):
+    generator = Model(symbolic_model, calibration_map, config)
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
@@ -531,10 +608,16 @@ def _generate_ekf_function_bodies(
     process_noise,
     sensor_models,
     sensor_noises,
+    calibration_map,
     config,
 ):
     generator = ExtendedKalmanFilter(
-        state_model, process_noise, sensor_models, sensor_noises, config
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     # For .../generated/formak/xyz.h
@@ -657,28 +740,46 @@ def _compile_impl(args, inserts, name, hpp, cpp):
     )
 
 
-def compile(symbolic_model, *, config=None):
+def compile(symbolic_model, calibration_map=None, *, config=None):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
+    if calibration_map is None:
+        calibration_map = {}
+
     args = _compile_argparse()
 
+    if args.header is None:
+        logger.warning("No Header specified, so output to stdout")
     inserts = _generate_model_function_bodies(
-        args.header, args.namespace, symbolic_model, config
+        header_location=args.header,
+        namespace=args.namespace,
+        symbolic_model=symbolic_model,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     return _compile_impl(args, inserts, "formak_model", ".h", ".cpp")
 
 
 def compile_ekf(
-    state_model, process_noise, sensor_models, sensor_noises, *, config=None
+    state_model,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    calibration_map=None,
+    *,
+    config=None,
 ):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
+
+    if calibration_map is None:
+        calibration_map = {}
 
     common.model_validation(
         state_model,
@@ -689,14 +790,16 @@ def compile_ekf(
 
     args = _compile_argparse()
 
+    assert args.header is not None
     inserts = _generate_ekf_function_bodies(
-        args.header,
-        args.namespace,
-        state_model,
-        process_noise,
-        sensor_models,
-        sensor_noises,
-        config,
+        header_location=args.header,
+        namespace=args.namespace,
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     return _compile_impl(args, inserts, "formak_ekf", ".hpp", ".cpp")

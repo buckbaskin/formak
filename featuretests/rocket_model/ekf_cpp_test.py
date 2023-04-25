@@ -46,5 +46,4 @@ def test_cpp_EKF():
         },
         sensor_noises={"altitude": np.eye(1)},
         calibration_map=calibration_map,
-        config={"compile": True, "warm_jit": True},
     )
