@@ -19,6 +19,7 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 class Config:
     common_subexpression_elimination: bool = True
     python_modules: List[str] = DEFAULT_MODULES
+    extra_validation: bool = False
 
 
 @dataclass
@@ -679,7 +680,12 @@ def compile_ekf(
     elif isinstance(config, dict):
         config = Config(**config)
 
-    common.model_validation(state_model, process_noise, sensor_models)
+    common.model_validation(
+        state_model,
+        process_noise,
+        sensor_models,
+        extra_validation=config.extra_validation,
+    )
 
     args = _compile_argparse()
 

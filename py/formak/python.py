@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Dict
 
 import numpy as np
@@ -716,20 +717,13 @@ class ExtendedKalmanFilter:
         return self
 
 
+@dataclass
 class Config:
-    def __init__(
-        self,
-        compile=False,
-        warm_jit=None,
-        common_subexpression_elimination=True,
-        python_modules=DEFAULT_MODULES,
-    ):
-        if warm_jit is None:
-            warm_jit = compile
-        self.compile = compile
-        self.warm_jit = warm_jit
-        self.common_subexpression_elimination = common_subexpression_elimination
-        self.python_modules = python_modules
+    compile: bool = False
+    warm_jit: bool = compile
+    common_subexpression_elimination: bool = True
+    python_modules = DEFAULT_MODULES
+    extra_validation: bool = False
 
 
 def compile(symbolic_model, calibration_map=None, *, config=None):
@@ -763,7 +757,12 @@ def compile_ekf(
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(state_model, process_noise, sensor_models)
+    common.model_validation(
+        state_model,
+        process_noise,
+        sensor_models,
+        extra_validation=config.extra_validation,
+    )
 
     return ExtendedKalmanFilter(
         state_model=state_model,

@@ -5,7 +5,9 @@ from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 
 
-def model_validation(state_model, process_noise, sensor_models, verbose=True):
+def model_validation(
+    state_model, process_noise, sensor_models, *, verbose=True, extra_validation=False
+):
     assert isinstance(process_noise, dict)
     allowed_keys = set(
         list(state_model.control)
@@ -36,7 +38,6 @@ def model_validation(state_model, process_noise, sensor_models, verbose=True):
                     f"Sensor Model[{k}][{k2}] has symbols not in state, calibration: {extra_symbols}"
                 )
 
-    extra_validation = False
     # Note: flagging this off for now because it was running into performance issues
     if extra_validation:
         symbols_to_solve_for = list(state_model.state)
