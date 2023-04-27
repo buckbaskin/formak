@@ -126,8 +126,6 @@ class Model:
                     extra = f"\nExtra: {extra_from_map}"
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
-        raise NotImplementedError("Calibration generation for C++ code")
-
         self.state_generator = StateStruct(self.arglist_state)
 
         self._model = BasicBlock(self._translate_model(symbolic_model), indent=4)
@@ -135,19 +133,29 @@ class Model:
         self._return = self._translate_return()
 
     def _translate_model(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input_state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input_state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
@@ -209,7 +217,13 @@ class ExtendedKalmanFilter:
     """C++ implementation of the EKF."""
 
     def __init__(
-        self, state_model, process_noise, sensor_models, sensor_noises, config
+        self,
+        state_model,
+        process_noise,
+        sensor_models,
+        sensor_noises,
+        config,
+        calibration_map=None,
     ):
         if isinstance(config, dict):
             config = Config(**config)
@@ -218,12 +232,12 @@ class ExtendedKalmanFilter:
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
-        self.calibration_size = len(symbolic_model.calibration)
+        self.calibration_size = len(state_model.calibration)
         self.control_size = len(state_model.control)
 
         self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
         self.arglist_calibration = sorted(
-            list(symbolic_model.calibration), key=lambda x: x.name
+            list(state_model.calibration), key=lambda x: x.name
         )
         self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
         self.arglist = (
@@ -258,8 +272,6 @@ class ExtendedKalmanFilter:
                     extra = f"\nExtra: {extra_from_map}"
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
-        raise NotImplementedError("Calibration generation for C++ code")
-
         self._process_model = BasicBlock(
             self._translate_process_model(state_model), indent=4
         )
@@ -282,19 +294,29 @@ class ExtendedKalmanFilter:
         self._return = self._translate_return()
 
     def _translate_process_model(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
@@ -310,19 +332,29 @@ class ExtendedKalmanFilter:
         )
 
     def _translate_process_jacobian(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for idx, symbol in enumerate(self.arglist_state):
             model = symbolic_model.state_model[symbol]
@@ -340,19 +372,29 @@ class ExtendedKalmanFilter:
         return f"{prefix}\n{impl}\n{indent}return jacobian;"
 
     def _translate_control_jacobian(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for idx, symbol in enumerate(self.arglist_state):
             model = symbolic_model.state_model[symbol]
@@ -463,6 +505,12 @@ class ExtendedKalmanFilter:
                 Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_calibration.{}()".format(member)),
+            )
+            for member in self.arglist_calibration
         ]
         for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
             assignment = str(predicted_reading)
@@ -542,6 +590,12 @@ class ExtendedKalmanFilter:
                 Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_calibration.{}()".format(member)),
+            )
+            for member in self.arglist_calibration
         ]
 
         for reading_idx, (_predicted_reading, model) in enumerate(
@@ -583,8 +637,10 @@ def _generate_model_function_bodies(
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    assert "generated/" in header_location
-    header_include = header_location.split("generated/")[-1]
+    if header_location is not None and "generated/" in header_location:
+        header_include = header_location.split("generated/")[-1]
+    else:
+        header_include = "generated_to_stdout.h"
 
     return {
         "Control_members": generator.control_members(),
@@ -622,8 +678,10 @@ def _generate_ekf_function_bodies(
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    assert "generated/" in header_location
-    header_include = header_location.split("generated/")[-1]
+    if header_location is not None and "generated/" in header_location:
+        header_include = header_location.split("generated/")[-1]
+    else:
+        header_include = "generated_to_stdout.h"
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
@@ -688,6 +746,14 @@ def _compile_argparse():
 
 def _compile_impl(args, inserts, name, hpp, cpp):
     # Compilation
+
+    if args.templates is None:
+        print('"Rendering" to stdout')
+        print(inserts)
+        return CppCompileResult(
+            success=False,
+        )
+
 
     templates = _parse_raw_templates(args.templates)
 
@@ -790,7 +856,8 @@ def compile_ekf(
 
     args = _compile_argparse()
 
-    assert args.header is not None
+    if args.header is None:
+        logger.warning("No Header specified, so output to stdout")
     inserts = _generate_ekf_function_bodies(
         header_location=args.header,
         namespace=args.namespace,

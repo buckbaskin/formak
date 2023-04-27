@@ -59,7 +59,7 @@ def named_acceleration(name):
     return acceleration(f"{name}_acc_x", f"{name}_acc_y", f"{name}_acc_z")
 
 
-def model_definition():
+def model_definition(*, debug=False):
     start_time = datetime.now()
 
     ## Define Model
@@ -69,8 +69,10 @@ def model_definition():
     # CON: Center Of Navigation
     CON_position_in_global_frame = named_translation("CON_pos")
     orientation_states, CON_orientation_in_global_frame = named_rotation("CON_ori")
-    print("CON_orientation_in_global_frame")
-    print(CON_orientation_in_global_frame)
+
+    if debug:
+        print("CON_orientation_in_global_frame")
+        print(CON_orientation_in_global_frame)
 
     # Note: Needs body-fixed / moving frame math
     CON_velocity_in_global_frame = named_velocity("CON")
@@ -177,8 +179,9 @@ def model_definition():
         ):
             yield v
 
-    for k, v in state_model_composer():
-        print(" - ", k, " : ", v)
+    if debug:
+        for k, v in state_model_composer():
+            print(" - ", k, " : ", v)
 
     state_model = {k: v for k, v in state_model_composer()}
     assert len(state_model) == 9
