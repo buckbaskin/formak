@@ -110,6 +110,10 @@ class Model:
     #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
     def model(self, dt, state, control_vector=None):
         if control_vector is None:
+            if self.control_size > 0:
+                raise TypeError(
+                    "model() missing 1 required positional argument: 'control_vector'"
+                )
             control_vector = np.zeros((0, 1))
 
         assert isinstance(dt, float)
