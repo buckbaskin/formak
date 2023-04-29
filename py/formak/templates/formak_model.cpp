@@ -15,8 +15,14 @@ namespace {{namespace}} {
       : {{Control_options_constructor_initializer_list}} {
   }
 
+  Calibration::Calibration() : data(Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero()) {
+  }
+  Calibration::Calibration(const CalibrationOptions& options)
+      : {{Calibration_options_constructor_initializer_list}} {
+  }
+
   State Model::model(double dt, const State& input_state,
-                     const Control& input_control) {
+                     const Control& input_control, const Calibration& input_calibration) {
     // clang-format off
 {{Model_model_body}}
     // clang-format on

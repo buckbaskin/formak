@@ -37,10 +37,27 @@ namespace {{namespace}} {
         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
   };
 
+  struct CalibrationOptions {
+    // clang-format off
+    {{ CalibrationOptions_members }}
+    // clang-format on
+  };
+
+  struct Calibration {
+    Calibration();
+    Calibration(const CalibrationOptions& options);
+    // clang-format off
+    {{Calibration_members}}
+    // clang-format on
+    Eigen::Matrix<double, {{Calibration_size}}, 1> data =
+        Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
+  };
+
   class Model {
    public:
     State model(double dt, const State& input_state,
-                const Control& input_control);
+                const Control& input_control,
+                const Calibration& input_calibration);
   };
 
 }  // namespace {{namespace}}

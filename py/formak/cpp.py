@@ -643,6 +643,10 @@ def _generate_model_function_bodies(
         header_include = "generated_to_stdout.h"
 
     return {
+        "Calibration_members": generator.control_members(),
+        "Calibration_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
+        "Calibration_size": generator.control_size,
+        "CalibrationOptions_members": generator.controloptions_members(),
         "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
