@@ -53,25 +53,34 @@ def test_EKF_creation_calibration():
         state_model=ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
-        sensor_noises={y: 1.0},
+        sensor_noises={y: np.eye(1)},
         calibration_map={a: 0.0, b: 0.0},
         config={},
     )
 
-    assert ekf.arglist == [dt, x, a, b]
-
     dt = 0.1
+    state_covariance = np.eye(1)
 
     state_vector = np.array([[0.0]])
-    assert (ekf.state_model(dt=dt, state=state_vector).transpose() == [0.0]).all()
+    assert (
+        ekf.process_model(
+            dt=dt, state=state_vector, covariance=state_covariance
+        ).state.transpose()
+        == [0.0]
+    ).all()
 
     ekf = python.compile_ekf(
         ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
-        sensor_noises={y: 1.0},
+        sensor_noises={y: np.eye(1)},
         calibration_map={a: 5.0, b: 0.5},
         config={},
     )
     state_vector = np.array([[-1.0]])
-    assert (ekf.state_model(dt=dt, state=state_vector).transpose() == [4.5]).all()
+    assert (
+        ekf.process_model(
+            dt=dt, state=state_vector, covariance=state_covariance
+        ).state.transpose()
+        == [4.5]
+    ).all()
