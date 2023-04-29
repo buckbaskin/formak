@@ -167,9 +167,9 @@ class SensorModel:
             try:
                 result = impl(*state)
                 reading[i, 0] = result
-            except TypeError:
+            except (TypeError, ValueError):
                 print(
-                    "TypeError when trying to process sensor model for reading %s"
+                    "TypeError XOR ValueError when trying to process sensor model for reading %s"
                     % (reading_id,)
                 )
                 print("expected: float")
@@ -260,9 +260,11 @@ class ExtendedKalmanFilter:
             self.state_size,
         )
 
-        symbolic_control_jacobian = process_matrix.jacobian(
-            self.state_model.arglist_control
-        )
+        symbolic_control_jacobian = []
+        if self.control_size > 0:
+            symbolic_control_jacobian = process_matrix.jacobian(
+                self.state_model.arglist_control
+            )
 
         self._impl_process_jacobian = [
             lambdify(

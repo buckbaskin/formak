@@ -754,7 +754,6 @@ def _compile_impl(args, inserts, name, hpp, cpp):
             success=False,
         )
 
-
     templates = _parse_raw_templates(args.templates)
 
     header_template = templates[name][hpp]
