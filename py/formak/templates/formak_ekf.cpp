@@ -9,25 +9,64 @@ namespace {{namespace}} {
       : {{State_options_constructor_initializer_list}} {
   }
 
-  Control::Control() : data(Eigen::Matrix<double, {{Control_size}}, 1>::Zero()) {
+  // clang-format off
+{% if enable_control %}
+  // clang-format on
+  Control::Control()
+      : data(Eigen::Matrix<double, {{Control_size}}, 1>::Zero()) {
   }
   Control::Control(const ControlOptions& options)
-      : {{Control_options_constructor_initializer_list}} {
-  }
+      : {{Control_options_constructor_initializer_list}} {}  // clang-format off
+{% endif %}  // clang-format on
 
-  StateAndVariance ExtendedKalmanFilter::process_model(
-      double dt, const StateAndVariance& input, const Control& input_control){
+  // clang-format off
+{% if enable_calibration %}
+  // clang-format on
+  Calibration::Calibration()
+      : data(Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero()) {
+  }
+  Calibration::Calibration(const CalibrationOptions& options)
+      : {{Calibration_options_constructor_initializer_list}} {}
+        // clang-format off
+{% endif %}  // clang-format on
+
+        StateAndVariance
+        ExtendedKalmanFilter::process_model(
+            double dt,
+            const State& input_state
+            // clang-format off
+{% if enable_calibration %}
+            // clang-format on
+            ,
+            const Calibration& input_calibration
+            // clang-format off
+{% endif %}  // clang-format on
+                         // clang-format off
+{% if enable_control %}
+                         // clang-format on
+            ,
+            const Control& input_control
+            // clang-format off
+{% endif %}  // clang-format on
+        ) {
     const Covariance& covariance = input.covariance;
     // G = process_jacobian
-    ExtendedKalmanFilter::ProcessJacobianT G = ExtendedKalmanFilter::ProcessModel::process_jacobian(dt, input, input_control);
+    ExtendedKalmanFilter::ProcessJacobianT G =
+        ExtendedKalmanFilter::ProcessModel::process_jacobian(dt, input,
+                                                             input_control);
     // V = control_jacobian
-    ExtendedKalmanFilter::ControlJacobianT V = ExtendedKalmanFilter::ProcessModel::control_jacobian(dt, input, input_control);
+    ExtendedKalmanFilter::ControlJacobianT V =
+        ExtendedKalmanFilter::ProcessModel::control_jacobian(dt, input,
+                                                             input_control);
     // M = process_noise
-    ExtendedKalmanFilter::CovarianceT M = ExtendedKalmanFilter::ProcessModel::covariance(dt, input, input_control);
+    ExtendedKalmanFilter::CovarianceT M =
+        ExtendedKalmanFilter::ProcessModel::covariance(dt, input,
+                                                       input_control);
 
     // Update State Estimate
     // next_state = process_model(input, input_control)
-    State next_state = ExtendedKalmanFilter::ProcessModel::model(dt, input, input_control);
+    State next_state =
+        ExtendedKalmanFilter::ProcessModel::model(dt, input, input_control);
 
     // Update Covariance
     // Sigma = G * Sigma * G.T + V * M * V.T
@@ -38,8 +77,8 @@ namespace {{namespace}} {
     return {.state = next_state, .covariance = next_covariance};
   }
 
-  State ExtendedKalmanFilterProcessModel::model(double dt,const StateAndVariance& input,
-                       const Control& input_control) {
+  State ExtendedKalmanFilterProcessModel::model(
+      double dt, const StateAndVariance& input, const Control& input_control) {
     // clang-format off
 {{ExtendedKalmanFilterProcessModel_model_body}}
     // clang-format on

@@ -294,13 +294,61 @@ namespace {{namespace}} {
     );
 
     static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
-        double dt, const StateAndVariance& input, const Control& input_control);
+        double dt,
+        const StateAndVariance& input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        const Calibration& input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+        // clang-format off
+{% if enable_control %}
+        // clang-format on
+        ,
+        const Control& input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
 
     static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
-        double dt, const StateAndVariance& input, const Control& input_control);
+        double dt,
+        const StateAndVariance& input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        const Calibration& input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+        // clang-format off
+{% if enable_control %}
+        // clang-format on
+        ,
+        const Control& input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
 
     static typename ExtendedKalmanFilter::CovarianceT covariance(
-        double dt, const StateAndVariance& input, const Control& input_control);
+        double dt,
+        const StateAndVariance& input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        const Calibration& input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+        // clang-format off
+{% if enable_control %}
+        // clang-format on
+        ,
+        const Control& input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
   };
 
 }  // namespace {{namespace}}
