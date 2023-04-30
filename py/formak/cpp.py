@@ -174,6 +174,9 @@ class Model:
             return_=self._return,
         )
 
+    def enable_control(self):
+        return self.control_size > 0
+
     def control_members(self):
         indent = " " * 4
         return f"\n{indent}".join(
@@ -193,6 +196,30 @@ class Model:
         indent = " " * 4
         return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
+        )
+
+    def enable_calibration(self):
+        return self.calibration_size > 0
+
+    def calibration_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
+            % (name, idx, indent, name, idx)
+            for idx, name in enumerate(self.arglist_calibration)
+        )
+
+    def calibration_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_calibration)
+            + ")"
+        )
+
+    def calibrationoptions_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_calibration
         )
 
 
@@ -643,10 +670,12 @@ def _generate_model_function_bodies(
         header_include = "generated_to_stdout.h"
 
     return {
-        "Calibration_members": generator.control_members(),
-        "Calibration_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
-        "Calibration_size": generator.control_size,
-        "CalibrationOptions_members": generator.controloptions_members(),
+        "enable_calibration": generator.enable_calibration(),
+        "Calibration_members": generator.calibration_members(),
+        "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
+        "Calibration_size": generator.calibration_size,
+        "CalibrationOptions_members": generator.calibrationoptions_members(),
+        "enable_control": generator.enable_control(),
         "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
