@@ -38,6 +38,9 @@ namespace {{namespace}} {
     DataT data = DataT::Identity();
   };
 
+  // clang-format off
+{% if enable_control %}
+  // clang-format on
   struct ControlOptions {
     // clang-format off
     {{ ControlOptions_members }}
@@ -45,16 +48,38 @@ namespace {{namespace}} {
   };
 
   struct Control {
-    using DataT = Eigen::Matrix<double, {{Control_size}}, 1>;
-
     Control();
     Control(const ControlOptions& options);
     // clang-format off
     {{Control_members}}
     // clang-format on
-    DataT data = DataT::Zero();
+    Eigen::Matrix<double, {{Control_size}}, 1> data =
+        Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
+  };
+  // clang-format off
+{% endif %}  // clang-format on
+
+  // clang-format off
+{% if enable_calibration %}
+  // clang-format on
+  struct CalibrationOptions {
+    // clang-format off
+    {{ CalibrationOptions_members }}
+    // clang-format on
   };
 
+  struct Calibration {
+    Calibration();
+    Calibration(const CalibrationOptions& options);
+    // clang-format off
+    {{Calibration_members}}
+    // clang-format on
+    Eigen::Matrix<double, {{Calibration_size}}, 1> data =
+        Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
+  };
+  // clang-format off
+{% endif %}
+  // clang-format on
   struct StateAndVariance {
     State state;
     Covariance covariance;
@@ -133,12 +158,34 @@ namespace {{namespace}} {
         Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
     using ProcessModel = ExtendedKalmanFilterProcessModel;
 
-    StateAndVariance process_model(double dt, const StateAndVariance& input,
-                                   const Control& input_control);
+    StateAndVariance process_model(
+        double dt,
+        const StateAndVariance& input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        const Calibration& input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+                     // clang-format off
+{% if enable_control %}
+                     // clang-format on
+        ,
+        const Control& input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
 
     template <SensorId Identifier, typename ReadingT>
     StateAndVariance sensor_model(
         const StateAndVariance& input,
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        const Calibration& input_calibration,
+        // clang-format off
+{% endif %}  // clang-format on
         const SensorReading<Identifier, ReadingT>& input_reading) {
       const State& state = input.state;                 // mu
       const Covariance& covariance = input.covariance;  // Sigma
@@ -146,17 +193,38 @@ namespace {{namespace}} {
 
       // z_est = sensor_model()
       const ReadingT reading_est =
-          ReadingT::SensorModel::model(input, input_reading);  // z_est
+          ReadingT::SensorModel::model(input,
+                                       // clang-format off
+{% if enable_calibration %}
+                                       // clang-format on
+                                       input_calibration,
+                                       // clang-format off
+{% endif %}      // clang-format on
+                                       input_reading);  // z_est
 
       // H = Jacobian(z_est w.r.t. state)
       const typename ReadingT::SensorJacobianT H =
-          ReadingT::SensorModel::jacobian(input, input_reading);
+          ReadingT::SensorModel::jacobian(input,
+                                          // clang-format off
+{% if enable_calibration %}
+                                          // clang-format on
+                                          input_calibration,
+                                          // clang-format off
+{% endif %}  // clang-format on
+                                          input_reading);
 
       // Project State Noise into Sensor Space
       // S = H * Sigma * H.T + Q_t
       const typename ReadingT::CovarianceT sensor_estimate_covariance =
           H * covariance.data * H.transpose() +
-          ReadingT::SensorModel::covariance(input, input_reading);
+          ReadingT::SensorModel::covariance(input,
+                                            // clang-format off
+{% if enable_calibration %}
+                                            // clang-format on
+                                            input_calibration,
+                                            // clang-format off
+{% endif %}  // clang-format on
+                                            input_reading);
 
       // S_inv = inverse(S)
       const typename ReadingT::CovarianceT S_inv =
@@ -206,8 +274,24 @@ namespace {{namespace}} {
 
   class ExtendedKalmanFilterProcessModel {
    public:
-    static State model(double dt, const StateAndVariance& input,
-                       const Control& input_control);
+    static State model(
+        double dt,
+        const StateAndVariance& input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        const Calibration& input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+        // clang-format off
+{% if enable_control %}
+        // clang-format on
+        ,
+        const Control& input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
 
     static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
         double dt, const StateAndVariance& input, const Control& input_control);

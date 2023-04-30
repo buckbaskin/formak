@@ -178,6 +178,17 @@ cc_formak_model(
     ),
 )
 
+cc_formak_model(
+    name = "calibration-ekf",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/formak/cpp/generator_ekf_with_calibration.py",
+    pysrcs = glob(
+        ["test/unit/formak/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
 cc_test(
     name = "unit-cpp-extended-kalman-filter-test",
     srcs = ["test/unit/formak/cpp/ExtendedKalmanFilter_test.cpp"],
@@ -197,12 +208,22 @@ cc_test(
 )
 
 cc_test(
-    name = "unit-cpp-calibration-test",
+    name = "unit-cpp-calibration-model-test",
     srcs = [
         "test/unit/formak/cpp/ModelWithCalibration_test.cpp",
     ],
     deps = [
         ":calibration-model",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-calibration-ekf-test",
+    srcs = [
+        "test/unit/formak/cpp/ExtendedKalmanFilterWithCalibration_test.cpp",
+    ],
+    deps = [
+        ":calibration-ekf",
     ] + CC_TEST_DEPS,
 )
 
