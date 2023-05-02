@@ -91,12 +91,6 @@ namespace {{namespace}} {
     // clang-format on
   };
 
-  template <SensorId Identifier, typename ReadingT>
-  struct SensorReading {
-    ReadingT reading;
-    static constexpr SensorId id = Identifier;
-  };
-
   // clang-format off
 {% for reading_type in reading_types %}
   // ReadingTSensorModel
@@ -123,6 +117,7 @@ namespace {{namespace}} {
     DataT data = DataT::Zero();
 
     constexpr static size_t size = {{reading_type.size}};
+    constexpr static SensorId Identifier = {{reading_type.identifier}};
   };
 
   std::ostream& operator<<(std::ostream& o, const {{reading_type.typename}}& reading) {
@@ -136,8 +131,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
         const Calibration& input_calibration,
   {% endif %}
-        const SensorReading<{{reading_type.identifier}},
-                            {{reading_type.typename}}>& input_reading);
+        const {{reading_type.typename}}& input_reading);
 
     static typename {{ reading_type.typename }}
     ::SensorJacobianT jacobian(
@@ -145,8 +139,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
         const Calibration& input_calibration,
   {% endif %}
-        const SensorReading<{{reading_type.identifier}},
-                            {{reading_type.typename}}>& input_reading);
+        const {{reading_type.typename}}& input_reading);
 
     static typename {{ reading_type.typename }}
     ::CovarianceT covariance(
@@ -154,8 +147,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
         const Calibration& input_calibration,
   {% endif %}
-        const SensorReading<{{reading_type.identifier}},
-                            {{reading_type.typename}}>& input_reading);
+        const {{reading_type.typename}}& input_reading);
   };
 
 {% endfor %}
@@ -191,7 +183,7 @@ namespace {{namespace}} {
 {% endif %}  // clang-format on
     );
 
-    template <SensorId Identifier, typename ReadingT>
+    template <typename ReadingT>
     StateAndVariance sensor_model(
         const StateAndVariance& input,
         // clang-format off
@@ -200,10 +192,9 @@ namespace {{namespace}} {
         const Calibration& input_calibration,
         // clang-format off
 {% endif %}  // clang-format on
-        const SensorReading<Identifier, ReadingT>& input_reading) {
+        const ReadingT& input_reading) {
       const State& state = input.state;                 // mu
       const Covariance& covariance = input.covariance;  // Sigma
-      const ReadingT& reading = input_reading.reading;  // z
 
       // z_est = sensor_model()
       const ReadingT reading_est =
@@ -252,8 +243,8 @@ namespace {{namespace}} {
       // Innovation
       // innovation = z - z_est
       const typename ReadingT::InnovationT innovation =
-          reading.data - reading_est.data;
-      _innovations[Identifier] = innovation;
+          input_reading.data - reading_est.data;
+      _innovations[ReadingT::Identifier] = innovation;
 
       // Update State Estimate
       // next_state = state + K * innovation
@@ -273,11 +264,11 @@ namespace {{namespace}} {
                               .covariance = next_covariance};
     }
 
-    template <SensorId Identifier, typename ReadingT>
+    template <typename ReadingT>
     std::optional<typename ReadingT::InnovationT> innovations() {
-      if (_innovations.count(Identifier) > 0) {
+      if (_innovations.count(ReadingT::Identifier) > 0) {
         return std::any_cast<typename ReadingT::InnovationT>(
-            _innovations[Identifier]);
+            _innovations[ReadingT::Identifier]);
       }
       return {};
     }

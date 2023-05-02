@@ -108,12 +108,10 @@ RC_GTEST_PROP(CppModel, EkfSensorProperty, (double x, double y)) {
   RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100);
 
   double reading = 1.0;
-  unit::SensorReading<(unit::SensorId::SIMPLE), unit::Simple> simple_reading{
-      unit::Simple({reading})};
+  unit::Simple simple_reading({reading});
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
-  auto maybe_first_innovation =
-      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  auto maybe_first_innovation = ekf.innovations<unit::Simple>();
   RC_ASSERT(maybe_first_innovation.has_value());
   typename unit::Simple::InnovationT first_innovation =
       maybe_first_innovation.value();
@@ -130,8 +128,7 @@ RC_GTEST_PROP(CppModel, EkfSensorProperty, (double x, double y)) {
   // Run this to get a second innovation
   [[maybe_unused]] auto next2 = ekf.sensor_model(next, simple_reading);
 
-  auto maybe_second_innovation =
-      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  auto maybe_second_innovation = ekf.innovations<unit::Simple>();
   RC_ASSERT(maybe_second_innovation.has_value());
   typename unit::Simple::InnovationT second_innovation =
       maybe_second_innovation.value();
@@ -164,12 +161,10 @@ TEST_P(CppModelFailureCasesSensor, RerunCases) {
   // RC_PRE(std::abs(x) < 1e100 && std::abs(y) < 1e100);
 
   double reading = 1.0;
-  unit::SensorReading<(unit::SensorId::SIMPLE), unit::Simple> simple_reading{
-      unit::Simple({reading})};
+  unit::Simple simple_reading({reading});
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
-  auto maybe_first_innovation =
-      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  auto maybe_first_innovation = ekf.innovations<unit::Simple>();
   ASSERT_TRUE(maybe_first_innovation.has_value());
   typename unit::Simple::InnovationT first_innovation =
       maybe_first_innovation.value();
@@ -186,8 +181,7 @@ TEST_P(CppModelFailureCasesSensor, RerunCases) {
   // Run this to get a second innovation
   [[maybe_unused]] auto next2 = ekf.sensor_model(next, simple_reading);
 
-  auto maybe_second_innovation =
-      ekf.innovations<unit::SensorId::SIMPLE, unit::Simple>();
+  auto maybe_second_innovation = ekf.innovations<unit::Simple>();
   ASSERT_TRUE(maybe_second_innovation.has_value());
   typename unit::Simple::InnovationT second_innovation =
       maybe_second_innovation.value();

@@ -64,9 +64,9 @@ TEST(EKF, SensorY) {
 
   double reading = 1.0;
 
-  SensorReading<(SensorId::Y), Y> simple_reading{Y({reading})};
-  EXPECT_EQ(simple_reading.reading.data.rows(), 1);
-  EXPECT_EQ(simple_reading.reading.data.cols(), 1);
+  Y simple_reading({reading});
+  EXPECT_EQ(simple_reading.data.rows(), 1);
+  EXPECT_EQ(simple_reading.data.cols(), 1);
 
   auto next =
       ekf.sensor_model({state, covariance}, calibration, simple_reading);
@@ -85,7 +85,7 @@ TEST(EKF, SensorModelDetail) {
   Calibration calibration({.a = 5.0, .b = B});
 
   {
-    SensorReading<(SensorId::Y), Y> simple_reading{Y{}};
+    Y simple_reading{};
     Y predicted =
         Y::SensorModel::model({state, covariance}, calibration, simple_reading);
     EXPECT_DOUBLE_EQ(predicted.y(), X + B);
@@ -100,7 +100,7 @@ TEST(EKF, SensorCovariances) {
   Calibration calibration({.a = 5.0, .b = 0.5});
 
   {
-    SensorReading<(SensorId::Y), Y> simple_reading{Y{}};
+    Y simple_reading{};
     Y::CovarianceT out = Y::SensorModel::covariance(
         {state, covariance}, calibration, simple_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
@@ -115,7 +115,7 @@ TEST(EKF, SensorJacobian) {
   Calibration calibration({.a = 5.0, .b = 0.5});
 
   {
-    SensorReading<(SensorId::Y), Y> simple_reading{Y{}};
+    Y simple_reading{};
     Y::SensorJacobianT out = Y::SensorModel::jacobian(
         {state, covariance}, calibration, simple_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);

@@ -248,8 +248,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
       const Calibration& input_calibration,
   {% endif %}
-      const SensorReading<{{reading_type.identifier}},
-                          {{reading_type.typename}}>& input_reading){
+      const {{reading_type.typename}}& input_reading){
       {{reading_type.SensorModel_model_body}}}
 
   {{ reading_type.typename }}
@@ -258,8 +257,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
       const Calibration& input_calibration,
   {% endif %}
-      const SensorReading<{{reading_type.identifier}},
-                          {{reading_type.typename}}>& input_reading){
+      const {{reading_type.typename}}& input_reading){
       {{reading_type.SensorModel_covariance_body}}}
 
   {{ reading_type.typename }}
@@ -268,8 +266,7 @@ namespace {{namespace}} {
   {% if enable_calibration %}
       const Calibration& input_calibration,
   {% endif %}
-      const SensorReading<{{reading_type.identifier}},
-                          {{reading_type.typename}}>& input_reading){
+      const {{reading_type.typename}}& input_reading){
       {{reading_type.SensorModel_jacobian_body}}}
 
 {% endfor %}
