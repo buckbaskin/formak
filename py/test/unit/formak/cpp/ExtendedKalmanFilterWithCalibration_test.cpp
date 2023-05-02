@@ -30,11 +30,10 @@ TEST_P(ProcessWithCalibrationTest, Test) {
 }
 
 INSTANTIATE_TEST_SUITE_P(StateTestCases, ProcessWithCalibrationTest,
-                         ::testing::Values(Options{.xStart = 0.0, .xEnd = 0.0},
-                                           Options{.xStart = 0.0, .xEnd = 1.0},
-                                           Options{.xStart = 1.0, .xEnd = 0.0},
-                                           Options{.xStart = 1.0,
-                                                   .xEnd = 1.0}));
+                         ::testing::Values(Options{.xStart = 0.0, .xEnd = 5.5},
+                                           Options{.xStart = 3.1, .xEnd = 8.6},
+                                           Options{.xStart = -1.0,
+                                                   .xEnd = 4.5}));
 }  // namespace process_with_calibration_test
 
 // ui_model = ui.Model(
@@ -120,7 +119,6 @@ TEST(EKF, SensorJacobian) {
     Y::SensorJacobianT out = Y::SensorModel::jacobian(
         {state, covariance}, calibration, simple_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
-    EXPECT_DOUBLE_EQ(out(0, 1), 0.0);
   }
 }
 
@@ -139,10 +137,7 @@ TEST(EKF, ProcessJacobian) {
   StateAndVariance next =
       ekf.process_model(dt, {state, covariance}, calibration);
 
-  EXPECT_GT(next.covariance.data(0, 0), 1.0);
-  EXPECT_GT(next.covariance.data(1, 1), 1.0);
-  EXPECT_DOUBLE_EQ(next.covariance.data(0, 1), dt);
-  EXPECT_DOUBLE_EQ(next.covariance.data(1, 0), next.covariance.data(0, 1));
+  EXPECT_DOUBLE_EQ(next.covariance.data(0, 0), 1.0);
 }
 
 }  // namespace unit
