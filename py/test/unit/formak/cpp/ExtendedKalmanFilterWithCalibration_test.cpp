@@ -27,14 +27,14 @@ TEST_P(ProcessWithCalibrationTest, Test) {
   auto next = ekf.process_model(dt, {state, covariance}, calibration);
 
   EXPECT_DOUBLE_EQ(next.state.x(), GetParam().xEnd);
-  EXPECT_DOUBLE_EQ(next.state.y(), GetParam().yEnd);
 }
 
 INSTANTIATE_TEST_SUITE_P(StateTestCases, ProcessWithCalibrationTest,
-                         ::testing::Values(Options{0.0, 0.0, 0.0, 0.02},
-                                           Options{0.0, 1.0, 0.1, 1.02},
-                                           Options{1.0, 0.0, 1.0, 0.02},
-                                           Options{1.0, 1.0, 1.1, 1.02}));
+                         ::testing::Values(Options{.xStart = 0.0, .xEnd = 0.0},
+                                           Options{.xStart = 0.0, .xEnd = 1.0},
+                                           Options{.xStart = 1.0, .xEnd = 0.0},
+                                           Options{.xStart = 1.0,
+                                                   .xEnd = 1.0}));
 }  // namespace process_with_calibration_test
 
 namespace ekf_sensor_test {
@@ -42,7 +42,7 @@ TEST(EKF, SensorSimple) {
   ExtendedKalmanFilter ekf;
 
   Covariance covariance;
-  State state({0.0, 0.0});
+  State state({0.0});
 
   double reading = 1.0;
 
@@ -59,7 +59,7 @@ TEST(EKF, SensorCombined) {
   ExtendedKalmanFilter ekf;
 
   Covariance covariance;
-  State state({0.0, 0.0});
+  State state({0.0});
 
   double reading = 1.0;
 
@@ -78,8 +78,7 @@ TEST(EKF, SensorCombined) {
 
 TEST(EKF, SensorModelDetail) {
   double x = -1.0;
-  double y = 2.0;
-  State state({x, y});
+  State state({x});
   Covariance covariance;
 
   {
@@ -99,8 +98,7 @@ TEST(EKF, SensorModelDetail) {
 
 TEST(EKF, SensorCovariances) {
   double x = -1.0;
-  double y = 2.0;
-  State state({x, y});
+  State state({x});
   Covariance covariance;
 
   {
@@ -120,8 +118,7 @@ TEST(EKF, SensorCovariances) {
 
 TEST(EKF, SensorJacobian) {
   double x = -1.0;
-  double y = 2.0;
-  State state({x, y});
+  State state({x});
   Covariance covariance;
 
   {
@@ -147,9 +144,8 @@ TEST(EKF, ProcessJacobian) {
   double dt = 0.05;
 
   double x = -1.0;
-  double y = 2.0;
 
-  State state({x, y});
+  State state({x});
   // Assumes default initialization of covariance (identity) and calibration (0)
   Covariance covariance;
   Calibration calibration;

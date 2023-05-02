@@ -33,7 +33,7 @@ namespace {{namespace}} {
         StateAndVariance
         ExtendedKalmanFilter::process_model(
             double dt,
-            const State& input_state
+            const StateAndVariance& input
             // clang-format off
 {% if enable_calibration %}
             // clang-format on
@@ -41,9 +41,9 @@ namespace {{namespace}} {
             const Calibration& input_calibration
             // clang-format off
 {% endif %}  // clang-format on
-                         // clang-format off
+            // clang-format off
 {% if enable_control %}
-                         // clang-format on
+            // clang-format on
             ,
             const Control& input_control
             // clang-format off
@@ -52,21 +52,85 @@ namespace {{namespace}} {
     const Covariance& covariance = input.covariance;
     // G = process_jacobian
     ExtendedKalmanFilter::ProcessJacobianT G =
-        ExtendedKalmanFilter::ProcessModel::process_jacobian(dt, input,
-                                                             input_control);
+        ExtendedKalmanFilter::ProcessModel::process_jacobian(
+            dt,
+            input
+            // clang-format off
+{% if enable_calibration %}
+            // clang-format on
+            ,
+            input_calibration
+            // clang-format off
+{% endif %}  // clang-format on
+            // clang-format off
+{% if enable_control %}
+            // clang-format on
+            ,
+            input_control
+            // clang-format off
+{% endif %}  // clang-format on
+        );
     // V = control_jacobian
     ExtendedKalmanFilter::ControlJacobianT V =
-        ExtendedKalmanFilter::ProcessModel::control_jacobian(dt, input,
-                                                             input_control);
+        ExtendedKalmanFilter::ProcessModel::control_jacobian(
+            dt,
+            input
+            // clang-format off
+{% if enable_calibration %}
+            // clang-format on
+            ,
+            input_calibration
+            // clang-format off
+{% endif %}  // clang-format on
+            // clang-format off
+{% if enable_control %}
+            // clang-format on
+            ,
+            input_control
+            // clang-format off
+{% endif %}  // clang-format on
+        );
     // M = process_noise
     ExtendedKalmanFilter::CovarianceT M =
-        ExtendedKalmanFilter::ProcessModel::covariance(dt, input,
-                                                       input_control);
+        ExtendedKalmanFilter::ProcessModel::covariance(
+            dt,
+            input
+            // clang-format off
+{% if enable_calibration %}
+            // clang-format on
+            ,
+            input_calibration
+            // clang-format off
+{% endif %}  // clang-format on
+            // clang-format off
+{% if enable_control %}
+            // clang-format on
+            ,
+            input_control
+            // clang-format off
+{% endif %}  // clang-format on
+        );
 
     // Update State Estimate
     // next_state = process_model(input, input_control)
-    State next_state =
-        ExtendedKalmanFilter::ProcessModel::model(dt, input, input_control);
+    State next_state = ExtendedKalmanFilter::ProcessModel::model(
+        dt,
+        input
+        // clang-format off
+{% if enable_calibration %}
+        // clang-format on
+        ,
+        input_calibration
+        // clang-format off
+{% endif %}  // clang-format on
+        // clang-format off
+{% if enable_control %}
+        // clang-format on
+        ,
+        input_control
+        // clang-format off
+{% endif %}  // clang-format on
+    );
 
     // Update Covariance
     // Sigma = G * Sigma * G.T + V * M * V.T
@@ -78,7 +142,23 @@ namespace {{namespace}} {
   }
 
   State ExtendedKalmanFilterProcessModel::model(
-      double dt, const StateAndVariance& input, const Control& input_control) {
+      double dt,
+      const StateAndVariance& input
+      // clang-format off
+{% if enable_calibration %}
+      // clang-format on
+      ,
+      const Calibration& input_calibration
+      // clang-format off
+{% endif %}  // clang-format on
+      // clang-format off
+{% if enable_control %}
+      // clang-format on
+      ,
+      const Control& input_control
+      // clang-format off
+{% endif %}  // clang-format on
+  ) {
     // clang-format off
 {{ExtendedKalmanFilterProcessModel_model_body}}
     // clang-format on
@@ -86,7 +166,23 @@ namespace {{namespace}} {
 
   typename ExtendedKalmanFilter::ProcessJacobianT
   ExtendedKalmanFilterProcessModel::process_jacobian(
-      double dt, const StateAndVariance& input, const Control& input_control) {
+      double dt,
+      const StateAndVariance& input
+      // clang-format off
+{% if enable_calibration %}
+      // clang-format on
+      ,
+      const Calibration& input_calibration
+      // clang-format off
+{% endif %}  // clang-format on
+      // clang-format off
+{% if enable_control %}
+      // clang-format on
+      ,
+      const Control& input_control
+      // clang-format off
+{% endif %}  // clang-format on
+  ) {
     // clang-format off
 {{ExtendedKalmanFilterProcessModel_process_jacobian_body}}
     // clang-format on
@@ -94,7 +190,23 @@ namespace {{namespace}} {
 
   typename ExtendedKalmanFilter::ControlJacobianT
   ExtendedKalmanFilterProcessModel::control_jacobian(
-      double dt, const StateAndVariance& input, const Control& input_control) {
+      double dt,
+      const StateAndVariance& input
+      // clang-format off
+{% if enable_calibration %}
+      // clang-format on
+      ,
+      const Calibration& input_calibration
+      // clang-format off
+{% endif %}  // clang-format on
+      // clang-format off
+{% if enable_control %}
+      // clang-format on
+      ,
+      const Control& input_control
+      // clang-format off
+{% endif %}  // clang-format on
+  ) {
     // clang-format off
 {{ExtendedKalmanFilterProcessModel_control_jacobian_body}}
     // clang-format on
@@ -102,7 +214,23 @@ namespace {{namespace}} {
 
   typename ExtendedKalmanFilter::CovarianceT
   ExtendedKalmanFilterProcessModel::covariance(
-      double dt, const StateAndVariance& input, const Control& input_control){
+      double dt,
+      const StateAndVariance& input
+      // clang-format off
+{% if enable_calibration %}
+      // clang-format on
+      ,
+      const Calibration& input_calibration
+      // clang-format off
+{% endif %}  // clang-format on
+      // clang-format off
+{% if enable_control %}
+      // clang-format on
+      ,
+      const Control& input_control
+      // clang-format off
+{% endif %}  // clang-format on
+  ){
       // clang-format off
 {{ExtendedKalmanFilterProcessModel_covariance_body}}
       // clang-format on
@@ -117,21 +245,32 @@ namespace {{namespace}} {
 
   {{reading_type.typename}} {{reading_type.typename}}SensorModel::model(
         const StateAndVariance& input,
-        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-{{reading_type.SensorModel_model_body}}
-  }
+  {% if enable_calibration %}
+      const Calibration& input_calibration,
+  {% endif %}
+      const SensorReading<{{reading_type.identifier}},
+                          {{reading_type.typename}}>& input_reading){
+      {{reading_type.SensorModel_model_body}}}
 
-  {{reading_type.typename}}::CovarianceT {{reading_type.typename}}SensorModel::covariance(
-        const StateAndVariance& input,
-        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-{{reading_type.SensorModel_covariance_body}}
-  }
+  {{ reading_type.typename }}
+  ::CovarianceT {{ reading_type.typename }}SensorModel::covariance(
+      const StateAndVariance& input,
+  {% if enable_calibration %}
+      const Calibration& input_calibration,
+  {% endif %}
+      const SensorReading<{{reading_type.identifier}},
+                          {{reading_type.typename}}>& input_reading){
+      {{reading_type.SensorModel_covariance_body}}}
 
-  {{reading_type.typename}}::SensorJacobianT {{reading_type.typename}}SensorModel::jacobian(
-        const StateAndVariance& input,
-        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading) {
-{{reading_type.SensorModel_jacobian_body}}
-  }
+  {{ reading_type.typename }}
+  ::SensorJacobianT {{ reading_type.typename }}SensorModel::jacobian(
+      const StateAndVariance& input,
+  {% if enable_calibration %}
+      const Calibration& input_calibration,
+  {% endif %}
+      const SensorReading<{{reading_type.identifier}},
+                          {{reading_type.typename}}>& input_reading){
+      {{reading_type.SensorModel_jacobian_body}}}
 
 {% endfor %}
   // clang-format on

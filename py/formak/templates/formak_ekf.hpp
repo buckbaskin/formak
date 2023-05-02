@@ -133,15 +133,29 @@ namespace {{namespace}} {
   struct {{reading_type.typename}}SensorModel {
       static {{reading_type.typename}} model(
         const StateAndVariance& input,
-        const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+  {% if enable_calibration %}
+        const Calibration& input_calibration,
+  {% endif %}
+        const SensorReading<{{reading_type.identifier}},
+                            {{reading_type.typename}}>& input_reading);
 
-      static typename {{reading_type.typename}}::SensorJacobianT jacobian(
-              const StateAndVariance& input,
-              const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+    static typename {{ reading_type.typename }}
+    ::SensorJacobianT jacobian(
+        const StateAndVariance& input,
+  {% if enable_calibration %}
+        const Calibration& input_calibration,
+  {% endif %}
+        const SensorReading<{{reading_type.identifier}},
+                            {{reading_type.typename}}>& input_reading);
 
-      static typename {{reading_type.typename}}::CovarianceT covariance(
-              const StateAndVariance& input,
-              const SensorReading<{{reading_type.identifier}}, {{reading_type.typename}}>& input_reading);
+    static typename {{ reading_type.typename }}
+    ::CovarianceT covariance(
+        const StateAndVariance& input,
+  {% if enable_calibration %}
+        const Calibration& input_calibration,
+  {% endif %}
+        const SensorReading<{{reading_type.identifier}},
+                            {{reading_type.typename}}>& input_reading);
   };
 
 {% endfor %}
