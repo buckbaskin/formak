@@ -66,6 +66,17 @@ cc_formak_model(
     ),
 )
 
+cc_formak_model(
+    name = "cpp-rocket-model",
+    namespace = "featuretest",
+    pydeps = [],
+    pymain = "rocket_model/generator.py",
+    pysrcs = glob(
+        ["rocket_model/*.py"],
+        allow_empty = False,
+    ),
+)
+
 cc_test_suite(
     name = "cpp-library-for-model-evaluation",
     srcs = glob(
@@ -79,7 +90,7 @@ cc_test_suite(
 )
 
 py_test_suite(
-    name = "rocket-model",
+    name = "rocket-model-py-test",
     srcs = glob(
         ["rocket_model/*.py"],
         allow_empty = False,
@@ -88,4 +99,15 @@ py_test_suite(
         "//py:formak",
         requirement("numpy"),
     ] + PY_FEATURE_TEST_DEPS,
+)
+
+cc_test_suite(
+    name = "rocket-model-cpp-test",
+    srcs = glob(
+        ["rocket_model/*.cpp"],
+        allow_empty = False,
+    ),
+    deps = [
+        ":cpp-rocket-model",
+    ] + CC_FEATURE_TEST_DEPS,
 )
