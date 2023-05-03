@@ -64,7 +64,6 @@ class Model:
             for idx, k in enumerate(
                 sorted(list(self.state_model.keys()), key=lambda x: x.name)
             ):
-                pre = self.state_model[k]
                 self.state_model[k] = simplify(self.state_model[k])
                 print(f"{idx} {k} {datetime.now() - start_time}")
 

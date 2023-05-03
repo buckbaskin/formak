@@ -6,7 +6,7 @@ from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
 
-import jinja2
+from formak.exceptions import ModelConstructionError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 from sympy import Symbol, ccode, diff
@@ -285,11 +285,11 @@ class ExtendedKalmanFilter:
                     f"Model Missing specification of calibration_map: {{{map_lite}}}"
                 )
             if len(calibration_map) != self.calibration_size:
-                missing_from_map = set(symbolic_model.calibration) - set(
+                missing_from_map = set(state_model.calibration) - set(
                     calibration_map.keys()
                 )
                 extra_from_map = set(calibration_map.keys()) - set(
-                    symbolic_model.calibration
+                    state_model.calibration
                 )
                 missing = ""
                 if len(missing_from_map) > 0:

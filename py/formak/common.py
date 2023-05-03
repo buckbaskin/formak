@@ -30,8 +30,8 @@ def model_validation(
 
     # Check if sensor models depend on values outside the state, calibration [and map]
     allowed_symbols = set(state_model.state) | set(state_model.calibration)
-    for k, model in sensor_models.items():
-        for k2, model in model.items():
+    for k, model_set in sensor_models.items():
+        for k2, model in model_set.items():
             if not set(model.free_symbols).issubset(allowed_symbols):
                 extra_symbols = sorted(list(set(model.free_symbols) - allowed_symbols))
                 raise ModelConstructionError(
