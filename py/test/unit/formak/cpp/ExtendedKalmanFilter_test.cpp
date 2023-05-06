@@ -94,9 +94,9 @@ TEST(EKF, SensorSimple) {
 
   double reading = 1.0;
 
-  SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple({reading})};
-  EXPECT_EQ(simple_reading.reading.data.rows(), 1);
-  EXPECT_EQ(simple_reading.reading.data.cols(), 1);
+  Simple simple_reading({reading});
+  EXPECT_EQ(simple_reading.data.rows(), 1);
+  EXPECT_EQ(simple_reading.data.cols(), 1);
 
   auto next = ekf.sensor_model({state, covariance}, simple_reading);
 
@@ -111,9 +111,9 @@ TEST(EKF, SensorCombined) {
 
   double reading = 1.0;
 
-  SensorReading<(SensorId::COMBINED), Combined> combined{Combined({reading})};
-  EXPECT_EQ(combined.reading.data.rows(), 1);
-  EXPECT_EQ(combined.reading.data.cols(), 1);
+  Combined combined({reading});
+  EXPECT_EQ(combined.data.rows(), 1);
+  EXPECT_EQ(combined.data.cols(), 1);
 
   auto next = ekf.sensor_model({state, covariance}, combined);
 
@@ -131,14 +131,14 @@ TEST(EKF, SensorModelDetail) {
   Covariance covariance;
 
   {
-    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple simple_reading{};
     Simple predicted =
         Simple::SensorModel::model({state, covariance}, simple_reading);
     EXPECT_DOUBLE_EQ(predicted.reading1(), x);
   }
 
   {
-    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined combined_reading{};
     Combined predicted =
         Combined::SensorModel::model({state, covariance}, combined_reading);
     EXPECT_DOUBLE_EQ(predicted.reading2(), x + y);
@@ -152,14 +152,14 @@ TEST(EKF, SensorCovariances) {
   Covariance covariance;
 
   {
-    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple simple_reading{};
     Simple::CovarianceT out =
         Simple::SensorModel::covariance({state, covariance}, simple_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
   }
 
   {
-    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined combined_reading{};
     Combined::CovarianceT out = Combined::SensorModel::covariance(
         {state, covariance}, combined_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 4.0);
@@ -173,7 +173,7 @@ TEST(EKF, SensorJacobian) {
   Covariance covariance;
 
   {
-    SensorReading<(SensorId::SIMPLE), Simple> simple_reading{Simple{}};
+    Simple simple_reading{};
     Simple::SensorJacobianT out =
         Simple::SensorModel::jacobian({state, covariance}, simple_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);
@@ -181,7 +181,7 @@ TEST(EKF, SensorJacobian) {
   }
 
   {
-    SensorReading<(SensorId::COMBINED), Combined> combined_reading{Combined{}};
+    Combined combined_reading{};
     Combined::SensorJacobianT out =
         Combined::SensorModel::jacobian({state, covariance}, combined_reading);
     EXPECT_DOUBLE_EQ(out(0, 0), 1.0);

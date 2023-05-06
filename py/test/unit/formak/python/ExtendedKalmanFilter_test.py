@@ -12,6 +12,7 @@ warnings.filterwarnings("error")
 
 def test_EKF_model_collapse():
     config = python.Config()
+    config.extra_validation = True
 
     with pytest.raises(ModelConstructionError):
         python.compile_ekf(

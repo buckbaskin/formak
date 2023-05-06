@@ -21,8 +21,7 @@ TEST(CppModel, SimpleEKF) {
 
   EXPECT_GT(next_state.z(), 0.0);
 
-  formak::SensorReading<formak::SensorId::SIMPLE, formak::Simple>
-      zero_sensor_reading;
+  formak::Simple zero_sensor_reading;
   auto next_state_and_variance = ekf.sensor_model(
       {.state = next_state, .covariance = next_variance}, zero_sensor_reading);
 

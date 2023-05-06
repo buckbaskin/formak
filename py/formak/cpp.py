@@ -1,11 +1,12 @@
 import argparse
+import logging
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
 
-import jinja2
+from formak.exceptions import ModelConstructionError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 from sympy import Symbol, ccode, diff
@@ -14,11 +15,14 @@ from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class Config:
     common_subexpression_elimination: bool = True
     python_modules: List[str] = DEFAULT_MODULES
+    extra_validation: bool = False
 
 
 @dataclass
@@ -71,7 +75,7 @@ class StateStruct:
 class Model:
     """C++ implementation of the model."""
 
-    def __init__(self, symbolic_model, config):
+    def __init__(self, symbolic_model, calibration_map, config):
         # TODO(buck): Enable mypy for type checking
         # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
         # assert isinstance(symbolic_model, ui.Model)
@@ -81,12 +85,46 @@ class Model:
 
         self.state_size = len(symbolic_model.state)
         self.control_size = len(symbolic_model.control)
+        self.calibration_size = len(symbolic_model.calibration)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(
             list(symbolic_model.control), key=lambda x: x.name
         )
-        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        if self.calibration_size > 0:
+            if len(calibration_map) == 0:
+                map_lite = "\n  , ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model with empty specification of calibration_map:\n{{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(symbolic_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    symbolic_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"\nMissing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self.state_generator = StateStruct(self.arglist_state)
 
@@ -95,19 +133,29 @@ class Model:
         self._return = self._translate_return()
 
     def _translate_model(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input_state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input_state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
@@ -125,6 +173,9 @@ class Model:
             indent=indent,
             return_=self._return,
         )
+
+    def enable_control(self):
+        return self.control_size > 0
 
     def control_members(self):
         indent = " " * 4
@@ -145,6 +196,30 @@ class Model:
         indent = " " * 4
         return f"\n{indent}".join(
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
+        )
+
+    def enable_calibration(self):
+        return self.calibration_size > 0
+
+    def calibration_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
+            % (name, idx, indent, name, idx)
+            for idx, name in enumerate(self.arglist_calibration)
+        )
+
+    def calibration_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_calibration)
+            + ")"
+        )
+
+    def calibrationoptions_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_calibration
         )
 
 
@@ -169,7 +244,13 @@ class ExtendedKalmanFilter:
     """C++ implementation of the EKF."""
 
     def __init__(
-        self, state_model, process_noise, sensor_models, sensor_noises, config
+        self,
+        state_model,
+        process_noise,
+        sensor_models,
+        sensor_noises,
+        config,
+        calibration_map=None,
     ):
         if isinstance(config, dict):
             config = Config(**config)
@@ -178,11 +259,45 @@ class ExtendedKalmanFilter:
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
+        self.calibration_size = len(state_model.calibration)
         self.control_size = len(state_model.control)
 
         self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(state_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
-        self.arglist = [state_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [state_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        if self.calibration_size > 0:
+            if len(calibration_map) == 0:
+                map_lite = "\n  , ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model Missing specification of calibration_map:\n{{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(state_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    state_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"\nMissing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self._process_model = BasicBlock(
             self._translate_process_model(state_model), indent=4
@@ -206,19 +321,29 @@ class ExtendedKalmanFilter:
         self._return = self._translate_return()
 
     def _translate_process_model(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for a in self.arglist_state:
             expr_before = symbolic_model.state_model[a]
@@ -234,19 +359,29 @@ class ExtendedKalmanFilter:
         )
 
     def _translate_process_jacobian(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for idx, symbol in enumerate(self.arglist_state):
             model = symbolic_model.state_model[symbol]
@@ -264,19 +399,29 @@ class ExtendedKalmanFilter:
         return f"{prefix}\n{impl}\n{indent}return jacobian;"
 
     def _translate_control_jacobian(self, symbolic_model):
-        subs_set = [
-            (
-                member,
-                Symbol("input.state.{}()".format(member)),
-            )
-            for member in self.arglist_state
-        ] + [
-            (
-                member,
-                Symbol("input_control.{}()".format(member)),
-            )
-            for member in self.arglist_control
-        ]
+        subs_set = (
+            [
+                (
+                    member,
+                    Symbol("input.state.{}()".format(member)),
+                )
+                for member in self.arglist_state
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_calibration.{}()".format(member)),
+                )
+                for member in self.arglist_calibration
+            ]
+            + [
+                (
+                    member,
+                    Symbol("input_control.{}()".format(member)),
+                )
+                for member in self.arglist_control
+            ]
+        )
 
         for idx, symbol in enumerate(self.arglist_state):
             model = symbolic_model.state_model[symbol]
@@ -324,22 +469,9 @@ class ExtendedKalmanFilter:
             f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
         )
 
-    def controloptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
-        )
-
     def state_options_constructor_initializer_list(self):
         return (
             "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
-        )
-
-    def control_options_constructor_initializer_list(self):
-        return (
-            "data("
-            + ", ".join(f"options.{name}" for name in self.arglist_control)
-            + ")"
         )
 
     def covariance_members(self):
@@ -349,6 +481,9 @@ class ExtendedKalmanFilter:
             % (symbol.name, idx, idx, indent, symbol.name, idx, idx)
             for idx, symbol in enumerate(self.arglist_state)
         )
+
+    def enable_control(self):
+        return self.control_size > 0
 
     def control_members(self):
         indent = " " * 4
@@ -380,6 +515,43 @@ class ExtendedKalmanFilter:
         suffix = f"{indent}return covariance;"
         return prefix + "\n" + body.compile() + "\n" + suffix
 
+    def controloptions_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
+        )
+
+    def control_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_control)
+            + ")"
+        )
+
+    def enable_calibration(self):
+        return self.calibration_size > 0
+
+    def calibration_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
+            % (name, idx, indent, name, idx)
+            for idx, name in enumerate(self.arglist_calibration)
+        )
+
+    def calibration_options_constructor_initializer_list(self):
+        return (
+            "data("
+            + ", ".join(f"options.{name}" for name in self.arglist_calibration)
+            + ")"
+        )
+
+    def calibrationoptions_members(self):
+        indent = " " * 4
+        return f"\n{indent}".join(
+            f"double {symbol.name} = 0.0;" for symbol in self.arglist_calibration
+        )
+
     def _translate_sensor_model(self, sensor_model_mapping):
         subs_set = [
             (
@@ -387,6 +559,12 @@ class ExtendedKalmanFilter:
                 Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_calibration.{}()".format(member)),
+            )
+            for member in self.arglist_calibration
         ]
         for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
             assignment = str(predicted_reading)
@@ -466,6 +644,12 @@ class ExtendedKalmanFilter:
                 Symbol("input.state.{}()".format(member)),
             )
             for member in self.arglist_state
+        ] + [
+            (
+                member,
+                Symbol("input_calibration.{}()".format(member)),
+            )
+            for member in self.arglist_calibration
         ]
 
         for reading_idx, (_predicted_reading, model) in enumerate(
@@ -500,15 +684,25 @@ class ExtendedKalmanFilter:
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 
-def _generate_model_function_bodies(header_location, namespace, symbolic_model, config):
-    generator = Model(symbolic_model, config)
+def _generate_model_function_bodies(
+    header_location, namespace, symbolic_model, calibration_map, config
+):
+    generator = Model(symbolic_model, calibration_map, config)
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    assert "generated/" in header_location
-    header_include = header_location.split("generated/")[-1]
+    if header_location is not None and "generated/" in header_location:
+        header_include = header_location.split("generated/")[-1]
+    else:
+        header_include = "generated_to_stdout.h"
 
     return {
+        "enable_calibration": generator.enable_calibration(),
+        "Calibration_members": generator.calibration_members(),
+        "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
+        "Calibration_size": generator.calibration_size,
+        "CalibrationOptions_members": generator.calibrationoptions_members(),
+        "enable_control": generator.enable_control(),
         "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
@@ -530,19 +724,33 @@ def _generate_ekf_function_bodies(
     process_noise,
     sensor_models,
     sensor_noises,
+    calibration_map,
     config,
 ):
     generator = ExtendedKalmanFilter(
-        state_model, process_noise, sensor_models, sensor_noises, config
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
-    assert "generated/" in header_location
-    header_include = header_location.split("generated/")[-1]
+    if header_location is not None and "generated/" in header_location:
+        header_include = header_location.split("generated/")[-1]
+    else:
+        header_include = "generated_to_stdout.h"
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
     return {
+        "enable_calibration": generator.enable_calibration(),
+        "Calibration_members": generator.calibration_members(),
+        "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
+        "Calibration_size": generator.calibration_size,
+        "CalibrationOptions_members": generator.calibrationoptions_members(),
+        "enable_control": generator.enable_control(),
         "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
@@ -605,6 +813,13 @@ def _compile_argparse():
 def _compile_impl(args, inserts, name, hpp, cpp):
     # Compilation
 
+    if args.templates is None:
+        print('"Rendering" to stdout')
+        print(inserts)
+        return CppCompileResult(
+            success=False,
+        )
+
     templates = _parse_raw_templates(args.templates)
 
     header_template = templates[name][hpp]
@@ -656,41 +871,67 @@ def _compile_impl(args, inserts, name, hpp, cpp):
     )
 
 
-def compile(symbolic_model, *, config=None):
+def compile(symbolic_model, calibration_map=None, *, config=None):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
+    if calibration_map is None:
+        calibration_map = {}
+
     args = _compile_argparse()
 
+    if args.header is None:
+        logger.warning("No Header specified, so output to stdout")
     inserts = _generate_model_function_bodies(
-        args.header, args.namespace, symbolic_model, config
+        header_location=args.header,
+        namespace=args.namespace,
+        symbolic_model=symbolic_model,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     return _compile_impl(args, inserts, "formak_model", ".h", ".cpp")
 
 
 def compile_ekf(
-    state_model, process_noise, sensor_models, sensor_noises, *, config=None
+    state_model,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    calibration_map=None,
+    *,
+    config=None,
 ):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
-    common.model_validation(state_model, process_noise)
+    if calibration_map is None:
+        calibration_map = {}
 
-    args = _compile_argparse()
-
-    inserts = _generate_ekf_function_bodies(
-        args.header,
-        args.namespace,
+    common.model_validation(
         state_model,
         process_noise,
         sensor_models,
-        sensor_noises,
-        config,
+        extra_validation=config.extra_validation,
+    )
+
+    args = _compile_argparse()
+
+    if args.header is None:
+        logger.warning("No Header specified, so output to stdout")
+    inserts = _generate_ekf_function_bodies(
+        header_location=args.header,
+        namespace=args.namespace,
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )
 
     return _compile_impl(args, inserts, "formak_ekf", ".hpp", ".cpp")

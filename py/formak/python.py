@@ -1,7 +1,9 @@
+from collections import namedtuple
+from dataclasses import dataclass
 from typing import Dict
 
 import numpy as np
-from formak.exceptions import MinimizationFailure
+from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numba import njit
 from scipy.optimize import minimize
 from sympy import Matrix, Symbol
@@ -15,19 +17,64 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 class Model:
     """Python implementation of the model."""
 
-    def __init__(self, symbolic_model, config):
+    def __init__(self, symbolic_model, config, calibration_map=None):
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)
 
+        if calibration_map is None:
+            calibration_map = {}
+
         self.state_size = len(symbolic_model.state)
+        self.calibration_size = len(symbolic_model.calibration)
         self.control_size = len(symbolic_model.control)
 
         self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
         self.arglist_control = sorted(
             list(symbolic_model.control), key=lambda x: x.name
         )
-        self.arglist = [symbolic_model.dt] + self.arglist_state + self.arglist_control
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
+        self.calibration_vector = np.zeros((0, 0))
+        if self.calibration_size > 0:
+            if len(calibration_map) == 0:
+                map_lite = ", ".join(
+                    [f"{k}: ..." for k in self.arglist_calibration[:3]]
+                )
+                if len(self.arglist_calibration) > 3:
+                    map_lite += ", ..."
+                raise ModelConstructionError(
+                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                )
+            if len(calibration_map) != self.calibration_size:
+                missing_from_map = set(symbolic_model.calibration) - set(
+                    calibration_map.keys()
+                )
+                extra_from_map = set(calibration_map.keys()) - set(
+                    symbolic_model.calibration
+                )
+                missing = ""
+                if len(missing_from_map) > 0:
+                    missing = f"\nMissing: {missing_from_map}"
+                extra = ""
+                if len(extra_from_map) > 0:
+                    extra = f"\nExtra: {extra_from_map}"
+                raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
+        self.calibration_vector = np.array(
+            [[calibration_map[k] for k in self.arglist_calibration]]
+        ).transpose()
+        if self.calibration_vector.shape != (self.calibration_size, 1):
+            raise ModelConstructionError(
+                f"calibration_vector shape {self.calibration_vector.shape} doesn't match {(self.calibration_size, 1)}"
+            )
 
         # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
         self._impl = [
@@ -48,49 +95,74 @@ class Model:
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 for jit_impl in self._impl:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
     # TODO(buck): numpy -> numpy if not compiled
     #   - Given the arglist, refactor expressions to work with state vectors
     #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
     def model(self, dt, state, control_vector=None):
         if control_vector is None:
-            control_vector = np.zeros((0, 0))
+            if self.control_size > 0:
+                raise TypeError(
+                    "model() missing 1 required positional argument: 'control_vector'"
+                )
+            control_vector = np.zeros((0, 1))
 
         assert isinstance(dt, float)
         assert isinstance(state, np.ndarray)
         assert isinstance(control_vector, np.ndarray)
 
         assert state.shape == (self.state_size, 1)
-        assert control_vector.shape == (self.control_size, min(self.control_size, 1))
+        assert control_vector.shape == (self.control_size, 1)
 
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
             try:
-                result = impl(dt, *state, *control_vector)
+                result = impl(dt, *state, *self.calibration_vector, *control_vector)
                 next_state[i, 0] = result
             except TypeError:
                 print(
                     "TypeError when trying to process process model for state %s"
                     % (state_id,)
                 )
+                print(f"given: {state}, {self.calibration_vector}, {control_vector}")
                 print("expected: float")
-                print("found: {}, {}".format(type(result), result))
+                if "result" in locals():
+                    print("found: {}, {}".format(type(result), result))
                 raise
         return next_state
 
 
 class SensorModel:
-    def __init__(self, state_model, sensor_model, config):
+    def __init__(self, state_model, sensor_model, calibration_map, config):
         self.readings = sorted(list(sensor_model.keys()))
         self.sensor_models = sensor_model
 
         self.sensor_size = len(self.readings)
         self.state_size = len(state_model.state)
+        self.calibration_size = len(state_model.calibration)
 
-        self.arglist = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(state_model.calibration), key=lambda x: x.name
+        )
+        self.arglist = self.arglist_state + self.arglist_calibration
+
+        self.calibration_vector = np.array(
+            [[calibration_map[k] for k in self.arglist_calibration]]
+        ).transpose()
+        if self.calibration_vector.shape != (self.calibration_size, 1):
+            raise ModelConstructionError(
+                f"calibration vector shape {self.calibration_vector.shape} doesn't match expected shape {(self.calibration_size, 1)}"
+            )
 
         self._impl = [
             lambdify(
@@ -110,24 +182,29 @@ class SensorModel:
     def __len__(self):
         return len(self.sensor_models)
 
-    def model(self, state):
-        assert isinstance(state, np.ndarray)
-        assert state.shape == (self.state_size, 1)
+    def model(self, state_vector):
+        assert isinstance(state_vector, np.ndarray)
+        assert state_vector.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
         for i, (reading_id, impl) in enumerate(zip(self.readings, self._impl)):
             try:
-                result = impl(*state)
+                result = impl(*state_vector, *self.calibration_vector)
                 reading[i, 0] = result
-            except TypeError:
+            except (TypeError, ValueError):
                 print(
-                    "TypeError when trying to process sensor model for reading %s"
+                    "Error when trying to process sensor model for reading %s"
                     % (reading_id,)
                 )
                 print("expected: float")
-                print("found: {}, {}".format(type(result), result))
+                print("given: {}, {}".format(state_vector, self.calibration_vector))
+                if "result" in locals():
+                    print("found: {}, {}".format(type(result), result))
                 raise
         return reading
+
+
+StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
 
 
 class ExtendedKalmanFilter:
@@ -138,31 +215,53 @@ class ExtendedKalmanFilter:
         sensor_models,
         sensor_noises,
         config,
+        calibration_map=None,
     ):
+        if calibration_map is None:
+            calibration_map = {}
+
         assert isinstance(config, Config)
         assert isinstance(process_noise, dict)
+        assert isinstance(calibration_map, dict)
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
+        self.calibration_size = len(state_model.calibration)
 
         self.params = {
             "process_noise": None,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
+            "calibration_map": calibration_map,
             "compile": compile,
         }
 
-        self._construct_process(state_model, process_noise, config)
-        self._construct_sensors(state_model, sensor_models, sensor_noises, config)
+        self._construct_process(
+            state_model=state_model,
+            process_noise=process_noise,
+            calibration_map=calibration_map,
+            config=config,
+        )
+        self._construct_sensors(
+            state_model=state_model,
+            sensor_models=sensor_models,
+            sensor_noises=sensor_noises,
+            calibration_map=calibration_map,
+            config=config,
+        )
 
-    def _construct_process(self, state_model, process_noise, config):
-        self.state_model = Model(state_model, config)
+    def _construct_process(self, state_model, process_noise, calibration_map, config):
+        self._state_model = Model(
+            symbolic_model=state_model, calibration_map=calibration_map, config=config
+        )
         assert len(process_noise) == self.control_size
 
-        process_noise_matrix = np.eye(self.state_model.control_size)
+        self.calibration_vector = self._state_model.calibration_vector
 
-        for iIdx, iSymbol in enumerate(self.state_model.arglist_control):
-            for jIdx, jSymbol in enumerate(self.state_model.arglist_control):
+        process_noise_matrix = np.eye(self._state_model.control_size)
+
+        for iIdx, iSymbol in enumerate(self._state_model.arglist_control):
+            for jIdx, jSymbol in enumerate(self._state_model.arglist_control):
                 if (iSymbol, jSymbol) in process_noise:
                     value = process_noise[(iSymbol, jSymbol)]
                 elif (jSymbol, iSymbol) in process_noise:
@@ -179,10 +278,10 @@ class ExtendedKalmanFilter:
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
         process_matrix = Matrix(
-            [state_model.state_model[a] for a in self.state_model.arglist_state]
+            [state_model.state_model[a] for a in self._state_model.arglist_state]
         )
         symbolic_process_jacobian = process_matrix.jacobian(
-            self.state_model.arglist_state
+            self._state_model.arglist_state
         )
         # TODO(buck): This assertion won't necessarily hold if CSE is on across states
         assert symbolic_process_jacobian.shape == (
@@ -190,13 +289,15 @@ class ExtendedKalmanFilter:
             self.state_size,
         )
 
-        symbolic_control_jacobian = process_matrix.jacobian(
-            self.state_model.arglist_control
-        )
+        symbolic_control_jacobian = []
+        if self.control_size > 0:
+            symbolic_control_jacobian = process_matrix.jacobian(
+                self._state_model.arglist_control
+            )
 
         self._impl_process_jacobian = [
             lambdify(
-                self.state_model.arglist,
+                self._state_model.arglist,
                 expr,
                 modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
@@ -213,14 +314,20 @@ class ExtendedKalmanFilter:
                 # Pre-warm Jit by calling with known values/structure
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_process_jacobian:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
         self._impl_control_jacobian = [
             lambdify(
-                self.state_model.arglist,
+                self._state_model.arglist,
                 expr,
                 modules=config.python_modules,
                 cse=config.common_subexpression_elimination,
@@ -236,16 +343,29 @@ class ExtendedKalmanFilter:
                 # Pre-warm Jit by calling with known values/structure
                 default_dt = 0.1
                 default_state = np.zeros((self.state_size, 1))
+                default_calibration = np.zeros((self.calibration_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 for jit_impl in self._impl_control_jacobian:
                     for _i in range(5):
-                        jit_impl(default_dt, *default_state, *default_control)
+                        jit_impl(
+                            default_dt,
+                            *default_state,
+                            *default_calibration,
+                            *default_control,
+                        )
 
-    def _construct_sensors(self, state_model, sensor_models, sensor_noises, config):
-        assert sorted(list(sensor_models.keys())) == sorted(list(sensor_noises.keys()))
+    def _construct_sensors(
+        self, state_model, sensor_models, sensor_noises, calibration_map, config
+    ):
+        assert set(sensor_models.keys()) == set(sensor_noises.keys())
 
         self.params["sensor_models"] = {
-            k: SensorModel(state_model, model, config)
+            k: SensorModel(
+                state_model=state_model,
+                sensor_model=model,
+                calibration_map=calibration_map,
+                config=config,
+            )
             for k, model in sensor_models.items()
         }
         for k in self.params["sensor_models"].keys():
@@ -306,7 +426,7 @@ class ExtendedKalmanFilter:
             for col in range(self.state_size):
                 jacobian[row, col] = self._impl_process_jacobian[
                     row * self.state_size + col
-                ](dt, *state, *control)
+                ](dt, *state, *self.calibration_vector, *control)
         return jacobian
 
     def control_jacobian(self, dt, state, control):
@@ -315,7 +435,7 @@ class ExtendedKalmanFilter:
             for col in range(self.control_size):
                 jacobian[row, col] = self._impl_control_jacobian[
                     row * self.control_size + col
-                ](dt, *state, *control)
+                ](dt, *state, *self.calibration_vector, *control)
         return jacobian
 
     def sensor_jacobian(self, sensor_key, state):
@@ -331,7 +451,10 @@ class ExtendedKalmanFilter:
                 )
         return jacobian
 
-    def process_model(self, dt, state, covariance, control):
+    def process_model(self, dt, state, covariance, control=None):
+        if control is None:
+            control = np.zeros((0, 1))
+
         try:
             assert isinstance(state, np.ndarray)
             assert isinstance(covariance, np.ndarray)
@@ -369,10 +492,10 @@ class ExtendedKalmanFilter:
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape
 
-        next_state = self.state_model.model(dt, state, control)
+        next_state = self._state_model.model(dt, state, control)
         assert next_state.shape == state.shape
 
-        return next_state, next_covariance
+        return StateAndCovariance(next_state, next_covariance)
 
     def sensor_model(self, sensor_key, state, covariance, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
@@ -427,7 +550,7 @@ class ExtendedKalmanFilter:
         next_state = state + np.matmul(K_t, innovation)
         assert next_state.shape == state.shape
 
-        return next_state, next_covariance
+        return StateAndCovariance(next_state, next_covariance)
 
     ### scikit-learn / sklearn interface ###
 
@@ -633,41 +756,58 @@ class ExtendedKalmanFilter:
         return self
 
 
+@dataclass
 class Config:
-    def __init__(
-        self,
-        compile=False,
-        warm_jit=None,
-        common_subexpression_elimination=True,
-        python_modules=DEFAULT_MODULES,
-    ):
-        if warm_jit is None:
-            warm_jit = compile
-        self.compile = compile
-        self.warm_jit = warm_jit
-        self.common_subexpression_elimination = common_subexpression_elimination
-        self.python_modules = python_modules
+    compile: bool = False
+    warm_jit: bool = compile
+    common_subexpression_elimination: bool = True
+    python_modules = DEFAULT_MODULES
+    extra_validation: bool = False
 
 
-def compile(symbolic_model, *, config=None):
+def compile(symbolic_model, calibration_map=None, *, config=None):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
-    return Model(symbolic_model, config)
+    if calibration_map is None:
+        calibration_map = {}
+
+    return Model(
+        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
+    )
 
 
 def compile_ekf(
-    state_model, process_noise, sensor_models, sensor_noises, *, config=None
+    state_model,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    calibration_map=None,
+    *,
+    config=None,
 ):
     if config is None:
         config = Config()
     elif isinstance(config, dict):
         config = Config(**config)
 
-    common.model_validation(state_model, process_noise)
+    if calibration_map is None:
+        calibration_map = {}
+
+    common.model_validation(
+        state_model,
+        process_noise,
+        sensor_models,
+        extra_validation=config.extra_validation,
+    )
 
     return ExtendedKalmanFilter(
-        state_model, process_noise, sensor_models, sensor_noises, config
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
     )

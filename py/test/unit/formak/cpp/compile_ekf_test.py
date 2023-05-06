@@ -6,6 +6,7 @@ from formak import cpp, ui
 
 def test_EKF_model_collapse():
     config = cpp.Config()
+    config.extra_validation = True
 
     with pytest.raises(ModelConstructionError):
         cpp.compile_ekf(
