@@ -103,13 +103,13 @@ class Model:
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
-                map_lite = ", ".join(
+                map_lite = "\n  , ".join(
                     [f"{k}: ..." for k in self.arglist_calibration[:3]]
                 )
                 if len(self.arglist_calibration) > 3:
                     map_lite += ", ..."
                 raise ModelConstructionError(
-                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                    f"Model with empty specification of calibration_map:\n{{{map_lite}}}"
                 )
             if len(calibration_map) != self.calibration_size:
                 missing_from_map = set(symbolic_model.calibration) - set(
@@ -276,13 +276,13 @@ class ExtendedKalmanFilter:
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
-                map_lite = ", ".join(
+                map_lite = "\n  , ".join(
                     [f"{k}: ..." for k in self.arglist_calibration[:3]]
                 )
                 if len(self.arglist_calibration) > 3:
                     map_lite += ", ..."
                 raise ModelConstructionError(
-                    f"Model Missing specification of calibration_map: {{{map_lite}}}"
+                    f"Model Missing specification of calibration_map:\n{{{map_lite}}}"
                 )
             if len(calibration_map) != self.calibration_size:
                 missing_from_map = set(state_model.calibration) - set(

@@ -25,7 +25,7 @@ def model_validation(
         if key not in allowed_keys:
             render = ", ".join([f"{k} {type(k)}" for k in allowed_keys])
             raise ModelConstructionError(
-                f'Key {key} {type(key)} not in allow"list" [{render}]'
+                f'Key {key} {type(key)} not in allow"list" of keys and combinations for process noise based on state_model.control [{render}]'
             )
 
     # Check if sensor models depend on values outside the state, calibration [and map]

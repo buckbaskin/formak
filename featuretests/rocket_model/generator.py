@@ -39,11 +39,12 @@ CON_position_in_global_frame = named_translation("CON_pos")
 
 cpp_implementation = cpp.compile_ekf(
     state_model=ui_model,
-    process_noise={k: 1.0 for k in ui_model.state_model.keys()},
+    process_noise={k: 1.0 for k in ui_model.control},
     sensor_models={
         "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
     },
     sensor_noises={"altitude": np.eye(1)},
+    calibration_map=calibration_map,
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
