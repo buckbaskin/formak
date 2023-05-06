@@ -33,6 +33,8 @@ The Calibration use case also provides additional functionality on top of the
 Control inputs. The two categories conceptually overlap as "known" values that
 are accepted in the state update; however, the Calibration values are also
 available within the sensor model. With just a State and Control input, the
+state needs to accept control inputs as a pass through to sensor models. This
+adds a compute penalty for computations with the state.
 
 Supporting calibration is a big step forward in functionality for FormaK that
 enables a variety of new model use cases.
