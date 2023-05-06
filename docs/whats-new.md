@@ -4,6 +4,8 @@ Release Notes
 
 ## 2023-05-05 Calibration
 
+Commit [`02005ce`](https://github.com/buckbaskin/formak/commit/02005ce4fe932f5ad4d1131b117fa0b0a20232b9)
+
 Add an optional Calibration parameter for setting up multiple sensor models or
 adding sensors at known positions.
 
