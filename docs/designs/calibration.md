@@ -55,6 +55,9 @@ The key classes in the implementation are:
 This design was retcon'd based on a feature test of developing a model for a
 rocket launch based on NASA data.
 
+[NASA Dataset Page](https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vicw-ivgd)
+[YouTube Video of Launch](https://www.youtube.com/watch?v=O97dPDkUGg4)
+
 The feature tests for this design are based on defining a model of the rocket
 motion and then generating Python and C++ models for the model. The
 implementation exposed a missing aspect of the FormaK model, specifically the
