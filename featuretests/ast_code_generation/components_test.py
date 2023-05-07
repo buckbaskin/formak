@@ -259,24 +259,60 @@ def test_classdef_covariance():
       using DataT = Eigen::Matrix<double, rows, cols>;
 
 
-      double& CON_ori_pitch() { return data(0, 0); }
-      double CON_ori_pitch() const { return data(0, 0); }
-      double& CON_ori_roll() { return data(1, 1); }
-      double CON_ori_roll() const { return data(1, 1); }
-      double& CON_ori_yaw() { return data(2, 2); }
-      double CON_ori_yaw() const { return data(2, 2); }
-      double& CON_pos_pos_x() { return data(3, 3); }
-      double CON_pos_pos_x() const { return data(3, 3); }
-      double& CON_pos_pos_y() { return data(4, 4); }
-      double CON_pos_pos_y() const { return data(4, 4); }
-      double& CON_pos_pos_z() { return data(5, 5); }
-      double CON_pos_pos_z() const { return data(5, 5); }
-      double& CON_vel_x() { return data(6, 6); }
-      double CON_vel_x() const { return data(6, 6); }
-      double& CON_vel_y() { return data(7, 7); }
-      double CON_vel_y() const { return data(7, 7); }
-      double& CON_vel_z() { return data(8, 8); }
-      double CON_vel_z() const { return data(8, 8); }
+      double& CON_ori_pitch() {
+        return data(0, 0);
+      }
+      double CON_ori_pitch() const {
+        return data(0, 0);
+      }
+      double& CON_ori_roll() {
+        return data(1, 1);
+      }
+      double CON_ori_roll() const {
+        return data(1, 1);
+      }
+      double& CON_ori_yaw() {
+        return data(2, 2);
+      }
+      double CON_ori_yaw() const {
+        return data(2, 2);
+      }
+      double& CON_pos_pos_x() {
+        return data(3, 3);
+      }
+      double CON_pos_pos_x() const {
+        return data(3, 3);
+      }
+      double& CON_pos_pos_y() {
+        return data(4, 4);
+      }
+      double CON_pos_pos_y() const {
+        return data(4, 4);
+      }
+      double& CON_pos_pos_z() {
+        return data(5, 5);
+      }
+      double CON_pos_pos_z() const {
+        return data(5, 5);
+      }
+      double& CON_vel_x() {
+        return data(6, 6);
+      }
+      double CON_vel_x() const {
+        return data(6, 6);
+      }
+      double& CON_vel_y() {
+        return data(7, 7);
+      }
+      double CON_vel_y() const {
+        return data(7, 7);
+      }
+      double& CON_vel_z() {
+        return data(8, 8);
+      }
+      double CON_vel_z() const {
+        return data(8, 8);
+      }
 
       DataT data = DataT::Identity();
     };
@@ -286,9 +322,9 @@ def test_classdef_covariance():
         "Covariance",
         bases=[],
         body=[
-            UsingDeclaration("DataT", "Eigen::Matrix<double, 9, 9>"),
-            ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const StateOptions&", "options")),
+            MemberDeclaration("static constexpr size_t", "rows", 9),
+            MemberDeclaration("static constexpr size_t", "cols", 9),
+            UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
         ]
         + list(
             chain.from_iterable(
@@ -377,18 +413,42 @@ def test_classdef_control():
       Control();
       Control(const ControlOptions& options);
 
-      double& IMU_reading_acc_x() {return data(0, 0); }
-      double IMU_reading_acc_x() const {return data(0, 0); }
-      double& IMU_reading_acc_y() {return data(1, 0); }
-      double IMU_reading_acc_y() const {return data(1, 0); }
-      double& IMU_reading_acc_z() {return data(2, 0); }
-      double IMU_reading_acc_z() const {return data(2, 0); }
-      double& IMU_reading_pitch_rate() {return data(3, 0); }
-      double IMU_reading_pitch_rate() const {return data(3, 0); }
-      double& IMU_reading_roll_rate() {return data(4, 0); }
-      double IMU_reading_roll_rate() const {return data(4, 0); }
-      double& IMU_reading_yaw_rate() {return data(5, 0); }
-      double IMU_reading_yaw_rate() const {return data(5, 0); }
+      double& IMU_reading_acc_x() {
+        return data(0, 0);
+      }
+      double IMU_reading_acc_x() const {
+        return data(0, 0);
+      }
+      double& IMU_reading_acc_y() {
+        return data(1, 0);
+      }
+      double IMU_reading_acc_y() const {
+        return data(1, 0);
+      }
+      double& IMU_reading_acc_z() {
+        return data(2, 0);
+      }
+      double IMU_reading_acc_z() const {
+        return data(2, 0);
+      }
+      double& IMU_reading_pitch_rate() {
+        return data(3, 0);
+      }
+      double IMU_reading_pitch_rate() const {
+        return data(3, 0);
+      }
+      double& IMU_reading_roll_rate() {
+        return data(4, 0);
+      }
+      double IMU_reading_roll_rate() const {
+        return data(4, 0);
+      }
+      double& IMU_reading_yaw_rate() {
+        return data(5, 0);
+      }
+      double IMU_reading_yaw_rate() const {
+        return data(5, 0);
+      }
 
       DataT data = DataT::Zero();
     };
