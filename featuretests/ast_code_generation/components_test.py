@@ -691,6 +691,127 @@ def test_forwarddeclaration_altitudesensormodel():
 
 
 @gen_comp
+def test_classdef_altitudeoptions():
+    """
+    struct AltitudeOptions {
+      double altitude = 0.0;
+    };
+    """
+    AltitudeOptions = ClassDef(
+        "struct",
+        "AltitudeOptions",
+        bases=[],
+        body=[
+            MemberDeclaration("double", "altitude", 0.0),
+        ],
+    )
+    return AltitudeOptions
+
+
+@gen_comp
+def test_classdef_altitude():
+    """
+    struct Altitude {
+      using DataT = Eigen::Matrix<double, 1, 1>;
+      using CovarianceT = Eigen::Matrix<double, 1, 1>;
+      using InnovationT = Eigen::Matrix<double, 1, 1>;
+      using KalmanGainT = Eigen::Matrix<double, 9, 1>;
+      using SensorJacobianT = Eigen::Matrix<double, 1, 9>;
+      using SensorModel = AltitudeSensorModel;
+
+      Altitude();
+      Altitude(const AltitudeOptions& options);
+
+      double& altitude() {
+        return data(0, 0);
+      }
+      double altitude() const {
+        return data(0, 0);
+      }
+
+      DataT data = DataT::Zero();
+
+      constexpr static size_t size = 1;
+      constexpr static SensorId Identifier = SensorId::ALTITUDE;
+    };
+    """
+    Altitude = ClassDef(
+        "struct",
+        "Altitude",
+        bases=[],
+        body=[
+            UsingDeclaration("DataT", "Eigen::Matrix<double, 1, 1>"),
+            UsingDeclaration("CovarianceT", "Eigen::Matrix<double, 1, 1>"),
+            UsingDeclaration("InnovationT", "Eigen::Matrix<double, 1, 1>"),
+            UsingDeclaration("KalmanGainT", "Eigen::Matrix<double, 9, 1>"),
+            UsingDeclaration("SensorJacobianT", "Eigen::Matrix<double, 1, 9>"),
+            UsingDeclaration("SensorModel", "AltitudeSensorModel"),
+            ConstructorDeclaration(),  # No args constructor gets default constructor
+            ConstructorDeclaration(Arg("const AltitudeOptions&", "options")),
+            FunctionDef(
+                "double&",
+                "altitude",
+                args=[],
+                modifier="",
+                body=[
+                    Return(f"data(0, 0)"),
+                ],
+            ),
+            FunctionDef(
+                "double",
+                "altitude",
+                args=[],
+                modifier="const",
+                body=[
+                    Return(f"data(0, 0)"),
+                ],
+            ),
+            MemberDeclaration("DataT", "data", "DataT::Zero()"),
+            MemberDeclaration("constexpr static size_t", "size", 1),
+            MemberDeclaration(
+                "constexpr static SensorId", "Identifier", "SensorId::ALTITUDE"
+            ),
+        ],
+    )
+    return Altitude
+
+
+@gen_comp
+def test_function_operatorltlt():
+    """
+    std::ostream& operator<<(std::ostream& o, const Altitude& reading) {
+        o << "Reading(data[1, 1] = " << reading.data << ")";
+        return o;
+    }
+    """
+    return Escape("")
+
+
+@gen_comp
+def test_classdef_altitudesensormodel():
+    """
+    struct AltitudeSensorModel {
+        static Altitude model(
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Altitude& input_reading);
+
+      static typename Altitude
+      ::SensorJacobianT jacobian(
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Altitude& input_reading);
+
+      static typename Altitude
+      ::CovarianceT covariance(
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Altitude& input_reading);
+    };"""
+    return Escape("")
+
+
+@gen_comp
 def test_namespace():
     """
     namespace featuretest {
