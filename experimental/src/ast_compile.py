@@ -85,9 +85,6 @@ namespace featuretest {
     DataT data = DataT::Identity();
   };
 
-
-
-
   struct ControlOptions {
 
     double IMU_reading_acc_x = 0.0;
@@ -287,8 +284,6 @@ namespace featuretest {
       next_covariance.data =
           covariance.data - kalman_gain * H * covariance.data;
 
-      // TODO(buck): Measurement Likelihood (optional)
-
       // Here be the StateAndVariance math
       return StateAndVariance{.state = next_state,
                               .covariance = next_covariance};
@@ -445,7 +440,7 @@ class ClassDef(BaseAst):
         for component in self.body:
             yield from component.compile(options, classname=self.name, **kwargs)
 
-        yield "}"
+        yield "}\n"
 
 
 @dataclass
@@ -484,11 +479,14 @@ class ConstructorDeclaration(BaseAst):
 
     @autoindent
     def compile(self, options: CompileState, classname: str, **kwargs):
-        yield f"{classname}("
-        for arg in self.args:
-            for line in arg.compile(options, classname=classname, **kwargs):
-                yield line + ","
-        yield ");"
+        if len(self.args) > 0:
+            yield f"{classname}("
+            for arg in self.args:
+                for line in arg.compile(options, classname=classname, **kwargs):
+                    yield line + ","
+            yield ");"
+        else:
+            yield f"{classname}();"
 
 
 @dataclass
@@ -573,7 +571,6 @@ State = ClassDef(
         chain.from_iterable(
             [
                 (
-                    # TODO(buck): fill in the body
                     FunctionDef(
                         "double&",
                         name,
@@ -627,7 +624,6 @@ Covariance = ClassDef(
         chain.from_iterable(
             [
                 (
-                    # TODO(buck): fill in the body
                     FunctionDef(
                         "double&",
                         name,
@@ -668,33 +664,75 @@ Covariance = ClassDef(
     ],
 )
 
-#  struct Covariance {
-#    using DataT = Eigen::Matrix<double, 9, 9>;
-#
-#
-#    double& CON_ori_pitch() { return data(0, 0); }
-#    double CON_ori_pitch() const { return data(0, 0); }
-#    double& CON_ori_roll() { return data(1, 1); }
-#    double CON_ori_roll() const { return data(1, 1); }
-#    double& CON_ori_yaw() { return data(2, 2); }
-#    double CON_ori_yaw() const { return data(2, 2); }
-#    double& CON_pos_pos_x() { return data(3, 3); }
-#    double CON_pos_pos_x() const { return data(3, 3); }
-#    double& CON_pos_pos_y() { return data(4, 4); }
-#    double CON_pos_pos_y() const { return data(4, 4); }
-#    double& CON_pos_pos_z() { return data(5, 5); }
-#    double CON_pos_pos_z() const { return data(5, 5); }
-#    double& CON_vel_x() { return data(6, 6); }
-#    double CON_vel_x() const { return data(6, 6); }
-#    double& CON_vel_y() { return data(7, 7); }
-#    double CON_vel_y() const { return data(7, 7); }
-#    double& CON_vel_z() { return data(8, 8); }
-#    double CON_vel_z() const { return data(8, 8); }
-#
-#    DataT data = DataT::Identity();
-#  };
+ControlOptions = ClassDef(
+    "struct",
+    "ControlOptions",
+    bases=[],
+    body=[
+        MemberDeclaration("double", "IMU_reading_acc_x", 0.0),
+        MemberDeclaration("double", "IMU_reading_acc_y", 0.0),
+        MemberDeclaration("double", "IMU_reading_acc_z", 0.0),
+        MemberDeclaration("double", "IMU_reading_pitch_rate", 0.0),
+        MemberDeclaration("double", "IMU_reading_roll_rate", 0.0),
+        MemberDeclaration("double", "IMU_reading_yaw_rate", 0.0),
+    ],
+)
 
-namespace = Namespace(name="featuretest", body=[StateOptions, State, Covariance])
+Control = ClassDef(
+    "struct",
+    "Control",
+    bases=[],
+    body=[
+        MemberDeclaration("static constexpr size_t", "rows", 6),
+        MemberDeclaration("static constexpr size_t", "cols", 1),
+        UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+        ConstructorDeclaration(),  # No args constructor gets default constructor
+        ConstructorDeclaration(Arg("const ControlOptions&", "options")),
+    ]
+    + list(
+        chain.from_iterable(
+            [
+                (
+                    FunctionDef(
+                        "double&",
+                        name,
+                        args=[],
+                        modifier="",
+                        body=[
+                            Return(f"data({idx}, 0)"),
+                        ],
+                    ),
+                    FunctionDef(
+                        "double",
+                        name,
+                        args=[],
+                        modifier="const",
+                        body=[
+                            Return(f"data({idx}, 0)"),
+                        ],
+                    ),
+                )
+                for idx, name in enumerate(
+                    [
+                        "IMU_reading_acc_x",
+                        "IMU_reading_acc_y",
+                        "IMU_reading_acc_z",
+                        "IMU_reading_pitch_rate",
+                        "IMU_reading_roll_rate",
+                        "IMU_reading_yaw_rate",
+                    ]
+                )
+            ]
+        )
+    )
+    + [
+        MemberDeclaration("DataT", "data", "DataT::Zero()"),
+    ],
+)
+
+namespace = Namespace(
+    name="featuretest", body=[StateOptions, State, Covariance, ControlOptions, Control]
+)
 
 includes = [
     "#include <Eigen/Dense>    // Matrix",
