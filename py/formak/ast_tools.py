@@ -131,14 +131,18 @@ class ConstructorDeclaration(BaseAst):
 
     @autoindent
     def compile(self, options: CompileState, classname: str, **kwargs):
-        if len(self.args) > 0:
+        if len(self.args) == 0:
+            yield f"{classname}();"
+        elif len(self.args) == 1:
+            # specialization for "short" functions
+            argstr = ''.join(self.args[0].compile(options, classname=classname, **kwargs)).strip()
+            yield f"{classname}({argstr});"
+        else:
             yield f"{classname}("
             for arg in self.args:
                 for line in arg.compile(options, classname=classname, **kwargs):
                     yield line + ","
             yield ");"
-        else:
-            yield f"{classname}();"
 
 
 @dataclass
@@ -165,13 +169,18 @@ class FunctionDef(BaseAst):
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
-        if len(self.args) > 0:
+        if len(self.args) == 0:
+            yield f"{self.return_type} {self.name}() {self.modifier} {{"
+        elif len(self.args) == 1:
+            # specialization for "short" functions
+            argstr = ''.join(self.args[0].compile(options, classname=classname, **kwargs)).strip()
+            print(f'debug: argstr|{argstr}')
+            yield f"{self.return_type} {self.name}({argstr}) {self.modifier} {{"
+        else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
                 yield from arg.compile(options, **kwargs)
             yield f") {self.modifier} {{"
-        else:
-            yield f"{self.return_type} {self.name}() {self.modifier} {{"
 
         for component in self.body:
             yield from component.compile(options, **kwargs)

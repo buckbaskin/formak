@@ -1,4 +1,6 @@
 from itertools import chain
+from typing import Optional
+import re
 import difflib
 
 from formak.ast_tools import (
@@ -25,6 +27,49 @@ def tprint(ast):
         print(line)
 
 
+def simplify(line):
+    return re.sub(r"\s+", " ", line.strip())
+
+
+def diff(test, *args, **kwargs) -> Optional[int]:
+    """
+    Split out logic from generator_compare to simplify what gets rendered in the pytest diff
+
+    Returns Optional[int] containing the line the diff starts if there is a diff
+    """
+    expected = list(
+        filter(
+            lambda s: len(s) > 0,
+            map(simplify, test.__doc__.splitlines(keepends=False)),
+        )
+    )
+
+    result = list(
+        filter(
+            lambda s: len(s) > 0,
+            map(
+                simplify,
+                test(*args, **kwargs).compile(CompileState(indent=2)),
+            ),
+        )
+    )
+
+    diff = difflib.ndiff(expected, result)
+
+    diff_start = None
+
+    print(f"diff {type(diff)}")
+    for idx, line in enumerate(diff):
+        print(str(idx).rjust(3), line)
+        if diff_start is None and line[0] in ["+", "?", "-"]:
+            diff_start = idx
+        if diff_start is not None and idx >= diff_start + 10:
+            print("...", "Trimming diff output")
+            break
+
+    return diff_start
+
+
 def generator_compare(test):
     def wrapped(*args, **kwargs):
         if test.__doc__ is None or test.__doc__ == "":
@@ -32,32 +77,10 @@ def generator_compare(test):
                 f"Test {test.__name__} is missing docstring to compare with generator_compare"
             )
 
-        expected = list(
-            filter(
-                lambda s: len(s) > 0,
-                map(lambda s: s.strip(), test.__doc__.splitlines(keepends=False)),
-            )
-        )
+        if diff(test, *args, **kwargs) is not None:
+            raise ValueError("Test did not match expected string")
 
-        result = list(
-            filter(
-                lambda s: len(s) > 0,
-                map(
-                    lambda s: s.strip(),
-                    test(*args, **kwargs).compile(CompileState(indent=2)),
-                ),
-            )
-        )
-
-        diff = difflib.ndiff(expected, result, linejunk=difflib.IS_LINE_JUNK)
-        print(f"diff {type(diff)}")
-        for idx, line in enumerate(diff):
-            print(str(idx).rjust(3), line)
-
-        1 / 0
-
-    # TODO(buck): annotate the wrapper
-
+    wrapped.__name__ = test.__name__
     return wrapped
 
 
@@ -111,24 +134,60 @@ def test_classdef_state():
       State();
       State(const StateOptions& options);
 
-      double& CON_ori_pitch() { return data(0, 0); }
-      double CON_ori_pitch() const { return data(0, 0); }
-      double& CON_ori_roll() { return data(1, 0); }
-      double CON_ori_roll() const { return data(1, 0); }
-      double& CON_ori_yaw() { return data(2, 0); }
-      double CON_ori_yaw() const { return data(2, 0); }
-      double& CON_pos_pos_x() { return data(3, 0); }
-      double CON_pos_pos_x() const { return data(3, 0); }
-      double& CON_pos_pos_y() { return data(4, 0); }
-      double CON_pos_pos_y() const { return data(4, 0); }
-      double& CON_pos_pos_z() { return data(5, 0); }
-      double CON_pos_pos_z() const { return data(5, 0); }
-      double& CON_vel_x() { return data(6, 0); }
-      double CON_vel_x() const { return data(6, 0); }
-      double& CON_vel_y() { return data(7, 0); }
-      double CON_vel_y() const { return data(7, 0); }
-      double& CON_vel_z() { return data(8, 0); }
-      double CON_vel_z() const { return data(8, 0); }
+      double& CON_ori_pitch() {
+        return data(0, 0);
+      }
+      double CON_ori_pitch() const {
+        return data(0, 0);
+      }
+      double& CON_ori_roll() {
+        return data(1, 0);
+      }
+      double CON_ori_roll() const {
+        return data(1, 0);
+      }
+      double& CON_ori_yaw() {
+        return data(2, 0);
+      }
+      double CON_ori_yaw() const {
+        return data(2, 0);
+      }
+      double& CON_pos_pos_x() {
+        return data(3, 0);
+      }
+      double CON_pos_pos_x() const {
+        return data(3, 0);
+      }
+      double& CON_pos_pos_y() {
+        return data(4, 0);
+      }
+      double CON_pos_pos_y() const {
+        return data(4, 0);
+      }
+      double& CON_pos_pos_z() {
+        return data(5, 0);
+      }
+      double CON_pos_pos_z() const {
+        return data(5, 0);
+      }
+      double& CON_vel_x() {
+        return data(6, 0);
+      }
+      double CON_vel_x() const {
+        return data(6, 0);
+      }
+      double& CON_vel_y() {
+        return data(7, 0);
+      }
+      double CON_vel_y() const {
+        return data(7, 0);
+      }
+      double& CON_vel_z() {
+        return data(8, 0);
+      }
+      double CON_vel_z() const {
+        return data(8, 0);
+      }
 
       DataT data = DataT::Zero();
     };
@@ -191,7 +250,37 @@ def test_classdef_state():
     return State
 
 
+@gen_comp
 def test_classdef_covariance():
+    """
+    struct Covariance {
+      static constexpr size_t rows = 9;
+      static constexpr size_t cols = 9;
+      using DataT = Eigen::Matrix<double, rows, cols>;
+
+
+      double& CON_ori_pitch() { return data(0, 0); }
+      double CON_ori_pitch() const { return data(0, 0); }
+      double& CON_ori_roll() { return data(1, 1); }
+      double CON_ori_roll() const { return data(1, 1); }
+      double& CON_ori_yaw() { return data(2, 2); }
+      double CON_ori_yaw() const { return data(2, 2); }
+      double& CON_pos_pos_x() { return data(3, 3); }
+      double CON_pos_pos_x() const { return data(3, 3); }
+      double& CON_pos_pos_y() { return data(4, 4); }
+      double CON_pos_pos_y() const { return data(4, 4); }
+      double& CON_pos_pos_z() { return data(5, 5); }
+      double CON_pos_pos_z() const { return data(5, 5); }
+      double& CON_vel_x() { return data(6, 6); }
+      double CON_vel_x() const { return data(6, 6); }
+      double& CON_vel_y() { return data(7, 7); }
+      double CON_vel_y() const { return data(7, 7); }
+      double& CON_vel_z() { return data(8, 8); }
+      double CON_vel_z() const { return data(8, 8); }
+
+      DataT data = DataT::Identity();
+    };
+    """
     Covariance = ClassDef(
         "struct",
         "Covariance",
@@ -244,10 +333,23 @@ def test_classdef_covariance():
             MemberDeclaration("DataT", "data", "DataT::Identity()"),
         ],
     )
-    tprint(Covariance)
+    return Covariance
 
 
+@gen_comp
 def test_classdef_controloptions():
+    """
+    struct ControlOptions {
+
+      double IMU_reading_acc_x = 0.0;
+      double IMU_reading_acc_y = 0.0;
+      double IMU_reading_acc_z = 0.0;
+      double IMU_reading_pitch_rate = 0.0;
+      double IMU_reading_roll_rate = 0.0;
+      double IMU_reading_yaw_rate = 0.0;
+
+    };
+    """
     ControlOptions = ClassDef(
         "struct",
         "ControlOptions",
@@ -261,10 +363,36 @@ def test_classdef_controloptions():
             MemberDeclaration("double", "IMU_reading_yaw_rate", 0.0),
         ],
     )
-    tprint(ControlOptions)
+    return ControlOptions
 
 
+@gen_comp
 def test_classdef_control():
+    """
+    struct Control {
+      static constexpr size_t rows = 6;
+      static constexpr size_t cols = 1;
+      using DataT = Eigen::Matrix<double, rows, cols>;
+
+      Control();
+      Control(const ControlOptions& options);
+
+      double& IMU_reading_acc_x() {return data(0, 0); }
+      double IMU_reading_acc_x() const {return data(0, 0); }
+      double& IMU_reading_acc_y() {return data(1, 0); }
+      double IMU_reading_acc_y() const {return data(1, 0); }
+      double& IMU_reading_acc_z() {return data(2, 0); }
+      double IMU_reading_acc_z() const {return data(2, 0); }
+      double& IMU_reading_pitch_rate() {return data(3, 0); }
+      double IMU_reading_pitch_rate() const {return data(3, 0); }
+      double& IMU_reading_roll_rate() {return data(4, 0); }
+      double IMU_reading_roll_rate() const {return data(4, 0); }
+      double& IMU_reading_yaw_rate() {return data(5, 0); }
+      double IMU_reading_yaw_rate() const {return data(5, 0); }
+
+      DataT data = DataT::Zero();
+    };
+    """
     Control = ClassDef(
         "struct",
         "Control",
@@ -316,10 +444,28 @@ def test_classdef_control():
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
         ],
     )
-    tprint(Control)
+    return Control
 
 
+@gen_comp
 def test_namespace():
+    """
+    namespace featuretest {
+      struct StateOptions {
+
+        double CON_ori_pitch = 0.0;
+        double CON_ori_roll = 0.0;
+        double CON_ori_yaw = 0.0;
+        double CON_pos_pos_x = 0.0;
+        double CON_pos_pos_y = 0.0;
+        double CON_pos_pos_z = 0.0;
+        double CON_vel_x = 0.0;
+        double CON_vel_y = 0.0;
+        double CON_vel_z = 0.0;
+
+      };
+    } // namespace featuretest
+    """
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -337,10 +483,39 @@ def test_namespace():
         ],
     )
     namespace = Namespace(name="featuretest", body=[StateOptions])
-    tprint(namespace)
+    return namespace
 
 
+@gen_comp
 def test_headerfile():
+    """
+    #pragma once
+
+    #include <Eigen/Dense>    // Matrix
+    #include <any>            // any
+    #include <cstddef>        // size_t
+    #include <iostream>       // std::cout, debugging
+    #include <optional>       // optional
+    #include <unordered_map>  // unordered_map
+
+
+    namespace featuretest {
+      struct StateOptions {
+
+        double CON_ori_pitch = 0.0;
+        double CON_ori_roll = 0.0;
+        double CON_ori_yaw = 0.0;
+        double CON_pos_pos_x = 0.0;
+        double CON_pos_pos_y = 0.0;
+        double CON_pos_pos_z = 0.0;
+        double CON_vel_x = 0.0;
+        double CON_vel_y = 0.0;
+        double CON_vel_z = 0.0;
+
+      };
+    } // namespace featuretest
+    """
+
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -368,4 +543,4 @@ def test_headerfile():
     ]
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
 
-    tprint(header)
+    return header
