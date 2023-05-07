@@ -1,4 +1,5 @@
 from itertools import chain
+import difflib
 
 from formak.ast_tools import (
     CompileState,
@@ -24,7 +25,62 @@ def tprint(ast):
         print(line)
 
 
+def generator_compare(test):
+    def wrapped(*args, **kwargs):
+        if test.__doc__ is None or test.__doc__ == "":
+            raise ValueError(
+                f"Test {test.__name__} is missing docstring to compare with generator_compare"
+            )
+
+        expected = list(
+            filter(
+                lambda s: len(s) > 0,
+                map(lambda s: s.strip(), test.__doc__.splitlines(keepends=False)),
+            )
+        )
+
+        result = list(
+            filter(
+                lambda s: len(s) > 0,
+                map(
+                    lambda s: s.strip(),
+                    test(*args, **kwargs).compile(CompileState(indent=2)),
+                ),
+            )
+        )
+
+        diff = difflib.ndiff(expected, result, linejunk=difflib.IS_LINE_JUNK)
+        print(f"diff {type(diff)}")
+        for idx, line in enumerate(diff):
+            print(str(idx).rjust(3), line)
+
+        1 / 0
+
+    # TODO(buck): annotate the wrapper
+
+    return wrapped
+
+
+gen_comp = generator_compare
+
+
+@gen_comp
 def test_classdef_stateoptions():
+    """
+    struct StateOptions {
+
+      double CON_ori_pitch = 0.0;
+      double CON_ori_roll = 0.0;
+      double CON_ori_yaw = 0.0;
+      double CON_pos_pos_x = 0.0;
+      double CON_pos_pos_y = 0.0;
+      double CON_pos_pos_z = 0.0;
+      double CON_vel_x = 0.0;
+      double CON_vel_y = 0.0;
+      double CON_vel_z = 0.0;
+
+    };
+    """
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -41,10 +97,42 @@ def test_classdef_stateoptions():
             MemberDeclaration("double", "CON_vel_z", 0.0),
         ],
     )
-    tprint(StateOptions)
+    return StateOptions
 
 
+@gen_comp
 def test_classdef_state():
+    """
+    struct State {
+      static constexpr size_t rows = 9;
+      static constexpr size_t cols = 1;
+      using DataT = Eigen::Matrix<double, rows, cols>;
+
+      State();
+      State(const StateOptions& options);
+
+      double& CON_ori_pitch() { return data(0, 0); }
+      double CON_ori_pitch() const { return data(0, 0); }
+      double& CON_ori_roll() { return data(1, 0); }
+      double CON_ori_roll() const { return data(1, 0); }
+      double& CON_ori_yaw() { return data(2, 0); }
+      double CON_ori_yaw() const { return data(2, 0); }
+      double& CON_pos_pos_x() { return data(3, 0); }
+      double CON_pos_pos_x() const { return data(3, 0); }
+      double& CON_pos_pos_y() { return data(4, 0); }
+      double CON_pos_pos_y() const { return data(4, 0); }
+      double& CON_pos_pos_z() { return data(5, 0); }
+      double CON_pos_pos_z() const { return data(5, 0); }
+      double& CON_vel_x() { return data(6, 0); }
+      double CON_vel_x() const { return data(6, 0); }
+      double& CON_vel_y() { return data(7, 0); }
+      double CON_vel_y() const { return data(7, 0); }
+      double& CON_vel_z() { return data(8, 0); }
+      double CON_vel_z() const { return data(8, 0); }
+
+      DataT data = DataT::Zero();
+    };
+    """
     State = ClassDef(
         "struct",
         "State",
@@ -100,7 +188,7 @@ def test_classdef_state():
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
         ],
     )
-    tprint(State)
+    return State
 
 
 def test_classdef_covariance():
