@@ -198,18 +198,22 @@ class FunctionDef(BaseAst):
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
+        modifier_str = ""
+        if len(self.modifier) > 0:
+            modifier_str = " " + self.modifier
+
         if len(self.args) == 0:
-            yield f"{self.return_type} {self.name}() {self.modifier} {{"
+            yield f"{self.return_type} {self.name}(){modifier_str} {{"
         elif len(self.args) == 1:
             # specialization for "short" functions
             argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
-            yield f"{self.return_type} {self.name}({argstr}) {self.modifier} {{"
+            yield f"{self.return_type} {self.name}({argstr}){modifier_str} {{"
         else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
                 for line in arg.compile(options, **kwargs):
                     yield line + ','
-            yield f") {self.modifier} {{"
+            yield f"){modifier_str} {{"
 
         for component in self.body:
             yield from component.compile(options, **kwargs)
@@ -227,18 +231,22 @@ class FunctionDeclaration(BaseAst):
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
+        modifier_str = ""
+        if len(self.modifier) > 0:
+            modifier_str = " " + self.modifier
+
         if len(self.args) == 0:
-            yield f"{self.return_type} {self.name}() {self.modifier};"
+            yield f"{self.return_type} {self.name}(){modifier_str};"
         elif len(self.args) == 1:
             # specialization for "short" functions
             argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
-            yield f"{self.return_type} {self.name}({argstr}) {self.modifier};"
+            yield f"{self.return_type} {self.name}({argstr}){modifier_str};"
         else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
                 for line in arg.compile(options, **kwargs):
                     yield line + ','
-            yield f") {self.modifier};"
+            yield f"){modifier_str};"
 
 
 @dataclass

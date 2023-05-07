@@ -810,15 +810,13 @@ def test_classdef_altitudesensormodel():
           const Altitude& input_reading,
         );
 
-      static typename Altitude
-      ::SensorJacobianT jacobian(
+      static typename Altitude::SensorJacobianT jacobian(
           const StateAndVariance& input,
           const Calibration& input_calibration,
           const Altitude& input_reading,
         );
 
-      static typename Altitude
-      ::CovarianceT covariance(
+      static typename Altitude::CovarianceT covariance(
           const StateAndVariance& input,
           const Calibration& input_calibration,
           const Altitude& input_reading,
@@ -832,6 +830,26 @@ def test_classdef_altitudesensormodel():
             FunctionDeclaration(
                 "static Altitude",
                 "model",
+                args=[
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Altitude&", "input_reading"),
+                ],
+                modifier="",
+            ),
+            FunctionDeclaration(
+                "static typename Altitude::SensorJacobianT",
+                "jacobian",
+                args=[
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Altitude&", "input_reading"),
+                ],
+                modifier="",
+            ),
+            FunctionDeclaration(
+                "static typename Altitude::CovarianceT",
+                "covariance",
                 args=[
                     Arg("const StateAndVariance&", "input"),
                     Arg("const Calibration&", "input_calibration"),
