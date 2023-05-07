@@ -111,3 +111,14 @@ cc_test_suite(
         ":cpp-rocket-model",
     ] + CC_FEATURE_TEST_DEPS,
 )
+
+py_test_suite(
+    name = "ast-code-generation",
+    srcs = glob(
+        ["ast_code_generation/*.py"],
+        allow_empty = False,
+    ),
+    deps = [
+        "//py:formak",
+    ] + PY_FEATURE_TEST_DEPS,
+)
