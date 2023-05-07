@@ -1,6 +1,5 @@
 import ast
 from dataclasses import dataclass
-from itertools import chain
 from typing import Any, List, Optional
 
 
@@ -96,6 +95,34 @@ class ClassDef(BaseAst):
 
 
 @dataclass
+class EnumClassDef(BaseAst):
+    _fields = ("name", "members")
+
+    name: str
+    members: List[str]
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield f"enum class {self.name} {{"
+        for member in self.members:
+            yield f"{' ' * options.indent}{member},"
+        yield "};\n"
+
+
+@dataclass
+class ForwardClassDeclaration(BaseAst):
+    _fields = ("tag", "name")
+
+    # tag: one of "struct", "class"
+    tag: str
+    name: str
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield f"{self.tag} {self.name};"
+
+
+@dataclass
 class MemberDeclaration(BaseAst):
     _fields = ("type_", "name", "value")
 
@@ -135,7 +162,9 @@ class ConstructorDeclaration(BaseAst):
             yield f"{classname}();"
         elif len(self.args) == 1:
             # specialization for "short" functions
-            argstr = ''.join(self.args[0].compile(options, classname=classname, **kwargs)).strip()
+            argstr = "".join(
+                self.args[0].compile(options, classname=classname, **kwargs)
+            ).strip()
             yield f"{classname}({argstr});"
         else:
             yield f"{classname}("
@@ -173,8 +202,8 @@ class FunctionDef(BaseAst):
             yield f"{self.return_type} {self.name}() {self.modifier} {{"
         elif len(self.args) == 1:
             # specialization for "short" functions
-            argstr = ''.join(self.args[0].compile(options, classname=classname, **kwargs)).strip()
-            print(f'debug: argstr|{argstr}')
+            argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
+            print(f"debug: argstr|{argstr}")
             yield f"{self.return_type} {self.name}({argstr}) {self.modifier} {{"
         else:
             yield f"{self.return_type} {self.name}("
@@ -197,6 +226,7 @@ class Return(BaseAst):
     @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield f"return {self.value};"
+
 
 @dataclass
 class Escape(BaseAst):

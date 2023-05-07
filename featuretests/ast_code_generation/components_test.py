@@ -8,7 +8,9 @@ from formak.ast_tools import (
     ClassDef,
     CompileState,
     ConstructorDeclaration,
+    EnumClassDef,
     Escape,
+    ForwardClassDeclaration,
     FunctionDef,
     HeaderFile,
     MemberDeclaration,
@@ -670,17 +672,12 @@ def test_classdef_stateandvariance():
 def test_enumclassdef_sensorid():
     """
     enum class SensorId {
-      ALTITUDE
+      ALTITUDE,
     };
     """
-    SensorId = ClassDef(
-        "class",
+    SensorId = EnumClassDef(
         "SensorId",
-        bases=[],
-        body=[
-            MemberDeclaration("State", "state"),
-            MemberDeclaration("Covariance", "covariance"),
-        ],
+        members=["ALTITUDE"],
     )
     return SensorId
 
@@ -690,7 +687,7 @@ def test_forwarddeclaration_altitudesensormodel():
     """
     struct AltitudeSensorModel;
     """
-    return Escape("")
+    return ForwardClassDeclaration("struct", "AltitudeSensorModel")
 
 
 @gen_comp
