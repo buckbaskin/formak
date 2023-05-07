@@ -1,5 +1,5 @@
 import ast
-from typing import List, Any
+from typing import List, Any, Optional
 from dataclasses import dataclass
 
 """
@@ -433,8 +433,54 @@ class ClassDef(BaseAst):
     bases: List[str]
     body: List[Any]
 
+    @autoindent
+    def compile(self, options: CompileState):
+        bases_str = ""
+        if len(self.bases) > 0:
+            raise NotImplementedError()
 
-namespace = Namespace(name="featuretest", body=[])
+        yield f"{self.tag} {self.name} {bases_str} {{"
+
+        for component in self.body:
+            yield from component.compile(options)
+
+        yield "}"
+
+
+@dataclass
+class MemberDeclaration(BaseAst):
+    _fields = ("type_", "name", "value")
+
+    type_: str
+    name: str
+    value: Optional[Any] = None
+
+    @autoindent
+    def compile(self, options: CompileState):
+        value_str = ""
+        if self.value is not None:
+            value_str = f"= {self.value}"
+        yield f"{self.type_} {self.name} {value_str};"
+
+
+StateOptions = ClassDef(
+    "struct",
+    "StateOptions",
+    bases=[],
+    body=[
+        MemberDeclaration("double", "CON_ori_pitch", 0.0),
+        MemberDeclaration("double", "CON_ori_roll", 0.0),
+        MemberDeclaration("double", "CON_ori_yaw", 0.0),
+        MemberDeclaration("double", "CON_pos_pos_x", 0.0),
+        MemberDeclaration("double", "CON_pos_pos_y", 0.0),
+        MemberDeclaration("double", "CON_pos_pos_z", 0.0),
+        MemberDeclaration("double", "CON_vel_x", 0.0),
+        MemberDeclaration("double", "CON_vel_y", 0.0),
+        MemberDeclaration("double", "CON_vel_z", 0.0),
+    ],
+)
+
+namespace = Namespace(name="featuretest", body=[StateOptions])
 
 includes = [
     "#include <Eigen/Dense>    // Matrix",
