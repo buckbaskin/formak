@@ -12,6 +12,7 @@ from formak.ast_tools import (
     Escape,
     ForwardClassDeclaration,
     FunctionDef,
+    FunctionDeclaration,
     HeaderFile,
     MemberDeclaration,
     Namespace,
@@ -754,7 +755,7 @@ def test_classdef_altitude():
                 args=[],
                 modifier="",
                 body=[
-                    Return(f"data(0, 0)"),
+                    Return("data(0, 0)"),
                 ],
             ),
             FunctionDef(
@@ -763,7 +764,7 @@ def test_classdef_altitude():
                 args=[],
                 modifier="const",
                 body=[
-                    Return(f"data(0, 0)"),
+                    Return("data(0, 0)"),
                 ],
             ),
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
@@ -779,12 +780,24 @@ def test_classdef_altitude():
 @gen_comp
 def test_function_operatorltlt():
     """
-    std::ostream& operator<<(std::ostream& o, const Altitude& reading) {
+    std::ostream& operator<<(
+      std::ostream& o,
+      const Altitude& reading,
+    ) {
         o << "Reading(data[1, 1] = " << reading.data << ")";
         return o;
     }
     """
-    return Escape("")
+    return FunctionDef(
+        "std::ostream&",
+        "operator<<",
+        args=[Arg("std::ostream&", "o"), Arg("const Altitude&", "reading")],
+        modifier="",
+        body=[
+            Escape('o << "Reading(data[1, 1] = " << reading.data << ")";'),
+            Return("o"),
+        ],
+    )
 
 
 @gen_comp
@@ -794,21 +807,40 @@ def test_classdef_altitudesensormodel():
         static Altitude model(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading);
+          const Altitude& input_reading,
+        );
 
       static typename Altitude
       ::SensorJacobianT jacobian(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading);
+          const Altitude& input_reading,
+        );
 
       static typename Altitude
       ::CovarianceT covariance(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading);
+          const Altitude& input_reading,
+          );
     };"""
-    return Escape("")
+    return ClassDef(
+        "struct",
+        "AltitudeSensorModel",
+        bases=[],
+        body=[
+            FunctionDeclaration(
+                "static Altitude",
+                "model",
+                args=[
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Altitude&", "input_reading"),
+                ],
+                modifier="",
+            ),
+        ],
+    )
 
 
 @gen_comp

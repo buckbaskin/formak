@@ -203,18 +203,42 @@ class FunctionDef(BaseAst):
         elif len(self.args) == 1:
             # specialization for "short" functions
             argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
-            print(f"debug: argstr|{argstr}")
             yield f"{self.return_type} {self.name}({argstr}) {self.modifier} {{"
         else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
-                yield from arg.compile(options, **kwargs)
+                for line in arg.compile(options, **kwargs):
+                    yield line + ','
             yield f") {self.modifier} {{"
 
         for component in self.body:
             yield from component.compile(options, **kwargs)
 
         yield "}"
+
+@dataclass
+class FunctionDeclaration(BaseAst):
+    _fields = ("return_type", "name", "args", "modifier")
+
+    return_type: str
+    name: str
+    args: List[Any]
+    modifier: str
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        if len(self.args) == 0:
+            yield f"{self.return_type} {self.name}() {self.modifier};"
+        elif len(self.args) == 1:
+            # specialization for "short" functions
+            argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
+            yield f"{self.return_type} {self.name}({argstr}) {self.modifier};"
+        else:
+            yield f"{self.return_type} {self.name}("
+            for arg in self.args:
+                for line in arg.compile(options, **kwargs):
+                    yield line + ','
+            yield f") {self.modifier};"
 
 
 @dataclass
