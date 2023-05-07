@@ -614,7 +614,87 @@ State = ClassDef(
     ],
 )
 
-namespace = Namespace(name="featuretest", body=[StateOptions, State])
+Covariance = ClassDef(
+    "struct",
+    "Covariance",
+    bases=[],
+    body=[
+        UsingDeclaration("DataT", "Eigen::Matrix<double, 9, 9>"),
+        ConstructorDeclaration(),  # No args constructor gets default constructor
+        ConstructorDeclaration(Arg("const StateOptions&", "options")),
+    ]
+    + list(
+        chain.from_iterable(
+            [
+                (
+                    # TODO(buck): fill in the body
+                    FunctionDef(
+                        "double&",
+                        name,
+                        args=[],
+                        modifier="",
+                        body=[
+                            Return(f"data({idx}, {idx})"),
+                        ],
+                    ),
+                    FunctionDef(
+                        "double",
+                        name,
+                        args=[],
+                        modifier="const",
+                        body=[
+                            Return(f"data({idx}, {idx})"),
+                        ],
+                    ),
+                )
+                for idx, name in enumerate(
+                    [
+                        "CON_ori_pitch",
+                        "CON_ori_roll",
+                        "CON_ori_yaw",
+                        "CON_pos_pos_x",
+                        "CON_pos_pos_y",
+                        "CON_pos_pos_z",
+                        "CON_vel_x",
+                        "CON_vel_y",
+                        "CON_vel_z",
+                    ]
+                )
+            ]
+        )
+    )
+    + [
+        MemberDeclaration("DataT", "data", "DataT::Identity()"),
+    ],
+)
+
+#  struct Covariance {
+#    using DataT = Eigen::Matrix<double, 9, 9>;
+#
+#
+#    double& CON_ori_pitch() { return data(0, 0); }
+#    double CON_ori_pitch() const { return data(0, 0); }
+#    double& CON_ori_roll() { return data(1, 1); }
+#    double CON_ori_roll() const { return data(1, 1); }
+#    double& CON_ori_yaw() { return data(2, 2); }
+#    double CON_ori_yaw() const { return data(2, 2); }
+#    double& CON_pos_pos_x() { return data(3, 3); }
+#    double CON_pos_pos_x() const { return data(3, 3); }
+#    double& CON_pos_pos_y() { return data(4, 4); }
+#    double CON_pos_pos_y() const { return data(4, 4); }
+#    double& CON_pos_pos_z() { return data(5, 5); }
+#    double CON_pos_pos_z() const { return data(5, 5); }
+#    double& CON_vel_x() { return data(6, 6); }
+#    double CON_vel_x() const { return data(6, 6); }
+#    double& CON_vel_y() { return data(7, 7); }
+#    double CON_vel_y() const { return data(7, 7); }
+#    double& CON_vel_z() { return data(8, 8); }
+#    double CON_vel_z() const { return data(8, 8); }
+#
+#    DataT data = DataT::Identity();
+#  };
+
+namespace = Namespace(name="featuretest", body=[StateOptions, State, Covariance])
 
 includes = [
     "#include <Eigen/Dense>    // Matrix",
