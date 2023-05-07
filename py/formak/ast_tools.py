@@ -107,8 +107,8 @@ class MemberDeclaration(BaseAst):
     def compile(self, options: CompileState, **kwargs):
         value_str = ""
         if self.value is not None:
-            value_str = f"= {self.value}"
-        yield f"{self.type_} {self.name} {value_str};"
+            value_str = f" = {self.value}"
+        yield f"{self.type_} {self.name}{value_str};"
 
 
 @dataclass
@@ -197,3 +197,12 @@ class Return(BaseAst):
     @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield f"return {self.value};"
+
+@dataclass
+class Escape(BaseAst):
+    _fields = ("string",)
+
+    string: str
+
+    def compile(self, options: CompileState, **kwargs):
+        yield self.string

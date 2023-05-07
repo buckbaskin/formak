@@ -4,16 +4,17 @@ import re
 import difflib
 
 from formak.ast_tools import (
-    CompileState,
-    Namespace,
-    HeaderFile,
-    ClassDef,
-    MemberDeclaration,
-    UsingDeclaration,
-    ConstructorDeclaration,
     Arg,
+    ClassDef,
+    CompileState,
+    ConstructorDeclaration,
+    Escape,
     FunctionDef,
+    HeaderFile,
+    MemberDeclaration,
+    Namespace,
     Return,
+    UsingDeclaration,
 )
 
 
@@ -505,6 +506,191 @@ def test_classdef_control():
         ],
     )
     return Control
+
+
+@gen_comp
+def test_classdef_calibrationoptions():
+    """
+    struct CalibrationOptions {
+
+      double IMU_ori_pitch = 0.0;
+      double IMU_ori_roll = 0.0;
+      double IMU_ori_yaw = 0.0;
+      double IMU_pos_x = 0.0;
+      double IMU_pos_y = 0.0;
+      double IMU_pos_z = 0.0;
+
+    };
+
+    """
+    CalibrationOptions = ClassDef(
+        "struct",
+        "CalibrationOptions",
+        bases=[],
+        body=[
+            MemberDeclaration("double", "IMU_ori_pitch", 0.0),
+            MemberDeclaration("double", "IMU_ori_roll", 0.0),
+            MemberDeclaration("double", "IMU_ori_yaw", 0.0),
+            MemberDeclaration("double", "IMU_pos_x", 0.0),
+            MemberDeclaration("double", "IMU_pos_y", 0.0),
+            MemberDeclaration("double", "IMU_pos_z", 0.0),
+        ],
+    )
+    return CalibrationOptions
+
+
+@gen_comp
+def test_classdef_calibration():
+    """
+    struct Calibration {
+      static constexpr size_t rows = 6;
+      static constexpr size_t cols = 1;
+      using DataT = Eigen::Matrix<double, rows, cols>;
+
+      Calibration();
+      Calibration(const CalibrationOptions& options);
+
+      double& IMU_ori_pitch() {
+        return data(0, 0);
+      }
+      double IMU_ori_pitch() const {
+        return data(0, 0);
+      }
+      double& IMU_ori_roll() {
+        return data(1, 0);
+      }
+      double IMU_ori_roll() const {
+        return data(1, 0);
+      }
+      double& IMU_ori_yaw() {
+        return data(2, 0);
+      }
+      double IMU_ori_yaw() const {
+        return data(2, 0);
+      }
+      double& IMU_pos_x() {
+        return data(3, 0);
+      }
+      double IMU_pos_x() const {
+        return data(3, 0);
+      }
+      double& IMU_pos_y() {
+        return data(4, 0);
+      }
+      double IMU_pos_y() const {
+        return data(4, 0);
+      }
+      double& IMU_pos_z() {
+        return data(5, 0);
+      }
+      double IMU_pos_z() const {
+        return data(5, 0);
+      }
+
+      DataT data = DataT::Zero();
+    };
+
+    """
+    Calibration = ClassDef(
+        "struct",
+        "Calibration",
+        bases=[],
+        body=[
+            MemberDeclaration("static constexpr size_t", "rows", 6),
+            MemberDeclaration("static constexpr size_t", "cols", 1),
+            UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+            ConstructorDeclaration(),  # No args constructor gets default constructor
+            ConstructorDeclaration(Arg("const CalibrationOptions&", "options")),
+        ]
+        + list(
+            chain.from_iterable(
+                [
+                    (
+                        FunctionDef(
+                            "double&",
+                            name,
+                            args=[],
+                            modifier="",
+                            body=[
+                                Return(f"data({idx}, 0)"),
+                            ],
+                        ),
+                        FunctionDef(
+                            "double",
+                            name,
+                            args=[],
+                            modifier="const",
+                            body=[
+                                Return(f"data({idx}, 0)"),
+                            ],
+                        ),
+                    )
+                    for idx, name in enumerate(
+                        [
+                            "IMU_ori_pitch",
+                            "IMU_ori_roll",
+                            "IMU_ori_yaw",
+                            "IMU_pos_x",
+                            "IMU_pos_y",
+                            "IMU_pos_z",
+                        ]
+                    )
+                ]
+            )
+        )
+        + [
+            MemberDeclaration("DataT", "data", "DataT::Zero()"),
+        ],
+    )
+    return Calibration
+
+
+@gen_comp
+def test_classdef_stateandvariance():
+    """
+    struct StateAndVariance {
+      State state;
+      Covariance covariance;
+    };
+
+    """
+    StateAndVariance = ClassDef(
+        "struct",
+        "StateAndVariance",
+        bases=[],
+        body=[
+            MemberDeclaration("State", "state"),
+            MemberDeclaration("Covariance", "covariance"),
+        ],
+    )
+    return StateAndVariance
+
+
+@gen_comp
+def test_enumclassdef_sensorid():
+    """
+    enum class SensorId {
+      ALTITUDE
+    };
+    """
+    SensorId = ClassDef(
+        "class",
+        "SensorId",
+        bases=[],
+        body=[
+            MemberDeclaration("State", "state"),
+            MemberDeclaration("Covariance", "covariance"),
+        ],
+    )
+    return SensorId
+
+
+@gen_comp
+def test_forwarddeclaration_altitudesensormodel():
+    """
+    struct AltitudeSensorModel;
+    """
+    return Escape("")
 
 
 @gen_comp
