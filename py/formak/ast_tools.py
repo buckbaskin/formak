@@ -212,13 +212,14 @@ class FunctionDef(BaseAst):
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
                 for line in arg.compile(options, **kwargs):
-                    yield line + ','
+                    yield line + ","
             yield f"){modifier_str} {{"
 
         for component in self.body:
             yield from component.compile(options, **kwargs)
 
         yield "}"
+
 
 @dataclass
 class FunctionDeclaration(BaseAst):
@@ -245,7 +246,7 @@ class FunctionDeclaration(BaseAst):
             yield f"{self.return_type} {self.name}("
             for arg in self.args:
                 for line in arg.compile(options, **kwargs):
-                    yield line + ','
+                    yield line + ","
             yield f"){modifier_str};"
 
 
@@ -258,6 +259,28 @@ class Return(BaseAst):
     @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield f"return {self.value};"
+
+
+@dataclass
+class Templated(BaseAst):
+    _fields = ("template_args", "templated")
+
+    template_args: List[Any]
+    templated: Any
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        if len(self.template_args) == 0:
+            yield "template <>"
+        elif len(self.template_args) == 1:
+            argstr = "".join(self.template_args[0].compile(options, **kwargs)).strip()
+            yield f"template <{argstr}>"
+        else:
+            yield "template <"
+            for arg in self.template_args:
+                yield from arg.compile(options, **kwargs)
+            yield ">"
+        yield from self.templated.compile(options, **kwargs)
 
 
 @dataclass

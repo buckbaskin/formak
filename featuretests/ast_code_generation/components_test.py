@@ -17,6 +17,7 @@ from formak.ast_tools import (
     MemberDeclaration,
     Namespace,
     Return,
+    Templated,
     UsingDeclaration,
 )
 
@@ -874,28 +875,24 @@ def test_classdef_extendedkalmanfilter():
     """
     class ExtendedKalmanFilter {
      public:
-      using CovarianceT =
-          Eigen::Matrix<double, 6, 6>;
-      using ProcessJacobianT =
-          Eigen::Matrix<double, 9, 9>;
-      using ControlJacobianT =
-          Eigen::Matrix<double, 9, 6>;
+      using CovarianceT = Eigen::Matrix<double, 6, 6>;
+      using ProcessJacobianT = Eigen::Matrix<double, 9, 9>;
+      using ControlJacobianT = Eigen::Matrix<double, 9, 6>;
       using ProcessModel = ExtendedKalmanFilterProcessModel;
 
       StateAndVariance process_model(
           double dt,
-          const StateAndVariance& input
-          ,
-          const Calibration& input_calibration
-          ,
-          const Control& input_control
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Control& input_control,
       );
 
       template <typename ReadingT>
       StateAndVariance sensor_model(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const ReadingT& input_reading) {
+          const ReadingT& input_reading,
+          ) {
         const State& state = input.state;                 // mu
         const Covariance& covariance = input.covariance;  // Sigma
 
@@ -963,7 +960,48 @@ def test_classdef_extendedkalmanfilter():
       std::unordered_map<SensorId, std::any> _innovations;
     };
     """
-    return Escape("")
+    return ClassDef(
+        "class",
+        "ExtendedKalmanFilter",
+        [],
+        [
+            Escape("public:"),
+            UsingDeclaration("CovarianceT ", "Eigen::Matrix<double, 6, 6>"),
+            UsingDeclaration("ProcessJacobianT ", "Eigen::Matrix<double, 9, 9>"),
+            UsingDeclaration("ControlJacobianT ", "Eigen::Matrix<double, 9, 6>"),
+            UsingDeclaration("ProcessModel ", "ExtendedKalmanFilterProcessModel"),
+            FunctionDeclaration(
+                "StateAndVariance",
+                "process_model",
+                args=[
+                    Arg("double", "dt"),
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Control&", "input_control"),
+                ],
+                modifier="",
+            ),
+            Templated(
+                [Arg("typename", "ReadingT")],
+                FunctionDef(
+                    "StateAndVariance",
+                    "sensor_model",
+                    args=[
+                        Arg("const StateAndVariance&", "input"),
+                        Arg("const Calibration&", "input_calibration"),
+                        Arg("const ReadingT&", "input_reading"),
+                    ],
+                    modifier="",
+                    body=[
+                        Escape(
+                            "const State& state = input.state;                 // mu"
+                        ),
+                    ],
+                ),
+            ),
+            Escape("private:"),
+        ],
+    )
 
 
 @gen_comp
@@ -1006,7 +1044,14 @@ def test_classdef_extendedkalmanfilterprocessmodel():
       );
     };
     """
-    return Escape("")
+    return ClassDef(
+        "class",
+        "ExtendedKalmanFilterProcessModel",
+        [],
+        [
+            Escape("public:"),
+        ],
+    )
 
 
 @gen_comp
