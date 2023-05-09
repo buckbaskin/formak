@@ -262,6 +262,29 @@ class Return(BaseAst):
 
 
 @dataclass
+class If(BaseAst):
+    _fields = ("test", "body", "orelse")
+
+    test: str
+    body: List[Any]
+    orelse: List[Any]
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield f"if ({self.test}) {{"
+        for component in self.body:
+            yield from component.compile(options, **kwargs)
+
+        if len(self.orelse) == 0:
+            yield "}"
+        else:
+            yield "} else {"
+            for component in self.orelse:
+                yield from component.component(options, **kwargs)
+            yield "}"
+
+
+@dataclass
 class Templated(BaseAst):
     _fields = ("template_args", "templated")
 

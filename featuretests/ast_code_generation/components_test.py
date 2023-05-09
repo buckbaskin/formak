@@ -11,9 +11,10 @@ from formak.ast_tools import (
     EnumClassDef,
     Escape,
     ForwardClassDeclaration,
-    FunctionDef,
     FunctionDeclaration,
+    FunctionDef,
     HeaderFile,
+    If,
     MemberDeclaration,
     Namespace,
     Return,
@@ -893,65 +894,16 @@ def test_classdef_extendedkalmanfilter():
           const Calibration& input_calibration,
           const ReadingT& input_reading,
           ) {
-        const State& state = input.state;                 // mu
-        const Covariance& covariance = input.covariance;  // Sigma
-
-        // z_est = sensor_model()
-        const ReadingT reading_est =
-            ReadingT::SensorModel::model(input,
-                                         input_calibration,
-                                         input_reading);  // z_est
-
-        // H = Jacobian(z_est w.r.t. state)
-        const typename ReadingT::SensorJacobianT H =
-            ReadingT::SensorModel::jacobian(input,
-                                            input_calibration,
-                                            input_reading);
-
-        // Project State Noise into Sensor Space
-        // S = H * Sigma * H.T + Q_t
-        const typename ReadingT::CovarianceT sensor_estimate_covariance =
-            H * covariance.data * H.transpose() +
-            ReadingT::SensorModel::covariance(input,
-                                              input_calibration,
-                                              input_reading);
-
-        // S_inv = inverse(S)
-        const typename ReadingT::CovarianceT S_inv =
-            sensor_estimate_covariance.inverse();
-
-        // Kalman Gain
-        // K = Sigma * H.T * S_inv
-        const typename ReadingT::KalmanGainT kalman_gain =
-            covariance.data * H.transpose() * S_inv;
-
-        // Innovation
-        // innovation = z - z_est
-        const typename ReadingT::InnovationT innovation =
-            input_reading.data - reading_est.data;
-        _innovations[ReadingT::Identifier] = innovation;
-
-        // Update State Estimate
-        // next_state = state + K * innovation
-        State next_state;
-        next_state.data = state.data + kalman_gain * innovation;
-
-        // Update Covariance
-        // next_covariance = Sigma - K * H * Sigma
-        Covariance next_covariance;
-        next_covariance.data =
-            covariance.data - kalman_gain * H * covariance.data;
-
-        // Here be the StateAndVariance math
-        return StateAndVariance{.state = next_state,
-                                .covariance = next_covariance};
+        const State& next_state = input.state;                 // mu
+        const Covariance& next_covariance = input.covariance;  // Sigma
+        // ...
+        return StateAndVariance{.state = next_state, .covariance = next_covariance};
       }
 
       template <typename ReadingT>
       std::optional<typename ReadingT::InnovationT> innovations() {
         if (_innovations.count(ReadingT::Identifier) > 0) {
-          return std::any_cast<typename ReadingT::InnovationT>(
-              _innovations[ReadingT::Identifier]);
+          return std::any_cast<typename ReadingT::InnovationT>(_innovations[ReadingT::Identifier]);
         }
         return {};
       }
@@ -993,13 +945,43 @@ def test_classdef_extendedkalmanfilter():
                     ],
                     modifier="",
                     body=[
+                        # Lots of escaping needs work
                         Escape(
-                            "const State& state = input.state;                 // mu"
+                            "const State& next_state = input.state;                 // mu"
+                        ),
+                        Escape(
+                            "const Covariance& next_covariance = input.covariance;  // Sigma"
+                        ),
+                        Escape("// ..."),
+                        Return(
+                            "StateAndVariance{.state = next_state, .covariance = next_covariance}"
                         ),
                     ],
                 ),
             ),
+            Templated(
+                [Arg("typename", "ReadingT")],
+                FunctionDef(
+                    "std::optional<typename ReadingT::InnovationT>",
+                    "innovations",
+                    [],
+                    "",
+                    body=[
+                        If(
+                            "_innovations.count(ReadingT::Identifier) > 0",
+                            [
+                                Return(
+                                    "std::any_cast<typename ReadingT::InnovationT>(_innovations[ReadingT::Identifier])"
+                                )
+                            ],
+                            [],
+                        ),
+                        Return("{}"),
+                    ],
+                ),
+            ),
             Escape("private:"),
+            Escape("std::unordered_map<SensorId, std::any> _innovations;"),
         ],
     )
 
