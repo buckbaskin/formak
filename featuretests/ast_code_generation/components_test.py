@@ -993,36 +993,30 @@ def test_classdef_extendedkalmanfilterprocessmodel():
      public:
       static State model(
           double dt,
-          const StateAndVariance& input
-          ,
-          const Calibration& input_calibration
-          ,
-          const Control& input_control
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Control& input_control,
       );
 
       static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
           double dt,
-          const StateAndVariance& input
-          ,
-          const Calibration& input_calibration
-          ,
-          const Control& input_control
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Control& input_control,
       );
 
       static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
           double dt,
-          const StateAndVariance& input
-          ,
-          const Calibration& input_calibration
-          ,
-          const Control& input_control
+          const StateAndVariance& input,
+          const Calibration& input_calibration,
+          const Control& input_control,
       );
 
       static typename ExtendedKalmanFilter::CovarianceT covariance(
           double dt,
           const StateAndVariance& input,
-          const Calibration& input_calibration      ,
-          const Control& input_control
+          const Calibration& input_calibration,
+          const Control& input_control,
       );
     };
     """
@@ -1032,6 +1026,50 @@ def test_classdef_extendedkalmanfilterprocessmodel():
         [],
         [
             Escape("public:"),
+            FunctionDeclaration(
+                "static State",
+                "model",
+                args=[
+                    Arg("double", "dt"),
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Control&", "input_control"),
+                ],
+                modifier="",
+            ),
+            FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ProcessJacobianT",
+                "process_jacobian",
+                args=[
+                    Arg("double", "dt"),
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Control&", "input_control"),
+                ],
+                modifier="",
+            ),
+            FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ControlJacobianT",
+                "control_jacobian",
+                args=[
+                    Arg("double", "dt"),
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Control&", "input_control"),
+                ],
+                modifier="",
+            ),
+            FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::CovarianceT",
+                "covariance",
+                args=[
+                    Arg("double", "dt"),
+                    Arg("const StateAndVariance&", "input"),
+                    Arg("const Calibration&", "input_calibration"),
+                    Arg("const Control&", "input_control"),
+                ],
+                modifier="",
+            ),
         ],
     )
 
