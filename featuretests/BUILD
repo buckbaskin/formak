@@ -133,14 +133,20 @@ py_binary(
 
 run_binary(
     name = "ast-generate-cpp",
-    outs = ["generated/example.h"],
-    args = ["$(location generated/example.h)"],
+    outs = [
+        "generated/example.cpp",
+        "generated/example.h",
+    ],
+    args = [
+        "$(location generated/example.h)",
+        "$(location generated/example.cpp)",
+    ],
     tool = "ast-generate-cpp-tool",
 )
 
 cc_library(
     name = "ast-cpp-generated",
-    srcs = [],
+    srcs = ["generated/example.cpp"],
     hdrs = ["generated/example.h"],
     strip_include_prefix = "generated",
     deps = ["@eigen"],

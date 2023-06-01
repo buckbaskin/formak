@@ -1,24 +1,18 @@
 from itertools import chain
-from typing import Optional
-import re
-import difflib
 
 from formak.ast_tools import (
     Arg,
     ClassDef,
     CompileState,
     ConstructorDeclaration,
-    EnumClassDef,
+    ConstructorDefinition,
     Escape,
-    ForwardClassDeclaration,
-    FunctionDeclaration,
     FunctionDef,
     HeaderFile,
-    If,
     MemberDeclaration,
     Namespace,
     Return,
-    Templated,
+    SourceFile,
     UsingDeclaration,
 )
 
@@ -118,10 +112,30 @@ def header_definition():
     return header
 
 
-def main(target_location):
+def source_definition():
+    body = [
+        ConstructorDefinition("State"),
+        ConstructorDefinition("State", Arg("const StateOptions&", "options")),
+    ]
+
+    namespace = Namespace(name="featuretest", body=body)
+    includes = [
+        "#include <example.h>",
+    ]
+    source = SourceFile(includes=includes, namespaces=[namespace])
+    return source
+
+
+def main(header_location, source_location):
     print("\n\nDebug!\n")
-    with open(target_location, "w") as f:
+
+    with open(header_location, "w") as f:
         for line in header_definition().compile(CompileState(indent=2)):
+            print(line)
+            f.write("%s\n" % line)
+
+    with open(source_location, "w") as f:
+        for line in source_definition().compile(CompileState(indent=2)):
             print(line)
             f.write("%s\n" % line)
 
@@ -129,4 +143,4 @@ def main(target_location):
 if __name__ == "__main__":
     import sys
 
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

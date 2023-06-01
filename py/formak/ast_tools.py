@@ -71,6 +71,22 @@ class HeaderFile(BaseAst):
 
 
 @dataclass
+class SourceFile(BaseAst):
+    _fields = ("includes", "namespaces")
+
+    includes: List[str]
+    namespaces: List[Namespace]
+
+    def compile(self, options: CompileState, **kwargs):
+        for include in self.includes:
+            yield include
+        yield ""
+
+        for namespace in self.namespaces:
+            yield from namespace.compile(options, **kwargs)
+
+
+@dataclass
 class ClassDef(BaseAst):
     _fields = ("tag", "name", "bases", "body")
 
@@ -172,6 +188,32 @@ class ConstructorDeclaration(BaseAst):
                 for line in arg.compile(options, classname=classname, **kwargs):
                     yield line + ","
             yield ");"
+
+
+class ConstructorDefinition(BaseAst):
+    _fields = (
+        "classname",
+        "args",
+    )
+
+    def __init__(self, classname, *args):
+        self.classname = classname
+        self.args = args
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        if len(self.args) == 0:
+            yield f"{self.classname}::{self.classname}() {{}}"
+        elif len(self.args) == 1:
+            # specialization for "short" functions
+            argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
+            yield f"{self.classname}::{self.classname}({argstr}) {{}}"
+        else:
+            yield f"{self.classname}::{self.classname}("
+            for arg in self.args:
+                for line in arg.compile(options, **kwargs):
+                    yield line + ","
+            yield ") {}"
 
 
 @dataclass
