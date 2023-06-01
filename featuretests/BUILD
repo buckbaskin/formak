@@ -1,5 +1,6 @@
 load("@pip_deps//:requirements.bzl", "requirement")
 load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
 PY_FEATURE_TEST_DEPS = [
     requirement("pytest"),
@@ -123,21 +124,11 @@ py_test_suite(
     ] + PY_FEATURE_TEST_DEPS,
 )
 
-py_library(
-    name = "ast-generate-cpp-library",
-    srcs = glob(
-        ["ast_code_generation/*.py"],
-        allow_empty = False,
-    ),
-    imports = [],
-    deps = [],
-)
-
 py_binary(
     name = "ast-generate-cpp-tool",
     srcs = ["ast_code_generation/generator.py"],
-    main = ["ast_code_generation/generator.py"],
-    deps = [":ast-generate-cpp-library"],
+    main = "ast_code_generation/generator.py",
+    deps = ["//py:formak"],
 )
 
 run_binary(
