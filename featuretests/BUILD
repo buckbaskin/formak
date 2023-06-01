@@ -113,7 +113,7 @@ cc_test_suite(
 )
 
 py_test_suite(
-    name = "ast-code-generation",
+    name = "ast-code-generation-py-test",
     srcs = glob(
         ["ast_code_generation/*.py"],
         allow_empty = False,
@@ -121,4 +121,46 @@ py_test_suite(
     deps = [
         "//py:formak",
     ] + PY_FEATURE_TEST_DEPS,
+)
+
+py_library(
+    name = "ast-generate-cpp-library",
+    srcs = glob(
+        ["ast_code_generation/*.py"],
+        allow_empty = False,
+    ),
+    imports = [],
+    deps = [],
+)
+
+py_binary(
+    name = "ast-generate-cpp-tool",
+    srcs = ["ast_code_generation/generator.py"],
+    main = ["ast_code_generation/generator.py"],
+    deps = [":ast-generate-cpp-library"],
+)
+
+run_binary(
+    name = "ast-generate-cpp",
+    outs = ["generated/example.h"],
+    args = ["$(location generated/example.h)"],
+    tool = "ast-generate-cpp-tool",
+)
+
+cc_library(
+    name = "ast-cpp-generated",
+    srcs = [],
+    hdrs = ["generated/example.h"],
+    strip_include_prefix = "generated",
+)
+
+cc_test_suite(
+    name = "ast-code-generation-cpp-test",
+    srcs = glob(
+        ["ast_code_generation/*.cpp"],
+        allow_empty = False,
+    ),
+    deps = [
+        ":ast-cpp-generated",
+    ] + CC_FEATURE_TEST_DEPS,
 )
