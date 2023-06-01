@@ -8,6 +8,7 @@ from formak.ast_tools import (
     ConstructorDefinition,
     Escape,
     FunctionDef,
+    FunctionDeclaration,
     HeaderFile,
     MemberDeclaration,
     Namespace,
@@ -99,7 +100,17 @@ def header_definition():
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
         ],
     )
-    namespace = Namespace(name="featuretest", body=[StateOptions, State])
+    func = FunctionDeclaration(
+                "State",
+                "elementwise_clamp",
+                args=[
+                    Arg("const State&", "lower"),
+                    Arg("const State&", "value"),
+                    Arg("const State&", "upper"),
+                ],
+                modifier="",
+            )
+    namespace = Namespace(name="featuretest", body=[StateOptions, State, func])
     includes = [
         "#include <Eigen/Dense>    // Matrix",
         "#include <any>            // any",
@@ -127,16 +138,18 @@ def source_definition():
 
 
 def main(header_location, source_location):
-    print("\n\nDebug!\n")
+    print("\n\nDebug Header!\n")
 
     with open(header_location, "w") as f:
-        for line in header_definition().compile(CompileState(indent=2)):
-            print(line)
+        for idx, line in enumerate(header_definition().compile(CompileState(indent=2))):
+            print(f'{str(idx).rjust(5)} | {line}')
             f.write("%s\n" % line)
 
+    print("\n\nDebug Source!\n")
+
     with open(source_location, "w") as f:
-        for line in source_definition().compile(CompileState(indent=2)):
-            print(line)
+        for idx, line in enumerate(source_definition().compile(CompileState(indent=2))):
+            print(f'{str(idx).rjust(5)} | {line}')
             f.write("%s\n" % line)
 
 

@@ -809,19 +809,19 @@ def test_classdef_altitudesensormodel():
         static Altitude model(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading,
+          const Altitude& input_reading
         );
 
       static typename Altitude::SensorJacobianT jacobian(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading,
+          const Altitude& input_reading
         );
 
       static typename Altitude::CovarianceT covariance(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Altitude& input_reading,
+          const Altitude& input_reading
           );
     };"""
     return ClassDef(
@@ -885,7 +885,7 @@ def test_classdef_extendedkalmanfilter():
           double dt,
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Control& input_control,
+          const Control& input_control
       );
 
       template <typename ReadingT>
@@ -995,28 +995,28 @@ def test_classdef_extendedkalmanfilterprocessmodel():
           double dt,
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Control& input_control,
+          const Control& input_control
       );
 
       static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
           double dt,
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Control& input_control,
+          const Control& input_control
       );
 
       static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
           double dt,
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Control& input_control,
+          const Control& input_control
       );
 
       static typename ExtendedKalmanFilter::CovarianceT covariance(
           double dt,
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const Control& input_control,
+          const Control& input_control
       );
     };
     """
