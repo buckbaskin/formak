@@ -33,74 +33,23 @@ def tprint(ast):
         print(line)
 
 
-def classdef_State():
-    """
-    struct State {
-      static constexpr size_t rows = 9;
-      static constexpr size_t cols = 1;
-      using DataT = Eigen::Matrix<double, rows, cols>;
-
-      State();
-      State(const StateOptions& options);
-
-      double& CON_ori_pitch() {
-        return data(0, 0);
-      }
-      double CON_ori_pitch() const {
-        return data(0, 0);
-      }
-      double& CON_ori_roll() {
-        return data(1, 0);
-      }
-      double CON_ori_roll() const {
-        return data(1, 0);
-      }
-      double& CON_ori_yaw() {
-        return data(2, 0);
-      }
-      double CON_ori_yaw() const {
-        return data(2, 0);
-      }
-      double& CON_pos_pos_x() {
-        return data(3, 0);
-      }
-      double CON_pos_pos_x() const {
-        return data(3, 0);
-      }
-      double& CON_pos_pos_y() {
-        return data(4, 0);
-      }
-      double CON_pos_pos_y() const {
-        return data(4, 0);
-      }
-      double& CON_pos_pos_z() {
-        return data(5, 0);
-      }
-      double CON_pos_pos_z() const {
-        return data(5, 0);
-      }
-      double& CON_vel_x() {
-        return data(6, 0);
-      }
-      double CON_vel_x() const {
-        return data(6, 0);
-      }
-      double& CON_vel_y() {
-        return data(7, 0);
-      }
-      double CON_vel_y() const {
-        return data(7, 0);
-      }
-      double& CON_vel_z() {
-        return data(8, 0);
-      }
-      double CON_vel_z() const {
-        return data(8, 0);
-      }
-
-      DataT data = DataT::Zero();
-    };
-    """
+def header_definition():
+    StateOptions = ClassDef(
+        "struct",
+        "StateOptions",
+        bases=[],
+        body=[
+            MemberDeclaration("double", "CON_ori_pitch", 0.0),
+            MemberDeclaration("double", "CON_ori_roll", 0.0),
+            MemberDeclaration("double", "CON_ori_yaw", 0.0),
+            MemberDeclaration("double", "CON_pos_pos_x", 0.0),
+            MemberDeclaration("double", "CON_pos_pos_y", 0.0),
+            MemberDeclaration("double", "CON_pos_pos_z", 0.0),
+            MemberDeclaration("double", "CON_vel_x", 0.0),
+            MemberDeclaration("double", "CON_vel_y", 0.0),
+            MemberDeclaration("double", "CON_vel_z", 0.0),
+        ],
+    )
     State = ClassDef(
         "struct",
         "State",
@@ -156,16 +105,25 @@ def classdef_State():
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
         ],
     )
-    namespace = Namespace(name="featuretest", body=[State])
-    return namespace.compile(CompileState())
+    namespace = Namespace(name="featuretest", body=[StateOptions, State])
+    includes = [
+        "#include <Eigen/Dense>    // Matrix",
+        "#include <any>            // any",
+        "#include <cstddef>        // size_t",
+        "#include <iostream>       // std::cout, debugging",
+        "#include <optional>       // optional",
+        "#include <unordered_map>  // unordered_map",
+    ]
+    header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
+    return header
 
 
 def main(target_location):
     print("\n\nDebug!\n")
-    with open(target_location, 'w') as f:
-        for line in classdef_State():
+    with open(target_location, "w") as f:
+        for line in header_definition().compile(CompileState(indent=2)):
             print(line)
-            f.write('%s\n' % line)
+            f.write("%s\n" % line)
 
 
 if __name__ == "__main__":

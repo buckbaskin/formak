@@ -4,7 +4,7 @@
 namespace testing {
 
 TEST(DoesTheExampleWork, DefaultConstructor) {
-  featuretests::State state;
+  featuretest::State state;
   FAIL() << "Check this even runs";
 }
 

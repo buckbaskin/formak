@@ -143,6 +143,7 @@ cc_library(
     srcs = [],
     hdrs = ["generated/example.h"],
     strip_include_prefix = "generated",
+    deps = ["@eigen"],
 )
 
 cc_test_suite(
