@@ -101,15 +101,15 @@ def header_definition():
         ],
     )
     func = FunctionDeclaration(
-                "State",
-                "elementwise_clamp",
-                args=[
-                    Arg("const State&", "lower"),
-                    Arg("const State&", "value"),
-                    Arg("const State&", "upper"),
-                ],
-                modifier="",
-            )
+        "State",
+        "elementwise_clamp",
+        args=[
+            Arg("const State&", "lower"),
+            Arg("const State&", "value"),
+            Arg("const State&", "upper"),
+        ],
+        modifier="",
+    )
     namespace = Namespace(name="featuretest", body=[StateOptions, State, func])
     includes = [
         "#include <Eigen/Dense>    // Matrix",
@@ -127,6 +127,29 @@ def source_definition():
     body = [
         ConstructorDefinition("State"),
         ConstructorDefinition("State", Arg("const StateOptions&", "options")),
+        FunctionDef(
+            "State",
+            "elementwise_clamp",
+            args=[
+                Arg("const State&", "value"),
+                Arg("const State&", "lower"),
+                Arg("const State&", "upper"),
+            ],
+            modifier="",
+            body=[
+                Escape("State result;"),
+                Escape(
+                    "result.CON_pos_pos_x() = std::clamp(value.CON_pos_pos_x(), lower.CON_pos_pos_x(), upper.CON_pos_pos_x());"
+                ),
+                Escape(
+                    "result.CON_pos_pos_y() = std::clamp(value.CON_pos_pos_y(), lower.CON_pos_pos_y(), upper.CON_pos_pos_y());"
+                ),
+                Escape(
+                    "result.CON_pos_pos_z() = std::clamp(value.CON_pos_pos_z(), lower.CON_pos_pos_z(), upper.CON_pos_pos_z());"
+                ),
+                Return("result"),
+            ],
+        ),
     ]
 
     namespace = Namespace(name="featuretest", body=body)
@@ -142,14 +165,14 @@ def main(header_location, source_location):
 
     with open(header_location, "w") as f:
         for idx, line in enumerate(header_definition().compile(CompileState(indent=2))):
-            print(f'{str(idx).rjust(5)} | {line}')
+            print(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
     print("\n\nDebug Source!\n")
 
     with open(source_location, "w") as f:
         for idx, line in enumerate(source_definition().compile(CompileState(indent=2))):
-            print(f'{str(idx).rjust(5)} | {line}')
+            print(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
 

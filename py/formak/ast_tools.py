@@ -184,9 +184,10 @@ class ConstructorDeclaration(BaseAst):
             yield f"{classname}({argstr});"
         else:
             yield f"{classname}("
-            for arg in self.args:
+            for arg in self.args[:-1]:
                 for line in arg.compile(options, classname=classname, **kwargs):
                     yield line + ","
+            yield from self.args[-1].compile(options, classname=classname, **kwargs)
             yield ");"
 
 
@@ -210,9 +211,10 @@ class ConstructorDefinition(BaseAst):
             yield f"{self.classname}::{self.classname}({argstr}) {{}}"
         else:
             yield f"{self.classname}::{self.classname}("
-            for arg in self.args:
+            for arg in self.args[:-1]:
                 for line in arg.compile(options, **kwargs):
                     yield line + ","
+            yield from self.args[-1].compile(options, **kwargs)
             yield ") {}"
 
 
@@ -252,9 +254,10 @@ class FunctionDef(BaseAst):
             yield f"{self.return_type} {self.name}({argstr}){modifier_str} {{"
         else:
             yield f"{self.return_type} {self.name}("
-            for arg in self.args:
+            for arg in self.args[:-1]:
                 for line in arg.compile(options, **kwargs):
                     yield line + ","
+            yield from self.args[-1].compile(options, **kwargs)
             yield f"){modifier_str} {{"
 
         for component in self.body:
@@ -286,9 +289,10 @@ class FunctionDeclaration(BaseAst):
             yield f"{self.return_type} {self.name}({argstr}){modifier_str};"
         else:
             yield f"{self.return_type} {self.name}("
-            for arg in self.args:
+            for arg in self.args[:-1]:
                 for line in arg.compile(options, **kwargs):
                     yield line + ","
+            yield from self.args[-1].compile(options, **kwargs)
             yield f"){modifier_str};"
 
 
