@@ -123,7 +123,37 @@ py_test_suite(
     size = "small",
     srcs = glob(
         [
-            "test/unit/**/*.py",
+            "test/unit/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":init-tree",
+        ":formak",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "cpp-generation-py",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/cpp/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":init-tree",
+        ":formak",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "python-generation-py",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/python/*.py",
         ],
         allow_empty = False,
     ),
@@ -149,9 +179,9 @@ cc_formak_model(
     name = "simple-model",
     namespace = "unit",
     pydeps = [],
-    pymain = "test/unit/formak/cpp/generator.py",
+    pymain = "test/unit/cpp/generator.py",
     pysrcs = glob(
-        ["test/unit/formak/cpp/*.py"],
+        ["test/unit/cpp/*.py"],
         allow_empty = False,
     ),
 )
@@ -160,9 +190,9 @@ cc_formak_model(
     name = "simple-ekf",
     namespace = "unit",
     pydeps = [],
-    pymain = "test/unit/formak/cpp/generator_ekf.py",
+    pymain = "test/unit/cpp/generator_ekf.py",
     pysrcs = glob(
-        ["test/unit/formak/cpp/*.py"],
+        ["test/unit/cpp/*.py"],
         allow_empty = False,
     ),
 )
@@ -171,9 +201,9 @@ cc_formak_model(
     name = "calibration-model",
     namespace = "unit",
     pydeps = [],
-    pymain = "test/unit/formak/cpp/generator_with_calibration.py",
+    pymain = "test/unit/cpp/generator_with_calibration.py",
     pysrcs = glob(
-        ["test/unit/formak/cpp/*.py"],
+        ["test/unit/cpp/*.py"],
         allow_empty = False,
     ),
 )
@@ -182,16 +212,16 @@ cc_formak_model(
     name = "calibration-ekf",
     namespace = "unit",
     pydeps = [],
-    pymain = "test/unit/formak/cpp/generator_ekf_with_calibration.py",
+    pymain = "test/unit/cpp/generator_ekf_with_calibration.py",
     pysrcs = glob(
-        ["test/unit/formak/cpp/*.py"],
+        ["test/unit/cpp/*.py"],
         allow_empty = False,
     ),
 )
 
 cc_test(
     name = "unit-cpp-extended-kalman-filter-test",
-    srcs = ["test/unit/formak/cpp/ExtendedKalmanFilter_test.cpp"],
+    srcs = ["test/unit/cpp/ExtendedKalmanFilter_test.cpp"],
     deps = [
         ":simple-ekf",
     ] + CC_TEST_DEPS,
@@ -200,7 +230,7 @@ cc_test(
 cc_test(
     name = "unit-cpp-model-test",
     srcs = [
-        "test/unit/formak/cpp/Model_test.cpp",
+        "test/unit/cpp/Model_test.cpp",
     ],
     deps = [
         ":simple-model",
@@ -210,7 +240,7 @@ cc_test(
 cc_test(
     name = "unit-cpp-calibration-model-test",
     srcs = [
-        "test/unit/formak/cpp/ModelWithCalibration_test.cpp",
+        "test/unit/cpp/ModelWithCalibration_test.cpp",
     ],
     deps = [
         ":calibration-model",
@@ -220,7 +250,7 @@ cc_test(
 cc_test(
     name = "unit-cpp-calibration-ekf-test",
     srcs = [
-        "test/unit/formak/cpp/ExtendedKalmanFilterWithCalibration_test.cpp",
+        "test/unit/cpp/ExtendedKalmanFilterWithCalibration_test.cpp",
     ],
     deps = [
         ":calibration-ekf",
