@@ -421,5 +421,6 @@ class Escape(BaseAst):
 
     string: str
 
+    @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield self.string

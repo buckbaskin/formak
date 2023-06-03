@@ -2,10 +2,28 @@ import argparse
 import logging
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
+from itertools import chain, zip_longest
 from os import scandir, walk
 from os.path import dirname
 from typing import Any, List, Tuple
 
+from formak.ast_tools import (
+    Arg,
+    ClassDef,
+    CompileState,
+    ConstructorDeclaration,
+    ConstructorDefinition,
+    Escape,
+    FromFileTemplate,
+    FunctionDeclaration,
+    FunctionDef,
+    HeaderFile,
+    MemberDeclaration,
+    Namespace,
+    Return,
+    SourceFile,
+    UsingDeclaration,
+)
 from formak.exceptions import ModelConstructionError
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
@@ -696,7 +714,7 @@ def _generate_model_function_bodies(
     else:
         header_include = "generated_to_stdout.h"
 
-    return {
+    inserts = {
         "enable_calibration": generator.enable_calibration(),
         "Calibration_members": generator.calibration_members(),
         "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
@@ -715,6 +733,12 @@ def _generate_model_function_bodies(
         "State_size": generator.state_size,
         "StateOptions_members": generator.state_generator.stateoptions_members(),
     }
+    extras = {
+        "arglist_state": generator.arglist_state,
+        "arglist_control": generator.arglist_control,
+    }
+
+    return inserts, extras
 
 
 def _generate_ekf_function_bodies(
@@ -744,7 +768,7 @@ def _generate_ekf_function_bodies(
         header_include = "generated_to_stdout.h"
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
-    return {
+    inserts = {
         "enable_calibration": generator.enable_calibration(),
         "Calibration_members": generator.calibration_members(),
         "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
@@ -769,6 +793,8 @@ def _generate_ekf_function_bodies(
         "State_size": generator.state_size,
         "StateOptions_members": generator.stateoptions_members(),
     }
+    extras = {}
+    return inserts, extras
 
 
 def _parse_raw_templates(arg, verbose=False):
@@ -810,7 +836,227 @@ def _compile_argparse():
     return args
 
 
-def _compile_impl(args, inserts, name, hpp, cpp):
+def model_header_from_ast(inserts, extras):
+    # // clang-format off
+    # namespace {{namespace}} {
+    # // clang-format-on
+    #   struct StateOptions {
+    #     // clang-format off
+    #     {{ StateOptions_members }}
+    #     // clang-format on
+    #   };
+    #
+    #   struct State {
+    #     State();
+    #     State(const StateOptions& options);
+    #     // clang-format off
+    #     {{State_members}}
+    #     // clang-format on
+    #     Eigen::Matrix<double, {{State_size}}, 1> data =
+    #         Eigen::Matrix<double, {{State_size}}, 1>::Zero();
+    #   };
+    #   // clang-format off
+    # {% if enable_control %}
+    #   // clang-format on
+    #   struct ControlOptions {
+    #     // clang-format off
+    #     {{ ControlOptions_members }}
+    #     // clang-format on
+    #   };
+    #
+    #   struct Control {
+    #     Control();
+    #     Control(const ControlOptions& options);
+    #     // clang-format off
+    #     {{Control_members}}
+    #     // clang-format on
+    #     Eigen::Matrix<double, {{Control_size}}, 1> data =
+    #         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
+    #   };
+    #   // clang-format off
+    # {% endif %}  // clang-format on
+    #
+    #   // clang-format off
+    # {% if enable_calibration %}
+    #   // clang-format on
+    #   struct CalibrationOptions {
+    #     // clang-format off
+    #     {{ CalibrationOptions_members }}
+    #     // clang-format on
+    #   };
+    #
+    #   struct Calibration {
+    #     Calibration();
+    #     Calibration(const CalibrationOptions& options);
+    #     // clang-format off
+    #     {{Calibration_members}}
+    #     // clang-format on
+    #     Eigen::Matrix<double, {{Calibration_size}}, 1> data =
+    #         Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
+    #   };
+    #   // clang-format off
+    # {% endif %}
+    #   // clang-format on
+    StateOptions = ClassDef(
+        "struct",
+        "StateOptions",
+        bases=[],
+        body=[
+            MemberDeclaration("double", member, 0.0)
+            for member in extras["arglist_state"]
+        ],
+    )
+    State = ClassDef(
+        "struct",
+        "State",
+        bases=[],
+        body=[
+            MemberDeclaration("static constexpr size_t", "rows", inserts["State_size"]),
+            MemberDeclaration("static constexpr size_t", "cols", 1),
+            # TODO(buck): Eigen::Matrix<...> can be split into its own structure
+            UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+            ConstructorDeclaration(),  # No args constructor gets default constructor
+            ConstructorDeclaration(args=[Arg("const StateOptions&", "options")]),
+        ]
+        + list(
+            chain.from_iterable(
+                [
+                    (
+                        FunctionDef(
+                            "double&",
+                            name,
+                            args=[],
+                            modifier="",
+                            body=[
+                                Return(f"data({idx}, 0)"),
+                            ],
+                        ),
+                        FunctionDef(
+                            "double",
+                            name,
+                            args=[],
+                            modifier="const",
+                            body=[
+                                Return(f"data({idx}, 0)"),
+                            ],
+                        ),
+                    )
+                    for idx, name in enumerate(extras["arglist_state"])
+                ]
+            )
+        )
+        + [
+            MemberDeclaration("DataT", "data", "DataT::Zero()"),
+        ],
+    )
+    body = [
+        StateOptions,
+        State,
+    ]
+
+    if inserts["enable_control"]:
+        body.append(
+            ClassDef(
+                "struct",
+                "ControlOptions",
+                bases=[],
+                body=[
+                    MemberDeclaration("double", member, 0.0)
+                    for member in extras["arglist_control"]
+                ],
+            )
+        )
+        body.append(
+            ClassDef(
+                "struct",
+                "Control",
+                bases=[],
+                body=[
+                    MemberDeclaration(
+                        "static constexpr size_t", "rows", inserts["Control_size"]
+                    ),
+                    MemberDeclaration("static constexpr size_t", "cols", 1),
+                    # TODO(buck): Eigen::Matrix<...> can be split into its own structure
+                    UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+                    ConstructorDeclaration(),  # No args constructor gets default constructor
+                    ConstructorDeclaration(
+                        args=[Arg("const ControlOptions&", "options")]
+                    ),
+                ]
+                + list(
+                    chain.from_iterable(
+                        [
+                            (
+                                FunctionDef(
+                                    "double&",
+                                    name,
+                                    args=[],
+                                    modifier="",
+                                    body=[
+                                        Return(f"data({idx}, 0)"),
+                                    ],
+                                ),
+                                FunctionDef(
+                                    "double",
+                                    name,
+                                    args=[],
+                                    modifier="const",
+                                    body=[
+                                        Return(f"data({idx}, 0)"),
+                                    ],
+                                ),
+                            )
+                            for idx, name in enumerate(extras["arglist_control"])
+                        ]
+                    )
+                )
+                + [
+                    MemberDeclaration("DataT", "data", "DataT::Zero()"),
+                ],
+            )
+        )
+
+    #   37:   class Model {
+    #   38:    public:
+    #   39:     State model(
+    #   40:         double dt,
+    #   41:         const State& input_state
+    #   42:
+    #   43:         ,
+    #   44:         const Control& input_control
+    #   45:     );
+    #   46:   };
+
+    body.append(
+        ClassDef(
+            "class",
+            "Model",
+            bases=[],
+            body=[
+                Escape("public:"),
+                FunctionDeclaration(
+                    "State",
+                    "model",
+                    args=[
+                        Arg("double", "dt"),
+                        Arg("const State&", "input_state"),
+                        Arg("const Control&", "input_control"),
+                    ],
+                    modifier="",
+                ),
+            ],
+        )
+    )
+
+    namespace = Namespace(name=inserts["namespace"], body=body)
+    includes = [
+        "#include <Eigen/Dense>    // Matrix",
+    ]
+    header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
+    return header.compile(CompileState(indent=2))
+
+
+def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     # Compilation
 
     if args.templates is None:
@@ -853,7 +1099,24 @@ def _compile_impl(args, inserts, name, hpp, cpp):
         print("End Walk")
         raise
 
-    header_str = header_template.render(**inserts)
+    # header_str = header_template.render(**inserts)
+    header_str = "\n".join(model_header_from_ast(inserts, extras))
+
+    # print("Human Diff")
+    # for idx, (old_line, new_line) in enumerate(
+    #     zip_longest(
+    #         filter(
+    #             lambda x: not x.lstrip().startswith("// clang-format"),
+    #             header_str.split("\n"),
+    #         ),
+    #         new_header_str.split("\n"),
+    #         fillvalue="",
+    #     )
+    # ):
+    #     print(f"{idx:4d}: {old_line.ljust(50)} | {new_line.ljust(50)}")
+
+    # 1 / 0
+
     source_str = source_template.render(**inserts)
 
     with open(args.header, "w") as header_file:
@@ -884,7 +1147,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
     if args.header is None:
         logger.warning("No Header specified, so output to stdout")
-    inserts = _generate_model_function_bodies(
+    inserts, extras = _generate_model_function_bodies(
         header_location=args.header,
         namespace=args.namespace,
         symbolic_model=symbolic_model,
@@ -892,7 +1155,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
         config=config,
     )
 
-    return _compile_impl(args, inserts, "formak_model", ".h", ".cpp")
+    return _compile_impl(args, inserts, "formak_model", ".h", ".cpp", extras=extras)
 
 
 def compile_ekf(
@@ -923,7 +1186,7 @@ def compile_ekf(
 
     if args.header is None:
         logger.warning("No Header specified, so output to stdout")
-    inserts = _generate_ekf_function_bodies(
+    inserts, extras = _generate_ekf_function_bodies(
         header_location=args.header,
         namespace=args.namespace,
         state_model=state_model,
@@ -934,4 +1197,4 @@ def compile_ekf(
         config=config,
     )
 
-    return _compile_impl(args, inserts, "formak_ekf", ".hpp", ".cpp")
+    return _compile_impl(args, inserts, "formak_ekf", ".hpp", ".cpp", extras=extras)
