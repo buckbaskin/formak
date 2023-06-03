@@ -1,6 +1,10 @@
 import ast
+import os
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2.exceptions import TemplateNotFound
 
 
 @dataclass
@@ -364,6 +368,51 @@ class Templated(BaseAst):
                 yield from arg.compile(options, **kwargs)
             yield ">"
         yield from self.templated.compile(options, **kwargs)
+
+
+@dataclass
+class FromFileTemplate(BaseAst):
+    _fields = ("template_options", "name", "inserts")
+
+    template_options: Union[str, os.PathLike]
+    name: str
+    inserts: Optional[Dict[str, Any]] = None
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        if self.inserts is None:
+            self.inserts = {}
+
+        templates_base_path = self.template_options.base
+        # jinja
+        env = Environment(
+            loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
+        )
+
+        # load template
+        try:
+            template = env.get_template(self.name)
+        except TemplateNotFound:
+            print("Debugging TemplateNotFound")
+            print("Trying to scandir")
+            with os.scandir(templates_base_path) as it:
+                if len(list(it)) == 0:
+                    print("No Paths in scandir")
+                    raise
+
+            print("Walking")
+            for root, _, files in os.walk(templates_base_path):
+                depth = len(root.split("/"))
+                print("{}Root: {!s}".format(" " * depth, root))
+                for filename in files:
+                    print("{}  - {!s}".format(" " * depth, filename))
+            print("End Walk")
+            raise
+
+        # substitute
+        template_str = template.render(**self.inserts)
+        # for line in substituted_template, yield line
+        yield from template_str.split("\n")
 
 
 @dataclass

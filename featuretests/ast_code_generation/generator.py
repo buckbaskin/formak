@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 from itertools import chain
 
 from formak.ast_tools import (
@@ -8,6 +9,7 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     Escape,
+    FromFileTemplate,
     FunctionDeclaration,
     FunctionDef,
     HeaderFile,
@@ -31,7 +33,7 @@ MEMBERS = [
 ]
 
 
-def header_definition():
+def header_definition(template_options):
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -104,7 +106,7 @@ def header_definition():
     return header
 
 
-def source_definition():
+def source_definition(template_options):
     body = [
         ConstructorDefinition("State"),
         ConstructorDefinition(
@@ -127,17 +129,7 @@ def source_definition():
             ],
             modifier="",
             body=[
-                Escape("State result;"),
-                Escape(
-                    "result.CON_pos_pos_x() = std::clamp(value.CON_pos_pos_x(), lower.CON_pos_pos_x(), upper.CON_pos_pos_x());"
-                ),
-                Escape(
-                    "result.CON_pos_pos_y() = std::clamp(value.CON_pos_pos_y(), lower.CON_pos_pos_y(), upper.CON_pos_pos_y());"
-                ),
-                Escape(
-                    "result.CON_pos_pos_z() = std::clamp(value.CON_pos_pos_z(), lower.CON_pos_pos_z(), upper.CON_pos_pos_z());"
-                ),
-                Return("result"),
+                FromFileTemplate(template_options, "clamp.cpp"),
             ],
         ),
     ]
@@ -150,18 +142,33 @@ def source_definition():
     return source
 
 
-def main(header_location, source_location):
+TemplateOptions = namedtuple("TemplateOptions", ["base", "name"])
+
+
+def parse_templates(template_paths):
+    target = "templates/"
+    base, name = template_paths.split(target)
+    return TemplateOptions(base=base + target, name=name)
+
+
+def main(template_paths, header_location, source_location):
     logging.debug("\n\nDebug Header!\n")
 
+    template_options = parse_templates(template_paths)
+
     with open(header_location, "w") as f:
-        for idx, line in enumerate(header_definition().compile(CompileState(indent=2))):
+        for idx, line in enumerate(
+            header_definition(template_options).compile(CompileState(indent=2))
+        ):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
     logging.debug("\n\nDebug Source!\n")
 
     with open(source_location, "w") as f:
-        for idx, line in enumerate(source_definition().compile(CompileState(indent=2))):
+        for idx, line in enumerate(
+            source_definition(template_options).compile(CompileState(indent=2))
+        ):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
@@ -169,4 +176,4 @@ def main(header_location, source_location):
 if __name__ == "__main__":
     import sys
 
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
