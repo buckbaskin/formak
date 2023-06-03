@@ -1,6 +1,6 @@
 import ast
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 
 @dataclass
@@ -30,6 +30,18 @@ def autoindent(compile_func):
     # TODO(buck): wrapper helper function
     wrapped.__name__ = compile_func.__name__
     return wrapped
+
+
+@dataclass
+class Arg(BaseAst):
+    _fields = ("type_", "name")
+
+    type_: str
+    name: str
+
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield f"{self.type_} {self.name}"
 
 
 @dataclass
@@ -166,14 +178,17 @@ class UsingDeclaration(BaseAst):
         yield f"using {self.name} = {self.type_};"
 
 
+@dataclass
 class ConstructorDeclaration(BaseAst):
     _fields = ("args",)
 
-    def __init__(self, *args):
-        self.args = args
+    args: Optional[List[Arg]] = None
 
     @autoindent
     def compile(self, options: CompileState, classname: str, **kwargs):
+        if self.args is None:
+            self.args = []
+
         if len(self.args) == 0:
             yield f"{classname}();"
         elif len(self.args) == 1:
@@ -191,43 +206,42 @@ class ConstructorDeclaration(BaseAst):
             yield ");"
 
 
+@dataclass
 class ConstructorDefinition(BaseAst):
     _fields = (
         "classname",
         "args",
+        "initializer_list",
     )
 
-    def __init__(self, classname, *args):
-        self.classname = classname
-        self.args = args
+    classname: str
+    args: Optional[List[Arg]] = None
+    initializer_list: Optional[List[Tuple[str, str]]] = None
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
+        if self.args is None:
+            self.args = []
+        if self.initializer_list is None:
+            self.initializer_list = []
+
+        initializer_list_str = ", ".join(f"{k}({v})" for k, v in self.initializer_list)
+        if initializer_list_str != "":
+            initializer_list_str = f" : {initializer_list_str}"
+
         if len(self.args) == 0:
-            yield f"{self.classname}::{self.classname}() {{}}"
+            yield f"{self.classname}::{self.classname}(){initializer_list_str} {{}}"
         elif len(self.args) == 1:
             # specialization for "short" functions
             argstr = "".join(self.args[0].compile(options, **kwargs)).strip()
-            yield f"{self.classname}::{self.classname}({argstr}) {{}}"
+            yield f"{self.classname}::{self.classname}({argstr}){initializer_list_str} {{}}"
         else:
             yield f"{self.classname}::{self.classname}("
             for arg in self.args[:-1]:
                 for line in arg.compile(options, **kwargs):
                     yield line + ","
             yield from self.args[-1].compile(options, **kwargs)
-            yield ") {}"
-
-
-@dataclass
-class Arg(BaseAst):
-    _fields = ("type_", "name")
-
-    type_: str
-    name: str
-
-    @autoindent
-    def compile(self, options: CompileState, **kwargs):
-        yield f"{self.type_} {self.name}"
+            yield "){initializer_list_str} {}"
 
 
 @dataclass
@@ -236,7 +250,7 @@ class FunctionDef(BaseAst):
 
     return_type: str
     name: str
-    args: List[Any]
+    args: List[Arg]
     modifier: str
     body: List[Any]
 
@@ -272,7 +286,7 @@ class FunctionDeclaration(BaseAst):
 
     return_type: str
     name: str
-    args: List[Any]
+    args: List[Arg]
     modifier: str
 
     @autoindent
@@ -334,7 +348,7 @@ class If(BaseAst):
 class Templated(BaseAst):
     _fields = ("template_args", "templated")
 
-    template_args: List[Any]
+    template_args: List[Arg]
     templated: Any
 
     @autoindent

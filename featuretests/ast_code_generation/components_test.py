@@ -208,7 +208,7 @@ def test_classdef_state():
             # TODO(buck): Eigen::Matrix<...> can be split into its own structure
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const StateOptions&", "options")),
+            ConstructorDeclaration(args=[Arg("const StateOptions&", "options")]),
         ]
         + list(
             chain.from_iterable(
@@ -468,7 +468,7 @@ def test_classdef_control():
             MemberDeclaration("static constexpr size_t", "cols", 1),
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const ControlOptions&", "options")),
+            ConstructorDeclaration(args=[Arg("const ControlOptions&", "options")]),
         ]
         + list(
             chain.from_iterable(
@@ -605,7 +605,7 @@ def test_classdef_calibration():
             MemberDeclaration("static constexpr size_t", "cols", 1),
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const CalibrationOptions&", "options")),
+            ConstructorDeclaration(args=[Arg("const CalibrationOptions&", "options")]),
         ]
         + list(
             chain.from_iterable(
@@ -750,7 +750,7 @@ def test_classdef_altitude():
             UsingDeclaration("SensorJacobianT", "Eigen::Matrix<double, 1, 9>"),
             UsingDeclaration("SensorModel", "AltitudeSensorModel"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const AltitudeOptions&", "options")),
+            ConstructorDeclaration(args=[Arg("const AltitudeOptions&", "options")]),
             FunctionDef(
                 "double&",
                 "altitude",
@@ -784,7 +784,7 @@ def test_function_operatorltlt():
     """
     std::ostream& operator<<(
       std::ostream& o,
-      const Altitude& reading,
+      const Altitude& reading
     ) {
         o << "Reading(data[1, 1] = " << reading.data << ")";
         return o;
@@ -892,7 +892,7 @@ def test_classdef_extendedkalmanfilter():
       StateAndVariance sensor_model(
           const StateAndVariance& input,
           const Calibration& input_calibration,
-          const ReadingT& input_reading,
+          const ReadingT& input_reading
           ) {
         const State& next_state = input.state;                 // mu
         const Covariance& next_covariance = input.covariance;  // Sigma

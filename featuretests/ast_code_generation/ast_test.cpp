@@ -5,6 +5,9 @@ namespace testing {
 
 TEST(DoesTheExampleWork, DefaultConstructor) {
   featuretest::State state;
+
+  EXPECT_DOUBLE_EQ(state.CON_pos_pos_x(), 0.0);
+  EXPECT_DOUBLE_EQ(state.CON_pos_pos_y(), 0.0);
 }
 
 TEST(DoesTheExampleWork, Constructor) {

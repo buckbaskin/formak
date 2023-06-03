@@ -1,3 +1,5 @@
+import logging
+
 from itertools import chain
 
 from formak.ast_tools import (
@@ -18,14 +20,17 @@ from formak.ast_tools import (
 )
 
 
-def tprint(ast):
-    """
-    tprint aka test_print
-
-    Incrementally print each line so that logging output will show previous lines. Exceptions will bubble up for the line
-    """
-    for line in ast.compile(CompileState(indent=2)):
-        print(line)
+MEMBERS = [
+    "CON_ori_pitch",
+    "CON_ori_roll",
+    "CON_ori_yaw",
+    "CON_pos_pos_x",
+    "CON_pos_pos_y",
+    "CON_pos_pos_z",
+    "CON_vel_x",
+    "CON_vel_y",
+    "CON_vel_z",
+]
 
 
 def header_definition():
@@ -33,17 +38,7 @@ def header_definition():
         "struct",
         "StateOptions",
         bases=[],
-        body=[
-            MemberDeclaration("double", "CON_ori_pitch", 0.0),
-            MemberDeclaration("double", "CON_ori_roll", 0.0),
-            MemberDeclaration("double", "CON_ori_yaw", 0.0),
-            MemberDeclaration("double", "CON_pos_pos_x", 0.0),
-            MemberDeclaration("double", "CON_pos_pos_y", 0.0),
-            MemberDeclaration("double", "CON_pos_pos_z", 0.0),
-            MemberDeclaration("double", "CON_vel_x", 0.0),
-            MemberDeclaration("double", "CON_vel_y", 0.0),
-            MemberDeclaration("double", "CON_vel_z", 0.0),
-        ],
+        body=[MemberDeclaration("double", member, 0.0) for member in MEMBERS],
     )
     State = ClassDef(
         "struct",
@@ -55,7 +50,7 @@ def header_definition():
             # TODO(buck): Eigen::Matrix<...> can be split into its own structure
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(Arg("const StateOptions&", "options")),
+            ConstructorDeclaration(args=[Arg("const StateOptions&", "options")]),
         ]
         + list(
             chain.from_iterable(
@@ -80,19 +75,7 @@ def header_definition():
                             ],
                         ),
                     )
-                    for idx, name in enumerate(
-                        [
-                            "CON_ori_pitch",
-                            "CON_ori_roll",
-                            "CON_ori_yaw",
-                            "CON_pos_pos_x",
-                            "CON_pos_pos_y",
-                            "CON_pos_pos_z",
-                            "CON_vel_x",
-                            "CON_vel_y",
-                            "CON_vel_z",
-                        ]
-                    )
+                    for idx, name in enumerate(MEMBERS)
                 ]
             )
         )
@@ -126,7 +109,16 @@ def header_definition():
 def source_definition():
     body = [
         ConstructorDefinition("State"),
-        ConstructorDefinition("State", Arg("const StateOptions&", "options")),
+        ConstructorDefinition(
+            "State",
+            args=[Arg("const StateOptions&", "options")],
+            initializer_list=[
+                (
+                    "data",
+                    ", ".join((f"options.{member}" for member in MEMBERS)),
+                )
+            ],
+        ),
         FunctionDef(
             "State",
             "elementwise_clamp",
@@ -161,18 +153,18 @@ def source_definition():
 
 
 def main(header_location, source_location):
-    print("\n\nDebug Header!\n")
+    logging.debug("\n\nDebug Header!\n")
 
     with open(header_location, "w") as f:
         for idx, line in enumerate(header_definition().compile(CompileState(indent=2))):
-            print(f"{str(idx).rjust(5)} | {line}")
+            logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
-    print("\n\nDebug Source!\n")
+    logging.debug("\n\nDebug Source!\n")
 
     with open(source_location, "w") as f:
         for idx, line in enumerate(source_definition().compile(CompileState(indent=2))):
-            print(f"{str(idx).rjust(5)} | {line}")
+            logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
 
