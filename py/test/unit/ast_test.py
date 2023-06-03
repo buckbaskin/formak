@@ -1,7 +1,7 @@
+import difflib
+import re
 from itertools import chain
 from typing import Optional
-import re
-import difflib
 
 from formak.ast_tools import (
     Arg,

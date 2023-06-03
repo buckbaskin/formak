@@ -1,6 +1,7 @@
-from formak import python, ui
-from model_definition import model_definition
 import numpy as np
+from model_definition import model_definition
+
+from formak import python, ui
 
 
 def test_python_Model():

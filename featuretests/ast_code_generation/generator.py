@@ -1,5 +1,4 @@
 import logging
-
 from itertools import chain
 
 from formak.ast_tools import (
@@ -9,8 +8,8 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     Escape,
-    FunctionDef,
     FunctionDeclaration,
+    FunctionDef,
     HeaderFile,
     MemberDeclaration,
     Namespace,
@@ -18,7 +17,6 @@ from formak.ast_tools import (
     SourceFile,
     UsingDeclaration,
 )
-
 
 MEMBERS = [
     "CON_ori_pitch",

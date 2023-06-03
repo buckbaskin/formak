@@ -1,7 +1,7 @@
 import numpy as np
-
-from formak import ui, python
 from sklearn.pipeline import Pipeline
+
+from formak import python, ui
 
 
 def test_like_sklearn_regression():

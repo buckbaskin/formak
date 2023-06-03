@@ -2,6 +2,7 @@ import sys
 from os.path import basename
 
 from formak.ui import *
+
 from formak import cpp
 
 dt = Symbol("dt")
