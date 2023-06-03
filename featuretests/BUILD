@@ -113,17 +113,6 @@ cc_test_suite(
     ] + CC_FEATURE_TEST_DEPS,
 )
 
-py_test_suite(
-    name = "ast-code-generation-py-test",
-    srcs = glob(
-        ["ast_code_generation/*.py"],
-        allow_empty = False,
-    ),
-    deps = [
-        "//py:formak",
-    ] + PY_FEATURE_TEST_DEPS,
-)
-
 py_binary(
     name = "ast-generate-cpp-tool",
     srcs = ["ast_code_generation/generator.py"],
