@@ -793,7 +793,10 @@ def _generate_ekf_function_bodies(
         "State_size": generator.state_size,
         "StateOptions_members": generator.stateoptions_members(),
     }
-    extras = {}
+    extras = {
+        "arglist_state": generator.arglist_state,
+        "arglist_control": generator.arglist_control,
+    }
     return inserts, extras
 
 
@@ -1080,7 +1083,7 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     )
 
     try:
-        header_template = env.get_template(name + hpp)
+        # header_template = env.get_template(name + hpp)
         source_template = env.get_template(name + cpp)
     except TemplateNotFound:
         print("Debugging TemplateNotFound")
