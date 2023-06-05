@@ -76,22 +76,8 @@ class StateStruct:
     def __init__(self, arglist):
         self.arglist = arglist
 
-    def members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
-            % (symbol.name, idx, indent, symbol.name, idx)
-            for idx, symbol in enumerate(self.arglist)
-        )
-
     def state_options_constructor_initializer_list(self):
         return "data(" + ", ".join(f"options.{name}" for name in self.arglist) + ")"
-
-    def stateoptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist
-        )
 
 
 class Model:
@@ -199,14 +185,6 @@ class Model:
     def enable_control(self):
         return self.control_size > 0
 
-    def control_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
-            % (name, idx, indent, name, idx)
-            for idx, name in enumerate(self.arglist_control)
-        )
-
     def control_options_constructor_initializer_list(self):
         return (
             "data("
@@ -214,34 +192,14 @@ class Model:
             + ")"
         )
 
-    def controloptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
-        )
-
     def enable_calibration(self):
         return self.calibration_size > 0
-
-    def calibration_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
-            % (name, idx, indent, name, idx)
-            for idx, name in enumerate(self.arglist_calibration)
-        )
 
     def calibration_options_constructor_initializer_list(self):
         return (
             "data("
             + ", ".join(f"options.{name}" for name in self.arglist_calibration)
             + ")"
-        )
-
-    def calibrationoptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_calibration
         )
 
 
@@ -467,52 +425,13 @@ class ExtendedKalmanFilter:
         )
         return "State({" + content + "});"
 
-    def sensorid_members(self, verbose=False):
-        indent = " " * 4
-        enum_names = [
-            "{name}".format(name=name.upper()) for name, _, _ in self.sensorlist
-        ]
-        if verbose:
-            print(f"sensorid_members: enum_names: {enum_names}")
-        return f",\n{indent}".join(enum_names)
-
-    def state_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() { return data(%s, 0); }\n%sdouble %s() const { return data(%s, 0); }"
-            % (symbol.name, idx, indent, symbol.name, idx)
-            for idx, symbol in enumerate(self.arglist_state)
-        )
-
-    def stateoptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_state
-        )
-
     def state_options_constructor_initializer_list(self):
         return (
             "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
         )
 
-    def covariance_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() { return data(%s, %s); }\n%sdouble %s() const { return data(%s, %s); }"
-            % (symbol.name, idx, idx, indent, symbol.name, idx, idx)
-            for idx, symbol in enumerate(self.arglist_state)
-        )
-
     def enable_control(self):
         return self.control_size > 0
-
-    def control_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
-            % (name, idx, indent, name, idx)
-            for idx, name in enumerate(self.arglist_control)
-        )
 
     def _translate_control_covariance(self, covariance):
         for i, iKey in enumerate(self.arglist_control):
@@ -536,12 +455,6 @@ class ExtendedKalmanFilter:
         suffix = f"{indent}return covariance;"
         return prefix + "\n" + body.compile() + "\n" + suffix
 
-    def controloptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_control
-        )
-
     def control_options_constructor_initializer_list(self):
         return (
             "data("
@@ -552,25 +465,11 @@ class ExtendedKalmanFilter:
     def enable_calibration(self):
         return self.calibration_size > 0
 
-    def calibration_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            "double& %s() {return data(%s, 0); }\n%sdouble %s() const {return data(%s, 0); }"
-            % (name, idx, indent, name, idx)
-            for idx, name in enumerate(self.arglist_calibration)
-        )
-
     def calibration_options_constructor_initializer_list(self):
         return (
             "data("
             + ", ".join(f"options.{name}" for name in self.arglist_calibration)
             + ")"
-        )
-
-    def calibrationoptions_members(self):
-        indent = " " * 4
-        return f"\n{indent}".join(
-            f"double {symbol.name} = 0.0;" for symbol in self.arglist_calibration
         )
 
     def _translate_sensor_model(self, sensor_model_mapping):
@@ -720,22 +619,16 @@ def _generate_model_function_bodies(
 
     inserts = {
         "enable_calibration": generator.enable_calibration(),
-        "Calibration_members": generator.calibration_members(),
         "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
         "Calibration_size": generator.calibration_size,
-        "CalibrationOptions_members": generator.calibrationoptions_members(),
         "enable_control": generator.enable_control(),
-        "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
-        "ControlOptions_members": generator.controloptions_members(),
         "header_include": header_include,
         "Model_model_body": generator.model_body(),
         "namespace": namespace,
-        "State_members": generator.state_generator.members(),
         "State_options_constructor_initializer_list": generator.state_generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
-        "StateOptions_members": generator.state_generator.stateoptions_members(),
     }
     extras = {
         "arglist_state": generator.arglist_state,
@@ -776,16 +669,11 @@ def _generate_ekf_function_bodies(
     # TODO(buck): Eventually should split out the code generation for the header and the source
     inserts = {
         "enable_calibration": generator.enable_calibration(),
-        "Calibration_members": generator.calibration_members(),
         "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
         "Calibration_size": generator.calibration_size,
-        "CalibrationOptions_members": generator.calibrationoptions_members(),
         "enable_control": generator.enable_control(),
-        "Control_members": generator.control_members(),
         "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
         "Control_size": generator.control_size,
-        "ControlOptions_members": generator.controloptions_members(),
-        "Covariance_members": generator.covariance_members(),
         "ExtendedKalmanFilterProcessModel_model_body": generator.process_model_body(),
         "ExtendedKalmanFilterProcessModel_process_jacobian_body": generator.process_jacobian_body(),
         "ExtendedKalmanFilterProcessModel_control_jacobian_body": generator.control_jacobian_body(),
@@ -793,11 +681,8 @@ def _generate_ekf_function_bodies(
         "header_include": header_include,
         "namespace": namespace,
         "reading_types": list(generator.reading_types()),
-        "SensorId_members": generator.sensorid_members(),
-        "State_members": generator.state_members(),
         "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
-        "StateOptions_members": generator.stateoptions_members(),
     }
     extras = {
         "arglist_state": generator.arglist_state,
