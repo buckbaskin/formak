@@ -13,7 +13,9 @@ from formak.ast_tools import (
     CompileState,
     ConstructorDeclaration,
     ConstructorDefinition,
+    EnumClassDef,
     Escape,
+    ForwardClassDeclaration,
     FromFileTemplate,
     FunctionDeclaration,
     FunctionDef,
@@ -737,6 +739,7 @@ def _generate_model_function_bodies(
         "arglist_state": generator.arglist_state,
         "arglist_control": generator.arglist_control,
         "arglist_calibration": generator.arglist_calibration,
+        "enable_EKF": False,
     }
 
     return inserts, extras
@@ -797,6 +800,8 @@ def _generate_ekf_function_bodies(
     extras = {
         "arglist_state": generator.arglist_state,
         "arglist_control": generator.arglist_control,
+        "arglist_calibration": generator.arglist_calibration,
+        "enable_EKF": True,
     }
     return inserts, extras
 
@@ -840,7 +845,7 @@ def _compile_argparse():
     return args
 
 
-def model_header_from_ast(inserts, extras):
+def header_from_ast(inserts, extras):
     # // clang-format off
     # namespace {{namespace}} {
     # // clang-format-on
@@ -1101,17 +1106,146 @@ def model_header_from_ast(inserts, extras):
             modifier="",
         )
 
-    Model = ClassDef(
-        "class",
-        "Model",
-        bases=[],
-        body=[
-            Escape("public:"),
-            State_model(inserts["enable_control"], inserts["enable_calibration"]),
-        ],
-    )
+    # struct Covariance {
+    #   using DataT = Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
 
-    body.append(Model)
+    #   // clang-format off
+    #   {{Covariance_members}}
+    #   // clang-format on
+    #   DataT data = DataT::Identity();
+    # };
+    # struct StateAndVariance {
+    #   State state;
+    #   Covariance covariance;
+    # };
+
+    # enum class SensorId {
+    #   // clang-format off
+    #   {{SensorId_members}}
+    #   // clang-format on
+    # };
+    if extras["enable_EKF"]:
+        Covariance = ClassDef(
+            "struct",
+            "Covariance",
+            bases=[],
+            body=[
+                MemberDeclaration("static constexpr size_t", "rows", 9),
+                MemberDeclaration("static constexpr size_t", "cols", 9),
+                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+            ]
+            + list(
+                chain.from_iterable(
+                    [
+                        (
+                            FunctionDef(
+                                "double&",
+                                name,
+                                args=[],
+                                modifier="",
+                                body=[
+                                    Return(f"data({idx}, {idx})"),
+                                ],
+                            ),
+                            FunctionDef(
+                                "double",
+                                name,
+                                args=[],
+                                modifier="const",
+                                body=[
+                                    Return(f"data({idx}, {idx})"),
+                                ],
+                            ),
+                        )
+                        for idx, name in enumerate(extras["arglist_state"])
+                    ]
+                )
+            )
+            + [
+                MemberDeclaration("DataT", "data", "DataT::Identity()"),
+            ],
+        )
+        StateAndVariance = ClassDef(
+            "struct",
+            "StateAndVariance",
+            bases=[],
+            body=[
+                MemberDeclaration("State", "state"),
+                MemberDeclaration("Covariance", "covariance"),
+            ],
+        )
+        SensorId = EnumClassDef(
+            "SensorId",
+            members=["ALTITUDE"],
+        )
+        body.append(Covariance)
+        body.append(StateAndVariance)
+        body.append(SensorId)
+        # class ExtendedKalmanFilterProcessModel;
+        body.append(
+            ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
+        )
+
+    # class ExtendedKalmanFilter {
+    #  public:
+    #   using CovarianceT =
+    #       Eigen::Matrix<double, {{Control_size}}, {{Control_size}}>;
+    #   using ProcessJacobianT =
+    #       Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
+    #   using ControlJacobianT =
+    #       Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
+    #   using ProcessModel = ExtendedKalmanFilterProcessModel;
+
+    #   StateAndVariance process_model(
+    #       double dt,
+    #       const StateAndVariance& input
+    #       // clang-format off
+    #  if enable_calibration %}
+    #       // clang-format on
+    #       ,
+    #       const Calibration& input_calibration
+    #       // clang-format off
+    #  endif %}  // clang-format on
+    #                      // clang-format off
+    #  if enable_control %}
+    #                      // clang-format on
+    #       ,
+    #       const Control& input_control
+    #       // clang-format off
+    #  endif %}  // clang-format on
+    #   );
+
+    #   template <typename ReadingT>
+    #   StateAndVariance sensor_model(
+    #       const StateAndVariance& input,
+    #       // clang-format off
+    #  if enable_calibration %}
+    #       // clang-format on
+    #       const Calibration& input_calibration,
+    #       // clang-format off
+    #  endif %}  // clang-format on
+    #       const ReadingT& input_reading) {
+    #     const State& state = input.state;                 // mu
+    #     const Covariance& covariance = input.covariance;  // Sigma
+
+    #     // z_est = sensor_model()
+    #     const ReadingT reading_est =
+    #         ReadingT::SensorModel::model(input,
+    #                                      // clang-format off
+    #  if enable_calibration %}
+    #                                      // clang-format on
+    else:  # enable_EKF == False
+        Model = ClassDef(
+            "class",
+            "Model",
+            bases=[],
+            body=[
+                Escape("public:"),
+                State_model(inserts["enable_control"], inserts["enable_calibration"]),
+            ],
+        )
+
+        body.append(Model)
 
     namespace = Namespace(name=inserts["namespace"], body=body)
     includes = [
@@ -1164,8 +1298,7 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
         print("End Walk")
         raise
 
-    # header_str = header_template.render(**inserts)
-    header_str = "\n".join(model_header_from_ast(inserts, extras))
+    header_str = "\n".join(header_from_ast(inserts, extras))
 
     # print("Human Diff")
     # for idx, (old_line, new_line) in enumerate(
