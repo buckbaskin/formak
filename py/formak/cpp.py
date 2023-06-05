@@ -258,6 +258,7 @@ ReadingT = namedtuple(
         "SensorModel_model_body",
         "SensorModel_covariance_body",
         "SensorModel_jacobian_body",
+        "sensor_model_mapping",
     ],
 )
 
@@ -467,8 +468,6 @@ class ExtendedKalmanFilter:
         return "State({" + content + "});"
 
     def sensorid_members(self, verbose=False):
-        # TODO(buck): Add a verbose flag option that will print out the generated class members
-        # TODO(buck): remove the default True in favor of the flag option
         indent = " " * 4
         enum_names = [
             "{name}".format(name=name.upper()) for name, _, _ in self.sensorlist
@@ -657,6 +656,7 @@ class ExtendedKalmanFilter:
                 SensorModel_model_body=SensorModel_model_body,
                 size=size,
                 typename=typename,
+                sensor_model_mapping=sensor_model_mapping,
             )
 
     def _translate_sensor_jacobian_impl(self, sensor_model_mapping):
@@ -804,6 +804,7 @@ def _generate_ekf_function_bodies(
         "arglist_control": generator.arglist_control,
         "arglist_calibration": generator.arglist_calibration,
         "enable_EKF": True,
+        "sensorlist": generator.sensorlist,
     }
     return inserts, extras
 
@@ -848,24 +849,6 @@ def _compile_argparse():
 
 
 def header_from_ast(inserts, extras):
-    # // clang-format off
-    # namespace {{namespace}} {
-    # // clang-format-on
-    #   struct StateOptions {
-    #     // clang-format off
-    #     {{ StateOptions_members }}
-    #     // clang-format on
-    #   };
-    #
-    #   struct State {
-    #     State();
-    #     State(const StateOptions& options);
-    #     // clang-format off
-    #     {{State_members}}
-    #     // clang-format on
-    #     Eigen::Matrix<double, {{State_size}}, 1> data =
-    #         Eigen::Matrix<double, {{State_size}}, 1>::Zero();
-    #   };
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -922,27 +905,6 @@ def header_from_ast(inserts, extras):
         State,
     ]
 
-    #   // clang-format off
-    # {% if enable_control %}
-    #   // clang-format on
-    #   struct ControlOptions {
-    #     // clang-format off
-    #     {{ ControlOptions_members }}
-    #     // clang-format on
-    #   };
-    #
-    #   struct Control {
-    #     Control();
-    #     Control(const ControlOptions& options);
-    #     // clang-format off
-    #     {{Control_members}}
-    #     // clang-format on
-    #     Eigen::Matrix<double, {{Control_size}}, 1> data =
-    #         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
-    #   };
-    #   // clang-format off
-    # {% endif %}  // clang-format on
-    #
     if inserts["enable_control"]:
         ControlOptions = ClassDef(
             "struct",
@@ -999,27 +961,6 @@ def header_from_ast(inserts, extras):
         )
         body.append(ControlOptions)
         body.append(Control)
-    #   // clang-format off
-    # {% if enable_calibration %}
-    #   // clang-format on
-    #   struct CalibrationOptions {
-    #     // clang-format off
-    #     {{ CalibrationOptions_members }}
-    #     // clang-format on
-    #   };
-    #
-    #   struct Calibration {
-    #     Calibration();
-    #     Calibration(const CalibrationOptions& options);
-    #     // clang-format off
-    #     {{Calibration_members}}
-    #     // clang-format on
-    #     Eigen::Matrix<double, {{Calibration_size}}, 1> data =
-    #         Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
-    #   };
-    #   // clang-format off
-    # {% endif %}
-    #   // clang-format on
     if inserts["enable_calibration"]:
         CalibrationOptions = ClassDef(
             "struct",
@@ -1108,24 +1049,6 @@ def header_from_ast(inserts, extras):
             modifier="",
         )
 
-    # struct Covariance {
-    #   using DataT = Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
-
-    #   // clang-format off
-    #   {{Covariance_members}}
-    #   // clang-format on
-    #   DataT data = DataT::Identity();
-    # };
-    # struct StateAndVariance {
-    #   State state;
-    #   Covariance covariance;
-    # };
-
-    # enum class SensorId {
-    #   // clang-format off
-    #   {{SensorId_members}}
-    #   // clang-format on
-    # };
     def StateAndVariance_process_model(enable_control, enable_calibration):
         args = [
             Arg("double", "dt"),
@@ -1144,9 +1067,8 @@ def header_from_ast(inserts, extras):
             modifier="",
         )
 
-    def StateAndVariance_sensor_model(enable_control, enable_calibration):
+    def StateAndVariance_sensor_model(enable_control, enable_calibration, inserts):
         args = [
-            Arg("double", "dt"),
             Arg("const StateAndVariance&", "input"),
         ]
 
@@ -1163,7 +1085,9 @@ def header_from_ast(inserts, extras):
                 args=args,
                 modifier="",
                 body=[
-                    FromFileTemplate(extras["template_options"], "sensor_model.hpp"),
+                    FromFileTemplate(
+                        extras["template_options"], "sensor_model.hpp", inserts=inserts
+                    ),
                 ],
             ),
         )
@@ -1174,8 +1098,12 @@ def header_from_ast(inserts, extras):
             "Covariance",
             bases=[],
             body=[
-                MemberDeclaration("static constexpr size_t", "rows", 9),
-                MemberDeclaration("static constexpr size_t", "cols", 9),
+                MemberDeclaration(
+                    "static constexpr size_t", "rows", inserts["State_size"]
+                ),
+                MemberDeclaration(
+                    "static constexpr size_t", "cols", inserts["State_size"]
+                ),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ]
             + list(
@@ -1209,6 +1137,7 @@ def header_from_ast(inserts, extras):
                 MemberDeclaration("DataT", "data", "DataT::Identity()"),
             ],
         )
+        body.append(Covariance)
         StateAndVariance = ClassDef(
             "struct",
             "StateAndVariance",
@@ -1218,66 +1147,155 @@ def header_from_ast(inserts, extras):
                 MemberDeclaration("Covariance", "covariance"),
             ],
         )
+        body.append(StateAndVariance)
         SensorId = EnumClassDef(
             "SensorId",
-            members=["ALTITUDE"],
+            members=[f"{name.upper()}" for name, _, _ in extras["sensorlist"]],
         )
-        body.append(Covariance)
-        body.append(StateAndVariance)
         body.append(SensorId)
+        for reading_type in inserts["reading_types"]:
+            body.append(
+                ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
+            )
+            body.append(
+                ClassDef(
+                    "struct",
+                    f"{reading_type.typename}Options",
+                    bases=[],
+                    body=[
+                        MemberDeclaration("double", symbol, 0.0)
+                        for symbol in sorted(
+                            list(reading_type.sensor_model_mapping.keys())
+                        )
+                    ],
+                )
+            )
+
+            standard_args = [Arg("const StateAndVariance&", "input")]
+            if inserts["enable_calibration"]:
+                standard_args.append(Arg("const Calibration&", "input_calibration"))
+            standard_args.append(
+                Arg(f"const {reading_type.typename}&", "input_reading")
+            )
+
+            body.append(
+                ClassDef(
+                    "struct",
+                    f"{reading_type.typename}",
+                    bases=[],
+                    body=[
+                        UsingDeclaration(
+                            "DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"
+                        ),
+                        UsingDeclaration(
+                            "CovarianceT",
+                            f"Eigen::Matrix<double, {reading_type.size}, {reading_type.size}>",
+                        ),
+                        UsingDeclaration(
+                            "InnovationT",
+                            f"Eigen::Matrix<double, {reading_type.size}, 1>",
+                        ),
+                        UsingDeclaration(
+                            "KalmanGainT",
+                            f"Eigen::Matrix<double, {inserts['State_size']}, {reading_type.size}>",
+                        ),
+                        UsingDeclaration(
+                            "SensorJacobianT",
+                            f"Eigen::Matrix<double, {reading_type.size}, {inserts['State_size']}>",
+                        ),
+                        UsingDeclaration(
+                            "SensorModel", f"{reading_type.typename}SensorModel"
+                        ),
+                        ConstructorDeclaration(args=[]),
+                        ConstructorDeclaration(
+                            args=[
+                                Arg(f"const {reading_type.typename}Options&", "options")
+                            ]
+                        ),
+                    ]
+                    + [
+                        FunctionDef(
+                            "double",
+                            name,
+                            args=[],
+                            modifier="",
+                            body=[Return(f"data({idx}, 0)")],
+                        )
+                        for idx, name in enumerate(
+                            sorted(list(reading_type.sensor_model_mapping.keys()))
+                        )
+                    ]
+                    + [
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}",
+                            "model",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}::SensorJacobianT",
+                            "jacobian",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}::CovarianceT",
+                            "covariance",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                        MemberDeclaration("DataT", "data", "DataT::Zero()"),
+                        MemberDeclaration(
+                            "constexpr static size_t", "size", reading_type.size
+                        ),
+                        MemberDeclaration(
+                            "constexpr static SensorId",
+                            "Identifier",
+                            reading_type.identifier,
+                        ),
+                    ],
+                )
+            )
+
+            standard_args = [Arg("const StateAndVariance&", "input")]
+            if inserts["enable_calibration"]:
+                standard_args.append(Arg("const Calibration&", "input_calibration"))
+            standard_args.append(
+                Arg(f"const {reading_type.typename}&", "input_reading")
+            )
+            body.append(
+                ClassDef(
+                    "struct",
+                    f"{reading_type.typename}SensorModel",
+                    bases=[],
+                    body=[
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}",
+                            "model",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}::SensorJacobianT",
+                            "jacobian",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                        FunctionDeclaration(
+                            f"static {reading_type.typename}::CovarianceT",
+                            "covariance",
+                            args=standard_args,
+                            modifier="",
+                        ),
+                    ],
+                )
+            )
+
         # class ExtendedKalmanFilterProcessModel;
         body.append(
             ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
         )
 
-        # class ExtendedKalmanFilter {
-        #  public:
-        #   using CovarianceT =
-        #       Eigen::Matrix<double, {{Control_size}}, {{Control_size}}>;
-        #   using ProcessJacobianT =
-        #       Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
-        #   using ControlJacobianT =
-        #       Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
-        #   using ProcessModel = ExtendedKalmanFilterProcessModel;
-
-        #   StateAndVariance process_model(
-        #       double dt,
-        #       const StateAndVariance& input
-        #       // clang-format off
-        #  if enable_calibration %}
-        #       // clang-format on
-        #       ,
-        #       const Calibration& input_calibration
-        #       // clang-format off
-        #  endif %}  // clang-format on
-        #                      // clang-format off
-        #  if enable_control %}
-        #                      // clang-format on
-        #       ,
-        #       const Control& input_control
-        #       // clang-format off
-        #  endif %}  // clang-format on
-        #   );
-
-        #   template <typename ReadingT>
-        #   StateAndVariance sensor_model(
-        #       const StateAndVariance& input,
-        #       // clang-format off
-        #  if enable_calibration %}
-        #       // clang-format on
-        #       const Calibration& input_calibration,
-        #       // clang-format off
-        #  endif %}  // clang-format on
-        #       const ReadingT& input_reading) {
-        #     const State& state = input.state;                 // mu
-        #     const Covariance& covariance = input.covariance;  // Sigma
-
-        #     // z_est = sensor_model()
-        #     const ReadingT reading_est =
-        #         ReadingT::SensorModel::model(input,
-        #                                      // clang-format off
-        #  if enable_calibration %}
-        #                                      // clang-format on
         ExtendedKalmanFilter = ClassDef(
             "class",
             "ExtendedKalmanFilter",
@@ -1301,7 +1319,9 @@ def header_from_ast(inserts, extras):
                     inserts["enable_control"], inserts["enable_calibration"]
                 ),
                 StateAndVariance_sensor_model(
-                    inserts["enable_control"], inserts["enable_calibration"]
+                    inserts["enable_control"],
+                    inserts["enable_calibration"],
+                    inserts=inserts,
                 ),
                 Escape("private:"),
                 # TODO(buck): This should get replaced with a dec
@@ -1310,26 +1330,6 @@ def header_from_ast(inserts, extras):
         )
         body.append(ExtendedKalmanFilter)
 
-        #   class ExtendedKalmanFilterProcessModel {
-        #    public:
-        #     static State model(
-        #         double dt,
-        #         const StateAndVariance& input
-        #         // clang-format off
-        # {% if enable_calibration %}
-        #         // clang-format on
-        #         ,
-        #         const Calibration& input_calibration
-        #         // clang-format off
-        # {% endif %}  // clang-format on
-        #         // clang-format off
-        # {% if enable_control %}
-        #         // clang-format on
-        #         ,
-        #         const Control& input_control
-        #         // clang-format off
-        # {% endif %}  // clang-format on
-        #     );
         def ExtendedKalmanFilterProcessModel_model(enable_calibration, enable_control):
             args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
             if enable_calibration:
@@ -1338,24 +1338,6 @@ def header_from_ast(inserts, extras):
                 args.append(Arg("const Control&", "input_control"))
             return FunctionDeclaration("static State", "model", args=args, modifier="")
 
-        #     static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
-        #         double dt,
-        #         const StateAndVariance& input
-        #         // clang-format off
-        # {% if enable_calibration %}
-        #         // clang-format on
-        #         ,
-        #         const Calibration& input_calibration
-        #         // clang-format off
-        # {% endif %}  // clang-format on
-        #         // clang-format off
-        # {% if enable_control %}
-        #         // clang-format on
-        #         ,
-        #         const Control& input_control
-        #         // clang-format off
-        # {% endif %}  // clang-format on
-        #     );
         def ExtendedKalmanFilterProcessModel_process_jacobian(
             enable_calibration, enable_control
         ):
@@ -1371,24 +1353,6 @@ def header_from_ast(inserts, extras):
                 modifier="",
             )
 
-        #    static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
-        #        double dt,
-        #        const StateAndVariance& input
-        #        // clang-format off
-        # {% if enable_calibration %}
-        #        // clang-format on
-        #        ,
-        #        const Calibration& input_calibration
-        #        // clang-format off
-        # {% endif %}  // clang-format on
-        #        // clang-format off
-        # {% if enable_control %}
-        #        // clang-format on
-        #        ,
-        #        const Control& input_control
-        #        // clang-format off
-        # {% endif %}  // clang-format on
-        #    );
         def ExtendedKalmanFilterProcessModel_control_jacobian(
             enable_calibration, enable_control
         ):
@@ -1404,26 +1368,6 @@ def header_from_ast(inserts, extras):
                 modifier="",
             )
 
-        #
-        #    static typename ExtendedKalmanFilter::CovarianceT covariance(
-        #        double dt,
-        #        const StateAndVariance& input
-        #        // clang-format off
-        # {% if enable_calibration %}
-        #        // clang-format on
-        #        ,
-        #        const Calibration& input_calibration
-        #        // clang-format off
-        # {% endif %}  // clang-format on
-        #        // clang-format off
-        # {% if enable_control %}
-        #        // clang-format on
-        #        ,
-        #        const Control& input_control
-        #        // clang-format off
-        # {% endif %}  // clang-format on
-        #    );
-        #  };
         def ExtendedKalmanFilterProcessModel_covariance(
             enable_calibration, enable_control
         ):
