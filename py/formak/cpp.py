@@ -1325,6 +1325,7 @@ def header_from_ast(inserts, extras):
     ]
     if extras["enable_EKF"]:
         includes.append("#include <any>")
+        includes.append("#include <optional>")
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
     return header.compile(CompileState(indent=2))
 
