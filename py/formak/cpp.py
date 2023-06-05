@@ -736,6 +736,7 @@ def _generate_model_function_bodies(
     extras = {
         "arglist_state": generator.arglist_state,
         "arglist_control": generator.arglist_control,
+        "arglist_calibration": generator.arglist_calibration,
     }
 
     return inserts, extras
@@ -858,48 +859,6 @@ def model_header_from_ast(inserts, extras):
     #     Eigen::Matrix<double, {{State_size}}, 1> data =
     #         Eigen::Matrix<double, {{State_size}}, 1>::Zero();
     #   };
-    #   // clang-format off
-    # {% if enable_control %}
-    #   // clang-format on
-    #   struct ControlOptions {
-    #     // clang-format off
-    #     {{ ControlOptions_members }}
-    #     // clang-format on
-    #   };
-    #
-    #   struct Control {
-    #     Control();
-    #     Control(const ControlOptions& options);
-    #     // clang-format off
-    #     {{Control_members}}
-    #     // clang-format on
-    #     Eigen::Matrix<double, {{Control_size}}, 1> data =
-    #         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
-    #   };
-    #   // clang-format off
-    # {% endif %}  // clang-format on
-    #
-    #   // clang-format off
-    # {% if enable_calibration %}
-    #   // clang-format on
-    #   struct CalibrationOptions {
-    #     // clang-format off
-    #     {{ CalibrationOptions_members }}
-    #     // clang-format on
-    #   };
-    #
-    #   struct Calibration {
-    #     Calibration();
-    #     Calibration(const CalibrationOptions& options);
-    #     // clang-format off
-    #     {{Calibration_members}}
-    #     // clang-format on
-    #     Eigen::Matrix<double, {{Calibration_size}}, 1> data =
-    #         Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
-    #   };
-    #   // clang-format off
-    # {% endif %}
-    #   // clang-format on
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -916,7 +875,6 @@ def model_header_from_ast(inserts, extras):
         body=[
             MemberDeclaration("static constexpr size_t", "rows", inserts["State_size"]),
             MemberDeclaration("static constexpr size_t", "cols", 1),
-            # TODO(buck): Eigen::Matrix<...> can be split into its own structure
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
             ConstructorDeclaration(args=[Arg("const StateOptions&", "options")]),
@@ -957,67 +915,162 @@ def model_header_from_ast(inserts, extras):
         State,
     ]
 
+    #   // clang-format off
+    # {% if enable_control %}
+    #   // clang-format on
+    #   struct ControlOptions {
+    #     // clang-format off
+    #     {{ ControlOptions_members }}
+    #     // clang-format on
+    #   };
+    #
+    #   struct Control {
+    #     Control();
+    #     Control(const ControlOptions& options);
+    #     // clang-format off
+    #     {{Control_members}}
+    #     // clang-format on
+    #     Eigen::Matrix<double, {{Control_size}}, 1> data =
+    #         Eigen::Matrix<double, {{Control_size}}, 1>::Zero();
+    #   };
+    #   // clang-format off
+    # {% endif %}  // clang-format on
+    #
     if inserts["enable_control"]:
-        body.append(
-            ClassDef(
-                "struct",
-                "ControlOptions",
-                bases=[],
-                body=[
-                    MemberDeclaration("double", member, 0.0)
-                    for member in extras["arglist_control"]
-                ],
-            )
+        ControlOptions = ClassDef(
+            "struct",
+            "ControlOptions",
+            bases=[],
+            body=[
+                MemberDeclaration("double", member, 0.0)
+                for member in extras["arglist_control"]
+            ],
         )
-        body.append(
-            ClassDef(
-                "struct",
-                "Control",
-                bases=[],
-                body=[
-                    MemberDeclaration(
-                        "static constexpr size_t", "rows", inserts["Control_size"]
-                    ),
-                    MemberDeclaration("static constexpr size_t", "cols", 1),
-                    # TODO(buck): Eigen::Matrix<...> can be split into its own structure
-                    UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
-                    ConstructorDeclaration(),  # No args constructor gets default constructor
-                    ConstructorDeclaration(
-                        args=[Arg("const ControlOptions&", "options")]
-                    ),
-                ]
-                + list(
-                    chain.from_iterable(
-                        [
-                            (
-                                FunctionDef(
-                                    "double&",
-                                    name,
-                                    args=[],
-                                    modifier="",
-                                    body=[
-                                        Return(f"data({idx}, 0)"),
-                                    ],
-                                ),
-                                FunctionDef(
-                                    "double",
-                                    name,
-                                    args=[],
-                                    modifier="const",
-                                    body=[
-                                        Return(f"data({idx}, 0)"),
-                                    ],
-                                ),
-                            )
-                            for idx, name in enumerate(extras["arglist_control"])
-                        ]
-                    )
+        Control = ClassDef(
+            "struct",
+            "Control",
+            bases=[],
+            body=[
+                MemberDeclaration(
+                    "static constexpr size_t", "rows", inserts["Control_size"]
+                ),
+                MemberDeclaration("static constexpr size_t", "cols", 1),
+                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+                ConstructorDeclaration(),  # No args constructor gets default constructor
+                ConstructorDeclaration(args=[Arg("const ControlOptions&", "options")]),
+            ]
+            + list(
+                chain.from_iterable(
+                    [
+                        (
+                            FunctionDef(
+                                "double&",
+                                name,
+                                args=[],
+                                modifier="",
+                                body=[
+                                    Return(f"data({idx}, 0)"),
+                                ],
+                            ),
+                            FunctionDef(
+                                "double",
+                                name,
+                                args=[],
+                                modifier="const",
+                                body=[
+                                    Return(f"data({idx}, 0)"),
+                                ],
+                            ),
+                        )
+                        for idx, name in enumerate(extras["arglist_control"])
+                    ]
                 )
-                + [
-                    MemberDeclaration("DataT", "data", "DataT::Zero()"),
-                ],
             )
+            + [
+                MemberDeclaration("DataT", "data", "DataT::Zero()"),
+            ],
         )
+        body.append(ControlOptions)
+        body.append(Control)
+    #   // clang-format off
+    # {% if enable_calibration %}
+    #   // clang-format on
+    #   struct CalibrationOptions {
+    #     // clang-format off
+    #     {{ CalibrationOptions_members }}
+    #     // clang-format on
+    #   };
+    #
+    #   struct Calibration {
+    #     Calibration();
+    #     Calibration(const CalibrationOptions& options);
+    #     // clang-format off
+    #     {{Calibration_members}}
+    #     // clang-format on
+    #     Eigen::Matrix<double, {{Calibration_size}}, 1> data =
+    #         Eigen::Matrix<double, {{Calibration_size}}, 1>::Zero();
+    #   };
+    #   // clang-format off
+    # {% endif %}
+    #   // clang-format on
+    if inserts["enable_calibration"]:
+        CalibrationOptions = ClassDef(
+            "struct",
+            "CalibrationOptions",
+            bases=[],
+            body=[
+                MemberDeclaration("double", member, 0.0)
+                for member in extras["arglist_calibration"]
+            ],
+        )
+        Calibration = ClassDef(
+            "struct",
+            "Calibration",
+            bases=[],
+            body=[
+                MemberDeclaration(
+                    "static constexpr size_t", "rows", inserts["Calibration_size"]
+                ),
+                MemberDeclaration("static constexpr size_t", "cols", 1),
+                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
+                ConstructorDeclaration(),  # No args constructor gets default constructor
+                ConstructorDeclaration(
+                    args=[Arg("const CalibrationOptions&", "options")]
+                ),
+            ]
+            + list(
+                chain.from_iterable(
+                    [
+                        (
+                            FunctionDef(
+                                "double&",
+                                name,
+                                args=[],
+                                modifier="",
+                                body=[
+                                    Return(f"data({idx}, 0)"),
+                                ],
+                            ),
+                            FunctionDef(
+                                "double",
+                                name,
+                                args=[],
+                                modifier="const",
+                                body=[
+                                    Return(f"data({idx}, 0)"),
+                                ],
+                            ),
+                        )
+                        for idx, name in enumerate(extras["arglist_calibration"])
+                    ]
+                )
+            )
+            + [
+                MemberDeclaration("DataT", "data", "DataT::Zero()"),
+            ],
+        )
+        body.append(CalibrationOptions)
+        body.append(Calibration)
 
     #   37:   class Model {
     #   38:    public:
@@ -1030,26 +1083,35 @@ def model_header_from_ast(inserts, extras):
     #   45:     );
     #   46:   };
 
-    body.append(
-        ClassDef(
-            "class",
-            "Model",
-            bases=[],
-            body=[
-                Escape("public:"),
-                FunctionDeclaration(
-                    "State",
-                    "model",
-                    args=[
-                        Arg("double", "dt"),
-                        Arg("const State&", "input_state"),
-                        Arg("const Control&", "input_control"),
-                    ],
-                    modifier="",
-                ),
-            ],
+    def State_model(enable_control, enable_calibration):
+        args = [
+            Arg("double", "dt"),
+            Arg("const State&", "input_state"),
+        ]
+
+        if enable_control:
+            args.append(Arg("const Control&", "input_control"))
+        if enable_calibration:
+            args.append(Arg("const Calibration&", "input_calibration"))
+
+        return FunctionDeclaration(
+            "State",
+            "model",
+            args=args,
+            modifier="",
         )
+
+    Model = ClassDef(
+        "class",
+        "Model",
+        bases=[],
+        body=[
+            Escape("public:"),
+            State_model(inserts["enable_control"], inserts["enable_calibration"]),
+        ],
     )
+
+    body.append(Model)
 
     namespace = Namespace(name=inserts["namespace"], body=body)
     includes = [
