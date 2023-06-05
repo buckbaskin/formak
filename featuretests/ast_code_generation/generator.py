@@ -17,6 +17,7 @@ from formak.ast_tools import (
     Namespace,
     Return,
     SourceFile,
+    TemplateOptions,
     UsingDeclaration,
 )
 
@@ -142,13 +143,10 @@ def source_definition(template_options):
     return source
 
 
-TemplateOptions = namedtuple("TemplateOptions", ["base", "name"])
-
-
 def parse_templates(template_paths):
     target = "templates/"
-    base, name = template_paths.split(target)
-    return TemplateOptions(base=base + target, name=name)
+    base, _ = template_paths.split(target)
+    return TemplateOptions(base=base + target)
 
 
 def main(template_paths, header_location, source_location):

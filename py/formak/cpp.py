@@ -24,6 +24,8 @@ from formak.ast_tools import (
     Namespace,
     Return,
     SourceFile,
+    Templated,
+    TemplateOptions,
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
@@ -1124,6 +1126,48 @@ def header_from_ast(inserts, extras):
     #   {{SensorId_members}}
     #   // clang-format on
     # };
+    def StateAndVariance_process_model(enable_control, enable_calibration):
+        args = [
+            Arg("double", "dt"),
+            Arg("const StateAndVariance&", "input_state"),
+        ]
+
+        if enable_control:
+            args.append(Arg("const Control&", "input_control"))
+        if enable_calibration:
+            args.append(Arg("const Calibration&", "input_calibration"))
+
+        return FunctionDeclaration(
+            "StateAndVariance",
+            "process_model",
+            args=args,
+            modifier="",
+        )
+
+    def StateAndVariance_sensor_model(enable_control, enable_calibration):
+        args = [
+            Arg("double", "dt"),
+            Arg("const StateAndVariance&", "input"),
+        ]
+
+        if enable_calibration:
+            args.append(Arg("const Calibration&", "input_calibration"))
+
+        args.append(Arg("const ReadingT&", "input_reading"))
+
+        return Templated(
+            [Arg("typename", "ReadingT")],
+            FunctionDef(
+                "StateAndVariance",
+                "sensor_model",
+                args=args,
+                modifier="",
+                body=[
+                    FromFileTemplate(extras["template_options"], "sensor_model.hpp"),
+                ],
+            ),
+        )
+
     if extras["enable_EKF"]:
         Covariance = ClassDef(
             "struct",
@@ -1186,54 +1230,236 @@ def header_from_ast(inserts, extras):
             ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
         )
 
-    # class ExtendedKalmanFilter {
-    #  public:
-    #   using CovarianceT =
-    #       Eigen::Matrix<double, {{Control_size}}, {{Control_size}}>;
-    #   using ProcessJacobianT =
-    #       Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
-    #   using ControlJacobianT =
-    #       Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
-    #   using ProcessModel = ExtendedKalmanFilterProcessModel;
+        # class ExtendedKalmanFilter {
+        #  public:
+        #   using CovarianceT =
+        #       Eigen::Matrix<double, {{Control_size}}, {{Control_size}}>;
+        #   using ProcessJacobianT =
+        #       Eigen::Matrix<double, {{State_size}}, {{State_size}}>;
+        #   using ControlJacobianT =
+        #       Eigen::Matrix<double, {{State_size}}, {{Control_size}}>;
+        #   using ProcessModel = ExtendedKalmanFilterProcessModel;
 
-    #   StateAndVariance process_model(
-    #       double dt,
-    #       const StateAndVariance& input
-    #       // clang-format off
-    #  if enable_calibration %}
-    #       // clang-format on
-    #       ,
-    #       const Calibration& input_calibration
-    #       // clang-format off
-    #  endif %}  // clang-format on
-    #                      // clang-format off
-    #  if enable_control %}
-    #                      // clang-format on
-    #       ,
-    #       const Control& input_control
-    #       // clang-format off
-    #  endif %}  // clang-format on
-    #   );
+        #   StateAndVariance process_model(
+        #       double dt,
+        #       const StateAndVariance& input
+        #       // clang-format off
+        #  if enable_calibration %}
+        #       // clang-format on
+        #       ,
+        #       const Calibration& input_calibration
+        #       // clang-format off
+        #  endif %}  // clang-format on
+        #                      // clang-format off
+        #  if enable_control %}
+        #                      // clang-format on
+        #       ,
+        #       const Control& input_control
+        #       // clang-format off
+        #  endif %}  // clang-format on
+        #   );
 
-    #   template <typename ReadingT>
-    #   StateAndVariance sensor_model(
-    #       const StateAndVariance& input,
-    #       // clang-format off
-    #  if enable_calibration %}
-    #       // clang-format on
-    #       const Calibration& input_calibration,
-    #       // clang-format off
-    #  endif %}  // clang-format on
-    #       const ReadingT& input_reading) {
-    #     const State& state = input.state;                 // mu
-    #     const Covariance& covariance = input.covariance;  // Sigma
+        #   template <typename ReadingT>
+        #   StateAndVariance sensor_model(
+        #       const StateAndVariance& input,
+        #       // clang-format off
+        #  if enable_calibration %}
+        #       // clang-format on
+        #       const Calibration& input_calibration,
+        #       // clang-format off
+        #  endif %}  // clang-format on
+        #       const ReadingT& input_reading) {
+        #     const State& state = input.state;                 // mu
+        #     const Covariance& covariance = input.covariance;  // Sigma
 
-    #     // z_est = sensor_model()
-    #     const ReadingT reading_est =
-    #         ReadingT::SensorModel::model(input,
-    #                                      // clang-format off
-    #  if enable_calibration %}
-    #                                      // clang-format on
+        #     // z_est = sensor_model()
+        #     const ReadingT reading_est =
+        #         ReadingT::SensorModel::model(input,
+        #                                      // clang-format off
+        #  if enable_calibration %}
+        #                                      // clang-format on
+        ExtendedKalmanFilter = ClassDef(
+            "class",
+            "ExtendedKalmanFilter",
+            bases=[],
+            body=[
+                Escape("public:"),
+                UsingDeclaration(
+                    "CovarianceT",
+                    f"Eigen::Matrix<double, {inserts['Control_size']}, {inserts['Control_size']}>",
+                ),
+                UsingDeclaration(
+                    "ProcessJacobianT",
+                    f"Eigen::Matrix<double, {inserts['State_size']}, {inserts['State_size']}>",
+                ),
+                UsingDeclaration(
+                    "ControlJacobianT",
+                    f"Eigen::Matrix<double, {inserts['State_size']}, {inserts['Control_size']}>",
+                ),
+                UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
+                StateAndVariance_process_model(
+                    inserts["enable_control"], inserts["enable_calibration"]
+                ),
+                StateAndVariance_sensor_model(
+                    inserts["enable_control"], inserts["enable_calibration"]
+                ),
+                Escape("private:"),
+                # TODO(buck): This should get replaced with a dec
+                Escape("std::unordered_map<SensorId, std::any> _innovations;"),
+            ],
+        )
+        body.append(ExtendedKalmanFilter)
+
+        #   class ExtendedKalmanFilterProcessModel {
+        #    public:
+        #     static State model(
+        #         double dt,
+        #         const StateAndVariance& input
+        #         // clang-format off
+        # {% if enable_calibration %}
+        #         // clang-format on
+        #         ,
+        #         const Calibration& input_calibration
+        #         // clang-format off
+        # {% endif %}  // clang-format on
+        #         // clang-format off
+        # {% if enable_control %}
+        #         // clang-format on
+        #         ,
+        #         const Control& input_control
+        #         // clang-format off
+        # {% endif %}  // clang-format on
+        #     );
+        def ExtendedKalmanFilterProcessModel_model(enable_calibration, enable_control):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration("static State", "model", args=args, modifier="")
+
+        #     static typename ExtendedKalmanFilter::ProcessJacobianT process_jacobian(
+        #         double dt,
+        #         const StateAndVariance& input
+        #         // clang-format off
+        # {% if enable_calibration %}
+        #         // clang-format on
+        #         ,
+        #         const Calibration& input_calibration
+        #         // clang-format off
+        # {% endif %}  // clang-format on
+        #         // clang-format off
+        # {% if enable_control %}
+        #         // clang-format on
+        #         ,
+        #         const Control& input_control
+        #         // clang-format off
+        # {% endif %}  // clang-format on
+        #     );
+        def ExtendedKalmanFilterProcessModel_process_jacobian(
+            enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ProcessJacobianT",
+                "process_jacobian",
+                args=args,
+                modifier="",
+            )
+
+        #    static typename ExtendedKalmanFilter::ControlJacobianT control_jacobian(
+        #        double dt,
+        #        const StateAndVariance& input
+        #        // clang-format off
+        # {% if enable_calibration %}
+        #        // clang-format on
+        #        ,
+        #        const Calibration& input_calibration
+        #        // clang-format off
+        # {% endif %}  // clang-format on
+        #        // clang-format off
+        # {% if enable_control %}
+        #        // clang-format on
+        #        ,
+        #        const Control& input_control
+        #        // clang-format off
+        # {% endif %}  // clang-format on
+        #    );
+        def ExtendedKalmanFilterProcessModel_control_jacobian(
+            enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ControlJacobianT",
+                "control_jacobian",
+                args=args,
+                modifier="",
+            )
+
+        #
+        #    static typename ExtendedKalmanFilter::CovarianceT covariance(
+        #        double dt,
+        #        const StateAndVariance& input
+        #        // clang-format off
+        # {% if enable_calibration %}
+        #        // clang-format on
+        #        ,
+        #        const Calibration& input_calibration
+        #        // clang-format off
+        # {% endif %}  // clang-format on
+        #        // clang-format off
+        # {% if enable_control %}
+        #        // clang-format on
+        #        ,
+        #        const Control& input_control
+        #        // clang-format off
+        # {% endif %}  // clang-format on
+        #    );
+        #  };
+        def ExtendedKalmanFilterProcessModel_covariance(
+            enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::CovarianceT",
+                "covariance",
+                args=args,
+                modifier="",
+            )
+
+        ExtendedKalmanFilterProcessModel = ClassDef(
+            "class",
+            "ExtendedKalmanFilterProcessModel",
+            bases=[],
+            body=[
+                Escape("public:"),
+                ExtendedKalmanFilterProcessModel_model(
+                    inserts["enable_calibration"], inserts["enable_control"]
+                ),
+                ExtendedKalmanFilterProcessModel_process_jacobian(
+                    inserts["enable_calibration"], inserts["enable_control"]
+                ),
+                ExtendedKalmanFilterProcessModel_control_jacobian(
+                    inserts["enable_calibration"], inserts["enable_control"]
+                ),
+                ExtendedKalmanFilterProcessModel_covariance(
+                    inserts["enable_calibration"], inserts["enable_control"]
+                ),
+            ],
+        )
+        body.append(ExtendedKalmanFilterProcessModel)
     else:  # enable_EKF == False
         Model = ClassDef(
             "class",
@@ -1251,6 +1477,8 @@ def header_from_ast(inserts, extras):
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
+    if extras["enable_EKF"]:
+        includes.append("#include <any>")
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
     return header.compile(CompileState(indent=2))
 
@@ -1273,6 +1501,7 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     # TODO(buck): This won't scale well to organizing templates in folders
     templates_base_path = dirname(header_template)
     assert templates_base_path == dirname(source_template)
+    extras["template_options"] = TemplateOptions(base=templates_base_path)
 
     env = Environment(
         loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
