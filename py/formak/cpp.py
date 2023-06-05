@@ -1055,10 +1055,10 @@ def header_from_ast(inserts, extras):
             Arg("const StateAndVariance&", "input_state"),
         ]
 
-        if enable_control:
-            args.append(Arg("const Control&", "input_control"))
         if enable_calibration:
             args.append(Arg("const Calibration&", "input_calibration"))
+        if enable_control:
+            args.append(Arg("const Control&", "input_control"))
 
         return FunctionDeclaration(
             "StateAndVariance",
@@ -1323,9 +1323,26 @@ def header_from_ast(inserts, extras):
                     inserts["enable_calibration"],
                     inserts=inserts,
                 ),
+                Templated(
+                    [Arg("typename", "ReadingT")],
+                    FunctionDef(
+                        "std::optional<typename ReadingT::InnovationT>",
+                        "innovations",
+                        args=[],
+                        modifier="",
+                        body=[
+                            FromFileTemplate(
+                                extras["template_options"],
+                                "innovations.hpp",
+                                inserts=inserts,
+                            )
+                        ],
+                    ),
+                ),
                 Escape("private:"),
-                # TODO(buck): This should get replaced with a dec
-                Escape("std::unordered_map<SensorId, std::any> _innovations;"),
+                MemberDeclaration(
+                    "std::unordered_map<SensorId, std::any>", "_innovations"
+                ),
             ],
         )
         body.append(ExtendedKalmanFilter)
