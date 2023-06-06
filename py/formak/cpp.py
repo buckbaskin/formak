@@ -905,17 +905,6 @@ def header_from_ast(inserts, extras):
         body.append(CalibrationOptions)
         body.append(Calibration)
 
-    #   37:   class Model {
-    #   38:    public:
-    #   39:     State model(
-    #   40:         double dt,
-    #   41:         const State& input_state
-    #   42:
-    #   43:         ,
-    #   44:         const Control& input_control
-    #   45:     );
-    #   46:   };
-
     def State_model(enable_control, enable_calibration):
         args = [
             Arg("double", "dt"),
@@ -1329,6 +1318,70 @@ def header_from_ast(inserts, extras):
     return header.compile(CompileState(indent=2))
 
 
+def source_from_ast(inserts, extras):
+    body = [
+        ConstructorDefinition(
+            "State", args=[], initializer_list=[("data", "DataT::Zero()")]
+        ),
+        ConstructorDefinition(
+            "State",
+            args=[Arg("const StateOptions&", "options")],
+            initializer_list=[
+                (
+                    "data",
+                    ", ".join(f"options.{name}" for name in extras["arglist_state"]),
+                ),
+            ],
+        ),
+    ]
+
+    if inserts["enable_calibration"]:
+        CalibrationDefaultConstructor = ConstructorDefinition(
+            "Calibration", args=[], initializer_list=[("data", "DataT::Zero()")]
+        )
+        CalibrationConstructor = ConstructorDefinition(
+            "Calibration",
+            args=[Arg("const CalibrationOptions&", "options")],
+            initializer_list=[
+                (
+                    "data",
+                    ", ".join(
+                        f"options.{name}" for name in extras["arglist_calibration"]
+                    ),
+                ),
+            ],
+        )
+        body.append(CalibrationDefaultConstructor)
+        body.append(CalibrationConstructor)
+
+    if inserts["enable_control"]:
+        ControlDefaultConstructor = ConstructorDefinition(
+            "Control", args=[], initializer_list=[("data", "DataT::Zero()")]
+        )
+        ControlConstructor = ConstructorDefinition(
+            "Control",
+            args=[Arg("const ControlOptions&", "options")],
+            initializer_list=[
+                (
+                    "data",
+                    ", ".join(f"options.{name}" for name in extras["arglist_control"]),
+                ),
+            ],
+        )
+        body.append(ControlDefaultConstructor)
+        body.append(ControlConstructor)
+
+    if extras["enable_EKF"]:
+        pass
+    else:  # extras['enable_EKF'] == False
+        pass
+
+    namespace = Namespace(name=inserts["namespace"], body=body)
+    includes = [f"#include <{inserts['header_include']}>"]
+    src = SourceFile(includes=includes, namespaces=[namespace])
+    return src.compile(CompileState(indent=2))
+
+
 def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     # Compilation
 
@@ -1340,57 +1393,35 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
         )
 
     templates = _parse_raw_templates(args.templates)
-
-    header_template = templates[name][hpp]
     source_template = templates[name][cpp]
-
     # TODO(buck): This won't scale well to organizing templates in folders
-    templates_base_path = dirname(header_template)
-    assert templates_base_path == dirname(source_template)
+    # TODO(buck): clean up arguments to the script
+    templates_base_path = dirname(source_template)
     extras["template_options"] = TemplateOptions(base=templates_base_path)
 
     env = Environment(
         loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
     )
-
-    try:
-        # header_template = env.get_template(name + hpp)
-        source_template = env.get_template(name + cpp)
-    except TemplateNotFound:
-        print("Debugging TemplateNotFound")
-        print("Trying to scandir")
-        with scandir(templates_base_path) as it:
-            if len(list(it)) == 0:
-                print("No Paths in scandir")
-                raise
-
-        print("Walking")
-        for root, _, files in walk(templates_base_path):
-            depth = len(root.split("/"))
-            print("{}Root: {!s}".format(" " * depth, root))
-            for filename in files:
-                print("{}  - {!s}".format(" " * depth, filename))
-        print("End Walk")
-        raise
+    source_template = env.get_template(name + cpp)
+    old_source_str = source_template.render(**inserts)
 
     header_str = "\n".join(header_from_ast(inserts, extras))
+    source_str = "\n".join(source_from_ast(inserts, extras))
 
-    # print("Human Diff")
-    # for idx, (old_line, new_line) in enumerate(
-    #     zip_longest(
-    #         filter(
-    #             lambda x: not x.lstrip().startswith("// clang-format"),
-    #             header_str.split("\n"),
-    #         ),
-    #         new_header_str.split("\n"),
-    #         fillvalue="",
-    #     )
-    # ):
-    #     print(f"{idx:4d}: {old_line.ljust(50)} | {new_line.ljust(50)}")
+    print("Human Diff")
+    for idx, (old_line, new_line) in enumerate(
+        zip_longest(
+            filter(
+                lambda x: not x.lstrip().startswith("// clang-format"),
+                old_source_str.split("\n"),
+            ),
+            source_str.split("\n"),
+            fillvalue="",
+        )
+    ):
+        print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}")
 
-    # 1 / 0
-
-    source_str = source_template.render(**inserts)
+    1 / 0
 
     with open(args.header, "w") as header_file:
         with open(args.source, "w") as source_file:

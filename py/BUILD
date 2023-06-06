@@ -24,7 +24,6 @@ filegroup(
     name = "templates",
     srcs = glob(
         [
-            "formak/templates/*.h",
             "formak/templates/*.hpp",
             "formak/templates/*.cpp",
         ],
