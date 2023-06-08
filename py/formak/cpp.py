@@ -1375,7 +1375,21 @@ def source_from_ast(inserts, extras):
     if extras["enable_EKF"]:
         pass
     else:  # extras['enable_EKF'] == False
-        pass
+        standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
+        if inserts["enable_calibration"]:
+            standard_args.append(Arg("const Calibration&", "input_calibration"))
+        if inserts["enable_control"]:
+            standard_args.append(Arg("const Control&", "input_control"))
+        Model_model = FunctionDef(
+            "State",
+            "Model::model",
+            modifier="",
+            args=standard_args,
+            body=[
+                Escape(inserts["Model_model_body"]),
+            ],
+        )
+        body.append(Model_model)
 
     namespace = Namespace(name=inserts["namespace"], body=body)
     includes = [f"#include <{inserts['header_include']}>"]
@@ -1409,20 +1423,20 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     header_str = "\n".join(header_from_ast(inserts, extras))
     source_str = "\n".join(source_from_ast(inserts, extras))
 
-    print("Human Diff")
-    for idx, (old_line, new_line) in enumerate(
-        zip_longest(
-            filter(
-                lambda x: not x.lstrip().startswith("// clang-format"),
-                old_source_str.split("\n"),
-            ),
-            source_str.split("\n"),
-            fillvalue="",
-        )
-    ):
-        print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}")
+    # print("Human Diff")
+    # for idx, (old_line, new_line) in enumerate(
+    #     zip_longest(
+    #         filter(
+    #             lambda x: not x.lstrip().startswith("// clang-format"),
+    #             old_source_str.split("\n"),
+    #         ),
+    #         source_str.split("\n"),
+    #         fillvalue="",
+    #     )
+    # ):
+    #     print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}".rstrip())
 
-    1 / 0
+    # 1 / 0
 
     with open(args.header, "w") as header_file:
         with open(args.source, "w") as source_file:
