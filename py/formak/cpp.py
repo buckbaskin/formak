@@ -1373,7 +1373,68 @@ def source_from_ast(inserts, extras):
         body.append(ControlConstructor)
 
     if extras["enable_EKF"]:
-        pass
+        standard_args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+        if inserts["enable_calibration"]:
+            standard_args.append(Arg("const Calibration&", "input_calibration"))
+        if inserts["enable_control"]:
+            standard_args.append(Arg("const Control&", "input_control"))
+        EKF_process_model = FunctionDef(
+            "StateAndVariance",
+            "ExtendedKalmanFilter::process_model",
+            modifier="",
+            args=standard_args,
+            body=[
+                FromFileTemplate(
+                    extras["template_options"], "process_model.cpp", inserts=inserts
+                ),
+            ],
+        )
+        body.append(EKF_process_model)
+        EKFPM_model = FunctionDef(
+            "State",
+            "ExtendedKalmanFilterProcessModel::model",
+            modifier="",
+            args=standard_args,
+            body=[
+                Escape(inserts["ExtendedKalmanFilterProcessModel_model_body"]),
+            ],
+        )
+        body.append(EKFPM_model)
+        EKFPM_process_jacobian = FunctionDef(
+            "typename ExtendedKalmanFilter::ProcessJacobianT",
+            "ExtendedKalmanFilterProcessModel::process_jacobian",
+            modifier="",
+            args=standard_args,
+            body=[
+                Escape(
+                    inserts["ExtendedKalmanFilterProcessModel_process_jacobian_body"]
+                ),
+            ],
+        )
+        body.append(EKFPM_process_jacobian)
+        EKFPM_control_jacobian = FunctionDef(
+            "typename ExtendedKalmanFilter::ControlJacobianT",
+            "ExtendedKalmanFilterProcessModel::control_jacobian",
+            modifier="",
+            args=standard_args,
+            body=[
+                Escape(
+                    inserts["ExtendedKalmanFilterProcessModel_control_jacobian_body"]
+                ),
+            ],
+        )
+        body.append(EKFPM_control_jacobian)
+        EKFPM_covariance = FunctionDef(
+            "typename ExtendedKalmanFilter::CovarianceT",
+            "ExtendedKalmanFilterProcessModel::covariance",
+            modifier="",
+            args=standard_args,
+            body=[
+                Escape(inserts["ExtendedKalmanFilterProcessModel_covariance_body"]),
+            ],
+        )
+        body.append(EKFPM_covariance)
+
     else:  # extras['enable_EKF'] == False
         standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
         if inserts["enable_calibration"]:
@@ -1397,7 +1458,7 @@ def source_from_ast(inserts, extras):
     return src.compile(CompileState(indent=2))
 
 
-def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
+def _compile_impl(args, inserts, name, hpp, cpp, *, extras, human_diff=False):
     # Compilation
 
     if args.templates is None:
@@ -1423,20 +1484,24 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     header_str = "\n".join(header_from_ast(inserts, extras))
     source_str = "\n".join(source_from_ast(inserts, extras))
 
-    # print("Human Diff")
-    # for idx, (old_line, new_line) in enumerate(
-    #     zip_longest(
-    #         filter(
-    #             lambda x: not x.lstrip().startswith("// clang-format"),
-    #             old_source_str.split("\n"),
-    #         ),
-    #         source_str.split("\n"),
-    #         fillvalue="",
-    #     )
-    # ):
-    #     print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}".rstrip())
+    if human_diff and extras["enable_EKF"]:
+        print("Human Diff")
+        for idx, (old_line, new_line) in enumerate(
+            zip_longest(
+                filter(
+                    lambda x: not x.lstrip().startswith("// clang-format"),
+                    old_source_str.split("\n"),
+                ),
+                filter(
+                    lambda x: not x.lstrip().startswith("// clang-format"),
+                    source_str.split("\n"),
+                ),
+                fillvalue="",
+            )
+        ):
+            print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}".rstrip())
 
-    # 1 / 0
+        1 / 0
 
     with open(args.header, "w") as header_file:
         with open(args.source, "w") as source_file:
