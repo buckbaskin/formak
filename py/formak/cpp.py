@@ -86,6 +86,9 @@ class Model:
             config = Config(**config)
         assert isinstance(config, Config)
 
+        self.enable_EKF = False
+        self.sensorlist = {}
+
         self.state_size = len(symbolic_model.state)
         self.control_size = len(symbolic_model.control)
         self.calibration_size = len(symbolic_model.calibration)
@@ -232,6 +235,8 @@ class ExtendedKalmanFilter:
             config = Config(**config)
         assert isinstance(config, Config)
         assert isinstance(process_noise, dict)
+
+        self.enable_EKF = True
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
@@ -602,18 +607,6 @@ class ExtendedKalmanFilter:
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 
-ExtrasT = namedtuple(
-    "ExtrasT",
-    [
-        "arglist_state",
-        "arglist_control",
-        "arglist_calibration",
-        "enable_EKF",
-        "sensorlist",
-    ],
-)
-
-
 def _generate_model_function_bodies(
     header_location, namespace, symbolic_model, calibration_map, config
 ):
@@ -639,15 +632,8 @@ def _generate_model_function_bodies(
         "State_options_constructor_initializer_list": generator.state_generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
     }
-    extras = ExtrasT(
-        arglist_state=generator.arglist_state,
-        arglist_control=generator.arglist_control,
-        arglist_calibration=generator.arglist_calibration,
-        enable_EKF=False,
-        sensorlist={},
-    )
 
-    return inserts, extras
+    return inserts, generator
 
 
 def _generate_ekf_function_bodies(
@@ -694,14 +680,7 @@ def _generate_ekf_function_bodies(
         "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
     }
-    extras = ExtrasT(
-        arglist_state=generator.arglist_state,
-        arglist_control=generator.arglist_control,
-        arglist_calibration=generator.arglist_calibration,
-        enable_EKF=True,
-        sensorlist=generator.sensorlist,
-    )
-    return inserts, extras
+    return inserts, generator
 
 
 def _compile_argparse():
@@ -1143,7 +1122,6 @@ def header_from_ast(inserts, extras):
                 )
             )
 
-        # class ExtendedKalmanFilterProcessModel;
         body.append(
             ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
         )
