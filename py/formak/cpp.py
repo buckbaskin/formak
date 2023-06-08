@@ -444,8 +444,10 @@ class ExtendedKalmanFilter:
                     value = covariance[iKey]
                 else:
                     value = 0.0
+
                 yield f"covariance({i}, {j})", value
-                yield f"covariance({j}, {i})", value
+                if i != j:
+                    yield f"covariance({j}, {i})", value
 
     def control_covariance_body(self):
         indent = " " * 4
@@ -1435,6 +1437,61 @@ def source_from_ast(inserts, extras):
         )
         body.append(EKFPM_covariance)
 
+        for reading_type in inserts["reading_types"]:
+            standard_args = [
+                Arg("const StateAndVariance&", "input"),
+            ]
+            if inserts["enable_calibration"]:
+                standard_args.append(Arg("const Calibration&", "input_calibration"))
+            standard_args.append(
+                Arg(f"const {reading_type.typename}&", "input_reading")
+            )
+            ReadingDefaultConstructor = ConstructorDefinition(
+                reading_type.typename,
+                args=[],
+                initializer_list=[("data", "DataT::Zero()")],
+            )
+            body.append(ReadingDefaultConstructor)
+            ReadingConstructor = ConstructorDefinition(
+                reading_type.typename,
+                args=[Arg(f"const {reading_type.typename}Options&", "options")],
+                initializer_list=[
+                    (
+                        "data",
+                        ", ".join(
+                            f"options.{name}"
+                            for name in sorted(
+                                list(reading_type.sensor_model_mapping.keys())
+                            )
+                        ),
+                    )
+                ],
+            )
+            body.append(ReadingConstructor)
+            ReadingSensorModel_model = FunctionDef(
+                reading_type.typename,
+                f"{reading_type.typename}SensorModel::model",
+                modifier="",
+                args=standard_args,
+                body=[Escape(reading_type.SensorModel_model_body)],
+            )
+            body.append(ReadingSensorModel_model)
+            ReadingSensorModel_covariance = FunctionDef(
+                f"{reading_type.typename}::CovarianceT",
+                f"{reading_type.typename}SensorModel::covariance",
+                modifier="",
+                args=standard_args,
+                body=[Escape(reading_type.SensorModel_covariance_body)],
+            )
+            body.append(ReadingSensorModel_covariance)
+            ReadingSensorModel_jacobian = FunctionDef(
+                f"{reading_type.typename}::SensorJacobianT",
+                f"{reading_type.typename}SensorModel::jacobian",
+                modifier="",
+                args=standard_args,
+                body=[Escape(reading_type.SensorModel_jacobian_body)],
+            )
+            body.append(ReadingSensorModel_jacobian)
     else:  # extras['enable_EKF'] == False
         standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
         if inserts["enable_calibration"]:
@@ -1458,7 +1515,7 @@ def source_from_ast(inserts, extras):
     return src.compile(CompileState(indent=2))
 
 
-def _compile_impl(args, inserts, name, hpp, cpp, *, extras, human_diff=False):
+def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     # Compilation
 
     if args.templates is None:
@@ -1468,6 +1525,8 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras, human_diff=False):
             success=False,
         )
 
+    # assert isinstance(args.templates, str)
+    # templates_base_path = dirname(args.templates)
     templates = _parse_raw_templates(args.templates)
     source_template = templates[name][cpp]
     # TODO(buck): This won't scale well to organizing templates in folders
@@ -1479,29 +1538,9 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras, human_diff=False):
         loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
     )
     source_template = env.get_template(name + cpp)
-    old_source_str = source_template.render(**inserts)
 
     header_str = "\n".join(header_from_ast(inserts, extras))
     source_str = "\n".join(source_from_ast(inserts, extras))
-
-    if human_diff and extras["enable_EKF"]:
-        print("Human Diff")
-        for idx, (old_line, new_line) in enumerate(
-            zip_longest(
-                filter(
-                    lambda x: not x.lstrip().startswith("// clang-format"),
-                    old_source_str.split("\n"),
-                ),
-                filter(
-                    lambda x: not x.lstrip().startswith("// clang-format"),
-                    source_str.split("\n"),
-                ),
-                fillvalue="",
-            )
-        ):
-            print(f"{idx:4d}: {old_line.ljust(80)} | {new_line.ljust(80)}".rstrip())
-
-        1 / 0
 
     with open(args.header, "w") as header_file:
         with open(args.source, "w") as source_file:
