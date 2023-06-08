@@ -1,10 +1,8 @@
 import argparse
 import logging
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from dataclasses import dataclass
-from itertools import chain, zip_longest
-from os import scandir, walk
-from os.path import dirname
+from itertools import chain
 from typing import Any, List, Tuple
 
 from formak.ast_tools import (
@@ -29,8 +27,6 @@ from formak.ast_tools import (
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-from jinja2.exceptions import TemplateNotFound
 from sympy import Symbol, ccode, diff
 
 from formak import common
@@ -1486,7 +1482,7 @@ def source_from_ast(inserts, extras):
     return src.compile(CompileState(indent=2))
 
 
-def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
+def _compile_impl(args, *, inserts, extras):
     # Compilation
 
     if args.header is None or args.source is None:
@@ -1498,11 +1494,6 @@ def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
 
     templates_base_path = "py/formak/templates/"
     extras["template_options"] = TemplateOptions(base=templates_base_path)
-
-    env = Environment(
-        loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
-    )
-    source_template = env.get_template(name + cpp)
 
     header_str = "\n".join(header_from_ast(inserts, extras))
     source_str = "\n".join(source_from_ast(inserts, extras))
@@ -1543,7 +1534,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
         config=config,
     )
 
-    return _compile_impl(args, inserts, "formak_model", ".h", ".cpp", extras=extras)
+    return _compile_impl(args, inserts=inserts, extras=extras)
 
 
 def compile_ekf(
@@ -1585,4 +1576,4 @@ def compile_ekf(
         config=config,
     )
 
-    return _compile_impl(args, inserts, "formak_ekf", ".hpp", ".cpp", extras=extras)
+    return _compile_impl(args, inserts=inserts, extras=extras)
