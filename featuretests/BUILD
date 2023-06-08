@@ -120,26 +120,17 @@ py_binary(
     deps = ["//py:formak"],
 )
 
-filegroup(
-    name = "ast-templates",
-    srcs = [
-        "ast_code_generation/templates/clamp.cpp",
-    ],
-    visibility = ["//visibility:public"],
-)
-
 run_binary(
     name = "ast-generate-cpp",
-    srcs = [":ast-templates"],
     outs = [
         "generated/example.cpp",
         "generated/example.h",
     ],
     args = [
-        "$(locations :ast-templates)",
         "$(location generated/example.h)",
         "$(location generated/example.cpp)",
     ],
+    srcs = ["//py:templates"],
     tool = "ast-generate-cpp-tool",
 )
 

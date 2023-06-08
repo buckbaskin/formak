@@ -17,7 +17,6 @@ from formak.ast_tools import (
     Namespace,
     Return,
     SourceFile,
-    TemplateOptions,
     UsingDeclaration,
 )
 
@@ -34,7 +33,7 @@ MEMBERS = [
 ]
 
 
-def header_definition(template_options):
+def header_definition():
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
@@ -107,7 +106,7 @@ def header_definition(template_options):
     return header
 
 
-def source_definition(template_options):
+def source_definition():
     body = [
         ConstructorDefinition("State"),
         ConstructorDefinition(
@@ -130,7 +129,7 @@ def source_definition(template_options):
             ],
             modifier="",
             body=[
-                FromFileTemplate(template_options, "clamp.cpp"),
+                FromFileTemplate("test/clamp.cpp", inserts={}),
             ],
         ),
     ]
@@ -143,20 +142,12 @@ def source_definition(template_options):
     return source
 
 
-def parse_templates(template_paths):
-    target = "templates/"
-    base, _ = template_paths.split(target)
-    return TemplateOptions(base=base + target)
-
-
-def main(template_paths, header_location, source_location):
+def main(header_location, source_location):
     logging.debug("\n\nDebug Header!\n")
-
-    template_options = parse_templates(template_paths)
 
     with open(header_location, "w") as f:
         for idx, line in enumerate(
-            header_definition(template_options).compile(CompileState(indent=2))
+            header_definition().compile(CompileState(indent=2))
         ):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
@@ -165,7 +156,7 @@ def main(template_paths, header_location, source_location):
 
     with open(source_location, "w") as f:
         for idx, line in enumerate(
-            source_definition(template_options).compile(CompileState(indent=2))
+            source_definition().compile(CompileState(indent=2))
         ):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
@@ -174,4 +165,4 @@ def main(template_paths, header_location, source_location):
 if __name__ == "__main__":
     import sys
 
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[2])

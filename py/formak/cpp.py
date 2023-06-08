@@ -23,7 +23,6 @@ from formak.ast_tools import (
     Return,
     SourceFile,
     Templated,
-    TemplateOptions,
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
@@ -603,6 +602,18 @@ class ExtendedKalmanFilter:
         return prefix + "\n" + body.compile() + "\n" + suffix
 
 
+ExtrasT = namedtuple(
+    "ExtrasT",
+    [
+        "arglist_state",
+        "arglist_control",
+        "arglist_calibration",
+        "enable_EKF",
+        "sensorlist",
+    ],
+)
+
+
 def _generate_model_function_bodies(
     header_location, namespace, symbolic_model, calibration_map, config
 ):
@@ -628,12 +639,13 @@ def _generate_model_function_bodies(
         "State_options_constructor_initializer_list": generator.state_generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
     }
-    extras = {
-        "arglist_state": generator.arglist_state,
-        "arglist_control": generator.arglist_control,
-        "arglist_calibration": generator.arglist_calibration,
-        "enable_EKF": False,
-    }
+    extras = ExtrasT(
+        arglist_state=generator.arglist_state,
+        arglist_control=generator.arglist_control,
+        arglist_calibration=generator.arglist_calibration,
+        enable_EKF=False,
+        sensorlist={},
+    )
 
     return inserts, extras
 
@@ -682,13 +694,13 @@ def _generate_ekf_function_bodies(
         "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
         "State_size": generator.state_size,
     }
-    extras = {
-        "arglist_state": generator.arglist_state,
-        "arglist_control": generator.arglist_control,
-        "arglist_calibration": generator.arglist_calibration,
-        "enable_EKF": True,
-        "sensorlist": generator.sensorlist,
-    }
+    extras = ExtrasT(
+        arglist_state=generator.arglist_state,
+        arglist_control=generator.arglist_control,
+        arglist_calibration=generator.arglist_calibration,
+        enable_EKF=True,
+        sensorlist=generator.sensorlist,
+    )
     return inserts, extras
 
 
@@ -708,8 +720,7 @@ def header_from_ast(inserts, extras):
         "StateOptions",
         bases=[],
         body=[
-            MemberDeclaration("double", member, 0.0)
-            for member in extras["arglist_state"]
+            MemberDeclaration("double", member, 0.0) for member in extras.arglist_state
         ],
     )
     State = ClassDef(
@@ -746,7 +757,7 @@ def header_from_ast(inserts, extras):
                             ],
                         ),
                     )
-                    for idx, name in enumerate(extras["arglist_state"])
+                    for idx, name in enumerate(extras.arglist_state)
                 ]
             )
         )
@@ -766,7 +777,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration("double", member, 0.0)
-                for member in extras["arglist_control"]
+                for member in extras.arglist_control
             ],
         )
         Control = ClassDef(
@@ -805,7 +816,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras["arglist_control"])
+                        for idx, name in enumerate(extras.arglist_control)
                     ]
                 )
             )
@@ -822,7 +833,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration("double", member, 0.0)
-                for member in extras["arglist_calibration"]
+                for member in extras.arglist_calibration
             ],
         )
         Calibration = ClassDef(
@@ -863,7 +874,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras["arglist_calibration"])
+                        for idx, name in enumerate(extras.arglist_calibration)
                     ]
                 )
             )
@@ -928,14 +939,12 @@ def header_from_ast(inserts, extras):
                 args=args,
                 modifier="",
                 body=[
-                    FromFileTemplate(
-                        extras["template_options"], "sensor_model.hpp", inserts=inserts
-                    ),
+                    FromFileTemplate("sensor_model.hpp", inserts=inserts),
                 ],
             ),
         )
 
-    if extras["enable_EKF"]:
+    if extras.enable_EKF:
         Covariance = ClassDef(
             "struct",
             "Covariance",
@@ -972,7 +981,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras["arglist_state"])
+                        for idx, name in enumerate(extras.arglist_state)
                     ]
                 )
             )
@@ -993,7 +1002,7 @@ def header_from_ast(inserts, extras):
         body.append(StateAndVariance)
         SensorId = EnumClassDef(
             "SensorId",
-            members=[f"{name.upper()}" for name, _, _ in extras["sensorlist"]],
+            members=[f"{name.upper()}" for name, _, _ in extras.sensorlist],
         )
         body.append(SensorId)
         for reading_type in inserts["reading_types"]:
@@ -1175,7 +1184,6 @@ def header_from_ast(inserts, extras):
                         modifier="",
                         body=[
                             FromFileTemplate(
-                                extras["template_options"],
                                 "innovations.hpp",
                                 inserts=inserts,
                             )
@@ -1281,7 +1289,7 @@ def header_from_ast(inserts, extras):
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
-    if extras["enable_EKF"]:
+    if extras.enable_EKF:
         includes.append("#include <any>")
         includes.append("#include <optional>")
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
@@ -1299,7 +1307,7 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(f"options.{name}" for name in extras["arglist_state"]),
+                    ", ".join(f"options.{name}" for name in extras.arglist_state),
                 ),
             ],
         ),
@@ -1315,9 +1323,7 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(
-                        f"options.{name}" for name in extras["arglist_calibration"]
-                    ),
+                    ", ".join(f"options.{name}" for name in extras.arglist_calibration),
                 ),
             ],
         )
@@ -1334,14 +1340,14 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(f"options.{name}" for name in extras["arglist_control"]),
+                    ", ".join(f"options.{name}" for name in extras.arglist_control),
                 ),
             ],
         )
         body.append(ControlDefaultConstructor)
         body.append(ControlConstructor)
 
-    if extras["enable_EKF"]:
+    if extras.enable_EKF:
         standard_args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
         if inserts["enable_calibration"]:
             standard_args.append(Arg("const Calibration&", "input_calibration"))
@@ -1353,9 +1359,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                FromFileTemplate(
-                    extras["template_options"], "process_model.cpp", inserts=inserts
-                ),
+                FromFileTemplate("process_model.cpp", inserts=inserts),
             ],
         )
         body.append(EKF_process_model)
@@ -1459,7 +1463,7 @@ def source_from_ast(inserts, extras):
                 body=[Escape(reading_type.SensorModel_jacobian_body)],
             )
             body.append(ReadingSensorModel_jacobian)
-    else:  # extras['enable_EKF'] == False
+    else:  # extras.enable_EKF == False
         standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
         if inserts["enable_calibration"]:
             standard_args.append(Arg("const Calibration&", "input_calibration"))
@@ -1491,9 +1495,6 @@ def _compile_impl(args, *, inserts, extras):
         return CppCompileResult(
             success=False,
         )
-
-    templates_base_path = "py/formak/templates/"
-    extras["template_options"] = TemplateOptions(base=templates_base_path)
 
     header_str = "\n".join(header_from_ast(inserts, extras))
     source_str = "\n".join(source_from_ast(inserts, extras))

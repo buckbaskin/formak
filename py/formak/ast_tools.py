@@ -7,14 +7,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 
-TemplateOptions = namedtuple(
-    "TemplateOptions",
-    [
-        "base",
-    ],
-)
-
-
 @dataclass
 class CompileState:
     indent: int = 0
@@ -380,9 +372,8 @@ class Templated(BaseAst):
 
 @dataclass
 class FromFileTemplate(BaseAst):
-    _fields = ("template_options", "name", "inserts")
+    _fields = ("name", "inserts")
 
-    template_options: Union[str, os.PathLike]
     name: str
     inserts: Optional[Dict[str, Any]] = None
 
@@ -391,10 +382,10 @@ class FromFileTemplate(BaseAst):
         if self.inserts is None:
             self.inserts = {}
 
-        templates_base_path = self.template_options.base
+        TEMPLATES_BASE_PATH = "py/formak/templates/"
         # jinja
         env = Environment(
-            loader=FileSystemLoader(templates_base_path), autoescape=select_autoescape()
+            loader=FileSystemLoader(TEMPLATES_BASE_PATH), autoescape=select_autoescape()
         )
 
         # load template
@@ -403,13 +394,13 @@ class FromFileTemplate(BaseAst):
         except TemplateNotFound:
             print("Debugging TemplateNotFound")
             print("Trying to scandir")
-            with os.scandir(templates_base_path) as it:
+            with os.scandir(TEMPLATES_BASE_PATH) as it:
                 if len(list(it)) == 0:
                     print("No Paths in scandir")
                     raise
 
             print("Walking")
-            for root, _, files in os.walk(templates_base_path):
+            for root, _, files in os.walk(TEMPLATES_BASE_PATH):
                 depth = len(root.split("/"))
                 print("{}Root: {!s}".format(" " * depth, root))
                 for filename in files:

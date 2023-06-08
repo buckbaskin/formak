@@ -17,6 +17,9 @@ black $DEFAULT ;
 echo "isort"
 isort --profile black py/ featuretests/;
 
+echo "codespell"
+codespell py/ featuretests/
+
 echo "clang-format"
 SEARCHRESULT=$(ag --cpp -g ".*" $DEFAULT) ;
 clang-format-12 -i -style=file $SEARCHRESULT

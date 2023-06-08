@@ -26,6 +26,7 @@ filegroup(
         [
             "formak/templates/*.hpp",
             "formak/templates/*.cpp",
+            "formak/templates/test/*.cpp",
         ],
         allow_empty = False,
     ),
