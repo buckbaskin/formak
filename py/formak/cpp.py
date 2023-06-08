@@ -696,37 +696,8 @@ def _generate_ekf_function_bodies(
     return inserts, extras
 
 
-def _parse_raw_templates(arg, verbose=False):
-    raw_templates = arg.split(" ")
-    templates = defaultdict(dict)
-
-    EXPECT_PREFIX = "py/formak/templates/"
-
-    for template_str in raw_templates:
-        if verbose:
-            print(f"Examining template: {template_str}")
-        if not template_str.startswith(EXPECT_PREFIX):
-            raise ValueError(
-                f"Template {template_str} did not start with expected prefix {EXPECT_PREFIX}"
-            )
-
-        if template_str.endswith(".cpp"):
-            templates[template_str[len(EXPECT_PREFIX) : -4]][".cpp"] = template_str
-        elif template_str.endswith(".h"):
-            templates[template_str[len(EXPECT_PREFIX) : -2]][".h"] = template_str
-        elif template_str.endswith(".hpp"):
-            templates[template_str[len(EXPECT_PREFIX) : -4]][".hpp"] = template_str
-        else:
-            raise ValueError(
-                f"Template {template_str} did not end with expected suffix"
-            )
-
-    return templates
-
-
 def _compile_argparse():
     parser = argparse.ArgumentParser(prog="generator.py")
-    parser.add_argument("--templates")
     parser.add_argument("--header")
     parser.add_argument("--source")
     parser.add_argument("--namespace")
@@ -1518,20 +1489,14 @@ def source_from_ast(inserts, extras):
 def _compile_impl(args, inserts, name, hpp, cpp, *, extras):
     # Compilation
 
-    if args.templates is None:
+    if args.header is None or args.source is None:
         print('"Rendering" to stdout')
         print(inserts)
         return CppCompileResult(
             success=False,
         )
 
-    # assert isinstance(args.templates, str)
-    # templates_base_path = dirname(args.templates)
-    templates = _parse_raw_templates(args.templates)
-    source_template = templates[name][cpp]
-    # TODO(buck): This won't scale well to organizing templates in folders
-    # TODO(buck): clean up arguments to the script
-    templates_base_path = dirname(source_template)
+    templates_base_path = "py/formak/templates/"
     extras["template_options"] = TemplateOptions(base=templates_base_path)
 
     env = Environment(
