@@ -70,7 +70,9 @@ class BasicBlock:
 class Model:
     """C++ implementation of the model."""
 
-    def __init__(self, symbolic_model, calibration_map, config):
+    def __init__(
+        self, symbolic_model, calibration_map, namespace, header_include, config
+    ):
         # TODO(buck): Enable mypy for type checking
         # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
         # assert isinstance(symbolic_model, ui.Model)
@@ -79,6 +81,9 @@ class Model:
         assert isinstance(config, Config)
 
         self.enable_EKF = False
+        self.namespace = namespace
+        self.header_include = header_include
+
         self.sensorlist = {}
 
         self.state_size = len(symbolic_model.state)
@@ -123,8 +128,6 @@ class Model:
                 if len(extra_from_map) > 0:
                     extra = f"\nExtra: {extra_from_map}"
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
-
-        self.state_generator = StateStruct(self.arglist_state)
 
         self._model = BasicBlock(self._translate_model(symbolic_model), indent=4)
 
@@ -206,6 +209,8 @@ class ExtendedKalmanFilter:
         process_noise,
         sensor_models,
         sensor_noises,
+        namespace,
+        header_include,
         config,
         calibration_map=None,
     ):
@@ -215,6 +220,8 @@ class ExtendedKalmanFilter:
         assert isinstance(process_noise, dict)
 
         self.enable_EKF = True
+        self.namespace = namespace
+        self.header_include = header_include
 
         # TODO(buck): This is lots of duplication with the model
         self.state_size = len(state_model.state)
@@ -569,7 +576,6 @@ class ExtendedKalmanFilter:
 def _generate_model_function_bodies(
     header_location, namespace, symbolic_model, calibration_map, config
 ):
-    generator = Model(symbolic_model, calibration_map, config)
 
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
@@ -578,12 +584,11 @@ def _generate_model_function_bodies(
     else:
         header_include = "generated_to_stdout.h"
 
-    inserts = {
-        "namespace": namespace,
-        "header_include": header_include,
-    }
+    generator = Model(
+        symbolic_model, calibration_map, namespace, header_include, config
+    )
 
-    return inserts, generator
+    return generator
 
 
 def _generate_ekf_function_bodies(
@@ -596,15 +601,6 @@ def _generate_ekf_function_bodies(
     calibration_map,
     config,
 ):
-    generator = ExtendedKalmanFilter(
-        state_model=state_model,
-        process_noise=process_noise,
-        sensor_models=sensor_models,
-        sensor_noises=sensor_noises,
-        calibration_map=calibration_map,
-        config=config,
-    )
-
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
     if header_location is not None and "generated/" in header_location:
@@ -612,12 +608,18 @@ def _generate_ekf_function_bodies(
     else:
         header_include = "generated_to_stdout.h"
 
-    # TODO(buck): Eventually should split out the code generation for the header and the source
-    inserts = {
-        "namespace": namespace,
-        "header_include": header_include,
-    }
-    return inserts, generator
+    generator = ExtendedKalmanFilter(
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        namespace=namespace,
+        header_include=header_include,
+        config=config,
+    )
+
+    return generator
 
 
 def _compile_argparse():
@@ -630,13 +632,14 @@ def _compile_argparse():
     return args
 
 
-def header_from_ast(inserts, extras):
+def header_from_ast(*, generator):
     StateOptions = ClassDef(
         "struct",
         "StateOptions",
         bases=[],
         body=[
-            MemberDeclaration("double", member, 0.0) for member in extras.arglist_state
+            MemberDeclaration("double", member, 0.0)
+            for member in generator.arglist_state
         ],
     )
     State = ClassDef(
@@ -644,7 +647,7 @@ def header_from_ast(inserts, extras):
         "State",
         bases=[],
         body=[
-            MemberDeclaration("static constexpr size_t", "rows", extras.state_size),
+            MemberDeclaration("static constexpr size_t", "rows", generator.state_size),
             MemberDeclaration("static constexpr size_t", "cols", 1),
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
@@ -673,7 +676,7 @@ def header_from_ast(inserts, extras):
                             ],
                         ),
                     )
-                    for idx, name in enumerate(extras.arglist_state)
+                    for idx, name in enumerate(generator.arglist_state)
                 ]
             )
         )
@@ -686,14 +689,14 @@ def header_from_ast(inserts, extras):
         State,
     ]
 
-    if extras.enable_control():
+    if generator.enable_control():
         ControlOptions = ClassDef(
             "struct",
             "ControlOptions",
             bases=[],
             body=[
                 MemberDeclaration("double", member, 0.0)
-                for member in extras.arglist_control
+                for member in generator.arglist_control
             ],
         )
         Control = ClassDef(
@@ -702,7 +705,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration(
-                    "static constexpr size_t", "rows", extras.control_size
+                    "static constexpr size_t", "rows", generator.control_size
                 ),
                 MemberDeclaration("static constexpr size_t", "cols", 1),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
@@ -732,7 +735,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras.arglist_control)
+                        for idx, name in enumerate(generator.arglist_control)
                     ]
                 )
             )
@@ -742,14 +745,14 @@ def header_from_ast(inserts, extras):
         )
         body.append(ControlOptions)
         body.append(Control)
-    if extras.enable_calibration():
+    if generator.enable_calibration():
         CalibrationOptions = ClassDef(
             "struct",
             "CalibrationOptions",
             bases=[],
             body=[
                 MemberDeclaration("double", member, 0.0)
-                for member in extras.arglist_calibration
+                for member in generator.arglist_calibration
             ],
         )
         Calibration = ClassDef(
@@ -758,7 +761,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration(
-                    "static constexpr size_t", "rows", extras.calibration_size
+                    "static constexpr size_t", "rows", generator.calibration_size
                 ),
                 MemberDeclaration("static constexpr size_t", "cols", 1),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
@@ -790,7 +793,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras.arglist_calibration)
+                        for idx, name in enumerate(generator.arglist_calibration)
                     ]
                 )
             )
@@ -837,7 +840,7 @@ def header_from_ast(inserts, extras):
             modifier="",
         )
 
-    def StateAndVariance_sensor_model(*, enable_control, enable_calibration, inserts):
+    def StateAndVariance_sensor_model(*, enable_control, enable_calibration):
         args = [
             Arg("const StateAndVariance&", "input"),
         ]
@@ -858,21 +861,25 @@ def header_from_ast(inserts, extras):
                     FromFileTemplate(
                         "sensor_model.hpp",
                         inserts={
-                            "enable_calibration": extras.enable_calibration(),
+                            "enable_calibration": generator.enable_calibration(),
                         },
                     ),
                 ],
             ),
         )
 
-    if extras.enable_EKF:
+    if generator.enable_EKF:
         Covariance = ClassDef(
             "struct",
             "Covariance",
             bases=[],
             body=[
-                MemberDeclaration("static constexpr size_t", "rows", extras.state_size),
-                MemberDeclaration("static constexpr size_t", "cols", extras.state_size),
+                MemberDeclaration(
+                    "static constexpr size_t", "rows", generator.state_size
+                ),
+                MemberDeclaration(
+                    "static constexpr size_t", "cols", generator.state_size
+                ),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ]
             + list(
@@ -898,7 +905,7 @@ def header_from_ast(inserts, extras):
                                 ],
                             ),
                         )
-                        for idx, name in enumerate(extras.arglist_state)
+                        for idx, name in enumerate(generator.arglist_state)
                     ]
                 )
             )
@@ -919,10 +926,10 @@ def header_from_ast(inserts, extras):
         body.append(StateAndVariance)
         SensorId = EnumClassDef(
             "SensorId",
-            members=[f"{name.upper()}" for name, _, _ in extras.sensorlist],
+            members=[f"{name.upper()}" for name, _, _ in generator.sensorlist],
         )
         body.append(SensorId)
-        for reading_type in extras.reading_types():
+        for reading_type in generator.reading_types():
             body.append(
                 ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
             )
@@ -941,7 +948,7 @@ def header_from_ast(inserts, extras):
             )
 
             standard_args = [Arg("const StateAndVariance&", "input")]
-            if extras.enable_calibration():
+            if generator.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -966,11 +973,11 @@ def header_from_ast(inserts, extras):
                         ),
                         UsingDeclaration(
                             "KalmanGainT",
-                            f"Eigen::Matrix<double, {extras.state_size}, {reading_type.size}>",
+                            f"Eigen::Matrix<double, {generator.state_size}, {reading_type.size}>",
                         ),
                         UsingDeclaration(
                             "SensorJacobianT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {extras.state_size}>",
+                            f"Eigen::Matrix<double, {reading_type.size}, {generator.state_size}>",
                         ),
                         UsingDeclaration(
                             "SensorModel", f"{reading_type.typename}SensorModel"
@@ -1027,7 +1034,7 @@ def header_from_ast(inserts, extras):
             )
 
             standard_args = [Arg("const StateAndVariance&", "input")]
-            if extras.enable_calibration():
+            if generator.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -1072,25 +1079,24 @@ def header_from_ast(inserts, extras):
                 Escape("public:"),
                 UsingDeclaration(
                     "CovarianceT",
-                    f"Eigen::Matrix<double, {extras.control_size}, {extras.control_size}>",
+                    f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
                 ),
                 UsingDeclaration(
                     "ProcessJacobianT",
-                    f"Eigen::Matrix<double, {extras.state_size}, {extras.state_size}>",
+                    f"Eigen::Matrix<double, {generator.state_size}, {generator.state_size}>",
                 ),
                 UsingDeclaration(
                     "ControlJacobianT",
-                    f"Eigen::Matrix<double, {extras.state_size}, {extras.control_size}>",
+                    f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
                 ),
                 UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
                 StateAndVariance_process_model(
-                    enable_control=extras.enable_control(),
-                    enable_calibration=extras.enable_calibration(),
+                    enable_control=generator.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
                 ),
                 StateAndVariance_sensor_model(
-                    enable_control=extras.enable_control(),
-                    enable_calibration=extras.enable_calibration(),
-                    inserts=inserts,
+                    enable_control=generator.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
                 ),
                 Templated(
                     [Arg("typename", "ReadingT")],
@@ -1177,20 +1183,20 @@ def header_from_ast(inserts, extras):
             body=[
                 Escape("public:"),
                 ExtendedKalmanFilterProcessModel_model(
-                    enable_calibration=extras.enable_calibration(),
-                    enable_control=extras.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_process_jacobian(
-                    enable_calibration=extras.enable_calibration(),
-                    enable_control=extras.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_control_jacobian(
-                    enable_calibration=extras.enable_calibration(),
-                    enable_control=extras.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_covariance(
-                    enable_calibration=extras.enable_calibration(),
-                    enable_control=extras.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
                 ),
             ],
         )
@@ -1202,24 +1208,27 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 Escape("public:"),
-                State_model(extras.enable_control(), extras.enable_calibration()),
+                State_model(
+                    enable_control=generator.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                ),
             ],
         )
 
         body.append(Model)
 
-    namespace = Namespace(name=inserts["namespace"], body=body)
+    namespace = Namespace(name=generator.namespace, body=body)
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
-    if extras.enable_EKF:
+    if generator.enable_EKF:
         includes.append("#include <any>")
         includes.append("#include <optional>")
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
     return header.compile(CompileState(indent=2))
 
 
-def source_from_ast(inserts, extras):
+def source_from_ast(*, generator):
     body = [
         ConstructorDefinition(
             "State", args=[], initializer_list=[("data", "DataT::Zero()")]
@@ -1230,13 +1239,13 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(f"options.{name}" for name in extras.arglist_state),
+                    ", ".join(f"options.{name}" for name in generator.arglist_state),
                 ),
             ],
         ),
     ]
 
-    if extras.enable_calibration():
+    if generator.enable_calibration():
         CalibrationDefaultConstructor = ConstructorDefinition(
             "Calibration", args=[], initializer_list=[("data", "DataT::Zero()")]
         )
@@ -1246,14 +1255,16 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(f"options.{name}" for name in extras.arglist_calibration),
+                    ", ".join(
+                        f"options.{name}" for name in generator.arglist_calibration
+                    ),
                 ),
             ],
         )
         body.append(CalibrationDefaultConstructor)
         body.append(CalibrationConstructor)
 
-    if extras.enable_control():
+    if generator.enable_control():
         ControlDefaultConstructor = ConstructorDefinition(
             "Control", args=[], initializer_list=[("data", "DataT::Zero()")]
         )
@@ -1263,18 +1274,18 @@ def source_from_ast(inserts, extras):
             initializer_list=[
                 (
                     "data",
-                    ", ".join(f"options.{name}" for name in extras.arglist_control),
+                    ", ".join(f"options.{name}" for name in generator.arglist_control),
                 ),
             ],
         )
         body.append(ControlDefaultConstructor)
         body.append(ControlConstructor)
 
-    if extras.enable_EKF:
+    if generator.enable_EKF:
         standard_args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-        if extras.enable_calibration():
+        if generator.enable_calibration():
             standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if extras.enable_control():
+        if generator.enable_control():
             standard_args.append(Arg("const Control&", "input_control"))
         EKF_process_model = FunctionDef(
             "StateAndVariance",
@@ -1285,8 +1296,8 @@ def source_from_ast(inserts, extras):
                 FromFileTemplate(
                     "process_model.cpp",
                     inserts={
-                        "enable_control": extras.enable_control(),
-                        "enable_calibration": extras.enable_calibration(),
+                        "enable_control": generator.enable_control(),
+                        "enable_calibration": generator.enable_calibration(),
                     },
                 ),
             ],
@@ -1298,7 +1309,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(extras.process_model_body()),
+                Escape(generator.process_model_body()),
             ],
         )
         body.append(EKFPM_model)
@@ -1308,7 +1319,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(extras.process_jacobian_body()),
+                Escape(generator.process_jacobian_body()),
             ],
         )
         body.append(EKFPM_process_jacobian)
@@ -1318,7 +1329,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(extras.control_jacobian_body()),
+                Escape(generator.control_jacobian_body()),
             ],
         )
         body.append(EKFPM_control_jacobian)
@@ -1328,16 +1339,16 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(extras.control_covariance_body()),
+                Escape(generator.control_covariance_body()),
             ],
         )
         body.append(EKFPM_covariance)
 
-        for reading_type in extras.reading_types():
+        for reading_type in generator.reading_types():
             standard_args = [
                 Arg("const StateAndVariance&", "input"),
             ]
-            if extras.enable_calibration():
+            if generator.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -1388,11 +1399,11 @@ def source_from_ast(inserts, extras):
                 body=[Escape(reading_type.SensorModel_jacobian_body)],
             )
             body.append(ReadingSensorModel_jacobian)
-    else:  # extras.enable_EKF == False
+    else:  # generator.enable_EKF == False
         standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
-        if extras.enable_calibration():
+        if generator.enable_calibration():
             standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if extras.enable_control():
+        if generator.enable_control():
             standard_args.append(Arg("const Control&", "input_control"))
         Model_model = FunctionDef(
             "State",
@@ -1400,29 +1411,28 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(extras.model_body()),
+                Escape(generator.model_body()),
             ],
         )
         body.append(Model_model)
 
-    namespace = Namespace(name=inserts["namespace"], body=body)
-    includes = [f"#include <{inserts['header_include']}>"]
+    namespace = Namespace(name=generator.namespace, body=body)
+    includes = [f"#include <{generator.header_include}>"]
     src = SourceFile(includes=includes, namespaces=[namespace])
     return src.compile(CompileState(indent=2))
 
 
-def _compile_impl(args, *, inserts, extras):
+def _compile_impl(args, *, generator):
     # Compilation
 
     if args.header is None or args.source is None:
         print('"Rendering" to stdout')
-        print(inserts)
         return CppCompileResult(
             success=False,
         )
 
-    header_str = "\n".join(header_from_ast(inserts, extras))
-    source_str = "\n".join(source_from_ast(inserts, extras))
+    header_str = "\n".join(header_from_ast(generator=generator))
+    source_str = "\n".join(source_from_ast(generator=generator))
 
     with open(args.header, "w") as header_file:
         with open(args.source, "w") as source_file:
@@ -1452,7 +1462,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
     if args.header is None:
         logger.warning("No Header specified, so output to stdout")
-    inserts, extras = _generate_model_function_bodies(
+    generator = _generate_model_function_bodies(
         header_location=args.header,
         namespace=args.namespace,
         symbolic_model=symbolic_model,
@@ -1460,7 +1470,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
         config=config,
     )
 
-    return _compile_impl(args, inserts=inserts, extras=extras)
+    return _compile_impl(args, generator=generator)
 
 
 def compile_ekf(
@@ -1491,7 +1501,7 @@ def compile_ekf(
 
     if args.header is None:
         logger.warning("No Header specified, so output to stdout")
-    inserts, extras = _generate_ekf_function_bodies(
+    generator = _generate_ekf_function_bodies(
         header_location=args.header,
         namespace=args.namespace,
         state_model=state_model,
@@ -1502,4 +1512,4 @@ def compile_ekf(
         config=config,
     )
 
-    return _compile_impl(args, inserts=inserts, extras=extras)
+    return _compile_impl(args, generator=generator)
