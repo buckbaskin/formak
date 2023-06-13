@@ -146,18 +146,14 @@ def main(header_location, source_location):
     logging.debug("\n\nDebug Header!\n")
 
     with open(header_location, "w") as f:
-        for idx, line in enumerate(
-            header_definition().compile(CompileState(indent=2))
-        ):
+        for idx, line in enumerate(header_definition().compile(CompileState(indent=2))):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 
     logging.debug("\n\nDebug Source!\n")
 
     with open(source_location, "w") as f:
-        for idx, line in enumerate(
-            source_definition().compile(CompileState(indent=2))
-        ):
+        for idx, line in enumerate(source_definition().compile(CompileState(indent=2))):
             logging.debug(f"{str(idx).rjust(5)} | {line}")
             f.write("%s\n" % line)
 

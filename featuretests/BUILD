@@ -122,6 +122,7 @@ py_binary(
 
 run_binary(
     name = "ast-generate-cpp",
+    srcs = ["//py:templates"],
     outs = [
         "generated/example.cpp",
         "generated/example.h",
@@ -130,7 +131,6 @@ run_binary(
         "$(location generated/example.h)",
         "$(location generated/example.cpp)",
     ],
-    srcs = ["//py:templates"],
     tool = "ast-generate-cpp-tool",
 )
 

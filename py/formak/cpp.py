@@ -67,14 +67,6 @@ class BasicBlock:
             yield f"{' ' * self._indent}{lvalue} = {cc_expr};"
 
 
-class StateStruct:
-    def __init__(self, arglist):
-        self.arglist = arglist
-
-    def state_options_constructor_initializer_list(self):
-        return "data(" + ", ".join(f"options.{name}" for name in self.arglist) + ")"
-
-
 class Model:
     """C++ implementation of the model."""
 
@@ -183,22 +175,8 @@ class Model:
     def enable_control(self):
         return self.control_size > 0
 
-    def control_options_constructor_initializer_list(self):
-        return (
-            "data("
-            + ", ".join(f"options.{name}" for name in self.arglist_control)
-            + ")"
-        )
-
     def enable_calibration(self):
         return self.calibration_size > 0
-
-    def calibration_options_constructor_initializer_list(self):
-        return (
-            "data("
-            + ", ".join(f"options.{name}" for name in self.arglist_calibration)
-            + ")"
-        )
 
 
 # size is the size of the reading for the EKF, not the size of the type
@@ -425,11 +403,6 @@ class ExtendedKalmanFilter:
         )
         return "State({" + content + "});"
 
-    def state_options_constructor_initializer_list(self):
-        return (
-            "data(" + ", ".join(f"options.{name}" for name in self.arglist_state) + ")"
-        )
-
     def enable_control(self):
         return self.control_size > 0
 
@@ -457,22 +430,8 @@ class ExtendedKalmanFilter:
         suffix = f"{indent}return covariance;"
         return prefix + "\n" + body.compile() + "\n" + suffix
 
-    def control_options_constructor_initializer_list(self):
-        return (
-            "data("
-            + ", ".join(f"options.{name}" for name in self.arglist_control)
-            + ")"
-        )
-
     def enable_calibration(self):
         return self.calibration_size > 0
-
-    def calibration_options_constructor_initializer_list(self):
-        return (
-            "data("
-            + ", ".join(f"options.{name}" for name in self.arglist_calibration)
-            + ")"
-        )
 
     def _translate_sensor_model(self, sensor_model_mapping):
         subs_set = [
@@ -620,17 +579,8 @@ def _generate_model_function_bodies(
         header_include = "generated_to_stdout.h"
 
     inserts = {
-        "enable_calibration": generator.enable_calibration(),
-        "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
-        "Calibration_size": generator.calibration_size,
-        "enable_control": generator.enable_control(),
-        "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
-        "Control_size": generator.control_size,
-        "header_include": header_include,
-        "Model_model_body": generator.model_body(),
         "namespace": namespace,
-        "State_options_constructor_initializer_list": generator.state_generator.state_options_constructor_initializer_list(),
-        "State_size": generator.state_size,
+        "header_include": header_include,
     }
 
     return inserts, generator
@@ -664,21 +614,8 @@ def _generate_ekf_function_bodies(
 
     # TODO(buck): Eventually should split out the code generation for the header and the source
     inserts = {
-        "enable_calibration": generator.enable_calibration(),
-        "Calibration_options_constructor_initializer_list": generator.calibration_options_constructor_initializer_list(),
-        "Calibration_size": generator.calibration_size,
-        "enable_control": generator.enable_control(),
-        "Control_options_constructor_initializer_list": generator.control_options_constructor_initializer_list(),
-        "Control_size": generator.control_size,
-        "ExtendedKalmanFilterProcessModel_model_body": generator.process_model_body(),
-        "ExtendedKalmanFilterProcessModel_process_jacobian_body": generator.process_jacobian_body(),
-        "ExtendedKalmanFilterProcessModel_control_jacobian_body": generator.control_jacobian_body(),
-        "ExtendedKalmanFilterProcessModel_covariance_body": generator.control_covariance_body(),
-        "header_include": header_include,
         "namespace": namespace,
-        "reading_types": list(generator.reading_types()),
-        "State_options_constructor_initializer_list": generator.state_options_constructor_initializer_list(),
-        "State_size": generator.state_size,
+        "header_include": header_include,
     }
     return inserts, generator
 
@@ -707,7 +644,7 @@ def header_from_ast(inserts, extras):
         "State",
         bases=[],
         body=[
-            MemberDeclaration("static constexpr size_t", "rows", inserts["State_size"]),
+            MemberDeclaration("static constexpr size_t", "rows", extras.state_size),
             MemberDeclaration("static constexpr size_t", "cols", 1),
             UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ConstructorDeclaration(),  # No args constructor gets default constructor
@@ -749,7 +686,7 @@ def header_from_ast(inserts, extras):
         State,
     ]
 
-    if inserts["enable_control"]:
+    if extras.enable_control():
         ControlOptions = ClassDef(
             "struct",
             "ControlOptions",
@@ -765,7 +702,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration(
-                    "static constexpr size_t", "rows", inserts["Control_size"]
+                    "static constexpr size_t", "rows", extras.control_size
                 ),
                 MemberDeclaration("static constexpr size_t", "cols", 1),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
@@ -805,7 +742,7 @@ def header_from_ast(inserts, extras):
         )
         body.append(ControlOptions)
         body.append(Control)
-    if inserts["enable_calibration"]:
+    if extras.enable_calibration():
         CalibrationOptions = ClassDef(
             "struct",
             "CalibrationOptions",
@@ -821,7 +758,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 MemberDeclaration(
-                    "static constexpr size_t", "rows", inserts["Calibration_size"]
+                    "static constexpr size_t", "rows", extras.calibration_size
                 ),
                 MemberDeclaration("static constexpr size_t", "cols", 1),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
@@ -864,7 +801,7 @@ def header_from_ast(inserts, extras):
         body.append(CalibrationOptions)
         body.append(Calibration)
 
-    def State_model(enable_control, enable_calibration):
+    def State_model(*, enable_control, enable_calibration):
         args = [
             Arg("double", "dt"),
             Arg("const State&", "input_state"),
@@ -882,7 +819,7 @@ def header_from_ast(inserts, extras):
             modifier="",
         )
 
-    def StateAndVariance_process_model(enable_control, enable_calibration):
+    def StateAndVariance_process_model(*, enable_control, enable_calibration):
         args = [
             Arg("double", "dt"),
             Arg("const StateAndVariance&", "input_state"),
@@ -900,7 +837,7 @@ def header_from_ast(inserts, extras):
             modifier="",
         )
 
-    def StateAndVariance_sensor_model(enable_control, enable_calibration, inserts):
+    def StateAndVariance_sensor_model(*, enable_control, enable_calibration, inserts):
         args = [
             Arg("const StateAndVariance&", "input"),
         ]
@@ -918,7 +855,12 @@ def header_from_ast(inserts, extras):
                 args=args,
                 modifier="",
                 body=[
-                    FromFileTemplate("sensor_model.hpp", inserts=inserts),
+                    FromFileTemplate(
+                        "sensor_model.hpp",
+                        inserts={
+                            "enable_calibration": extras.enable_calibration(),
+                        },
+                    ),
                 ],
             ),
         )
@@ -929,12 +871,8 @@ def header_from_ast(inserts, extras):
             "Covariance",
             bases=[],
             body=[
-                MemberDeclaration(
-                    "static constexpr size_t", "rows", inserts["State_size"]
-                ),
-                MemberDeclaration(
-                    "static constexpr size_t", "cols", inserts["State_size"]
-                ),
+                MemberDeclaration("static constexpr size_t", "rows", extras.state_size),
+                MemberDeclaration("static constexpr size_t", "cols", extras.state_size),
                 UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
             ]
             + list(
@@ -984,7 +922,7 @@ def header_from_ast(inserts, extras):
             members=[f"{name.upper()}" for name, _, _ in extras.sensorlist],
         )
         body.append(SensorId)
-        for reading_type in inserts["reading_types"]:
+        for reading_type in extras.reading_types():
             body.append(
                 ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
             )
@@ -1003,7 +941,7 @@ def header_from_ast(inserts, extras):
             )
 
             standard_args = [Arg("const StateAndVariance&", "input")]
-            if inserts["enable_calibration"]:
+            if extras.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -1028,11 +966,11 @@ def header_from_ast(inserts, extras):
                         ),
                         UsingDeclaration(
                             "KalmanGainT",
-                            f"Eigen::Matrix<double, {inserts['State_size']}, {reading_type.size}>",
+                            f"Eigen::Matrix<double, {extras.state_size}, {reading_type.size}>",
                         ),
                         UsingDeclaration(
                             "SensorJacobianT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {inserts['State_size']}>",
+                            f"Eigen::Matrix<double, {reading_type.size}, {extras.state_size}>",
                         ),
                         UsingDeclaration(
                             "SensorModel", f"{reading_type.typename}SensorModel"
@@ -1089,7 +1027,7 @@ def header_from_ast(inserts, extras):
             )
 
             standard_args = [Arg("const StateAndVariance&", "input")]
-            if inserts["enable_calibration"]:
+            if extras.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -1134,23 +1072,24 @@ def header_from_ast(inserts, extras):
                 Escape("public:"),
                 UsingDeclaration(
                     "CovarianceT",
-                    f"Eigen::Matrix<double, {inserts['Control_size']}, {inserts['Control_size']}>",
+                    f"Eigen::Matrix<double, {extras.control_size}, {extras.control_size}>",
                 ),
                 UsingDeclaration(
                     "ProcessJacobianT",
-                    f"Eigen::Matrix<double, {inserts['State_size']}, {inserts['State_size']}>",
+                    f"Eigen::Matrix<double, {extras.state_size}, {extras.state_size}>",
                 ),
                 UsingDeclaration(
                     "ControlJacobianT",
-                    f"Eigen::Matrix<double, {inserts['State_size']}, {inserts['Control_size']}>",
+                    f"Eigen::Matrix<double, {extras.state_size}, {extras.control_size}>",
                 ),
                 UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
                 StateAndVariance_process_model(
-                    inserts["enable_control"], inserts["enable_calibration"]
+                    enable_control=extras.enable_control(),
+                    enable_calibration=extras.enable_calibration(),
                 ),
                 StateAndVariance_sensor_model(
-                    inserts["enable_control"],
-                    inserts["enable_calibration"],
+                    enable_control=extras.enable_control(),
+                    enable_calibration=extras.enable_calibration(),
                     inserts=inserts,
                 ),
                 Templated(
@@ -1163,7 +1102,7 @@ def header_from_ast(inserts, extras):
                         body=[
                             FromFileTemplate(
                                 "innovations.hpp",
-                                inserts=inserts,
+                                inserts={},
                             )
                         ],
                     ),
@@ -1176,7 +1115,9 @@ def header_from_ast(inserts, extras):
         )
         body.append(ExtendedKalmanFilter)
 
-        def ExtendedKalmanFilterProcessModel_model(enable_calibration, enable_control):
+        def ExtendedKalmanFilterProcessModel_model(
+            *, enable_calibration, enable_control
+        ):
             args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
             if enable_calibration:
                 args.append(Arg("const Calibration&", "input_calibration"))
@@ -1185,7 +1126,7 @@ def header_from_ast(inserts, extras):
             return FunctionDeclaration("static State", "model", args=args, modifier="")
 
         def ExtendedKalmanFilterProcessModel_process_jacobian(
-            enable_calibration, enable_control
+            *, enable_calibration, enable_control
         ):
             args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
             if enable_calibration:
@@ -1200,7 +1141,7 @@ def header_from_ast(inserts, extras):
             )
 
         def ExtendedKalmanFilterProcessModel_control_jacobian(
-            enable_calibration, enable_control
+            *, enable_calibration, enable_control
         ):
             args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
             if enable_calibration:
@@ -1215,7 +1156,7 @@ def header_from_ast(inserts, extras):
             )
 
         def ExtendedKalmanFilterProcessModel_covariance(
-            enable_calibration, enable_control
+            *, enable_calibration, enable_control
         ):
             args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
             if enable_calibration:
@@ -1236,16 +1177,20 @@ def header_from_ast(inserts, extras):
             body=[
                 Escape("public:"),
                 ExtendedKalmanFilterProcessModel_model(
-                    inserts["enable_calibration"], inserts["enable_control"]
+                    enable_calibration=extras.enable_calibration(),
+                    enable_control=extras.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_process_jacobian(
-                    inserts["enable_calibration"], inserts["enable_control"]
+                    enable_calibration=extras.enable_calibration(),
+                    enable_control=extras.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_control_jacobian(
-                    inserts["enable_calibration"], inserts["enable_control"]
+                    enable_calibration=extras.enable_calibration(),
+                    enable_control=extras.enable_control(),
                 ),
                 ExtendedKalmanFilterProcessModel_covariance(
-                    inserts["enable_calibration"], inserts["enable_control"]
+                    enable_calibration=extras.enable_calibration(),
+                    enable_control=extras.enable_control(),
                 ),
             ],
         )
@@ -1257,7 +1202,7 @@ def header_from_ast(inserts, extras):
             bases=[],
             body=[
                 Escape("public:"),
-                State_model(inserts["enable_control"], inserts["enable_calibration"]),
+                State_model(extras.enable_control(), extras.enable_calibration()),
             ],
         )
 
@@ -1291,7 +1236,7 @@ def source_from_ast(inserts, extras):
         ),
     ]
 
-    if inserts["enable_calibration"]:
+    if extras.enable_calibration():
         CalibrationDefaultConstructor = ConstructorDefinition(
             "Calibration", args=[], initializer_list=[("data", "DataT::Zero()")]
         )
@@ -1308,7 +1253,7 @@ def source_from_ast(inserts, extras):
         body.append(CalibrationDefaultConstructor)
         body.append(CalibrationConstructor)
 
-    if inserts["enable_control"]:
+    if extras.enable_control():
         ControlDefaultConstructor = ConstructorDefinition(
             "Control", args=[], initializer_list=[("data", "DataT::Zero()")]
         )
@@ -1327,9 +1272,9 @@ def source_from_ast(inserts, extras):
 
     if extras.enable_EKF:
         standard_args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-        if inserts["enable_calibration"]:
+        if extras.enable_calibration():
             standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if inserts["enable_control"]:
+        if extras.enable_control():
             standard_args.append(Arg("const Control&", "input_control"))
         EKF_process_model = FunctionDef(
             "StateAndVariance",
@@ -1337,7 +1282,13 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                FromFileTemplate("process_model.cpp", inserts=inserts),
+                FromFileTemplate(
+                    "process_model.cpp",
+                    inserts={
+                        "enable_control": extras.enable_control(),
+                        "enable_calibration": extras.enable_calibration(),
+                    },
+                ),
             ],
         )
         body.append(EKF_process_model)
@@ -1347,7 +1298,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(inserts["ExtendedKalmanFilterProcessModel_model_body"]),
+                Escape(extras.process_model_body()),
             ],
         )
         body.append(EKFPM_model)
@@ -1357,9 +1308,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(
-                    inserts["ExtendedKalmanFilterProcessModel_process_jacobian_body"]
-                ),
+                Escape(extras.process_jacobian_body()),
             ],
         )
         body.append(EKFPM_process_jacobian)
@@ -1369,9 +1318,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(
-                    inserts["ExtendedKalmanFilterProcessModel_control_jacobian_body"]
-                ),
+                Escape(extras.control_jacobian_body()),
             ],
         )
         body.append(EKFPM_control_jacobian)
@@ -1381,16 +1328,16 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(inserts["ExtendedKalmanFilterProcessModel_covariance_body"]),
+                Escape(extras.control_covariance_body()),
             ],
         )
         body.append(EKFPM_covariance)
 
-        for reading_type in inserts["reading_types"]:
+        for reading_type in extras.reading_types():
             standard_args = [
                 Arg("const StateAndVariance&", "input"),
             ]
-            if inserts["enable_calibration"]:
+            if extras.enable_calibration():
                 standard_args.append(Arg("const Calibration&", "input_calibration"))
             standard_args.append(
                 Arg(f"const {reading_type.typename}&", "input_reading")
@@ -1443,9 +1390,9 @@ def source_from_ast(inserts, extras):
             body.append(ReadingSensorModel_jacobian)
     else:  # extras.enable_EKF == False
         standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
-        if inserts["enable_calibration"]:
+        if extras.enable_calibration():
             standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if inserts["enable_control"]:
+        if extras.enable_control():
             standard_args.append(Arg("const Control&", "input_control"))
         Model_model = FunctionDef(
             "State",
@@ -1453,7 +1400,7 @@ def source_from_ast(inserts, extras):
             modifier="",
             args=standard_args,
             body=[
-                Escape(inserts["Model_model_body"]),
+                Escape(extras.model_body()),
             ],
         )
         body.append(Model_model)

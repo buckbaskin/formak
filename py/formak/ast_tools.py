@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
 
+
 @dataclass
 class CompileState:
     indent: int = 0
