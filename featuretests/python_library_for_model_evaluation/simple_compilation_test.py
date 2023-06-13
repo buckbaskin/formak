@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-
 from formak.ui import *
+
 from formak import python
 
 

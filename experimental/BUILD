@@ -193,3 +193,9 @@ py_binary(
     srcs = ["src/linear_cpu_model.py"],
     main = "src/linear_cpu_model.py",
 )
+
+py_binary(
+    name = "ast-compile",
+    srcs = ["src/ast_compile.py"],
+    main = "src/ast_compile.py",
+)
