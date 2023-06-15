@@ -4,17 +4,6 @@ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
 
 py_test_suite(
-    name = "python-library-for-model-evaluation",
-    srcs = glob(
-        ["python_library_for_model_evaluation/*.py"],
-        allow_empty = False,
-    ),
-    deps = [
-        "//py:formak",
-    ] + PY_FEATURE_TEST_DEPS,
-)
-
-py_test_suite(
     name = "scikit-learn-integration",
     srcs = glob(
         ["scikit_learn_integration/*.py"],
