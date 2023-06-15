@@ -152,3 +152,16 @@ cc_test_suite(
         ":ast-cpp-generated",
     ] + CC_FEATURE_TEST_DEPS,
 )
+
+
+py_test_suite(
+    name = "cse-py-test",
+    srcs = glob(
+        ["common_subexpression_elimination/*.py"],
+        allow_empty = False,
+    ),
+    deps = [
+        "//py:formak",
+        requirement("numpy"),
+    ] + PY_FEATURE_TEST_DEPS,
+)
