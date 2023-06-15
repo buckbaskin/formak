@@ -1,26 +1,7 @@
 load("@pip_deps//:requirements.bzl", "requirement")
 load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-
-PY_FEATURE_TEST_DEPS = [
-    requirement("pytest"),
-]
-
-CC_FEATURE_TEST_DEPS = [
-    "@gtest//:gtest_main",
-]
-
-py_test_suite(
-    name = "python-ui-demo",
-    size = "small",
-    srcs = glob(
-        ["python_ui_demo/*.py"],
-        allow_empty = False,
-    ),
-    deps = [
-        "//py:formak",
-    ] + PY_FEATURE_TEST_DEPS,
-)
+load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
 
 py_test_suite(
     name = "python-library-for-model-evaluation",
@@ -152,7 +133,6 @@ cc_test_suite(
         ":ast-cpp-generated",
     ] + CC_FEATURE_TEST_DEPS,
 )
-
 
 py_test_suite(
     name = "cse-py-test",

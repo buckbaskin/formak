@@ -1,9 +1,10 @@
 import numpy as np
 import pytest
 from formak.ui import *
-from sympy import symbols, sin, cos
+from sympy import cos, sin, symbols
 
 from formak import python
+
 
 def combine_nodes(leaves):
     for i in range(0, len(leaves) // 2):
@@ -13,7 +14,7 @@ def combine_nodes(leaves):
 
 
 def test_python_CSE():
-    l, r = symbols(['l', 'r'])
+    l, r = symbols(["l", "r"])
 
     # 2 * sin(l * r) * cos(l + r)
 
@@ -33,4 +34,4 @@ def test_python_CSE():
     # run with cse, without cse
 
     # compare times
-    1/0
+    1 / 0
