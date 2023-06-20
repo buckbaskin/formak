@@ -4,28 +4,6 @@ load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
 
 cc_formak_model(
-    name = "cpp-model",
-    namespace = "formak",
-    pydeps = [],
-    pymain = "cpp_library_for_model_evaluation/generator.py",
-    pysrcs = glob(
-        ["cpp_library_for_model_evaluation/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "cpp-ekf",
-    namespace = "formak",
-    pydeps = [],
-    pymain = "cpp_library_for_model_evaluation/generator_ekf.py",
-    pysrcs = glob(
-        ["cpp_library_for_model_evaluation/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
     name = "cpp-rocket-model",
     namespace = "featuretest",
     pydeps = [],
@@ -34,18 +12,6 @@ cc_formak_model(
         ["rocket_model/*.py"],
         allow_empty = False,
     ),
-)
-
-cc_test_suite(
-    name = "cpp-library-for-model-evaluation",
-    srcs = glob(
-        ["cpp_library_for_model_evaluation/*.cpp"],
-        allow_empty = False,
-    ),
-    deps = [
-        ":cpp-model",
-        ":cpp-ekf",
-    ] + CC_FEATURE_TEST_DEPS,
 )
 
 py_test_suite(
