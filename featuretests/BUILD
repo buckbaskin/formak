@@ -3,18 +3,6 @@ load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
 
-py_test_suite(
-    name = "scikit-learn-integration",
-    srcs = glob(
-        ["scikit_learn_integration/*.py"],
-        allow_empty = False,
-    ),
-    deps = [
-        "//py:formak",
-        requirement("numpy"),
-    ] + PY_FEATURE_TEST_DEPS,
-)
-
 cc_formak_model(
     name = "cpp-model",
     namespace = "formak",
