@@ -1,12 +1,57 @@
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "py_test_suite")
-load("//featuretests:test_deps.bzl", "PY_FEATURE_TEST_DEPS")
+load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
+load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
+
+py_library(
+    name = "common",
+    srcs = ["common.py"],
+    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+)
 
 py_test_suite(
     name = "py-test",
     srcs = ["simple_test.py"],
     deps = [
         "//py:formak",
+        ":common",
         requirement("numpy"),
     ] + PY_FEATURE_TEST_DEPS,
+)
+
+cc_formak_model(
+    name = "cse-model",
+    namespace = "cse",
+    pydeps = [
+        ":common",
+    ],
+    pymain = "gen_cse.py",
+    pysrcs = glob(
+        ["*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "no-cse-model",
+    namespace = "no_cse",
+    pydeps = [
+        ":common",
+    ],
+    pymain = "no_gen_cse.py",
+    pysrcs = glob(
+        ["*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_test_suite(
+    name = "cse",
+    srcs = glob(
+        ["*.cpp"],
+        allow_empty = False,
+    ),
+    deps = [
+        ":cse-model",
+        ":no-cse-model",
+    ] + CC_FEATURE_TEST_DEPS,
 )

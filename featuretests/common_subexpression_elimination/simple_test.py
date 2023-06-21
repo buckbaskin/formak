@@ -1,7 +1,8 @@
+from datetime import datetime
+
 import numpy as np
 import pytest
 from formak.ui import *
-from datetime import datetime
 from sympy import cos, sin, symbols
 
 from formak import python
