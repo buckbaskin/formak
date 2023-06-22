@@ -4,8 +4,20 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ostream>
 #include <random>
 #include <tuple>
+#include <vector>
+
+namespace {
+std::ostream& operator<<(std::ostream& o,
+                         std::vector<std::chrono::nanoseconds> times) {
+  for (std::chrono::nanoseconds time : times) {
+    o << (time.count() / 1.0e6) << " ms" << std::endl;
+  }
+  return o;
+}
+}  // namespace
 
 namespace featuretest {
 
@@ -33,31 +45,24 @@ TEST(CppModel, Simple) {
   std::vector<std::chrono::nanoseconds> no_cse_times;
 
   for (const auto& [left, right] : input) {
-    const auto cse_start = std::chrono::system_clock::now();
+    const auto cse_start = std::chrono::steady_clock::now();
     cse_model.model(0.1, cse::StateOptions{.left = left, .right = right});
-    const auto cse_end = std::chrono::system_clock::now();
+    const auto cse_end = std::chrono::steady_clock::now();
     cse_times.push_back(cse_end - cse_start);
   }
+  std::cout << "cse time:" << std::endl << cse_times;
   std::sort(cse_times.begin(), cse_times.end());
   double cse_p99_slowest = cse_times[98].count() / 1.0e6;
 
   for (const auto& [left, right] : input) {
-    const auto no_cse_start = std::chrono::system_clock::now();
+    const auto no_cse_start = std::chrono::steady_clock::now();
     no_cse_model.model(0.1, no_cse::StateOptions{.left = left, .right = right});
-    const auto no_cse_end = std::chrono::system_clock::now();
+    const auto no_cse_end = std::chrono::steady_clock::now();
     no_cse_times.push_back(no_cse_end - no_cse_start);
   }
+  std::cout << "no cse time:" << std::endl << no_cse_times;
   std::sort(no_cse_times.begin(), no_cse_times.end());
   double no_cse_p01_fastest = no_cse_times[1].count() / 1.0e6;
-
-  for (const auto& cse_time : cse_times) {
-    std::cout << "cse time " << cse_time.count() / 1.0e6 << " ms" << std::endl;
-  }
-
-  for (const auto& no_cse_time : no_cse_times) {
-    std::cout << "no_cse time " << no_cse_time.count() / 1.0e6 << " ms"
-              << std::endl;
-  }
 
   EXPECT_LT(cse_p99_slowest, no_cse_p01_fastest);
 }
