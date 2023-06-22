@@ -55,6 +55,7 @@ def test_python_CSE():
     inputs = np.random.default_rng(seed=1).random((100, 2))
 
     # run with cse, without cse
+    print('CSE')
     cse_times = []
     for l, r in inputs:
         state_vector = np.array([[l, r]]).transpose()
@@ -66,6 +67,7 @@ def test_python_CSE():
     assert len(cse_times) > 0
     cse_p99_slowest = np.percentile(cse_times, 99)
 
+    print('NO CSE')
     no_cse_times = []
     for l, r in inputs:
         state_vector = np.array([[l, r]]).transpose()

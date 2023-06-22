@@ -1,12 +1,14 @@
 from collections import namedtuple
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Dict
+from itertools import count
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numba import njit
 from scipy.optimize import minimize
-from sympy import Matrix, Symbol
+from sympy import Matrix, Symbol, cse
 from sympy.utilities.lambdify import lambdify
 
 from formak import common
@@ -76,18 +78,41 @@ class Model:
                 f"calibration_vector shape {self.calibration_vector.shape} doesn't match {(self.calibration_size, 1)}"
             )
 
-        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
+        replacements = []
+        reduced_exprs = [symbolic_model.state_model[a] for a in self.arglist_state]
+
+        if config.common_subexpression_elimination:
+            replacements, reduced_exprs = cse(
+                reduced_exprs, symbols=(Symbol(f"_t{i}") for i in count())
+            )
+
+        temporaries = [r[0] for r in replacements]
+        self._impl_prefix = []
+        for i in range(len(replacements)):
+            self._impl_prefix.append(
+                (
+                    temporaries[i],
+                    lambdify(
+                        self.arglist + temporaries[:i],
+                        replacements[i][1],
+                        modules=config.python_modules,
+                        cse=False,
+                    ),
+                )
+            )
+
         self._impl = [
             lambdify(
-                self.arglist,
+                self.arglist + temporaries,
                 symbolic_model.state_model[a],
                 modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
+                cse=False,
             )
             for a in self.arglist_state
         ]
 
         if config.compile:
+            # TODO(buck): Compile _impl_prefix as well
             self._impl = [njit(i) for i in self._impl]
 
             if config.warm_jit:
@@ -96,6 +121,7 @@ class Model:
                 default_state = np.zeros((self.state_size, 1))
                 default_control = np.zeros((self.control_size, 1))
                 default_calibration = np.zeros((self.calibration_size, 1))
+                default_temporaries = np.zeros((len(temporaries), 1))
                 for jit_impl in self._impl:
                     for _i in range(5):
                         jit_impl(
@@ -103,11 +129,9 @@ class Model:
                             *default_state,
                             *default_calibration,
                             *default_control,
+                            *default_temporaries,
                         )
 
-    # TODO(buck): numpy -> numpy if not compiled
-    #   - Given the arglist, refactor expressions to work with state vectors
-    #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
     def model(self, dt, state, control_vector=None):
         if control_vector is None:
             if self.control_size > 0:
@@ -123,10 +147,17 @@ class Model:
         assert state.shape == (self.state_size, 1)
         assert control_vector.shape == (self.control_size, 1)
 
+        start_temps = datetime.now()
+        temporaries = {}
+        for target, expr in self._impl_prefix:
+            temporaries[str(target)] = expr(dt, *state, *self.calibration_vector, *control_vector, **temporaries)
+
+        end_temps = datetime.now()
+
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
             try:
-                result = impl(dt, *state, *self.calibration_vector, *control_vector)
+                result = impl(dt, *state, *self.calibration_vector, *control_vector, **temporaries)
                 next_state[i, 0] = result
             except TypeError:
                 print(
@@ -138,6 +169,11 @@ class Model:
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
                 raise
+
+        end_impl = datetime.now()
+
+        print(f'Timing impl {end_impl - end_temps} temps {end_temps - start_temps}')
+
         return next_state
 
 
