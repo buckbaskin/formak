@@ -104,11 +104,11 @@ class Model:
         self._impl = [
             lambdify(
                 self.arglist + temporaries,
-                symbolic_model.state_model[a],
+                expr,
                 modules=config.python_modules,
                 cse=False,
             )
-            for a in self.arglist_state
+            for expr in reduced_exprs
         ]
 
         if config.compile:
@@ -147,14 +147,11 @@ class Model:
         assert state.shape == (self.state_size, 1)
         assert control_vector.shape == (self.control_size, 1)
 
-        start_temps = datetime.now()
         temporaries = {}
         for target, expr in self._impl_prefix:
             temporaries[str(target)] = expr(
                 dt, *state, *self.calibration_vector, *control_vector, **temporaries
             )
-
-        end_temps = datetime.now()
 
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
@@ -173,10 +170,6 @@ class Model:
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
                 raise
-
-        end_impl = datetime.now()
-
-        print(f"Timing impl {end_impl - end_temps} temps {end_temps - start_temps}")
 
         return next_state
 
