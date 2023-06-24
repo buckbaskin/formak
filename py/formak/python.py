@@ -1,8 +1,8 @@
 from collections import namedtuple
-from datetime import datetime
 from dataclasses import dataclass
-from typing import Dict
+from datetime import datetime
 from itertools import count
+from typing import Dict
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -150,14 +150,18 @@ class Model:
         start_temps = datetime.now()
         temporaries = {}
         for target, expr in self._impl_prefix:
-            temporaries[str(target)] = expr(dt, *state, *self.calibration_vector, *control_vector, **temporaries)
+            temporaries[str(target)] = expr(
+                dt, *state, *self.calibration_vector, *control_vector, **temporaries
+            )
 
         end_temps = datetime.now()
 
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
             try:
-                result = impl(dt, *state, *self.calibration_vector, *control_vector, **temporaries)
+                result = impl(
+                    dt, *state, *self.calibration_vector, *control_vector, **temporaries
+                )
                 next_state[i, 0] = result
             except TypeError:
                 print(
@@ -172,7 +176,7 @@ class Model:
 
         end_impl = datetime.now()
 
-        print(f'Timing impl {end_impl - end_temps} temps {end_temps - start_temps}')
+        print(f"Timing impl {end_impl - end_temps} temps {end_temps - start_temps}")
 
         return next_state
 
