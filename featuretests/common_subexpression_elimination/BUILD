@@ -53,5 +53,6 @@ cc_test_suite(
     deps = [
         ":cse-model",
         ":no-cse-model",
+        "//cpp:utils-microbenchmark",
     ] + CC_FEATURE_TEST_DEPS,
 )
