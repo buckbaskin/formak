@@ -23,6 +23,9 @@ class BasicBlock:
 
         self._compile()
 
+    def __len__(self):
+        return len(self._exprs)
+
     def _compile(self):
         prefix = []
         body = self._exprs
@@ -327,26 +330,19 @@ class ExtendedKalmanFilter:
                 self._state_model.arglist_control
             )
 
-        self._impl_process_jacobian = [
-            lambdify(
-                self._state_model.arglist,
-                expr,
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for expr in symbolic_process_jacobian
-        ]
+        self._impl_process_jacobian = BasicBlock(
+            arglist=self._state_model.arglist,
+            # Flatten the Matrix symbolic_process_jacobian by iterating over all elements
+            statements=[expr for expr in symbolic_process_jacobian],
+            config=config,
+        )
         assert len(self._impl_process_jacobian) == self.state_size**2
 
-        self._impl_control_jacobian = [
-            lambdify(
-                self._state_model.arglist,
-                expr,
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for expr in symbolic_control_jacobian
-        ]
+        self._impl_control_jacobian = BasicBlock(
+            arglist=self._state_model.arglist,
+            statements=[expr for expr in symbolic_control_jacobian],
+            config=config,
+        )
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
 
     def _construct_sensors(
@@ -388,15 +384,11 @@ class ExtendedKalmanFilter:
                 self.state_size,
             )
 
-            impl_sensor_jacobian = [
-                lambdify(
-                    self.arglist_sensor,
-                    expr,
-                    modules=config.python_modules,
-                    cse=config.common_subexpression_elimination,
-                )
-                for expr in symbolic_sensor_jacobian
-            ]
+            impl_sensor_jacobian = BasicBlock(
+                arglist=self.arglist_sensor,
+                statements=[expr for expr in symbolic_sensor_jacobian],
+                config=config,
+            )
             assert len(impl_sensor_jacobian) == sensor_size * self.state_size
 
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
@@ -406,35 +398,42 @@ class ExtendedKalmanFilter:
         self.sensor_prediction_uncertainty = {}
 
     def process_jacobian(self, dt, state, control):
+        computed_jacobian = list(
+            self._impl_process_jacobian.execute(
+                dt, *state, *self.calibration_vector, *control
+            )
+        )
+
         jacobian = np.zeros((self.state_size, self.state_size))
         for row in range(self.state_size):
             for col in range(self.state_size):
-                jacobian[row, col] = self._impl_process_jacobian[
-                    row * self.state_size + col
-                ](dt, *state, *self.calibration_vector, *control)
+                result = computed_jacobian[row * self.state_size + col]
+                jacobian[row, col] = result
         return jacobian
 
     def control_jacobian(self, dt, state, control):
-        jacobian = np.zeros((self.state_size, self.control_size))
+        computed_jacobian = list(
+            self._impl_control_jacobian.execute(
+                dt, *state, *self.calibration_vector, *control
+            )
+        )
+        result = np.zeros((self.state_size, self.control_size))
         for row in range(self.state_size):
             for col in range(self.control_size):
-                jacobian[row, col] = self._impl_control_jacobian[
-                    row * self.control_size + col
-                ](dt, *state, *self.calibration_vector, *control)
-        return jacobian
+                result[row, col] = computed_jacobian[row * self.control_size + col]
+        return result
 
     def sensor_jacobian(self, sensor_key, state):
         sensor_size = self.params["sensor_models"][sensor_key].sensor_size
-        jacobian = np.zeros((sensor_size, self.state_size))
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
 
+        computed_jacobian = list(impl_sensor_jacobian.execute(*state))
+        result = np.zeros((sensor_size, self.state_size))
         for row in range(sensor_size):
             for col in range(self.state_size):
-                jacobian[row, col] = impl_sensor_jacobian[row * sensor_size + col](
-                    *state
-                )
-        return jacobian
+                result[row, col] = computed_jacobian[row * sensor_size + col]
+        return result
 
     def process_model(self, dt, state, covariance, control=None):
         if control is None:
