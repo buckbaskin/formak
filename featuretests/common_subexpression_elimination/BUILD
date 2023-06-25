@@ -37,19 +37,16 @@ cc_formak_model(
     pydeps = [
         ":common",
     ],
-    pymain = "no_gen_cse.py",
+    pymain = "gen_no_cse.py",
     pysrcs = glob(
         ["*.py"],
         allow_empty = False,
     ),
 )
 
-cc_test_suite(
-    name = "cse",
-    srcs = glob(
-        ["*.cpp"],
-        allow_empty = False,
-    ),
+cc_test(
+    name = "cpp-test",
+    srcs = ["simple_test.cpp"],
     deps = [
         ":cse-model",
         ":no-cse-model",

@@ -2,7 +2,7 @@ import argparse
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from itertools import chain
+from itertools import chain, count
 from typing import Any, List, Tuple
 
 from formak.ast_tools import (
@@ -26,7 +26,7 @@ from formak.ast_tools import (
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
-from sympy import Symbol, ccode, diff
+from sympy import Symbol, ccode, cse, diff
 
 from formak import common
 
@@ -50,21 +50,35 @@ class CppCompileResult:
 
 
 class BasicBlock:
-    def __init__(self, statements: List[Tuple[str, Any]], indent=0):
+    def __init__(self, statements: List[Tuple[str, Any]], indent=0, *, config):
         # should be Tuple[str, sympy expression]
-        self._statements = statements
+        statements = list(statements)
+        self._targets = [k for k, _ in statements]
+        self._exprs = [v for _, v in statements]
         self._indent = indent
+        self._config = config
 
     def compile(self):
-        return "\n".join(self._compile_impl())
+        result = "\n".join(self._compile_impl())
+        logger.debug(f"Compile Result: {result}")
+        return result
 
     def _compile_impl(self):
-        # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
-        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
+        prefix = []
+        body = self._exprs
+
+        if self._config.common_subexpression_elimination:
+            prefix, body = cse(body, symbols=(Symbol(f"_t{i}") for i in count()))
+
         # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
-        for lvalue, expr in self._statements:
+        for target, expr in prefix:
+            assert isinstance(target, Symbol)
             cc_expr = ccode(expr)
-            yield f"{' ' * self._indent}{lvalue} = {cc_expr};"
+            yield f"{' ' * self._indent}double {target} = {cc_expr};"
+
+        for target, expr in zip(self._targets, body):
+            cc_expr = ccode(expr)
+            yield f"{' ' * self._indent}{target} = {cc_expr};"
 
 
 class Model:
@@ -129,7 +143,9 @@ class Model:
                     extra = f"\nExtra: {extra_from_map}"
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
-        self._model = BasicBlock(self._translate_model(symbolic_model), indent=4)
+        self._model = BasicBlock(
+            self._translate_model(symbolic_model), indent=4, config=config
+        )
 
         self._return = self._translate_return()
 

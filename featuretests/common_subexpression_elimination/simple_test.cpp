@@ -77,7 +77,7 @@ TEST(CppModel, Simple) {
   std::cout << "CSE    " << cse_p99_slowest << std::endl
             << cse_times << std::endl;
   std::cout << "No CSE " << no_cse_p01_fastest << std::endl
-            << cse_times << std::endl;
+            << no_cse_times << std::endl;
 
   EXPECT_LT(cse_p99_slowest, no_cse_p01_fastest);
 }
