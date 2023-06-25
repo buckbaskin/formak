@@ -16,11 +16,9 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
 class BasicBlock:
-    def __init__(self, *, arglist, statements: List[Tuple[str, Any]], config):
-        statements = list(statements)
+    def __init__(self, *, arglist, statements, config):
         self._arglist = arglist
-        self._targets = [k for k, _ in statements]
-        self._exprs = [v for _, v in statements]
+        self._exprs = statements
         self._config = config
 
         self._compile()
@@ -64,8 +62,8 @@ class BasicBlock:
         for name, expr in self._prefix:
             temporary_values[str(name)] = expr(*args, **kwargs, **temporary_values)
 
-        for name, impl in zip(self._targets, self._body):
-            yield name, impl(*args, **kwargs, **temporary_values)
+        for impl in self._body:
+            yield impl(*args, **kwargs, **temporary_values)
 
 
 class Model:
@@ -132,7 +130,7 @@ class Model:
 
         self._impl = BasicBlock(
             arglist=self.arglist,
-            statements=[(a, symbolic_model.state_model[a]) for a in self.arglist_state],
+            statements=[symbolic_model.state_model[a] for a in self.arglist_state],
             config=config,
         )
 
@@ -153,7 +151,12 @@ class Model:
 
         next_state = np.zeros((self.state_size, 1))
         for i, (state_id, result) in enumerate(
-            self._impl.execute(dt, *state, *self.calibration_vector, *control_vector)
+            zip(
+                self.arglist_state,
+                self._impl.execute(
+                    dt, *state, *self.calibration_vector, *control_vector
+                ),
+            )
         ):
             try:
                 next_state[i, 0] = result
@@ -194,15 +197,11 @@ class SensorModel:
                 f"calibration vector shape {self.calibration_vector.shape} doesn't match expected shape {(self.calibration_size, 1)}"
             )
 
-        self._impl = [
-            lambdify(
-                self.arglist,
-                sensor_model[k],
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for k in self.readings
-        ]
+        self._impl = BasicBlock(
+            arglist=self.arglist,
+            statements=[sensor_model[k] for k in self.readings],
+            config=config,
+        )
 
         ## "Pre-flight" Checks
 
@@ -217,9 +216,13 @@ class SensorModel:
         assert state_vector.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
-        for i, (reading_id, impl) in enumerate(zip(self.readings, self._impl)):
+        for i, (reading_id, result) in enumerate(
+            zip(
+                self.readings,
+                self._impl.execute(*state_vector, *self.calibration_vector),
+            )
+        ):
             try:
-                result = impl(*state_vector, *self.calibration_vector)
                 reading[i, 0] = result
             except (TypeError, ValueError):
                 print(
