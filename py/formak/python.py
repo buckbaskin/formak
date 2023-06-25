@@ -1,8 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
-from datetime import datetime
 from itertools import count
-from typing import Dict
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -14,6 +13,59 @@ from sympy.utilities.lambdify import lambdify
 from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
+
+
+class BasicBlock:
+    def __init__(self, *, arglist, statements: List[Tuple[str, Any]], config):
+        statements = list(statements)
+        self._arglist = arglist
+        self._targets = [k for k, _ in statements]
+        self._exprs = [v for _, v in statements]
+        self._config = config
+
+        self._compile()
+
+    def _compile(self):
+        prefix = []
+        body = self._exprs
+
+        if self._config.common_subexpression_elimination:
+            prefix, body = cse(body, symbols=(Symbol(f"_t{i}") for i in count()))
+
+        temporaries = [r[0] for r in prefix]
+        self._prefix = []
+        for i in range(len(prefix)):
+            self._prefix.append(
+                (
+                    temporaries[i],
+                    lambdify(
+                        self._arglist + temporaries[:i],
+                        prefix[i][1],
+                        modules=self._config.python_modules,
+                        cse=False,
+                    ),
+                )
+            )
+
+        self._body = [
+            lambdify(
+                self._arglist + temporaries,
+                expr,
+                modules=self._config.python_modules,
+                cse=False,
+            )
+            for expr in body
+        ]
+
+    def execute(self, *args, **kwargs):
+
+        # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
+        temporary_values = {}
+        for name, expr in self._prefix:
+            temporary_values[str(name)] = expr(*args, **kwargs, **temporary_values)
+
+        for name, impl in zip(self._targets, self._body):
+            yield name, impl(*args, **kwargs, **temporary_values)
 
 
 class Model:
@@ -78,59 +130,11 @@ class Model:
                 f"calibration_vector shape {self.calibration_vector.shape} doesn't match {(self.calibration_size, 1)}"
             )
 
-        replacements = []
-        reduced_exprs = [symbolic_model.state_model[a] for a in self.arglist_state]
-
-        if config.common_subexpression_elimination:
-            replacements, reduced_exprs = cse(
-                reduced_exprs, symbols=(Symbol(f"_t{i}") for i in count())
-            )
-
-        temporaries = [r[0] for r in replacements]
-        self._impl_prefix = []
-        for i in range(len(replacements)):
-            self._impl_prefix.append(
-                (
-                    temporaries[i],
-                    lambdify(
-                        self.arglist + temporaries[:i],
-                        replacements[i][1],
-                        modules=config.python_modules,
-                        cse=False,
-                    ),
-                )
-            )
-
-        self._impl = [
-            lambdify(
-                self.arglist + temporaries,
-                expr,
-                modules=config.python_modules,
-                cse=False,
-            )
-            for expr in reduced_exprs
-        ]
-
-        if config.compile:
-            # TODO(buck): Compile _impl_prefix as well
-            self._impl = [njit(i) for i in self._impl]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                default_temporaries = np.zeros((len(temporaries), 1))
-                for jit_impl in self._impl:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                            *default_temporaries,
-                        )
+        self._impl = BasicBlock(
+            arglist=self.arglist,
+            statements=[(a, symbolic_model.state_model[a]) for a in self.arglist_state],
+            config=config,
+        )
 
     def model(self, dt, state, control_vector=None):
         if control_vector is None:
@@ -147,18 +151,11 @@ class Model:
         assert state.shape == (self.state_size, 1)
         assert control_vector.shape == (self.control_size, 1)
 
-        temporaries = {}
-        for target, expr in self._impl_prefix:
-            temporaries[str(target)] = expr(
-                dt, *state, *self.calibration_vector, *control_vector, **temporaries
-            )
-
         next_state = np.zeros((self.state_size, 1))
-        for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
+        for i, (state_id, result) in enumerate(
+            self._impl.execute(dt, *state, *self.calibration_vector, *control_vector)
+        ):
             try:
-                result = impl(
-                    dt, *state, *self.calibration_vector, *control_vector, **temporaries
-                )
                 next_state[i, 0] = result
             except TypeError:
                 print(
@@ -266,7 +263,6 @@ class ExtendedKalmanFilter:
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
-            "compile": compile,
         }
 
         self._construct_process(
@@ -339,25 +335,6 @@ class ExtendedKalmanFilter:
         ]
         assert len(self._impl_process_jacobian) == self.state_size**2
 
-        # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
-        if config.compile:
-            self._impl_process_jacobian = [njit(i) for i in self._impl_process_jacobian]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                for jit_impl in self._impl_process_jacobian:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                        )
-
         self._impl_control_jacobian = [
             lambdify(
                 self._state_model.arglist,
@@ -368,24 +345,6 @@ class ExtendedKalmanFilter:
             for expr in symbolic_control_jacobian
         ]
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
-
-        if config.compile:
-            self._impl_control_jacobian = [njit(i) for i in self._impl_control_jacobian]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                for jit_impl in self._impl_control_jacobian:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                        )
 
     def _construct_sensors(
         self, state_model, sensor_models, sensor_noises, calibration_map, config
@@ -438,16 +397,6 @@ class ExtendedKalmanFilter:
             assert len(impl_sensor_jacobian) == sensor_size * self.state_size
 
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
-            if config.compile:
-                impl_sensor_jacobian = [njit(i) for i in impl_sensor_jacobian]
-
-                if config.warm_jit:
-                    # Pre-warm Jit by calling with known values/structure
-                    default_state = np.zeros((self.state_size, 1))
-                    for jit_impl in impl_sensor_jacobian:
-                        for _i in range(5):
-                            jit_impl(*default_state)
-
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
         self.innovations = {}
@@ -791,8 +740,6 @@ class ExtendedKalmanFilter:
 
 @dataclass
 class Config:
-    compile: bool = False
-    warm_jit: bool = compile
     common_subexpression_elimination: bool = True
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
