@@ -10,20 +10,11 @@
 #include <tuple>
 #include <vector>
 
-namespace {
-std::ostream& operator<<(std::ostream& o,
-                         std::vector<std::chrono::nanoseconds> times) {
-  for (std::chrono::nanoseconds time : times) {
-    o << (time.count() / 1.0e6) << " ms" << std::endl;
-  }
-  return o;
-}
-}  // namespace
-
 namespace featuretest {
 
 TEST(CppModel, Simple) {
   using formak::utils::microbenchmark;
+  using namespace formak::utils::io_helpers;
 
   cse::Model cse_model;
   no_cse::Model no_cse_model;
@@ -35,7 +26,7 @@ TEST(CppModel, Simple) {
 
     std::vector<std::tuple<double, double>> result;
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 101; i++) {
       result.push_back(std::make_tuple(dist(prng), dist(prng)));
     }
 

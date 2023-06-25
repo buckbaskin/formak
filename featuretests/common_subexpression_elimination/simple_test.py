@@ -54,7 +54,7 @@ def test_python_CSE():
     # state_vector_next = python_implementation.model(0.1, state_vector)
 
     # random -> random_sample in 1.25
-    inputs = np.random.default_rng(seed=1).random((100, 2))
+    inputs = np.random.default_rng(seed=1).random((101, 2))
     inputs = [np.array([[l, r]]).transpose() for l, r in inputs]
 
     # run with cse, without cse

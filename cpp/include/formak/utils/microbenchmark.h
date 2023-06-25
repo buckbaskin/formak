@@ -2,10 +2,20 @@
 
 #include <algorithm>  // sort
 #include <chrono>
-#include <iterator>  // back_inserter
+#include <ostream>
 #include <vector>
 
 namespace formak::utils {
+
+namespace io_helpers {
+std::ostream& operator<<(std::ostream& o, std::chrono::nanoseconds time);
+
+std::ostream& operator<<(std::ostream& o,
+                         const std::vector<std::chrono::nanoseconds>& times);
+}  // namespace io_helpers
+
+std::vector<double> random_input(size_t size);
+
 template <typename InputT, typename Func>
 std::vector<std::chrono::nanoseconds> microbenchmark(
     Func&& lambda, const std::vector<InputT>& inputs) {
@@ -13,7 +23,9 @@ std::vector<std::chrono::nanoseconds> microbenchmark(
 
   for (const InputT& i : inputs) {
     const auto start = std::chrono::steady_clock::now();
-    lambda(i);
+    for (int count = 0; count < 128; ++count) {
+      lambda(i);
+    }
     const auto end = std::chrono::steady_clock::now();
     times.push_back(end - start);
   }
@@ -21,4 +33,5 @@ std::vector<std::chrono::nanoseconds> microbenchmark(
 
   return times;
 }
+
 }  // namespace formak::utils

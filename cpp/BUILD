@@ -19,6 +19,7 @@ cc_test(
 
 cc_library(
     name = "utils-microbenchmark",
+    srcs = ["src/utils/microbenchmark.cpp"],
     hdrs = [
         "include/formak/utils/microbenchmark.h",
     ],
