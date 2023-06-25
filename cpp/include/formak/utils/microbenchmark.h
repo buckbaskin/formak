@@ -5,7 +5,7 @@
 #include <iterator>  // back_inserter
 #include <vector>
 
-namespace formak {
+namespace formak::utils {
 template <typename InputT, typename Func>
 std::vector<std::chrono::nanoseconds> microbenchmark(
     Func&& lambda, const std::vector<InputT>& inputs) {
@@ -21,4 +21,4 @@ std::vector<std::chrono::nanoseconds> microbenchmark(
 
   return times;
 }
-}  // namespace formak
+}  // namespace formak::utils

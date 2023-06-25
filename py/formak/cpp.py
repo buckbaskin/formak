@@ -236,6 +236,7 @@ class ExtendedKalmanFilter:
         assert isinstance(process_noise, dict)
 
         self.enable_EKF = True
+        self.config = config
         self.namespace = namespace
         self.header_include = header_include
 
@@ -282,17 +283,25 @@ class ExtendedKalmanFilter:
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self._process_model = BasicBlock(
-            self._translate_process_model(state_model), indent=4
+            self._translate_process_model(state_model),
+            indent=4,
+            config=config,
         )
         self._process_jacobian = BasicBlock(
-            self._translate_process_jacobian(state_model), indent=4
+            self._translate_process_jacobian(state_model),
+            indent=4,
+            config=config,
         )
 
         self._control_jacobian = BasicBlock(
-            self._translate_control_jacobian(state_model), indent=4
+            self._translate_control_jacobian(state_model),
+            indent=4,
+            config=config,
         )
         self._control_covariance = BasicBlock(
-            self._translate_control_covariance(process_noise), indent=4
+            self._translate_control_covariance(process_noise),
+            indent=4,
+            config=config,
         )
 
         # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
@@ -496,7 +505,9 @@ class ExtendedKalmanFilter:
                     print(f"Modeling {predicted_reading} as function of state: {model}")
 
             body = BasicBlock(
-                self._translate_sensor_model(sensor_model_mapping), indent=4
+                self._translate_sensor_model(sensor_model_mapping),
+                indent=4,
+                config=self.config,
             )
             indent = " " * 4
             return_ = (
@@ -570,7 +581,9 @@ class ExtendedKalmanFilter:
         indent = " " * 4
         prefix = f"{indent}{typename}::SensorJacobianT jacobian;"
         body = BasicBlock(
-            self._translate_sensor_jacobian_impl(sensor_model_mapping), indent=4
+            self._translate_sensor_jacobian_impl(sensor_model_mapping),
+            indent=4,
+            config=self.config,
         )
         suffix = f"{indent}return jacobian;"
         return prefix + "\n" + body.compile() + "\n" + suffix
@@ -584,7 +597,11 @@ class ExtendedKalmanFilter:
     def _translate_sensor_covariance(self, typename, covariance):
         indent = " " * 4
         prefix = f"{indent}{typename}::CovarianceT covariance;"
-        body = BasicBlock(self._translate_sensor_covariance_impl(covariance), indent=4)
+        body = BasicBlock(
+            self._translate_sensor_covariance_impl(covariance),
+            indent=4,
+            config=self.config,
+        )
         suffix = f"{indent}return covariance;"
         return prefix + "\n" + body.compile() + "\n" + suffix
 

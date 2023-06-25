@@ -23,6 +23,8 @@ std::ostream& operator<<(std::ostream& o,
 namespace featuretest {
 
 TEST(CppModel, Simple) {
+  using formak::utils::microbenchmark;
+
   cse::Model cse_model;
   no_cse::Model no_cse_model;
 
@@ -61,12 +63,12 @@ TEST(CppModel, Simple) {
                    };
                  });
 
-  std::vector<std::chrono::nanoseconds> cse_times = formak::microbenchmark(
+  std::vector<std::chrono::nanoseconds> cse_times = microbenchmark(
       [&cse_model](const cse::StateOptions& options) {
         cse_model.model(0.1, options);
       },
       cse_input);
-  std::vector<std::chrono::nanoseconds> no_cse_times = formak::microbenchmark(
+  std::vector<std::chrono::nanoseconds> no_cse_times = microbenchmark(
       [&no_cse_model](const no_cse::StateOptions& options) {
         no_cse_model.model(0.1, options);
       },
