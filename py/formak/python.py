@@ -263,6 +263,10 @@ class ExtendedKalmanFilter:
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
         self.calibration_size = len(state_model.calibration)
+        self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(state_model.calibration), key=lambda x: x.name
+        )
 
         self.params = {
             "process_noise": None,
@@ -367,7 +371,7 @@ class ExtendedKalmanFilter:
 
         self.params["sensor_noises"] = sensor_noises
 
-        self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
         self._impl_sensor_jacobians = {}
 
@@ -381,7 +385,7 @@ class ExtendedKalmanFilter:
             # TODO(buck): This assertion won't necessarily hold if CSE is on across states
             assert symbolic_sensor_jacobian.shape == (
                 sensor_size,
-                self.state_size,
+                self.state_size + self.calibration_size,
             )
 
             impl_sensor_jacobian = BasicBlock(
@@ -389,7 +393,9 @@ class ExtendedKalmanFilter:
                 statements=[expr for expr in symbolic_sensor_jacobian],
                 config=config,
             )
-            assert len(impl_sensor_jacobian) == sensor_size * self.state_size
+            assert len(impl_sensor_jacobian) == sensor_size * (
+                self.state_size + self.calibration_size
+            )
 
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
@@ -428,7 +434,9 @@ class ExtendedKalmanFilter:
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
 
-        computed_jacobian = list(impl_sensor_jacobian.execute(*state))
+        computed_jacobian = list(
+            impl_sensor_jacobian.execute(*state, *self.calibration_vector)
+        )
         result = np.zeros((sensor_size, self.state_size))
         for row in range(sensor_size):
             for col in range(self.state_size):
