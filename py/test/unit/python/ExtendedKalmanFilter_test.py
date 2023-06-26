@@ -165,3 +165,81 @@ def test_EKF_process_jacobian():
         ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
         [[1.0, 1.0], [0.0, 1.0]],
     )
+
+
+def test_SensorModel_calibration():
+    config = python.Config()
+    dt = 0.1
+
+    def read_once(calibration_map):
+        # class SensorModel:
+        #     def __init__(self, state_model, sensor_model, calibration_map, config):
+        model = python.SensorModel(
+            state_model=ui.Model(
+                ui.Symbol("dt"),
+                set(ui.symbols(["x"])),
+                set(),
+                {ui.Symbol("x"): "x"},
+                calibration=set(ui.symbols(["a"])),
+            ),
+            calibration_map=calibration_map,
+            sensor_model={"reading": ui.Symbol("a") + ui.Symbol("x")},
+            config=config,
+        )
+
+        # def model(self, state_vector):
+        return model.model(np.zeros((1, 1)))
+
+    calibration = {
+        "a": -1.4,
+    }
+    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+
+    assert read_once(calibration_map) == -1.4
+
+    calibration = {
+        "a": 1.2,
+    }
+    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+
+    assert read_once(calibration_map) == 1.2
+
+
+def test_EKF_sensor_jacobian_calibration():
+    config = python.Config()
+    dt = 0.1
+
+    def read_once(calibration_map):
+        # class SensorModel:
+        #     def __init__(self, state_model, sensor_model, calibration_map, config):
+        ekf = python.ExtendedKalmanFilter(
+            state_model=ui.Model(
+                ui.Symbol("dt"),
+                set(ui.symbols(["x"])),
+                set(),
+                {ui.Symbol("x"): "x"},
+                calibration=set(ui.symbols(["a"])),
+            ),
+            process_noise={},
+            calibration_map=calibration_map,
+            sensor_models={"key": {"reading": ui.Symbol("a") * ui.Symbol("x")}},
+            sensor_noises={"key": np.eye(1)},
+            config=config,
+        )
+
+        # def sensor_jacobian(self, sensor_key, state)
+        return ekf.sensor_jacobian("key", np.zeros((1, 1)))[0, 0]
+
+    calibration = {
+        "a": -1.4,
+    }
+    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+
+    assert read_once(calibration_map) == -1.4
+
+    calibration = {
+        "a": 1.2,
+    }
+    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+
+    assert read_once(calibration_map) == 1.2
