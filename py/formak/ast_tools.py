@@ -2,7 +2,7 @@ import ast
 import os
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
@@ -30,7 +30,14 @@ class BaseAst(ast.AST):
 def autoindent(compile_func):
     def wrapped(self, options: CompileState, **kwargs):
         for line in compile_func(self, options, **kwargs):
-            yield " " * options.indent + line
+            try:
+                yield " " * options.indent + line
+            except TypeError:
+                raise TypeError(
+                    f"""
+                        Component {self} yielded a non-string:
+                        {line}"""
+                )
 
     # TODO(buck): wrapper helper function
     wrapped.__name__ = compile_func.__name__
@@ -54,7 +61,7 @@ class Namespace(BaseAst):
     _fields = ("name", "body")
 
     name: str
-    body: List[Any]
+    body: Iterable[BaseAst]
 
     def compile(self, options: CompileState, **kwargs):
         yield f"namespace {self.name} {{"
@@ -111,7 +118,7 @@ class ClassDef(BaseAst):
     tag: str
     name: str
     bases: List[str]
-    body: List[Any]
+    body: Iterable[BaseAst]
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -257,7 +264,7 @@ class FunctionDef(BaseAst):
     name: str
     args: List[Arg]
     modifier: str
-    body: List[Any]
+    body: Iterable[BaseAst]
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -280,7 +287,21 @@ class FunctionDef(BaseAst):
             yield f"){modifier_str} {{"
 
         for component in self.body:
-            yield from component.compile(options, **kwargs)
+            try:
+                yield from component.compile(options, **kwargs)
+            except AttributeError:
+                raise AttributeError(
+                    f"""
+                    In FunctionDef(
+                        {self.return_type},
+                        {self.name},
+                        {self.args},
+                        "{self.modifier}",
+                        {", ".join([str(e) for e in self.body])},
+                        )
+                    Component {type(component)} {component} did not have the expected attribute compile.
+                    Did you mean to wrap the string with a call to Escape(string)?"""
+                )
 
         yield "}"
 
@@ -331,7 +352,7 @@ class If(BaseAst):
     _fields = ("test", "body", "orelse")
 
     test: str
-    body: List[Any]
+    body: Iterable[BaseAst]
     orelse: List[Any]
 
     @autoindent
@@ -345,7 +366,7 @@ class If(BaseAst):
         else:
             yield "} else {"
             for component in self.orelse:
-                yield from component.component(options, **kwargs)
+                yield from component.compile(options, **kwargs)
             yield "}"
 
 
