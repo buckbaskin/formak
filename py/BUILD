@@ -198,6 +198,28 @@ cc_formak_model(
 )
 
 cc_formak_model(
+    name = "ekf-cse",
+    namespace = "cse",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf_cse.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "ekf-no-cse",
+    namespace = "no_cse",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf_no_cse.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
     name = "calibration-model",
     namespace = "unit",
     pydeps = [],
@@ -224,6 +246,15 @@ cc_test(
     srcs = ["test/unit/cpp/ExtendedKalmanFilter_test.cpp"],
     deps = [
         ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-basic-block",
+    srcs = ["test/unit/cpp/BasicBlock_test.cpp"],
+    deps = [
+        ":ekf-cse",
+        ":ekf-no-cse",
     ] + CC_TEST_DEPS,
 )
 
