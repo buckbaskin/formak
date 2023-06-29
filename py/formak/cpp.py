@@ -12,7 +12,6 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     EnumClassDef,
-    Escape,
     ForwardClassDeclaration,
     FromFileTemplate,
     FunctionDeclaration,
@@ -20,6 +19,8 @@ from formak.ast_tools import (
     HeaderFile,
     MemberDeclaration,
     Namespace,
+    Private,
+    Public,
     Return,
     SourceFile,
     Templated,
@@ -1088,7 +1089,7 @@ def header_from_ast(*, generator):
             "ExtendedKalmanFilter",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 UsingDeclaration(
                     "CovarianceT",
                     f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
@@ -1125,7 +1126,7 @@ def header_from_ast(*, generator):
                         ],
                     ),
                 ),
-                Escape("private:"),
+                Private(),
                 MemberDeclaration(
                     "std::unordered_map<SensorId, std::any>", "_innovations"
                 ),
@@ -1193,7 +1194,7 @@ def header_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 ExtendedKalmanFilterProcessModel_model(
                     enable_calibration=generator.enable_calibration(),
                     enable_control=generator.enable_control(),
@@ -1219,7 +1220,7 @@ def header_from_ast(*, generator):
             "Model",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 State_model(
                     enable_control=generator.enable_control(),
                     enable_calibration=generator.enable_calibration(),

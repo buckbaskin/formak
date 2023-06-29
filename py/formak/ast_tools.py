@@ -44,6 +44,18 @@ def autoindent(compile_func):
     return wrapped
 
 
+class Public(BaseAst):
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield "public:"
+
+
+class Private(BaseAst):
+    @autoindent
+    def compile(self, options: CompileState, **kwargs):
+        yield "private:"
+
+
 @dataclass
 class Arg(BaseAst):
     _fields = ("type_", "name")
