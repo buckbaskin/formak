@@ -46,7 +46,6 @@ py_library(
         requirement("scipy"),
         requirement("scikit-learn"),
         requirement("numpy"),
-        requirement("numba"),
         requirement("colorama"),
         requirement("hypothesis"),
         requirement("Jinja2"),

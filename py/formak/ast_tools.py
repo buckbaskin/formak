@@ -1,8 +1,7 @@
 import ast
 import os
-from collections import namedtuple
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jinja2.exceptions import TemplateNotFound
@@ -45,12 +44,20 @@ def autoindent(compile_func):
 
 
 class Public(BaseAst):
+    """
+    Include a line for "public:"
+    """
+
     @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield "public:"
 
 
 class Private(BaseAst):
+    """
+    Include a line for "private:"
+    """
+
     @autoindent
     def compile(self, options: CompileState, **kwargs):
         yield "private:"
@@ -70,6 +77,10 @@ class Arg(BaseAst):
 
 @dataclass
 class Namespace(BaseAst):
+    """
+    Include start and end lines for a C++ namespace
+    """
+
     _fields = ("name", "body")
 
     name: str
@@ -124,6 +135,10 @@ class SourceFile(BaseAst):
 
 @dataclass
 class ClassDef(BaseAst):
+    """
+    Generate lines to set up a C++ struct or class
+    """
+
     _fields = ("tag", "name", "bases", "body")
 
     # tag: one of "struct", "class"
@@ -270,6 +285,10 @@ class ConstructorDefinition(BaseAst):
 
 @dataclass
 class FunctionDef(BaseAst):
+    """
+    Generate lines to set up a function definition (separate from a function declaration)
+    """
+
     _fields = ("return_type", "name", "args", "modifier", "body")
 
     return_type: str
@@ -361,6 +380,12 @@ class Return(BaseAst):
 
 @dataclass
 class If(BaseAst):
+    """
+    Generate an if statement
+
+    Naming follows the Python AST
+    """
+
     _fields = ("test", "body", "orelse")
 
     test: str

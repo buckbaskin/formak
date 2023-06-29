@@ -11,13 +11,6 @@ from common import ui_model
 from formak import python
 
 
-def combine_nodes(leaves):
-    for i in range(0, len(leaves) // 2):
-        l = leaves[i * 2]
-        r = leaves[i * 2 + 1]
-        yield 2 * sin(l * r) * cos(l + r)
-
-
 def test_python_CSE():
     model = ui_model()
 

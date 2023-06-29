@@ -169,7 +169,6 @@ def test_EKF_process_jacobian():
 
 def test_SensorModel_calibration():
     config = python.Config()
-    dt = 0.1
 
     def read_once(calibration_map):
         model = python.SensorModel(
@@ -204,7 +203,6 @@ def test_SensorModel_calibration():
 
 def test_EKF_sensor_jacobian_calibration():
     config = python.Config()
-    dt = 0.1
 
     def read_once(calibration_map):
         ekf = python.ExtendedKalmanFilter(

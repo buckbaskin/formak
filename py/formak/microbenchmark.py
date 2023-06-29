@@ -2,6 +2,9 @@ from datetime import datetime
 
 
 def microbenchmark(function, input_iterable):
+    """
+    Time the lambda function for each input
+    """
     if len(input_iterable) == 0:
         raise ValueError("Input Iterable must have at least one value")
 
@@ -9,7 +12,7 @@ def microbenchmark(function, input_iterable):
     for state_vector in input_iterable:
         start_time = datetime.now()
 
-        for i in range(10):
+        for _ in range(10):
             function(state_vector)
 
         end_time = datetime.now()

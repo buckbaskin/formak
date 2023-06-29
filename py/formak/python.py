@@ -1,11 +1,10 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
-from numba import njit
 from scipy.optimize import minimize
 from sympy import Matrix, Symbol, cse
 from sympy.utilities.lambdify import lambdify
@@ -17,12 +16,28 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 @dataclass
 class Config:
+    """
+    Options for generating C++
+
+    common_subexpression_elimination:
+        Remove common shared computation
+    python_modules:
+        Allow dependencies. Math is the Python standard library
+    extra_validation:
+        Catch errors earlier in exchange for increased compute time
+    """
+
     common_subexpression_elimination: bool = True
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
 
 
 class BasicBlock:
+    """
+    A run of statements without control flow. All statements can be reordered
+    or changed to improve performance.
+    """
+
     def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
         self._arglist = arglist
         self._exprs = statements

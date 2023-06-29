@@ -16,6 +16,7 @@ std::ostream& operator<<(std::ostream& o,
 
 std::vector<double> random_input(size_t size);
 
+/// \brief Time the lambda function for each input
 template <typename InputT, typename Func>
 std::vector<std::chrono::nanoseconds> microbenchmark(
     Func&& lambda, const std::vector<InputT>& inputs) {

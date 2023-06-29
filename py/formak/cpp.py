@@ -3,7 +3,7 @@ import logging
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import chain, count
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from formak.ast_tools import (
     Arg,
@@ -38,8 +38,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Config:
+    """
+    Options for generating C++
+
+    common_subexpression_elimination:
+        Remove common shared computation
+    extra_validation:
+        Catch errors earlier in exchange for increased compute time
+    """
+
     common_subexpression_elimination: bool = True
-    python_modules: Iterable[str] = DEFAULT_MODULES
     extra_validation: bool = False
 
 
@@ -51,6 +59,11 @@ class CppCompileResult:
 
 
 class BasicBlock:
+    """
+    A run of statements without control flow. All statements can be reordered
+    or changed to improve performance.
+    """
+
     def __init__(
         self, *, statements: List[Tuple[str, Any]], indent: int, config: Config
     ):
