@@ -15,8 +15,15 @@ from formak import common
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 
+@dataclass
+class Config:
+    common_subexpression_elimination: bool = True
+    python_modules = DEFAULT_MODULES
+    extra_validation: bool = False
+
+
 class BasicBlock:
-    def __init__(self, *, arglist, statements, config):
+    def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
         self._arglist = arglist
         self._exprs = statements
         self._config = config
@@ -746,13 +753,6 @@ class ExtendedKalmanFilter:
                 self.params[p] = params[p]
 
         return self
-
-
-@dataclass
-class Config:
-    common_subexpression_elimination: bool = True
-    python_modules = DEFAULT_MODULES
-    extra_validation: bool = False
 
 
 def compile(symbolic_model, calibration_map=None, *, config=None):

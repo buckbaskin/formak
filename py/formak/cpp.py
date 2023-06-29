@@ -51,7 +51,9 @@ class CppCompileResult:
 
 
 class BasicBlock:
-    def __init__(self, statements: List[Tuple[str, Any]], indent=0, *, config):
+    def __init__(
+        self, *, statements: List[Tuple[str, Any]], indent: int, config: Config
+    ):
         # should be Tuple[str, sympy expression]
         statements = list(statements)
         self._targets = [k for k, _ in statements]
@@ -145,7 +147,7 @@ class Model:
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self._model = BasicBlock(
-            self._translate_model(symbolic_model), indent=4, config=config
+            statements=self._translate_model(symbolic_model), indent=4, config=config
         )
 
         self._return = self._translate_return()
@@ -280,23 +282,23 @@ class ExtendedKalmanFilter:
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self._process_model = BasicBlock(
-            self._translate_process_model(state_model),
+            statements=self._translate_process_model(state_model),
             indent=4,
             config=config,
         )
         self._process_jacobian = BasicBlock(
-            self._translate_process_jacobian(state_model),
+            statements=self._translate_process_jacobian(state_model),
             indent=4,
             config=config,
         )
 
         self._control_jacobian = BasicBlock(
-            self._translate_control_jacobian(state_model),
+            statements=self._translate_control_jacobian(state_model),
             indent=4,
             config=config,
         )
         self._control_covariance = BasicBlock(
-            self._translate_control_covariance(process_noise),
+            statements=self._translate_control_covariance(process_noise),
             indent=4,
             config=config,
         )
@@ -490,7 +492,7 @@ class ExtendedKalmanFilter:
                     print(f"Modeling {predicted_reading} as function of state: {model}")
 
             body = BasicBlock(
-                self._translate_sensor_model(sensor_model_mapping),
+                statements=self._translate_sensor_model(sensor_model_mapping),
                 indent=4,
                 config=self.config,
             )
@@ -564,7 +566,7 @@ class ExtendedKalmanFilter:
     def _translate_sensor_jacobian(self, typename, sensor_model_mapping):
         yield MemberDeclaration(f"{typename}::SensorJacobianT", "jacobian")
         yield from BasicBlock(
-            self._translate_sensor_jacobian_impl(sensor_model_mapping),
+            statements=self._translate_sensor_jacobian_impl(sensor_model_mapping),
             indent=4,
             config=self.config,
         ).compile()
@@ -579,7 +581,7 @@ class ExtendedKalmanFilter:
     def _translate_sensor_covariance(self, typename, covariance):
         yield MemberDeclaration(f"{typename}::CovarianceT", "covariance")
         yield from BasicBlock(
-            self._translate_sensor_covariance_impl(covariance),
+            statements=self._translate_sensor_covariance_impl(covariance),
             indent=4,
             config=self.config,
         ).compile()
