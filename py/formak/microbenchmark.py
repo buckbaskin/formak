@@ -9,7 +9,8 @@ def microbenchmark(function, input_iterable):
     for state_vector in input_iterable:
         start_time = datetime.now()
 
-        function(state_vector)
+        for i in range(10):
+            function(state_vector)
 
         end_time = datetime.now()
         dt = end_time - start_time
