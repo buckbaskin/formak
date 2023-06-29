@@ -7,6 +7,7 @@ from formak.microbenchmark import microbenchmark
 from formak.ui import *
 from sympy import cos, sin, symbols
 
+from common import ui_model
 from formak import python
 
 
@@ -18,31 +19,7 @@ def combine_nodes(leaves):
 
 
 def test_python_CSE():
-    l, r = symbols(["l", "r"])
-
-    # 2 * sin(l * r) * cos(l + r)
-
-    leaves_count = 1024
-
-    leaves = [l, r] * leaves_count
-
-    nodes = list(combine_nodes(leaves))
-
-    while len(nodes) > 1:
-        nodes = list(combine_nodes(nodes))
-
-    symbolic_model = nodes[0]
-
-    dt = Symbol("dt")
-
-    state = {l, r}
-    state_model = {
-        l: symbolic_model,
-        r: symbolic_model,
-    }
-    control = {}
-
-    model = Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = ui_model()
 
     cse_implementation = python.compile(
         model, config=python.Config(common_subexpression_elimination=True)
@@ -51,13 +28,11 @@ def test_python_CSE():
         model, config=python.Config(common_subexpression_elimination=False)
     )
 
-    # state_vector_next = python_implementation.model(0.1, state_vector)
-
     # random -> random_sample in 1.25
     inputs = np.random.default_rng(seed=1).random((101, 2))
     inputs = [np.array([[l, r]]).transpose() for l, r in inputs]
 
-    # run with cse, without cse
+    # run with CSE, without CSE
     print("CSE")
     cse_times = microbenchmark(partial(cse_implementation.model, 0.1), inputs)
     cse_p99_slowest = np.percentile(cse_times, 99)

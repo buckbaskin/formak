@@ -5,12 +5,13 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_library(
     name = "common",
     srcs = ["common.py"],
-    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+    deps = ["//py:formak"],
 )
 
-py_test_suite(
+py_test(
     name = "py-test",
     srcs = ["simple_test.py"],
+    main = "simple_test.py",
     deps = [
         "//py:formak",
         ":common",
