@@ -1,5 +1,8 @@
 # Thinking With FormaK
 
+Before getting started with FormaK, it can be helpful to know some of the
+concepts that will come up and how FormaK thinks about the problem space.
+
 FormaK helps take a model from concept stage to production. This is done by
 taking the model through different stages of development.
 1. Model definition - detailed model of features

@@ -2,8 +2,8 @@ import argparse
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from itertools import chain
-from typing import Any, List, Tuple
+from itertools import chain, count
+from typing import Any, List, Optional, Tuple
 
 from formak.ast_tools import (
     Arg,
@@ -12,7 +12,6 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     EnumClassDef,
-    Escape,
     ForwardClassDeclaration,
     FromFileTemplate,
     FunctionDeclaration,
@@ -20,13 +19,15 @@ from formak.ast_tools import (
     HeaderFile,
     MemberDeclaration,
     Namespace,
+    Private,
+    Public,
     Return,
     SourceFile,
     Templated,
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
-from sympy import Symbol, ccode, diff
+from sympy import Symbol, ccode, cse, diff
 
 from formak import common
 
@@ -37,34 +38,63 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Config:
+    """
+    Options for generating C++
+
+    common_subexpression_elimination:
+        Remove common shared computation
+    extra_validation:
+        Catch errors earlier in exchange for increased compute time
+    """
+
     common_subexpression_elimination: bool = True
-    python_modules: List[str] = DEFAULT_MODULES
     extra_validation: bool = False
 
 
 @dataclass
 class CppCompileResult:
     success: bool
-    header_path: str = None
-    source_path: str = None
+    header_path: Optional[str] = None
+    source_path: Optional[str] = None
 
 
 class BasicBlock:
-    def __init__(self, statements: List[Tuple[str, Any]], indent=0):
+    """
+    A run of statements without control flow. All statements can be reordered
+    or changed to improve performance.
+    """
+
+    def __init__(
+        self, *, statements: List[Tuple[str, Any]], indent: int, config: Config
+    ):
         # should be Tuple[str, sympy expression]
-        self._statements = statements
+        statements = list(statements)
+        self._targets = [k for k, _ in statements]
+        self._exprs = [v for _, v in statements]
         self._indent = indent
+        self._config = config
+
+    def __len__(self):
+        return len(self._exprs)
 
     def compile(self):
-        return "\n".join(self._compile_impl())
+        prefix = []
+        body = self._exprs
 
-    def _compile_impl(self):
-        # TODO(buck): this ignores a CSE flag in favor of never doing it. Add in the flag
-        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
-        # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
-        for lvalue, expr in self._statements:
+        if self._config.common_subexpression_elimination:
+            prefix, body = cse(body, symbols=(Symbol(f"_t{i}") for i in count()))
+
+        # Note: The list of statements is ordered and can get CSE or reordered
+        # within the block because we know it is straight calculation without
+        # control flow (a basic block)
+        for target, expr in prefix:
+            assert isinstance(target, Symbol)
             cc_expr = ccode(expr)
-            yield f"{' ' * self._indent}{lvalue} = {cc_expr};"
+            yield MemberDeclaration("double", target, cc_expr)
+
+        for target, expr in zip(self._targets, body):
+            cc_expr = ccode(expr)
+            yield MemberDeclaration("", target, cc_expr)
 
 
 class Model:
@@ -129,7 +159,9 @@ class Model:
                     extra = f"\nExtra: {extra_from_map}"
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
-        self._model = BasicBlock(self._translate_model(symbolic_model), indent=4)
+        self._model = BasicBlock(
+            statements=self._translate_model(symbolic_model), indent=4, config=config
+        )
 
         self._return = self._translate_return()
 
@@ -168,12 +200,8 @@ class Model:
         return "State({" + content + "})"
 
     def model_body(self):
-        indent = " " * 4
-        return "{impl}\n{indent}return {return_};".format(
-            impl=self._model.compile(),
-            indent=indent,
-            return_=self._return,
-        )
+        yield from self._model.compile()
+        yield Return(self._return)
 
     def enable_control(self):
         return self.control_size > 0
@@ -220,6 +248,7 @@ class ExtendedKalmanFilter:
         assert isinstance(process_noise, dict)
 
         self.enable_EKF = True
+        self.config = config
         self.namespace = namespace
         self.header_include = header_include
 
@@ -266,17 +295,25 @@ class ExtendedKalmanFilter:
                 raise ModelConstructionError(f"Mismatched Calibration:{missing}{extra}")
 
         self._process_model = BasicBlock(
-            self._translate_process_model(state_model), indent=4
+            statements=self._translate_process_model(state_model),
+            indent=4,
+            config=config,
         )
         self._process_jacobian = BasicBlock(
-            self._translate_process_jacobian(state_model), indent=4
+            statements=self._translate_process_jacobian(state_model),
+            indent=4,
+            config=config,
         )
 
         self._control_jacobian = BasicBlock(
-            self._translate_control_jacobian(state_model), indent=4
+            statements=self._translate_control_jacobian(state_model),
+            indent=4,
+            config=config,
         )
         self._control_covariance = BasicBlock(
-            self._translate_control_covariance(process_noise), indent=4
+            statements=self._translate_control_covariance(process_noise),
+            indent=4,
+            config=config,
         )
 
         # TODO(buck): Translate the sensor models dictionary contents into BasicBlocks
@@ -317,12 +354,8 @@ class ExtendedKalmanFilter:
             yield f"double {a.name}", expr_after
 
     def process_model_body(self):
-        indent = " " * 4
-        return "{impl}\n{indent}return {return_};".format(
-            impl=self._process_model.compile(),
-            indent=indent,
-            return_=self._return,
-        )
+        yield from self._process_model.compile()
+        yield Return(self._return)
 
     def _translate_process_jacobian(self, symbolic_model):
         subs_set = (
@@ -358,11 +391,9 @@ class ExtendedKalmanFilter:
                 yield assignment, expr_after
 
     def process_jacobian_body(self):
-        indent = " " * 4
-        typename = "ExtendedKalmanFilter"
-        prefix = f"{indent}{typename}::ProcessJacobianT jacobian;"
-        impl = self._process_jacobian.compile()
-        return f"{prefix}\n{impl}\n{indent}return jacobian;"
+        yield MemberDeclaration("ExtendedKalmanFilter::ProcessJacobianT", "jacobian")
+        yield from self._process_jacobian.compile()
+        yield Return("jacobian")
 
     def _translate_control_jacobian(self, symbolic_model):
         subs_set = (
@@ -398,11 +429,9 @@ class ExtendedKalmanFilter:
                 yield assignment, expr_after
 
     def control_jacobian_body(self):
-        indent = " " * 4
-        typename = "ExtendedKalmanFilter"
-        prefix = f"{indent}{typename}::ControlJacobianT jacobian;"
-        impl = self._control_jacobian.compile()
-        return f"{prefix}\n{impl}\n{indent}return jacobian;"
+        yield MemberDeclaration("ExtendedKalmanFilter::ControlJacobianT", "jacobian")
+        yield from self._control_jacobian.compile()
+        yield Return("jacobian")
 
     def _translate_return(self):
         content = ", ".join(
@@ -430,12 +459,9 @@ class ExtendedKalmanFilter:
                     yield f"covariance({j}, {i})", value
 
     def control_covariance_body(self):
-        indent = " " * 4
-        typename = "ExtendedKalmanFilter"
-        prefix = f"{indent}{typename}::CovarianceT covariance;"
-        body = self._control_covariance
-        suffix = f"{indent}return covariance;"
-        return prefix + "\n" + body.compile() + "\n" + suffix
+        yield MemberDeclaration("ExtendedKalmanFilter::CovarianceT", "covariance")
+        yield from self._control_covariance.compile()
+        yield Return("covariance")
 
     def enable_calibration(self):
         return self.calibration_size > 0
@@ -455,10 +481,9 @@ class ExtendedKalmanFilter:
             for member in self.arglist_calibration
         ]
         for predicted_reading, model in sorted(list(sensor_model_mapping.items())):
-            assignment = str(predicted_reading)
             expr_before = model
             expr_after = expr_before.subs(subs_set)
-            yield f"double {assignment}", expr_after
+            yield f"double {predicted_reading}", expr_after
 
     def reading_types(self, verbose=False):
         for name, sensor_model_mapping, sensor_noise in self.sensorlist:
@@ -480,19 +505,20 @@ class ExtendedKalmanFilter:
                     print(f"Modeling {predicted_reading} as function of state: {model}")
 
             body = BasicBlock(
-                self._translate_sensor_model(sensor_model_mapping), indent=4
+                statements=self._translate_sensor_model(sensor_model_mapping),
+                indent=4,
+                config=self.config,
             )
-            indent = " " * 4
-            return_ = (
-                "{}return {}Options{{".format(indent, typename)
+            return_ = Return(
+                "{}Options{{".format(typename)
                 + ", ".join(
                     str(reading)
                     for reading in sorted(list(sensor_model_mapping.keys()))
                 )
-                + "};"
+                + "}"
             )
             # TODO(buck): Move this line handling to the template?
-            SensorModel_model_body = body.compile() + "\n" + return_
+            SensorModel_model_body = list(body.compile()) + [return_]
             SensorModel_covariance_body = self._translate_sensor_covariance(
                 typename, sensor_noise
             )
@@ -551,13 +577,13 @@ class ExtendedKalmanFilter:
                 yield assignment, expr_after
 
     def _translate_sensor_jacobian(self, typename, sensor_model_mapping):
-        indent = " " * 4
-        prefix = f"{indent}{typename}::SensorJacobianT jacobian;"
-        body = BasicBlock(
-            self._translate_sensor_jacobian_impl(sensor_model_mapping), indent=4
-        )
-        suffix = f"{indent}return jacobian;"
-        return prefix + "\n" + body.compile() + "\n" + suffix
+        yield MemberDeclaration(f"{typename}::SensorJacobianT", "jacobian")
+        yield from BasicBlock(
+            statements=self._translate_sensor_jacobian_impl(sensor_model_mapping),
+            indent=4,
+            config=self.config,
+        ).compile()
+        yield Return("jacobian")
 
     def _translate_sensor_covariance_impl(self, covariance):
         rows, cols = covariance.shape
@@ -566,11 +592,13 @@ class ExtendedKalmanFilter:
                 yield f"covariance({i}, {j})", covariance[i, j]
 
     def _translate_sensor_covariance(self, typename, covariance):
-        indent = " " * 4
-        prefix = f"{indent}{typename}::CovarianceT covariance;"
-        body = BasicBlock(self._translate_sensor_covariance_impl(covariance), indent=4)
-        suffix = f"{indent}return covariance;"
-        return prefix + "\n" + body.compile() + "\n" + suffix
+        yield MemberDeclaration(f"{typename}::CovarianceT", "covariance")
+        yield from BasicBlock(
+            statements=self._translate_sensor_covariance_impl(covariance),
+            indent=4,
+            config=self.config,
+        ).compile()
+        yield Return("covariance")
 
 
 def _generate_model_function_bodies(
@@ -1076,7 +1104,7 @@ def header_from_ast(*, generator):
             "ExtendedKalmanFilter",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 UsingDeclaration(
                     "CovarianceT",
                     f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
@@ -1113,7 +1141,7 @@ def header_from_ast(*, generator):
                         ],
                     ),
                 ),
-                Escape("private:"),
+                Private(),
                 MemberDeclaration(
                     "std::unordered_map<SensorId, std::any>", "_innovations"
                 ),
@@ -1181,7 +1209,7 @@ def header_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 ExtendedKalmanFilterProcessModel_model(
                     enable_calibration=generator.enable_calibration(),
                     enable_control=generator.enable_control(),
@@ -1207,7 +1235,7 @@ def header_from_ast(*, generator):
             "Model",
             bases=[],
             body=[
-                Escape("public:"),
+                Public(),
                 State_model(
                     enable_control=generator.enable_control(),
                     enable_calibration=generator.enable_calibration(),
@@ -1308,9 +1336,7 @@ def source_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel::model",
             modifier="",
             args=standard_args,
-            body=[
-                Escape(generator.process_model_body()),
-            ],
+            body=generator.process_model_body(),
         )
         body.append(EKFPM_model)
         EKFPM_process_jacobian = FunctionDef(
@@ -1318,9 +1344,7 @@ def source_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel::process_jacobian",
             modifier="",
             args=standard_args,
-            body=[
-                Escape(generator.process_jacobian_body()),
-            ],
+            body=generator.process_jacobian_body(),
         )
         body.append(EKFPM_process_jacobian)
         EKFPM_control_jacobian = FunctionDef(
@@ -1328,9 +1352,7 @@ def source_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel::control_jacobian",
             modifier="",
             args=standard_args,
-            body=[
-                Escape(generator.control_jacobian_body()),
-            ],
+            body=generator.control_jacobian_body(),
         )
         body.append(EKFPM_control_jacobian)
         EKFPM_covariance = FunctionDef(
@@ -1338,9 +1360,7 @@ def source_from_ast(*, generator):
             "ExtendedKalmanFilterProcessModel::covariance",
             modifier="",
             args=standard_args,
-            body=[
-                Escape(generator.control_covariance_body()),
-            ],
+            body=generator.control_covariance_body(),
         )
         body.append(EKFPM_covariance)
 
@@ -1380,7 +1400,7 @@ def source_from_ast(*, generator):
                 f"{reading_type.typename}SensorModel::model",
                 modifier="",
                 args=standard_args,
-                body=[Escape(reading_type.SensorModel_model_body)],
+                body=reading_type.SensorModel_model_body,
             )
             body.append(ReadingSensorModel_model)
             ReadingSensorModel_covariance = FunctionDef(
@@ -1388,7 +1408,7 @@ def source_from_ast(*, generator):
                 f"{reading_type.typename}SensorModel::covariance",
                 modifier="",
                 args=standard_args,
-                body=[Escape(reading_type.SensorModel_covariance_body)],
+                body=reading_type.SensorModel_covariance_body,
             )
             body.append(ReadingSensorModel_covariance)
             ReadingSensorModel_jacobian = FunctionDef(
@@ -1396,7 +1416,7 @@ def source_from_ast(*, generator):
                 f"{reading_type.typename}SensorModel::jacobian",
                 modifier="",
                 args=standard_args,
-                body=[Escape(reading_type.SensorModel_jacobian_body)],
+                body=reading_type.SensorModel_jacobian_body,
             )
             body.append(ReadingSensorModel_jacobian)
     else:  # generator.enable_EKF == False
@@ -1410,9 +1430,7 @@ def source_from_ast(*, generator):
             "Model::model",
             modifier="",
             args=standard_args,
-            body=[
-                Escape(generator.model_body()),
-            ],
+            body=generator.model_body(),
         )
         body.append(Model_model)
 

@@ -48,7 +48,6 @@ def test_python_EKF():
         },
         sensor_noises={"altitude": np.eye(1)},
         calibration_map=calibration_map,
-        config={"compile": True, "warm_jit": True},
     )
 
     state_vector = np.zeros((9, 1))

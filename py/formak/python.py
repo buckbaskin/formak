@@ -1,17 +1,94 @@
 from collections import namedtuple
 from dataclasses import dataclass
-from typing import Dict
+from itertools import count
+from typing import Any, Dict, List
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
-from numba import njit
 from scipy.optimize import minimize
-from sympy import Matrix, Symbol
+from sympy import Matrix, Symbol, cse
 from sympy.utilities.lambdify import lambdify
 
 from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
+
+
+@dataclass
+class Config:
+    """
+    Options for generating C++
+
+    common_subexpression_elimination:
+        Remove common shared computation
+    python_modules:
+        Allow dependencies. Math is the Python standard library
+    extra_validation:
+        Catch errors earlier in exchange for increased compute time
+    """
+
+    common_subexpression_elimination: bool = True
+    python_modules = DEFAULT_MODULES
+    extra_validation: bool = False
+
+
+class BasicBlock:
+    """
+    A run of statements without control flow. All statements can be reordered
+    or changed to improve performance.
+    """
+
+    def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
+        self._arglist = arglist
+        self._exprs = statements
+        self._config = config
+
+        self._compile()
+
+    def __len__(self):
+        return len(self._exprs)
+
+    def _compile(self):
+        prefix = []
+        body = self._exprs
+
+        if self._config.common_subexpression_elimination:
+            prefix, body = cse(body, symbols=(Symbol(f"_t{i}") for i in count()))
+
+        temporaries = [r[0] for r in prefix]
+        self._prefix = []
+        for i in range(len(prefix)):
+            self._prefix.append(
+                (
+                    temporaries[i],
+                    lambdify(
+                        self._arglist + temporaries[:i],
+                        prefix[i][1],
+                        modules=self._config.python_modules,
+                        cse=False,
+                    ),
+                )
+            )
+
+        self._body = [
+            lambdify(
+                self._arglist + temporaries,
+                expr,
+                modules=self._config.python_modules,
+                cse=False,
+            )
+            for expr in body
+        ]
+
+    def execute(self, *args, **kwargs):
+
+        # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
+        temporary_values = {}
+        for name, expr in self._prefix:
+            temporary_values[str(name)] = expr(*args, **kwargs, **temporary_values)
+
+        for impl in self._body:
+            yield impl(*args, **kwargs, **temporary_values)
 
 
 class Model:
@@ -76,38 +153,12 @@ class Model:
                 f"calibration_vector shape {self.calibration_vector.shape} doesn't match {(self.calibration_size, 1)}"
             )
 
-        # TODO(buck): Common Subexpression Elimination supports multiple inputs, so use common subexpression elimination across state calculations
-        self._impl = [
-            lambdify(
-                self.arglist,
-                symbolic_model.state_model[a],
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for a in self.arglist_state
-        ]
+        self._impl = BasicBlock(
+            arglist=self.arglist,
+            statements=[symbolic_model.state_model[a] for a in self.arglist_state],
+            config=config,
+        )
 
-        if config.compile:
-            self._impl = [njit(i) for i in self._impl]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                for jit_impl in self._impl:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                        )
-
-    # TODO(buck): numpy -> numpy if not compiled
-    #   - Given the arglist, refactor expressions to work with state vectors
-    #   - Transparently convert states, controls to numpy so that it's always numpy -> numpy
     def model(self, dt, state, control_vector=None):
         if control_vector is None:
             if self.control_size > 0:
@@ -124,9 +175,15 @@ class Model:
         assert control_vector.shape == (self.control_size, 1)
 
         next_state = np.zeros((self.state_size, 1))
-        for i, (state_id, impl) in enumerate(zip(self.arglist_state, self._impl)):
+        for i, (state_id, result) in enumerate(
+            zip(
+                self.arglist_state,
+                self._impl.execute(
+                    dt, *state, *self.calibration_vector, *control_vector
+                ),
+            )
+        ):
             try:
-                result = impl(dt, *state, *self.calibration_vector, *control_vector)
                 next_state[i, 0] = result
             except TypeError:
                 print(
@@ -138,6 +195,7 @@ class Model:
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
                 raise
+
         return next_state
 
 
@@ -164,15 +222,11 @@ class SensorModel:
                 f"calibration vector shape {self.calibration_vector.shape} doesn't match expected shape {(self.calibration_size, 1)}"
             )
 
-        self._impl = [
-            lambdify(
-                self.arglist,
-                sensor_model[k],
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for k in self.readings
-        ]
+        self._impl = BasicBlock(
+            arglist=self.arglist,
+            statements=[sensor_model[k] for k in self.readings],
+            config=config,
+        )
 
         ## "Pre-flight" Checks
 
@@ -187,9 +241,13 @@ class SensorModel:
         assert state_vector.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
-        for i, (reading_id, impl) in enumerate(zip(self.readings, self._impl)):
+        for i, (reading_id, result) in enumerate(
+            zip(
+                self.readings,
+                self._impl.execute(*state_vector, *self.calibration_vector),
+            )
+        ):
             try:
-                result = impl(*state_vector, *self.calibration_vector)
                 reading[i, 0] = result
             except (TypeError, ValueError):
                 print(
@@ -227,13 +285,16 @@ class ExtendedKalmanFilter:
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
         self.calibration_size = len(state_model.calibration)
+        self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(state_model.calibration), key=lambda x: x.name
+        )
 
         self.params = {
             "process_noise": None,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
-            "compile": compile,
         }
 
         self._construct_process(
@@ -295,64 +356,20 @@ class ExtendedKalmanFilter:
                 self._state_model.arglist_control
             )
 
-        self._impl_process_jacobian = [
-            lambdify(
-                self._state_model.arglist,
-                expr,
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for expr in symbolic_process_jacobian
-        ]
+        self._impl_process_jacobian = BasicBlock(
+            arglist=self._state_model.arglist,
+            # Flatten the Matrix symbolic_process_jacobian by iterating over all elements
+            statements=[expr for expr in symbolic_process_jacobian],
+            config=config,
+        )
         assert len(self._impl_process_jacobian) == self.state_size**2
 
-        # TODO(buck): parameterized tests with compile=False and compile=True. Generically, parameterize tests over all config (or a useful subset of all configs)
-        if config.compile:
-            self._impl_process_jacobian = [njit(i) for i in self._impl_process_jacobian]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                for jit_impl in self._impl_process_jacobian:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                        )
-
-        self._impl_control_jacobian = [
-            lambdify(
-                self._state_model.arglist,
-                expr,
-                modules=config.python_modules,
-                cse=config.common_subexpression_elimination,
-            )
-            for expr in symbolic_control_jacobian
-        ]
+        self._impl_control_jacobian = BasicBlock(
+            arglist=self._state_model.arglist,
+            statements=[expr for expr in symbolic_control_jacobian],
+            config=config,
+        )
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
-
-        if config.compile:
-            self._impl_control_jacobian = [njit(i) for i in self._impl_control_jacobian]
-
-            if config.warm_jit:
-                # Pre-warm Jit by calling with known values/structure
-                default_dt = 0.1
-                default_state = np.zeros((self.state_size, 1))
-                default_calibration = np.zeros((self.calibration_size, 1))
-                default_control = np.zeros((self.control_size, 1))
-                for jit_impl in self._impl_control_jacobian:
-                    for _i in range(5):
-                        jit_impl(
-                            default_dt,
-                            *default_state,
-                            *default_calibration,
-                            *default_control,
-                        )
 
     def _construct_sensors(
         self, state_model, sensor_models, sensor_noises, calibration_map, config
@@ -376,7 +393,7 @@ class ExtendedKalmanFilter:
 
         self.params["sensor_noises"] = sensor_noises
 
-        self.arglist_sensor = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
         self._impl_sensor_jacobians = {}
 
@@ -390,66 +407,63 @@ class ExtendedKalmanFilter:
             # TODO(buck): This assertion won't necessarily hold if CSE is on across states
             assert symbolic_sensor_jacobian.shape == (
                 sensor_size,
-                self.state_size,
+                self.state_size + self.calibration_size,
             )
 
-            impl_sensor_jacobian = [
-                lambdify(
-                    self.arglist_sensor,
-                    expr,
-                    modules=config.python_modules,
-                    cse=config.common_subexpression_elimination,
-                )
-                for expr in symbolic_sensor_jacobian
-            ]
-            assert len(impl_sensor_jacobian) == sensor_size * self.state_size
+            impl_sensor_jacobian = BasicBlock(
+                arglist=self.arglist_sensor,
+                statements=[expr for expr in symbolic_sensor_jacobian],
+                config=config,
+            )
+            assert len(impl_sensor_jacobian) == sensor_size * (
+                self.state_size + self.calibration_size
+            )
 
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
-            if config.compile:
-                impl_sensor_jacobian = [njit(i) for i in impl_sensor_jacobian]
-
-                if config.warm_jit:
-                    # Pre-warm Jit by calling with known values/structure
-                    default_state = np.zeros((self.state_size, 1))
-                    for jit_impl in impl_sensor_jacobian:
-                        for _i in range(5):
-                            jit_impl(*default_state)
-
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
         self.innovations = {}
         self.sensor_prediction_uncertainty = {}
 
     def process_jacobian(self, dt, state, control):
+        computed_jacobian = list(
+            self._impl_process_jacobian.execute(
+                dt, *state, *self.calibration_vector, *control
+            )
+        )
+
         jacobian = np.zeros((self.state_size, self.state_size))
         for row in range(self.state_size):
             for col in range(self.state_size):
-                jacobian[row, col] = self._impl_process_jacobian[
-                    row * self.state_size + col
-                ](dt, *state, *self.calibration_vector, *control)
+                result = computed_jacobian[row * self.state_size + col]
+                jacobian[row, col] = result
         return jacobian
 
     def control_jacobian(self, dt, state, control):
-        jacobian = np.zeros((self.state_size, self.control_size))
+        computed_jacobian = list(
+            self._impl_control_jacobian.execute(
+                dt, *state, *self.calibration_vector, *control
+            )
+        )
+        result = np.zeros((self.state_size, self.control_size))
         for row in range(self.state_size):
             for col in range(self.control_size):
-                jacobian[row, col] = self._impl_control_jacobian[
-                    row * self.control_size + col
-                ](dt, *state, *self.calibration_vector, *control)
-        return jacobian
+                result[row, col] = computed_jacobian[row * self.control_size + col]
+        return result
 
     def sensor_jacobian(self, sensor_key, state):
         sensor_size = self.params["sensor_models"][sensor_key].sensor_size
-        jacobian = np.zeros((sensor_size, self.state_size))
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
 
+        computed_jacobian = list(
+            impl_sensor_jacobian.execute(*state, *self.calibration_vector)
+        )
+        result = np.zeros((sensor_size, self.state_size))
         for row in range(sensor_size):
             for col in range(self.state_size):
-                jacobian[row, col] = impl_sensor_jacobian[row * sensor_size + col](
-                    *state
-                )
-        return jacobian
+                result[row, col] = computed_jacobian[row * sensor_size + col]
+        return result
 
     def process_model(self, dt, state, covariance, control=None):
         if control is None:
@@ -754,15 +768,6 @@ class ExtendedKalmanFilter:
                 self.params[p] = params[p]
 
         return self
-
-
-@dataclass
-class Config:
-    compile: bool = False
-    warm_jit: bool = compile
-    common_subexpression_elimination: bool = True
-    python_modules = DEFAULT_MODULES
-    extra_validation: bool = False
 
 
 def compile(symbolic_model, calibration_map=None, *, config=None):
