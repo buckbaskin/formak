@@ -172,8 +172,6 @@ def test_SensorModel_calibration():
     dt = 0.1
 
     def read_once(calibration_map):
-        # class SensorModel:
-        #     def __init__(self, state_model, sensor_model, calibration_map, config):
         model = python.SensorModel(
             state_model=ui.Model(
                 ui.Symbol("dt"),
@@ -187,7 +185,6 @@ def test_SensorModel_calibration():
             config=config,
         )
 
-        # def model(self, state_vector):
         return model.model(np.zeros((1, 1)))
 
     calibration = {
@@ -210,8 +207,6 @@ def test_EKF_sensor_jacobian_calibration():
     dt = 0.1
 
     def read_once(calibration_map):
-        # class SensorModel:
-        #     def __init__(self, state_model, sensor_model, calibration_map, config):
         ekf = python.ExtendedKalmanFilter(
             state_model=ui.Model(
                 ui.Symbol("dt"),
@@ -227,7 +222,6 @@ def test_EKF_sensor_jacobian_calibration():
             config=config,
         )
 
-        # def sensor_jacobian(self, sensor_key, state)
         return ekf.sensor_jacobian("key", np.zeros((1, 1)))[0, 0]
 
     calibration = {
