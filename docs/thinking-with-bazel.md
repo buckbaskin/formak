@@ -1,15 +1,24 @@
 # Thinking In Bazel
 
-Concept Tiers
+## Concepts
 
-## Basics
+Audience: All Users
 
-- build environment
-    - ???
+... Detailed structure of project ... built from bottom up by starting with
+specific files (e.g. `cc_test`) ...
+
+... Detailed structure enables a better build tool ... Detailed structure can
+be maintained incrementally ... maintained by distributed team, effort ...
+
+## Working Knowledge
+
+Audience: Language authors. People using bazel commands like `bazel test`
+
 - targets
 	- named bazel objects
-- tools
-	- A subset of targets/special case of targets
+    - typed (e.g. there are C++ bazel targets)
+- paths
+    - ???
 - Starlark
 	- Language used in BUILD files
 - Build rules
@@ -22,13 +31,28 @@ Concept Tiers
         - ???
 
 ## C++
+
+Audience: Authors, maintainers, editors of BUILD files
+
+- build environment
+    - ???
+- tools
+	- A subset of targets/special case of targets
 - Build rules
-	- `cc_toolchain`
-        - ???
-	- `cc_binary`
-        - ???
+	- `cc_library`
+        - named collection of C++ sources built into a library for consumption by other rules (other libraries, binaries, tests, etc.)
+    - `cc_binary`
+        - named collection of C++ sources built into a binary for execution
+    - `cc_test`
+        - cc_binary but with extra bits attached and more expectations about pass/fail behavior
 
 ## Building C++
+
+Audience: People writing more advanced Bazel to support BUILD file authors, etc.
+
+- phases
+    - analysis phase
+        - ???
 
 - C++ toolchain
     - ???
@@ -41,6 +65,25 @@ Concept Tiers
 	- `--cpu=k8`
         - ???
 
+- provider
+    - ???
+- features
+    - ???
+
+- Build rules
+	- `cc_toolchain`
+        - Selected by Bazel. ???
+        - `cc_toolchain.toolchain_config`
+            - A `CcToolchainConfigInfo`
+
+- `CcToolchainProvider`
+
+tools and paths can sometimes be exchanged
+[Example](https://github.com/bazelbuild/rules_cc/blob/main/cc/cc_toolchain_config_lib.bzl#L473-L477)
+
+- `CcToolchainConfigInfo`
+    - `CcToolchainConfigInfo` is a provider that provides the necessary level of granularity for configuring the behavior of Bazel's C++ rules. By default, Bazel automatically configures `CcToolchainConfigInfo` for your build, but you have the option to configure it manually. For that, you need a Starlark rule that provides the `CcToolchainConfigInfo` and you need to point the `toolchain_config` attribute of the `cc_toolchain` to your rule. You can create the `CcToolchainConfigInfo` by calling `cc_common.create_cc_toolchain_config_info()`. You can find Starlark constructors for all structs you'll need in the process in `@rules_cc//cc:cc_toolchain_config_lib.bzl`.
+
 ## Annotated Bazel Tutorial
 
 Source: [Bazel Tutorial: Configure C++ Toolchains](https://bazel.build/tutorials/ccp-toolchain-config)
@@ -49,7 +92,8 @@ Source: [Bazel Tutorial: Configure C++ Toolchains](https://bazel.build/tutorials
 ### Bazel Tutorial: Configure C++ Toolchains
 
 > This tutorial uses an example scenario to describe how to configure C++
-> toolchains for a project. It's based on an
+> toolchains for a project.
+> It's based on an
 > [example C++ project](https://github.com/bazelbuild/examples/tree/master/cpp-tutorial/stage1)
 > that builds error-free using `clang`.
 
