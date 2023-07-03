@@ -5,3 +5,9 @@ cc_test(
     srcs = ["cpp11.cpp"],
     deps = CC_FEATURE_TEST_DEPS,
 )
+
+cc_test(
+    name = "cpp14",
+    srcs = ["cpp14.cpp"],
+    deps = CC_FEATURE_TEST_DEPS,
+)
