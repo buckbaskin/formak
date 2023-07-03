@@ -15,10 +15,10 @@ echo "black"
 black $DEFAULT ;
 
 echo "isort"
-isort --profile black py/ featuretests/;
+isort --profile black py/ featuretests/ languagesupport/
 
 echo "codespell"
-codespell py/ featuretests/
+codespell py/ featuretests/ languagesupport/
 
 echo "clang-format"
 SEARCHRESULT=$(ag --cpp -g ".*" $DEFAULT) ;

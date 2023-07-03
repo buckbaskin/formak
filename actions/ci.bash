@@ -1,5 +1,5 @@
 bt() {
-    bazel test --verbose_failures "$@" //py/...
+    bazel test --verbose_failures "$@" //py/... //cpp/... //languagesupport/...
     RESULT=$?
     if [ $RESULT -ne 0 ] ; then
         echo " "
