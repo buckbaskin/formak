@@ -5,6 +5,7 @@ Concept Tiers
 ## Basics
 
 - build environment
+    - ???
 - targets
 	- named bazel objects
 - tools
@@ -12,26 +13,33 @@ Concept Tiers
 - Starlark
 	- Language used in BUILD files
 - Build rules
+    - ???
 
+- .bazelrc
+	- `--config=config-name`
+        - ???
+	- `build:config-name`
+        - ???
 
 ## C++
 - Build rules
-	- cc_toolchain
-	- cc_binary
+	- `cc_toolchain`
+        - ???
+	- `cc_binary`
+        - ???
 
 ## Building C++
 
 - C++ toolchain
+    - ???
 
-- .bazelrc
-	- --config=config-name
-	- build:config-name
-- --crosstool_top
+- `--crosstool_top`
 	- Control the toolchain used to build targets
-- --host_crosstool_top
+- `--host_crosstool_top`
 	- Control the toolchain used to build tools used in the toolchain
-- --cpu
-	- --cpu=k8
+- `--cpu`
+	- `--cpu=k8`
+        - ???
 
 ## Annotated Bazel Tutorial
 
