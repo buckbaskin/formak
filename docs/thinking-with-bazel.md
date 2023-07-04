@@ -2,23 +2,31 @@
 
 ## Concepts
 
-Audience: All Users
+*Audience*: All Users
 
-... Detailed structure of project ... built from bottom up by starting with
-specific files (e.g. `cc_test`) ...
+Bazel is a build system for managing a project by tracking a detailed set of
+metadata.  This set is built from the bottom up by assembling common small
+pieces (targets, e.g. `cc_test` for a source file that defines a test).
 
-... Detailed structure enables a better build tool ... Detailed structure can
-be maintained incrementally ... maintained by distributed team, effort ...
+Configuring this detailed strucutre enables a better build tool. For example,
+by knowing the structure of how differnt targets related to each other the
+build can be parallelized or build steps can be de-duplicated. By building this
+structure up from small pieces the project can be maintained incrementally and
+by folks with knowledge of a specific area without having to understand how the
+entire system works.
 
 ## Working Knowledge
 
-Audience: Language authors. People using bazel commands like `bazel test`
+*Audience*: Language authors. People using bazel commands like `bazel test`
 
 - targets
 	- named bazel objects
     - typed (e.g. there are C++ bazel targets)
 - paths
-    - ???
+    - I think this may be just the absolute Unix path to a file or directory, or the path relative to a target. [Example in codebase](https://cs.opensource.google/bazel/bazel/+/4eea5c62a566d21832c93e4c18ec559e75d5c1ce:tools/cpp/cc_toolchain_config_lib.bzl;l=405-406). Probably a [path-like object](https://docs.python.org/3/glossary.html#term-path-like-object) like in Python
+- label
+    - `//path/to/package:target-name`
+    - Looks a lot like a path, with `//` at the location of the WORKSPACE file
 - Starlark
 	- Language used in BUILD files
 - Build rules
@@ -32,12 +40,14 @@ Audience: Language authors. People using bazel commands like `bazel test`
 
 ## C++
 
-Audience: Authors, maintainers, editors of BUILD files
+*Audience*: Authors, maintainers, editors of BUILD files
 
 - build environment
-    - ???
+    - environment seems to be used to refer to the Bash-like environment in which things are run (e.g [setting environment variables like `TEST_SIZE`](https://docs.bazel.build/versions/5.4.1/be/common-definitions.html#common-attributes-tests))
+    - But also there are many possible `environment`s that can be specified (e.g. [to ensure compatibility](https://docs.bazel.build/versions/5.4.1/be/common-definitions.html#common-attributes))
 - tools
 	- A subset of targets/special case of targets
+    - Accepts a path XOR a tool (label?) [Source](https://cs.opensource.google/bazel/bazel/+/release-6.3.0:tools/cpp/cc_toolchain_config_lib.bzl;l=439-443)
 - Build rules
 	- `cc_library`
         - named collection of C++ sources built into a library for consumption by other rules (other libraries, binaries, tests, etc.)
@@ -48,7 +58,7 @@ Audience: Authors, maintainers, editors of BUILD files
 
 ## Building C++
 
-Audience: People writing more advanced Bazel to support BUILD file authors, etc.
+*Audience*: People writing more advanced Bazel to support BUILD file authors, etc.
 
 - phases
     - analysis phase
@@ -66,8 +76,10 @@ Audience: People writing more advanced Bazel to support BUILD file authors, etc.
         - ???
 
 - provider
+    - [looks like this is a basic type from bazel?](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L333)
     - ???
 - features
+    - A named list of flags
     - ???
 
 - Build rules
@@ -83,6 +95,75 @@ tools and paths can sometimes be exchanged
 
 - `CcToolchainConfigInfo`
     - `CcToolchainConfigInfo` is a provider that provides the necessary level of granularity for configuring the behavior of Bazel's C++ rules. By default, Bazel automatically configures `CcToolchainConfigInfo` for your build, but you have the option to configure it manually. For that, you need a Starlark rule that provides the `CcToolchainConfigInfo` and you need to point the `toolchain_config` attribute of the `cc_toolchain` to your rule. You can create the `CcToolchainConfigInfo` by calling `cc_common.create_cc_toolchain_config_info()`. You can find Starlark constructors for all structs you'll need in the process in `@rules_cc//cc:cc_toolchain_config_lib.bzl`.
+    - [CcToolchainConfigInfo Reference](https://docs.bazel.build/versions/5.4.1/cc-toolchain-config-reference.html)
+    - [create_cc_toolchain_config_info](https://docs.bazel.build/versions/5.2.0/skylark/lib/cc_common.html#create_cc_toolchain_config_info)
+
+
+- [create_cc_toolchain_config_info](https://docs.bazel.build/versions/5.2.0/skylark/lib/cc_common.html#create_cc_toolchain_config_info)
+    - Creates a CcToolchainConfigInfo **provider**
+    - Arguments:
+        - `ctx` context
+        - `features`, default = [], a list of [features](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L336)
+        - `action_configs`, default = [], A list of [action_configs](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L461).
+        - `artifact_name_patterns`, default = [], A list of [artifact_name_patterns](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L516).
+        - `cxx_builtin_include_directories`, default = []
+        - `toolchain_identifier`
+        - `target_system_name`, required, The GNU System Name.
+        - `target_cpu`, required, The target architecture string.
+        - `target_libc`, required, The target libcversion string (e.g. "glibc-2.2.2")
+        - `compiler`, required, The compiler version string (e.g. "gcc-4.1.1")
+        - `abi_version`, Optional[string], (e.g. "gcc-3.4")
+        - `abi_libc_version`, Optional[string]
+        - `tool_paths`, default = [], A list of [tool_paths](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L400)
+        - `make_variables`, default = [], A list of [make_variables](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L86).
+        - `builtin_sysroot`, Optional[string]
+
+
+- `ctx`, [Rule context](https://bazel.build/rules/lib/builtins/ctx)
+    - "lets the implementation function access the current target's label, attributes, configuration, and the providers of its dependencies. It has methods for declaring output files and the actions that produce them"
+    - conventionally named `ctx`
+    - Example: Value type `Label` as member `ctx.label`
+- `features`, default = [], a list of [features](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L336)
+    - A named list of flags
+    - I'd love to find an example of an instance of a call to [`def feature`](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L344) or [`FeatureInfo`](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L333)
+- `action_configs`, default = [], A list of [action_configs](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L461).
+    - [`def action_config`](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L488)
+    - action config configures an action
+    - Action config activation occurs by the same semantics as features: a feature can 'require' or 'imply' an action config in the same way that it would another feature. [Source](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L498-L500)
+- `artifact_name_patterns`, default = [], A list of [artifact_name_patterns](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L516).
+- `cxx_builtin_include_directories`, default = []
+- `toolchain_identifier`
+- `host_system_name`, required, The GNU System Name.
+    - Example: "local"
+    - Another example: ???
+- `target_system_name`, required, The GNU System Name.
+    - Example: "local"
+    - Another example: ???
+- `target_cpu`, required, The target architecture string.
+    - Example: "k8" (x86, maybe x86-64)
+    - Example ???
+- `target_libc`, required, The target libcversion string
+    - Example: "glibc-2.2.2"
+    - Example: "unknown"
+    - Example ???
+- `compiler`, required, The compiler version string
+    - Example: "gcc-4.1.1"
+    - Example: "clang"
+    - Example ???
+- `abi_version`, Optional[string]
+    - Example: "unknown"
+    - Example: "gcc-3.4"
+    - Example ???
+- `abi_libc_version`, Optional[string]
+    - Example: "unknown"
+    - Example ???
+- `tool_paths`, default = [], A list of [tool_paths](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L400)
+    - Example ???
+- `make_variables`, default = [], A list of [make_variables](https://github.com/bazelbuild/bazel/blob/master/tools/cpp/cc_toolchain_config_lib.bzl#L86).
+    - Example ???
+- `builtin_sysroot`, Optional[string]
+    - Do I want this or not for a hermetic build?
+    - Example ???
 
 ## Annotated Bazel Tutorial
 
