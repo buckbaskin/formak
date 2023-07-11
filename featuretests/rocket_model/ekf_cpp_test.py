@@ -1,12 +1,14 @@
-from formak import ui, cpp
 from itertools import repeat
+
+import numpy as np
 from model_definition import (
     model_definition,
-    named_rotation_rate,
     named_acceleration,
+    named_rotation_rate,
     named_translation,
 )
-import numpy as np
+
+from formak import cpp, ui
 
 
 def test_cpp_EKF():

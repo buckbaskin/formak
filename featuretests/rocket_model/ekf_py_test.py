@@ -1,12 +1,14 @@
-from formak import ui, python
 from itertools import repeat
+
+import numpy as np
 from model_definition import (
     model_definition,
-    named_rotation_rate,
     named_acceleration,
+    named_rotation_rate,
     named_translation,
 )
-import numpy as np
+
+from formak import python, ui
 
 
 def test_python_EKF():
@@ -46,7 +48,6 @@ def test_python_EKF():
         },
         sensor_noises={"altitude": np.eye(1)},
         calibration_map=calibration_map,
-        config={"compile": True, "warm_jit": True},
     )
 
     state_vector = np.zeros((9, 1))

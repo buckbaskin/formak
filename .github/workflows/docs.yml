@@ -12,7 +12,7 @@ jobs:
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: Check for changes to docs. Relies on empty being falsey
-        run: git diff --name-only cpp-gen $(git merge-base cpp-gen origin/master) | grep "^docs/designs/"
+        run: git diff --name-only calibration $(git merge-base calibration origin/master) | grep "^docs/designs/"
       - run: echo "🍏 This job's status is ${{ job.status }}."
   docs-diff:
     runs-on: ubuntu-latest
@@ -27,5 +27,5 @@ jobs:
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: Check for changes to docs. Relies on empty being falsey
-        run: git diff --name-only cpp-gen $(git merge-base cpp-gen origin/master) | grep "^docs" | grep -v "^docs/designs/"
+        run: git diff --name-only calibration $(git merge-base calibration origin/master) | grep "^docs" | grep -v "^docs/designs/"
       - run: echo "🍏 This job's status is ${{ job.status }}."

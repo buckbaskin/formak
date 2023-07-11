@@ -47,7 +47,7 @@ def cc_formak_model(namespace, name, pymain, pysrcs, pydeps = None, python_versi
     run_binary(
         name = GENRULE_NAME,
         tool = PY_BINARY_NAME,
-        args = ["--templates", "$(locations " + MODEL_TEMPLATES + ")", "--header", "$(location generated/%s/%s.h)" % (namespace, name), "--source", "$(location generated/%s/%s.cpp)" % (namespace, name), "--namespace", namespace],
+        args = ["--header", "$(location generated/%s/%s.h)" % (namespace, name), "--source", "$(location generated/%s/%s.cpp)" % (namespace, name), "--namespace", namespace],
         outs = OUTPUT_FILES,
         srcs = ["//py:templates"],
     )

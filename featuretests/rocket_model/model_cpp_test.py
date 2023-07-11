@@ -1,6 +1,7 @@
-from formak import cpp, ui
-from model_definition import model_definition
 import numpy as np
+from model_definition import model_definition
+
+from formak import cpp, ui
 
 
 def test_cpp_Model():

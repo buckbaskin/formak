@@ -1,12 +1,13 @@
 import sys
 from datetime import datetime
+from functools import reduce
 from os.path import basename
 
-from functools import reduce
-from formak import ui, python
 import numpy as np
-from sympy import sin, cos
+from sympy import cos, sin
 from sympy.solvers.solveset import nonlinsolve
+
+from formak import python, ui
 
 
 def rotation(roll, pitch, yaw):
