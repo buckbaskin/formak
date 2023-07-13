@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from scipy.optimize import minimize
-from sympy import Matrix, Symbol, cse
+from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
 
 from formak import common
@@ -58,12 +58,16 @@ class BasicBlock:
         temporaries = [r[0] for r in prefix]
         self._prefix = []
         for i in range(len(prefix)):
+            expr = prefix[i][1]
+            if self._config.common_subexpression_elimination:
+                expr = simplify(expr)
+
             self._prefix.append(
                 (
                     temporaries[i],
                     lambdify(
                         self._arglist + temporaries[:i],
-                        prefix[i][1],
+                        expr,
                         modules=self._config.python_modules,
                         cse=False,
                     ),
@@ -73,7 +77,9 @@ class BasicBlock:
         self._body = [
             lambdify(
                 self._arglist + temporaries,
-                expr,
+                simplify(expr)
+                if self._config.common_subexpression_elimination
+                else expr,
                 modules=self._config.python_modules,
                 cse=False,
             )

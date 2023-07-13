@@ -46,6 +46,7 @@ cpp_implementation = cpp.compile_ekf(
     },
     sensor_noises={"altitude": np.eye(1)},
     calibration_map=calibration_map,
+    config=cpp.Config(common_subexpression_elimination=True),
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
