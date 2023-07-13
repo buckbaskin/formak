@@ -27,7 +27,7 @@ from formak.ast_tools import (
     UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
-from sympy import Symbol, ccode, cse, diff
+from sympy import Symbol, ccode, cse, diff, simplify
 
 from formak import common
 
@@ -89,10 +89,14 @@ class BasicBlock:
         # control flow (a basic block)
         for target, expr in prefix:
             assert isinstance(target, Symbol)
+            if self._config.common_subexpression_elimination:
+                expr = simplify(expr)
             cc_expr = ccode(expr)
             yield MemberDeclaration("double", target, cc_expr)
 
         for target, expr in zip(self._targets, body):
+            if self._config.common_subexpression_elimination:
+                expr = simplify(expr)
             cc_expr = ccode(expr)
             yield MemberDeclaration("", target, cc_expr)
 
