@@ -619,7 +619,7 @@ class ExtendedKalmanFilter:
 
         minimize_this(x0)
 
-        result = minimize(minimize_this, x0)
+        result = minimize(minimize_this, x0, tol=1.0e-1)
 
         if not result.success:
             raise MinimizationFailure(result)

@@ -9,6 +9,12 @@ class MinimizationFailure(FormakBaseException):
         self.success = minimization_result.success
         self.message = minimization_result.message
 
+    def __str__(self):
+        return "MinimizationFailure({}, {})".format(
+            self.success,
+            self.message,
+        )
+
     def __repr__(self):
         return "MinimizationFailure({}, {})".format(
             self.success,
