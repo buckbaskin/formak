@@ -4,7 +4,7 @@ Author: Buck Baskin @bebaskin
 Created: 2023-06-12
 Updated: 2023-06-12
 Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
-Status: Refactor/Cleanup
+Status: Merged
 
 ## Overview
 

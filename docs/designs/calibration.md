@@ -5,7 +5,7 @@ Created: 2023-05-06
 Updated: 2023-05-06
 Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
-Status: Refactor/Cleanup
+Status: Merged
 
 ## Overview
 

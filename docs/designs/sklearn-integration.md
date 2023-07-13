@@ -5,7 +5,7 @@ Created: 2022-09-26
 Updated: 2022-12-21
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
-Status: 7. Unit Testing
+Status: Merged
 
 
 ## Overview
