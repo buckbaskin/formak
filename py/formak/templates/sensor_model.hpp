@@ -9,7 +9,7 @@ const ReadingT reading_est =
                                  // clang-format on
                                  input_calibration,
                                  // clang-format off
-{% endif %}      // clang-format on
+{% endif %}    // clang-format on
                                  input_reading);  // z_est
 
 // H = Jacobian(z_est w.r.t. state)
