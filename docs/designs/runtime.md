@@ -57,6 +57,16 @@ need to worry about tracking states, variances, times, the process model (or
 models in the future), sensor models. Instead the user just passes in the
 desired output time and any new information from sensors and gets the result.
 
+### Managing Computation
+
+The `tick` member function will manage the computation of the underlying filter.
+
+### Managing Memory
+
+The `ManagedFilter` class will own the memory for the underlying computation;
+however, the layout for the underlying computation will need to be provided by
+the generated computation as a struct.
+
 ## Feature Tests
 
 The feature tests for this design will focus on the tick interface in a few

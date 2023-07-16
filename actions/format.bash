@@ -20,6 +20,9 @@ isort --profile black py/ featuretests/ languagesupport/
 echo "codespell"
 codespell py/ featuretests/ languagesupport/
 
+echo "proselint"
+proselint --config=common/proselint.json  docs/designs/*.md docs/formak/*.md docs/*.md | grep -v "symbols\.curly_quotes" | grep -v "symbols\.ellipsis"
+
 echo "clang-format"
 SEARCHRESULT=$(ag --cpp -g ".*" $DEFAULT) ;
 clang-format-12 -i -style=file $SEARCHRESULT
