@@ -50,7 +50,31 @@ TEST(ManagedFilterTickTest, OneReading) {
 }
 
 TEST(ManagedFilterTickTest, MultipleReadings) {
-  [[maybe_unused]] ManagedFilter<featuretest::ExtendedKalmanFilter> mf;
+  using namespace featuretest;
+  ManagedFilter<ExtendedKalmanFilter> mf;
+
+  Control control;
+
+  auto state0p1 = ([&mf, &control]() {
+    Simple reading{SimpleOptions{.timestamp = 0.05}};
+    return mf.tick(0.1, control,
+                   {
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.05}),
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.06}),
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.07}),
+                   });
+  })();
+
+  auto state0p2 = ([&mf, &control]() {
+    return mf.tick(0.2, control,
+                   {
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.15}),
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.16}),
+                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.17}),
+                   });
+  })();
+
+  EXPECT_NE(state0p1.state.data, state0p2.state.data);
 }
 
 }  // namespace testing
