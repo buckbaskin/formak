@@ -38,14 +38,12 @@ TEST(ManagedFilterTickTest, OneReading) {
 
   auto state0p1 = ([&mf, &control]() {
     featuretest::Simple reading{featuretest::SimpleOptions{.timestamp = 0.05}};
-    return mf.tick(0.1, control,
-                   std::vector<featuretest::StampedReading>{reading});
+    return mf.tick(0.1, control, {mf.wrap(reading)});
   })();
 
   auto state0p2 = ([&mf, &control]() {
     featuretest::Simple reading{featuretest::SimpleOptions{.timestamp = 0.15}};
-    return mf.tick(0.2, control,
-                   std::vector<featuretest::StampedReading>{reading});
+    return mf.tick(0.2, control, {mf.wrap(reading)});
   })();
 
   EXPECT_NE(state0p1.state.data, state0p2.state.data);

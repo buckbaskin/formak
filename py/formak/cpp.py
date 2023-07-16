@@ -1117,7 +1117,7 @@ def header_from_ast(*, generator):
                 body=[
                     FunctionDeclaration(
                         "virtual StateAndVariance",
-                        "state_model",
+                        "sensor_model",
                         args=[
                             Arg("const ExtendedKalmanFilter&", "impl"),
                             Arg("const StateAndVariance&", "input"),
@@ -1190,7 +1190,7 @@ def header_from_ast(*, generator):
                         ),
                         FunctionDef(
                             "StateAndVariance",
-                            "state_model",
+                            "sensor_model",
                             args=[
                                 Arg("const ExtendedKalmanFilter&", "impl"),
                                 Arg("const StateAndVariance&", "input"),

@@ -1,4 +1,5 @@
 #include <any>
+#include <memory>
 #include <vector>
 
 namespace formak::runtime {
@@ -6,18 +7,29 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
+  struct BoxedStampedReading {
+    std::shared_ptr<typename Impl::StampedReadingT> data;
+  };
+  template <typename ReadingT>
+  BoxedStampedReading wrap(const ReadingT& reading) const {
+    return BoxedStampedReading{
+        .data = std::shared_ptr<typename Impl::StampedReadingT>(
+            new ReadingT(reading)),
+    };
+  }
+
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control) {
     return processUpdate(outputTime, control);
   }
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control,
-      const std::vector<typename Impl::StampedReadingT>& readings) {
+      const std::vector<BoxedStampedReading>& readings) {
     for (const auto& stampedReading : readings) {
-      _state = processUpdate(stampedReading.timestamp, control);
-      _currentTime = stampedReading.timestamp;
+      _state = processUpdate(stampedReading.data->timestamp, control);
+      _currentTime = stampedReading.data->timestamp;
 
-      _state = stampedReading.sensor_model(_impl, _state);
+      _state = stampedReading.data->sensor_model(_impl, _state);
     }
 
     return tick(outputTime, control);
