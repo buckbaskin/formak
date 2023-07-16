@@ -37,13 +37,13 @@ TEST(ManagedFilterTickTest, OneReading) {
   featuretest::Control control;
 
   auto state0p1 = ([&mf, &control]() {
-    featuretest::Simple reading{featuretest::SimpleOptions{.timestamp = 0.05}};
-    return mf.tick(0.1, control, {mf.wrap(reading)});
+    featuretest::Simple reading{featuretest::SimpleOptions{}};
+    return mf.tick(0.1, control, {mf.wrap(0.05, reading)});
   })();
 
   auto state0p2 = ([&mf, &control]() {
-    featuretest::Simple reading{featuretest::SimpleOptions{.timestamp = 0.15}};
-    return mf.tick(0.2, control, {mf.wrap(reading)});
+    featuretest::Simple reading{featuretest::SimpleOptions{}};
+    return mf.tick(0.2, control, {mf.wrap(0.15, reading)});
   })();
 
   EXPECT_NE(state0p1.state.data, state0p2.state.data);
@@ -56,23 +56,21 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
   Control control;
 
   auto state0p1 = ([&mf, &control]() {
-    Simple reading{SimpleOptions{.timestamp = 0.05}};
     return mf.tick(0.1, control,
                    {
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.05}),
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.06}),
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.07}),
+                       mf.wrap<Simple>(0.05, SimpleOptions{}),
+                       mf.wrap<Simple>(0.06, SimpleOptions{}),
+                       mf.wrap<Simple>(0.07, SimpleOptions{}),
                    });
   })();
 
   auto state0p2 = ([&mf, &control]() {
-    return mf.tick(
-        0.2, control,
-        {
-            mf.wrap<Simple>(SimpleOptions{.timestamp = 0.15}),
-            mf.wrap<Accel>(AccelOptions{.timestamp = 0.16, .a = 1.0}),
-            mf.wrap<Simple>(SimpleOptions{.timestamp = 0.17}),
-        });
+    return mf.tick(0.2, control,
+                   {
+                       mf.wrap<Simple>(0.15, SimpleOptions{}),
+                       mf.wrap<Accel>(0.16, AccelOptions{.a = 1.0}),
+                       mf.wrap<Simple>(0.17, SimpleOptions{}),
+                   });
   })();
 
   EXPECT_NE(state0p1.state.data, state0p2.state.data);

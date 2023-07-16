@@ -8,11 +8,13 @@ template <typename Impl>
 class ManagedFilter {
  public:
   struct StampedReading {
+    double timestamp = 0.0;
     std::shared_ptr<typename Impl::StampedReadingBaseT> data;
   };
   template <typename ReadingT>
-  StampedReading wrap(const ReadingT& reading) const {
+  StampedReading wrap(double timestamp, const ReadingT& reading) const {
     return StampedReading{
+        .timestamp = timestamp,
         .data = std::shared_ptr<typename Impl::StampedReadingBaseT>(
             new ReadingT(reading)),
     };
@@ -26,8 +28,8 @@ class ManagedFilter {
       double outputTime, const typename Impl::ControlT& control,
       const std::vector<StampedReading>& readings) {
     for (const auto& stampedReading : readings) {
-      _state = processUpdate(stampedReading.data->timestamp, control);
-      _currentTime = stampedReading.data->timestamp;
+      _state = processUpdate(stampedReading.timestamp, control);
+      _currentTime = stampedReading.timestamp;
 
       _state = stampedReading.data->sensor_model(_impl, _state);
     }

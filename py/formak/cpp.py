@@ -1124,7 +1124,6 @@ def header_from_ast(*, generator):
                         ],
                         modifier="= 0",
                     ),
-                    MemberDeclaration("double", "timestamp", 0.0),
                 ],
             )
         )
@@ -1137,8 +1136,7 @@ def header_from_ast(*, generator):
                     "struct",
                     f"{reading_type.typename}Options",
                     bases=[],
-                    body=[MemberDeclaration("double", "timestamp", 0.0)]
-                    + [
+                    body=[
                         MemberDeclaration("double", symbol, 0.0)
                         for symbol in sorted(
                             list(reading_type.sensor_model_mapping.keys())
