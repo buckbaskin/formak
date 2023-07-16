@@ -12,6 +12,7 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     EnumClassDef,
+    Escape,
     ForwardClassDeclaration,
     FromFileTemplate,
     FunctionDeclaration,
@@ -966,7 +967,18 @@ def header_from_ast(*, generator):
                 "struct",
                 "StampedReading",
                 bases=[],
-                body=[MemberDeclaration("double", "timestamp", 0.0)],
+                body=[
+                    FunctionDeclaration(
+                        "virtual StateAndVariance",
+                        "state_model",
+                        args=[
+                            Arg("const ExtendedKalmanFilter&", "impl"),
+                            Arg("const StateAndVariance&", "input"),
+                        ],
+                        modifier="= 0",
+                    ),
+                    MemberDeclaration("double", "timestamp", 0.0),
+                ],
             )
         )
         for reading_type in generator.reading_types():
@@ -1028,6 +1040,18 @@ def header_from_ast(*, generator):
                             args=[
                                 Arg(f"const {reading_type.typename}Options&", "options")
                             ]
+                        ),
+                        FunctionDef(
+                            "StateAndVariance",
+                            "state_model",
+                            args=[
+                                Arg("const ExtendedKalmanFilter&", "impl"),
+                                Arg("const StateAndVariance&", "input"),
+                            ],
+                            modifier="override",
+                            body=[
+                                Escape("return impl.sensor_model(input, *this);"),
+                            ],
                         ),
                     ]
                     + [
