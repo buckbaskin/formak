@@ -963,6 +963,153 @@ def header_from_ast(*, generator):
         )
         body.append(SensorId)
         body.append(
+            ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
+        )
+        body.append(ForwardClassDeclaration("struct", "StampedReading"))
+
+        ExtendedKalmanFilter = ClassDef(
+            "class",
+            "ExtendedKalmanFilter",
+            bases=[],
+            body=[
+                Public(),
+                UsingDeclaration(
+                    "StateAndVarianceT",
+                    "StateAndVariance",
+                ),
+                UsingDeclaration(
+                    "ControlT",
+                    "Control",
+                ),
+                UsingDeclaration(
+                    "StampedReadingT",
+                    "StampedReading",
+                ),
+                UsingDeclaration(
+                    "CovarianceT",
+                    f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
+                ),
+                UsingDeclaration(
+                    "ProcessJacobianT",
+                    f"Eigen::Matrix<double, {generator.state_size}, {generator.state_size}>",
+                ),
+                UsingDeclaration(
+                    "ControlJacobianT",
+                    f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
+                ),
+                UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
+                StateAndVariance_process_model(
+                    enable_control=generator.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                ),
+                StateAndVariance_sensor_model(
+                    enable_control=generator.enable_control(),
+                    enable_calibration=generator.enable_calibration(),
+                ),
+                Templated(
+                    [Arg("typename", "ReadingT")],
+                    FunctionDef(
+                        "std::optional<typename ReadingT::InnovationT>",
+                        "innovations",
+                        args=[],
+                        modifier="",
+                        body=[
+                            FromFileTemplate(
+                                "innovations.hpp",
+                                inserts={},
+                            )
+                        ],
+                    ),
+                ),
+                Private(),
+                MemberDeclaration(
+                    "mutable std::unordered_map<SensorId, std::any>", "_innovations"
+                ),
+            ],
+        )
+        body.append(ExtendedKalmanFilter)
+
+        def ExtendedKalmanFilterProcessModel_model(
+            *, enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration("static State", "model", args=args, modifier="")
+
+        def ExtendedKalmanFilterProcessModel_process_jacobian(
+            *, enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ProcessJacobianT",
+                "process_jacobian",
+                args=args,
+                modifier="",
+            )
+
+        def ExtendedKalmanFilterProcessModel_control_jacobian(
+            *, enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::ControlJacobianT",
+                "control_jacobian",
+                args=args,
+                modifier="",
+            )
+
+        def ExtendedKalmanFilterProcessModel_covariance(
+            *, enable_calibration, enable_control
+        ):
+            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
+            if enable_calibration:
+                args.append(Arg("const Calibration&", "input_calibration"))
+            if enable_control:
+                args.append(Arg("const Control&", "input_control"))
+            return FunctionDeclaration(
+                "static typename ExtendedKalmanFilter::CovarianceT",
+                "covariance",
+                args=args,
+                modifier="",
+            )
+
+        ExtendedKalmanFilterProcessModel = ClassDef(
+            "class",
+            "ExtendedKalmanFilterProcessModel",
+            bases=[],
+            body=[
+                Public(),
+                ExtendedKalmanFilterProcessModel_model(
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
+                ),
+                ExtendedKalmanFilterProcessModel_process_jacobian(
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
+                ),
+                ExtendedKalmanFilterProcessModel_control_jacobian(
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
+                ),
+                ExtendedKalmanFilterProcessModel_covariance(
+                    enable_calibration=generator.enable_calibration(),
+                    enable_control=generator.enable_control(),
+                ),
+            ],
+        )
+        body.append(ExtendedKalmanFilterProcessModel)
+        body.append(
             ClassDef(
                 "struct",
                 "StampedReading",
@@ -1132,152 +1279,6 @@ def header_from_ast(*, generator):
                 )
             )
 
-        body.append(
-            ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
-        )
-
-        ExtendedKalmanFilter = ClassDef(
-            "class",
-            "ExtendedKalmanFilter",
-            bases=[],
-            body=[
-                Public(),
-                UsingDeclaration(
-                    "StateAndVarianceT",
-                    "StateAndVariance",
-                ),
-                UsingDeclaration(
-                    "ControlT",
-                    "Control",
-                ),
-                UsingDeclaration(
-                    "StampedReadingT",
-                    "StampedReading",
-                ),
-                UsingDeclaration(
-                    "CovarianceT",
-                    f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
-                ),
-                UsingDeclaration(
-                    "ProcessJacobianT",
-                    f"Eigen::Matrix<double, {generator.state_size}, {generator.state_size}>",
-                ),
-                UsingDeclaration(
-                    "ControlJacobianT",
-                    f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
-                ),
-                UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
-                StateAndVariance_process_model(
-                    enable_control=generator.enable_control(),
-                    enable_calibration=generator.enable_calibration(),
-                ),
-                StateAndVariance_sensor_model(
-                    enable_control=generator.enable_control(),
-                    enable_calibration=generator.enable_calibration(),
-                ),
-                Templated(
-                    [Arg("typename", "ReadingT")],
-                    FunctionDef(
-                        "std::optional<typename ReadingT::InnovationT>",
-                        "innovations",
-                        args=[],
-                        modifier="",
-                        body=[
-                            FromFileTemplate(
-                                "innovations.hpp",
-                                inserts={},
-                            )
-                        ],
-                    ),
-                ),
-                Private(),
-                MemberDeclaration(
-                    "std::unordered_map<SensorId, std::any>", "_innovations"
-                ),
-            ],
-        )
-        body.append(ExtendedKalmanFilter)
-
-        def ExtendedKalmanFilterProcessModel_model(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration("static State", "model", args=args, modifier="")
-
-        def ExtendedKalmanFilterProcessModel_process_jacobian(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::ProcessJacobianT",
-                "process_jacobian",
-                args=args,
-                modifier="",
-            )
-
-        def ExtendedKalmanFilterProcessModel_control_jacobian(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::ControlJacobianT",
-                "control_jacobian",
-                args=args,
-                modifier="",
-            )
-
-        def ExtendedKalmanFilterProcessModel_covariance(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::CovarianceT",
-                "covariance",
-                args=args,
-                modifier="",
-            )
-
-        ExtendedKalmanFilterProcessModel = ClassDef(
-            "class",
-            "ExtendedKalmanFilterProcessModel",
-            bases=[],
-            body=[
-                Public(),
-                ExtendedKalmanFilterProcessModel_model(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_process_jacobian(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_control_jacobian(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_covariance(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-            ],
-        )
-        body.append(ExtendedKalmanFilterProcessModel)
     else:  # enable_EKF == False
         Model = ClassDef(
             "class",

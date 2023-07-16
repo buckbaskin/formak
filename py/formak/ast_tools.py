@@ -151,7 +151,7 @@ class ClassDef(BaseAst):
     def compile(self, options: CompileState, **kwargs):
         bases_str = ""
         if len(self.bases) > 0:
-            bases_str = ": {}".format(", ".join(self.bases))
+            bases_str = ": {}".format(", ".join((f"public {b}" for b in self.bases)))
 
         yield f"{self.tag} {self.name} {bases_str} {{"
 
@@ -414,7 +414,6 @@ class Templated(BaseAst):
     template_args: List[Arg]
     templated: Any
 
-    @autoindent
     def compile(self, options: CompileState, **kwargs):
         if len(self.template_args) == 0:
             yield "template <>"
