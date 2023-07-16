@@ -8,9 +8,10 @@ namespace testing {
 using formak::runtime::ManagedFilter;
 
 TEST(ManagedFilterTickTest, TimeOnly) {
+  featuretest::State state(featuretest::StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
       0.0, {
-               .state = {},
+               .state = state,
                .covariance = {},
            });
 
@@ -24,9 +25,10 @@ TEST(ManagedFilterTickTest, TimeOnly) {
 }
 
 TEST(ManagedFilterTickTest, EmptyReadings) {
+  featuretest::State state(featuretest::StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
       1.0, {
-               .state = {},
+               .state = state,
                .covariance = {},
            });
 
@@ -40,9 +42,10 @@ TEST(ManagedFilterTickTest, EmptyReadings) {
 }
 
 TEST(ManagedFilterTickTest, OneReading) {
+  featuretest::State state(featuretest::StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
       2.0, {
-               .state = {},
+               .state = state,
                .covariance = {},
            });
 
@@ -63,9 +66,10 @@ TEST(ManagedFilterTickTest, OneReading) {
 
 TEST(ManagedFilterTickTest, MultipleReadings) {
   using namespace featuretest;
+  State state(StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
       3.0, {
-               .state = {},
+               .state = state,
                .covariance = {},
            });
 
