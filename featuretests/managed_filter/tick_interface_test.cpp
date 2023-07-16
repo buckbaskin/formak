@@ -66,12 +66,13 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
   })();
 
   auto state0p2 = ([&mf, &control]() {
-    return mf.tick(0.2, control,
-                   {
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.15}),
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.16}),
-                       mf.wrap<Simple>(SimpleOptions{.timestamp = 0.17}),
-                   });
+    return mf.tick(
+        0.2, control,
+        {
+            mf.wrap<Simple>(SimpleOptions{.timestamp = 0.15}),
+            mf.wrap<Accel>(AccelOptions{.timestamp = 0.16, .a = 1.0}),
+            mf.wrap<Simple>(SimpleOptions{.timestamp = 0.17}),
+        });
   })();
 
   EXPECT_NE(state0p1.state.data, state0p2.state.data);
