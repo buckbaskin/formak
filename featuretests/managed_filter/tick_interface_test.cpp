@@ -18,7 +18,16 @@ TEST(ManagedFilterTickTest, TimeOnly) {
 }
 
 TEST(ManagedFilterTickTest, EmptyReadings) {
-  [[maybe_unused]] ManagedFilter<featuretest::ExtendedKalmanFilter> mf;
+  ManagedFilter<featuretest::ExtendedKalmanFilter> mf;
+  // using ManagedFilter<featuretest::ExtendedKalmanFilter>::StampedReading;
+
+  featuretest::Control control;
+
+  auto state0p1 = mf.tick(0.1, control, {});
+
+  auto state0p2 = mf.tick(0.2, control, {});
+
+  EXPECT_NE(state0p1.state.data, state0p2.state.data);
 }
 
 TEST(ManagedFilterTickTest, OneReading) {
