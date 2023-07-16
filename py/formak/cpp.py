@@ -961,6 +961,14 @@ def header_from_ast(*, generator):
             members=[f"{name.upper()}" for name, _, _ in generator.sensorlist],
         )
         body.append(SensorId)
+        body.append(
+            ClassDef(
+                "struct",
+                "StampedReading",
+                bases=[],
+                body=[MemberDeclaration("double", "timestamp", 0.0)],
+            )
+        )
         for reading_type in generator.reading_types():
             body.append(
                 ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
@@ -970,7 +978,8 @@ def header_from_ast(*, generator):
                     "struct",
                     f"{reading_type.typename}Options",
                     bases=[],
-                    body=[
+                    body=[MemberDeclaration("double", "timestamp", 0.0)]
+                    + [
                         MemberDeclaration("double", symbol, 0.0)
                         for symbol in sorted(
                             list(reading_type.sensor_model_mapping.keys())
@@ -990,7 +999,7 @@ def header_from_ast(*, generator):
                 ClassDef(
                     "struct",
                     f"{reading_type.typename}",
-                    bases=[],
+                    bases=["StampedReading"],
                     body=[
                         UsingDeclaration(
                             "DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"
@@ -1116,6 +1125,10 @@ def header_from_ast(*, generator):
                 UsingDeclaration(
                     "ControlT",
                     "Control",
+                ),
+                UsingDeclaration(
+                    "StampedReadingT",
+                    "StampedReading",
                 ),
                 UsingDeclaration(
                     "CovarianceT",

@@ -151,7 +151,7 @@ class ClassDef(BaseAst):
     def compile(self, options: CompileState, **kwargs):
         bases_str = ""
         if len(self.bases) > 0:
-            raise NotImplementedError()
+            bases_str = ": {}".format(", ".join(self.bases))
 
         yield f"{self.tag} {self.name} {bases_str} {{"
 

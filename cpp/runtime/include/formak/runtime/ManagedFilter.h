@@ -5,35 +5,17 @@ namespace formak::runtime {
 
 template <typename Impl>
 class ManagedFilter {
- private:
-  struct StampedReading {
-    double time;
-    virtual typename Impl::StateAndVarianceT sensor_model(
-        const Impl& impl,
-        const typename Impl::StateAndVarianceT& input_state) const = 0;
-  };
-
  public:
-  template <typename ReadingT>
-  struct StampedReadingImpl {
-    typename Impl::StateAndVarianceT sensor_model(
-        const Impl& impl,
-        const typename Impl::StateAndVarianceT& input_state) const override {
-      return impl.sensor_model(input_state, reading);
-    }
-    ReadingT reading;
-  };
-
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control) {
     return processUpdate(outputTime, control);
   }
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control,
-      const std::vector<StampedReading>& readings) {
-    for (const StampedReading& stampedReading : readings) {
-      _state = processUpdate(stampedReading.time, control);
-      _currentTime = stampedReading.time;
+      const std::vector<typename Impl::StampedReadingT>& readings) {
+    for (const auto& stampedReading : readings) {
+      _state = processUpdate(stampedReading.timestamp, control);
+      _currentTime = stampedReading.timestamp;
 
       _state = stampedReading.sensor_model(_impl, _state);
     }
