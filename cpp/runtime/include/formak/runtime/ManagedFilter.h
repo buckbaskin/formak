@@ -7,6 +7,11 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
+  ManagedFilter(double initialTimestamp,
+                const typename Impl::StateAndVarianceT& initialState)
+      : _currentTime(initialTimestamp), _state(initialState) {
+  }
+
   struct StampedReading {
     double timestamp = 0.0;
     std::shared_ptr<typename Impl::StampedReadingBaseT> data;
