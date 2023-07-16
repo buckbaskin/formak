@@ -7,13 +7,13 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
-  struct BoxedStampedReading {
-    std::shared_ptr<typename Impl::StampedReadingT> data;
+  struct StampedReading {
+    std::shared_ptr<typename Impl::StampedReadingBaseT> data;
   };
   template <typename ReadingT>
-  BoxedStampedReading wrap(const ReadingT& reading) const {
-    return BoxedStampedReading{
-        .data = std::shared_ptr<typename Impl::StampedReadingT>(
+  StampedReading wrap(const ReadingT& reading) const {
+    return StampedReading{
+        .data = std::shared_ptr<typename Impl::StampedReadingBaseT>(
             new ReadingT(reading)),
     };
   }
@@ -24,7 +24,7 @@ class ManagedFilter {
   }
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control,
-      const std::vector<BoxedStampedReading>& readings) {
+      const std::vector<StampedReading>& readings) {
     for (const auto& stampedReading : readings) {
       _state = processUpdate(stampedReading.data->timestamp, control);
       _currentTime = stampedReading.data->timestamp;

@@ -965,7 +965,7 @@ def header_from_ast(*, generator):
         body.append(
             ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
         )
-        body.append(ForwardClassDeclaration("struct", "StampedReading"))
+        body.append(ForwardClassDeclaration("struct", "StampedReadingBase"))
 
         ExtendedKalmanFilter = ClassDef(
             "class",
@@ -982,8 +982,8 @@ def header_from_ast(*, generator):
                     "Control",
                 ),
                 UsingDeclaration(
-                    "StampedReadingT",
-                    "StampedReading",
+                    "StampedReadingBaseT",
+                    "StampedReadingBase",
                 ),
                 UsingDeclaration(
                     "CovarianceT",
@@ -1112,7 +1112,7 @@ def header_from_ast(*, generator):
         body.append(
             ClassDef(
                 "struct",
-                "StampedReading",
+                "StampedReadingBase",
                 bases=[],
                 body=[
                     FunctionDeclaration(
@@ -1158,7 +1158,7 @@ def header_from_ast(*, generator):
                 ClassDef(
                     "struct",
                     f"{reading_type.typename}",
-                    bases=["StampedReading"],
+                    bases=["StampedReadingBase"],
                     body=[
                         UsingDeclaration(
                             "DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"
