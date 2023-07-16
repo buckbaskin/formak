@@ -23,12 +23,15 @@ lint:
 	pyupgrade $(ag --python -g "." py/ experimental/)
 	# format docstrings
 	pydocstringformatter -w $(ag --python -g "." py/)
+	# check writing rules
+	proselint --config=common/proselint.json  docs/designs/*.md docs/formak/*.md docs/*.md
 	# pre-commit
 	pre-commit --version
 	pre-commit run --all-files
 	# interrogate
 	interrogate --version
 	interrogate -vv py/formak/
+
 
 tidy:
 	bash actions/tidy.bash
