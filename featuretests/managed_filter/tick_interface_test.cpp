@@ -8,11 +8,13 @@ using formak::runtime::ManagedFilter;
 TEST(ManagedFilterTickTest, TimeOnly) {
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf;
 
-  auto state0p1 = mf.tick(0.1);
+  featuretest::Control control;
 
-  auto state0p2 = mf.tick(0.2);
+  auto state0p1 = mf.tick(0.1, control);
 
-  EXPECT_NE(state0p1, state0p2);
+  auto state0p2 = mf.tick(0.2, control);
+
+  EXPECT_NE(state0p1.state.data, state0p2.state.data);
 }
 
 TEST(ManagedFilterTickTest, EmptyReadings) {

@@ -869,7 +869,7 @@ def header_from_ast(*, generator):
             "StateAndVariance",
             "process_model",
             args=args,
-            modifier="",
+            modifier="const",
         )
 
     def StateAndVariance_sensor_model(*, enable_control, enable_calibration):
@@ -888,7 +888,7 @@ def header_from_ast(*, generator):
                 "StateAndVariance",
                 "sensor_model",
                 args=args,
-                modifier="",
+                modifier="const",
                 body=[
                     FromFileTemplate(
                         "sensor_model.hpp",
@@ -1110,6 +1110,14 @@ def header_from_ast(*, generator):
             body=[
                 Public(),
                 UsingDeclaration(
+                    "StateAndVarianceT",
+                    "StateAndVariance",
+                ),
+                UsingDeclaration(
+                    "ControlT",
+                    "Control",
+                ),
+                UsingDeclaration(
                     "CovarianceT",
                     f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
                 ),
@@ -1322,7 +1330,7 @@ def source_from_ast(*, generator):
         EKF_process_model = FunctionDef(
             "StateAndVariance",
             "ExtendedKalmanFilter::process_model",
-            modifier="",
+            modifier="const",
             args=standard_args,
             body=[
                 FromFileTemplate(

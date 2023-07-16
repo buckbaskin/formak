@@ -4,33 +4,38 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
+  typename Impl::StateAndVarianceT tick(
+      double outputTime, const typename Impl::ControlT& control) {
+    return processUpdate(outputTime, control);
+  }
   template <typename ReadingT>
-  typename Impl::StateAndVariance tick(double outputTime,
-                                       const typename Impl::Control& control,
-                                       const std::vector<ReadingT>& readings) {
+  typename Impl::StateAndVarianceT tick(double outputTime,
+                                        const typename Impl::ControlT& control,
+                                        const std::vector<ReadingT>& readings) {
     for (const auto& sensorReading : readings) {
       _state = processUpdate(sensorReading.time, _state);
       _currentTime = sensorReading.time;
 
-      _state = Impl::sensor_model(_state, sensorReading);
+      _state = _impl.sensor_model(_state, sensorReading);
     }
 
-    return Impl::processUpdate(_state, outputTime);
+    return tick(outputTime, control);
   }
 
-  typename Impl::StateAndVariance processUpdate(
-      double outputTime, const typename Impl::Control& control) const {
+ private:
+  typename Impl::StateAndVarianceT processUpdate(
+      double outputTime, const typename Impl::ControlT& control) const {
     double dt = 0.1;
-    typename Impl::StateAndVariance state = _state;
+    typename Impl::StateAndVarianceT state = _state;
     for (double currentTime = _currentTime; currentTime < outputTime;
          currentTime += dt) {
-      state = Impl::process_model(dt, state, control);
+      state = _impl.process_model(dt, state, control);
     }
     return state;
   }
 
- private:
   double _currentTime = 0.0;
-  typename Impl::StateAndVariance _state;
+  const Impl _impl;
+  typename Impl::StateAndVarianceT _state;
 };
 }  // namespace formak::runtime
