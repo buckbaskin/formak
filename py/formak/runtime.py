@@ -1,7 +1,7 @@
 from collections import namedtuple
 from typing import List, Optional
 
-StampedReading = namedtuple("StampedReading", ["timestamp", "data"])
+StampedReading = namedtuple("StampedReading", ["timestamp", "sensor_key", "data"])
 
 
 class ManagedFilter(object):
@@ -11,7 +11,12 @@ class ManagedFilter(object):
         self.state = state
         self.covariance = covariance
 
-    def tick(self, output_time: float, readings: Optional[List[StampedReading]] = None):
+    def tick(
+        self,
+        output_time: float,
+        control,
+        readings: Optional[List[StampedReading]] = None,
+    ):
         if readings is None:
             readings = []
 
@@ -19,44 +24,28 @@ class ManagedFilter(object):
             assert isinstance(sensor_reading, StampedReading)
 
             self.current_time, (self.state, self.covariance) = self._process_model(
-                sensor_reading.timestamp, self.state, self.covariance
+                sensor_reading.timestamp, control
             )
 
+            # def sensor_model(self, sensor_key, state, covariance, sensor_reading):
             (self.state, self.covariance) = self._impl.sensor_model(
-                sensor_reading.data, self.state, self.covariance
+                sensor_reading.sensor_key,
+                self.state,
+                self.covariance,
+                sensor_reading.data,
             )
 
         return self._process_model(output_time, control)
 
-    def _process_model(self, target_time, state, covariance):
+    def _process_model(self, output_time, control):
         # const
-        raise NotImplementedError("_process_model")
+        dt = 0.1
+        current_time = self.current_time
+        state = self.state
+        covariance = self.covariance
 
-    # typename Impl::StateAndVarianceT tick(
-    #     double outputTime, const typename Impl::ControlT& control) {
-    #   return processUpdate(outputTime, control);
-    # }
-    # typename Impl::StateAndVarianceT tick(
-    #     double outputTime, const typename Impl::ControlT& control,
-    #     const std::vector<StampedReading>& readings) {
-    #   for (const auto& stampedReading : readings) {
-    #     _state = processUpdate(stampedReading.timestamp, control);
-    #     _currentTime = stampedReading.timestamp;
+        while current_time < output_time:
+            current_time += dt
+            state, covariance = self._impl.process_model(dt, state, covariance, control)
 
-    #     _state = stampedReading.data->sensor_model(_impl, _state);
-    #   }
-
-    #   return tick(outputTime, control);
-    # }
-
-    # private:
-    # typename Impl::StateAndVarianceT processUpdate(
-    #     double outputTime, const typename Impl::ControlT& control) const {
-    #   double dt = 0.1;
-    #   typename Impl::StateAndVarianceT state = _state;
-    #   for (double currentTime = _currentTime; currentTime < outputTime;
-    #        currentTime += dt) {
-    #     state = _impl.process_model(dt, state, control);
-    #   }
-    #   return state;
-    # }
+        return current_time, (state, covariance)

@@ -1,6 +1,3 @@
-import sys
-from os.path import basename
-
 import numpy as np
 
 from formak import cpp, ui

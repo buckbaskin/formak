@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
+from formak.runtime import ManagedFilter, StampedReading
 
-from formak import python, runtime, ui
+from formak import python, ui
 
 
 def make_ekf():
@@ -33,28 +34,11 @@ def make_ekf():
 
 
 def test_tick_time_only():
-    # featuretest::State state(featuretest::StateOptions{.v = 1.0});
-    # formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
-    #     0.0, {
-    #              .state = state,
-    #              .covariance = {},
-    #          });
-
-    # featuretest::Control control;
-
-    # auto state0p1 = mf.tick(0.1, control);
-
-    # auto state0p2 = mf.tick(0.2, control);
-
-    # EXPECT_NE(state0p1.state.data, state0p2.state.data);
     ekf = make_ekf()
     state = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
     covariance = np.eye(4)
-    mf = runtime.ManagedFilter(
-        ekf=ekf, start_time=0.0, state=state, covariance=covariance
-    )
-
     control = np.array([[0.0]])
+    mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
     state0p1 = mf.tick(0.1, control)
 
@@ -64,38 +48,78 @@ def test_tick_time_only():
 
 
 def test_tick_empty_sensor_readings():
-    mf = runtime.ManagedFilter()
+    ekf = make_ekf()
+    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
+    covariance = np.eye(4)
+    control = np.array([[0.0]])
+    mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
-    state0p1 = mf.tick(0.1, [])
+    state0p1 = mf.tick(0.1, control, [])
 
-    state0p2 = mf.tick(0.2, [])
+    state0p2 = mf.tick(0.2, control, [])
 
     assert state0p1 != state0p2
 
 
 def test_tick_one_sensor_reading():
-    mf = runtime.ManagedFilter()
+    # featuretest::State state(featuretest::StateOptions{.v = 1.0});
+    # formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
+    #     2.0, {
+    #              .state = state,
+    #              .covariance = {},
+    #          });
 
-    reading1 = None
+    # featuretest::Control control;
 
-    state0p1 = mf.tick(0.1, [reading1])
+    # auto state0p1 = ([&mf, &control]() {
+    #   featuretest::Simple reading{featuretest::SimpleOptions{}};
+    #   return mf.tick(2.1, control, {mf.wrap(2.05, reading)});
+    # })();
 
-    reading2 = None
+    # auto state0p2 = ([&mf, &control]() {
+    #   featuretest::Simple reading{featuretest::SimpleOptions{}};
+    #   return mf.tick(2.2, control, {mf.wrap(2.15, reading)});
+    # })();
 
-    state0p2 = mf.tick(0.2, [reading2])
+    # EXPECT_NE(state0p1.state.data, state0p2.state.data);
+    ekf = make_ekf()
+    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
+    covariance = np.eye(4)
+    control = np.array([[0.0]])
+    mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
+
+    reading1 = StampedReading(2.05, "simple", None)
+
+    state0p1 = mf.tick(0.1, control, [reading1])
+
+    reading2 = StampedReading(2.15, "simple", None)
+
+    state0p2 = mf.tick(0.2, control, [reading2])
 
     assert state0p1 != state0p2
 
 
 def test_tick_multiple_sensor_reading():
-    mf = runtime.ManagedFilter()
+    ekf = make_ekf()
+    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
+    covariance = np.eye(4)
+    control = np.array([[0.0]])
+    mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
-    readings1 = [None, None, None]
+    readings1 = [
+        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", None),
+    ]
 
-    state0p1 = mf.tick(0.1, readings1)
+    state0p1 = mf.tick(0.1, control, readings1)
 
-    readings2 = [None, None, None]
+    readings2 = [
+        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", None),
+    ]
 
-    state0p2 = mf.tick(0.2, readings2)
+    state0p2 = mf.tick(0.2, control, readings2)
 
     assert state0p1 != state0p2
