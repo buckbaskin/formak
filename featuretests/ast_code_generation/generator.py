@@ -1,5 +1,4 @@
 import logging
-from collections import namedtuple
 from itertools import chain
 
 from formak.ast_tools import (

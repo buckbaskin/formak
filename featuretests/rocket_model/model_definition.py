@@ -1,7 +1,5 @@
-import sys
 from datetime import datetime
 from functools import reduce
-from os.path import basename
 
 import numpy as np
 from sympy import cos, sin
