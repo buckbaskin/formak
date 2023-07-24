@@ -9,7 +9,7 @@ class ManagedFilter {
  public:
   ManagedFilter(double initialTimestamp,
                 const typename Impl::StateAndVarianceT& initialState)
-      : _currentTime(initialTimestamp), _state(initialState) {
+      : _impl(), _currentTime(initialTimestamp), _state(initialState) {
   }
 
   struct StampedReading {
@@ -54,8 +54,8 @@ class ManagedFilter {
     return state;
   }
 
-  double _currentTime = 0.0;
   const Impl _impl;
+  double _currentTime = 0.0;
   typename Impl::StateAndVarianceT _state;
 };
 }  // namespace formak::runtime

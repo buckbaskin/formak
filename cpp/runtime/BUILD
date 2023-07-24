@@ -7,3 +7,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [],
 )
+
+cc_test(
+    name = "managed-filter-test",
+    srcs = ["test/ManagedFilter_test.cpp"],
+    deps = [
+        ":managed-filter",
+        "@gtest//:gtest_main",
+    ],
+)
