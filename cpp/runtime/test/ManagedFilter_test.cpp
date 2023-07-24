@@ -33,7 +33,7 @@ struct TestImpl {
                                  const ControlT& control) const {
     return {
         .state = state.state + dt * control.velocity,
-        .covariance = state.covariance + dt,
+        .covariance = state.covariance + std::abs(dt),
     };
   }
 };

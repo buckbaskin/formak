@@ -49,10 +49,27 @@ class ManagedFilter {
       double outputTime, const typename Impl::ControlT& control) const {
     double dt = 0.1;
     typename Impl::StateAndVarianceT state = _state;
-    for (double currentTime = _currentTime; currentTime < outputTime;
-         currentTime += dt) {
-      state = _impl.process_model(dt, state, control);
+    if (_currentTime == outputTime) {
+    } else if (_currentTime < outputTime) {
+      double currentTime = _currentTime;
+      for (; currentTime < outputTime; currentTime += dt) {
+        state = _impl.process_model(dt, state, control);
+      }
+      if (currentTime < outputTime) {
+        state = _impl.process_model(outputTime - currentTime, state, control);
+        currentTime = outputTime;
+      }
+    } else {  // _currentTime > outputTime
+      double currentTime = _currentTime;
+      for (; currentTime > outputTime; currentTime -= dt) {
+        state = _impl.process_model(-dt, state, control);
+      }
+      if (currentTime > outputTime) {
+        state = _impl.process_model(outputTime - currentTime, state, control);
+        currentTime = outputTime;
+      }
     }
+
     return state;
   }
 
