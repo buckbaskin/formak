@@ -3,6 +3,8 @@ from typing import List, Optional
 
 StampedReading = namedtuple("StampedReading", ["timestamp", "sensor_key", "data"])
 
+StateAndVariance = namedtuple("StateAndVariance", ["state", "covariance"])
+
 
 class ManagedFilter(object):
     def __init__(self, ekf, start_time: float, state, covariance):
@@ -27,7 +29,6 @@ class ManagedFilter(object):
                 sensor_reading.timestamp, control
             )
 
-            # def sensor_model(self, sensor_key, state, covariance, sensor_reading):
             (self.state, self.covariance) = self._impl.sensor_model(
                 sensor_reading.sensor_key,
                 self.state,
@@ -35,7 +36,8 @@ class ManagedFilter(object):
                 sensor_reading.data,
             )
 
-        return self._process_model(output_time, control)
+        _, state_and_variance = self._process_model(output_time, control)
+        return state_and_variance
 
     def _process_model(self, output_time, control):
         # const
@@ -48,4 +50,4 @@ class ManagedFilter(object):
             current_time += dt
             state, covariance = self._impl.process_model(dt, state, covariance, control)
 
-        return current_time, (state, covariance)
+        return current_time, StateAndVariance(state, covariance)

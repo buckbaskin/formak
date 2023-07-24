@@ -35,7 +35,7 @@ def make_ekf():
 
 def test_tick_time_only():
     ekf = make_ekf()
-    state = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
+    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
     covariance = np.eye(4)
     control = np.array([[0.0]])
     mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
@@ -44,7 +44,7 @@ def test_tick_time_only():
 
     state0p2 = mf.tick(0.2, control)
 
-    assert np.any(state0p1 != state0p2)
+    assert np.any(state0p1.state != state0p2.state)
 
 
 def test_tick_empty_sensor_readings():
@@ -58,30 +58,10 @@ def test_tick_empty_sensor_readings():
 
     state0p2 = mf.tick(2.2, control, [])
 
-    assert np.any(state0p1 != state0p2)
+    assert np.any(state0p1.state != state0p2.state)
 
 
 def test_tick_one_sensor_reading():
-    # featuretest::State state(featuretest::StateOptions{.v = 1.0});
-    # formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
-    #     2.0, {
-    #              .state = state,
-    #              .covariance = {},
-    #          });
-
-    # featuretest::Control control;
-
-    # auto state0p1 = ([&mf, &control]() {
-    #   featuretest::Simple reading{featuretest::SimpleOptions{}};
-    #   return mf.tick(2.1, control, {mf.wrap(2.05, reading)});
-    # })();
-
-    # auto state0p2 = ([&mf, &control]() {
-    #   featuretest::Simple reading{featuretest::SimpleOptions{}};
-    #   return mf.tick(2.2, control, {mf.wrap(2.15, reading)});
-    # })();
-
-    # EXPECT_NE(state0p1.state.data, state0p2.state.data);
     ekf = make_ekf()
     state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
     covariance = np.eye(4)
@@ -96,7 +76,7 @@ def test_tick_one_sensor_reading():
 
     state0p2 = mf.tick(2.2, control, [reading2])
 
-    assert np.any(state0p1 != state0p2)
+    assert np.any(state0p1.state != state0p2.state)
 
 
 def test_tick_multiple_sensor_reading():
@@ -112,7 +92,7 @@ def test_tick_multiple_sensor_reading():
         StampedReading(3.07, "simple", np.zeros((1, 1))),
     ]
 
-    current_time, (state0p1, _cov) = mf.tick(3.1, control, readings1)
+    state0p1 = mf.tick(3.1, control, readings1)
 
     readings2 = [
         StampedReading(3.15, "simple", np.zeros((1, 1))),
@@ -120,6 +100,6 @@ def test_tick_multiple_sensor_reading():
         StampedReading(3.17, "simple", np.zeros((1, 1))),
     ]
 
-    current_time, (state0p2, _cov) = mf.tick(3.2, control, readings2)
+    state0p2 = mf.tick(3.2, control, readings2)
 
-    assert np.any(state0p1 != state0p2)
+    assert np.any(state0p1.state != state0p2.state)
