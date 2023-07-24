@@ -44,7 +44,7 @@ def test_tick_time_only():
 
     state0p2 = mf.tick(0.2, control)
 
-    assert state0p1 != state0p2
+    assert np.any(state0p1 != state0p2)
 
 
 def test_tick_empty_sensor_readings():
@@ -58,7 +58,7 @@ def test_tick_empty_sensor_readings():
 
     state0p2 = mf.tick(0.2, control, [])
 
-    assert state0p1 != state0p2
+    assert np.any(state0p1 != state0p2)
 
 
 def test_tick_one_sensor_reading():
@@ -88,15 +88,15 @@ def test_tick_one_sensor_reading():
     control = np.array([[0.0]])
     mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
-    reading1 = StampedReading(2.05, "simple", None)
+    reading1 = StampedReading(2.05, "simple", np.zeros((1,1)))
 
     state0p1 = mf.tick(0.1, control, [reading1])
 
-    reading2 = StampedReading(2.15, "simple", None)
+    reading2 = StampedReading(2.15, "simple", np.zeros((1,1)))
 
     state0p2 = mf.tick(0.2, control, [reading2])
 
-    assert state0p1 != state0p2
+    assert np.any(state0p1 != state0p2)
 
 
 def test_tick_multiple_sensor_reading():
@@ -107,19 +107,19 @@ def test_tick_multiple_sensor_reading():
     mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
     readings1 = [
-        StampedReading(0.10, "simple", None),
-        StampedReading(0.10, "simple", None),
-        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
     ]
 
-    state0p1 = mf.tick(0.1, control, readings1)
+    current_time, (state0p1, _cov) = mf.tick(0.1, control, readings1)
 
     readings2 = [
-        StampedReading(0.10, "simple", None),
-        StampedReading(0.10, "simple", None),
-        StampedReading(0.10, "simple", None),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
+        StampedReading(0.10, "simple", np.zeros((1,1))),
     ]
 
-    state0p2 = mf.tick(0.2, control, readings2)
+    current_time, (state0p2, _cov) = mf.tick(0.2, control, readings2)
 
-    assert state0p1 != state0p2
+    assert np.any(state0p1 != state0p2)
