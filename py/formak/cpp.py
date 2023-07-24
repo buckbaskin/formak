@@ -1122,7 +1122,7 @@ def header_from_ast(*, generator):
                             Arg("const ExtendedKalmanFilter&", "impl"),
                             Arg("const StateAndVariance&", "input"),
                         ],
-                        modifier="= 0",
+                        modifier="const = 0",
                     ),
                 ],
             )
@@ -1193,7 +1193,7 @@ def header_from_ast(*, generator):
                                 Arg("const ExtendedKalmanFilter&", "impl"),
                                 Arg("const StateAndVariance&", "input"),
                             ],
-                            modifier="override",
+                            modifier="const override",
                             body=[
                                 Escape("return impl.sensor_model(input, *this);"),
                             ],
