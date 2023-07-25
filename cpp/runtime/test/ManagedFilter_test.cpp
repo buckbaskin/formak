@@ -189,13 +189,15 @@ INSTANTIATE_TEST_SUITE_P(
 }  // namespace tick
 
 namespace multitick {
+using test::tools::OrderOptions;
+
 class ManagedFilterMultiTest
     : public ::testing::Test,
       public ::testing::WithParamInterface<test::tools::OrderOptions> {};
 
 TEST_P(ManagedFilterMultiTest, TickMultiReading) {
   using formak::runtime::ManagedFilter;
-  Options options = GetParam();
+  OrderOptions options = GetParam();
 
   double start_time = 10.0;
   StateAndVariance initial_state{

@@ -25,6 +25,6 @@ std::ostream& operator<<(std::ostream& o, const OrderOptions& options);
 std::vector<std::vector<ShuffleId>> AllOrderings(
     const std::vector<ShuffleId>& base_set);
 
-std::vector<OrderOptions> AllOrderOptions();
+std::vector<OrderOptions> AllOptions();
 
 }  // namespace test::tools

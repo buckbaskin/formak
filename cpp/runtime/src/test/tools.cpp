@@ -1,6 +1,7 @@
 #include <formak/runtime/test/tools.h>
 
-#include <iterator>  // back_inserter
+#include <algorithm>  // copy_if
+#include <iterator>   // back_inserter
 #include <vector>
 
 namespace test::tools {
