@@ -1,6 +1,8 @@
 #include <formak/runtime/ManagedFilter.h>
+#include <formak/runtime/test/tools.h>
 #include <gtest/gtest.h>
 
+#include <iterator>  // back_inserter
 #include <tuple>
 #include <vector>
 
@@ -187,43 +189,10 @@ INSTANTIATE_TEST_SUITE_P(
 }  // namespace tick
 
 namespace multitick {
-enum class ShuffleId {
-  Zero,
-  Sensor0,
-  Sensor1,
-  Sensor2,
-  Sensor3,
-  Output,
-};
+class ManagedFilterMultiTest
+    : public ::testing::Test,
+      public ::testing::WithParamInterface<test::tools::OrderOptions> {};
 
-struct Options {
-  double output_dt = 0.0;
-  std::array<double, 4> sensor_dt{0.0, 0.0, 0.0, 0.0};
-};
-std::ostream& operator<<(std::ostream& o, const std::array<double, 4>& a) {
-  o << "[" << a[0] << ", " << a[1] << ", " << a[2] << ", " << a[3] << "]";
-  return o;
-}
-std::ostream& operator<<(std::ostream& o, const Options& options) {
-  o << "Options{.output_dt=" << options.output_dt
-    << ", .sensor_dt=" << options.sensor_dt << "}";
-  return o;
-}
-
-std::vector<Options> AllOrderings() {
-  std::vector<Options> result;
-
-  result.push_back(Options{});
-
-  return result;
-}
-
-class ManagedFilterMultiTest : public ::testing::Test,
-                               public ::testing::WithParamInterface<Options> {};
-
-// typename Impl::StateAndVarianceT tick(
-//     double outputTime, const typename Impl::ControlT& control,
-//     const std::vector<StampedReading>& readings) { ... }
 TEST_P(ManagedFilterMultiTest, TickMultiReading) {
   using formak::runtime::ManagedFilter;
   Options options = GetParam();
@@ -255,8 +224,8 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
   EXPECT_NE(next_state.state, initial_state.state);
 }
 
-INSTANTIATE_TEST_SUITE_P(TickTimings, ManagedFilterMultiTest,
-                         ::testing::ValuesIn(AllOrderings()));
+INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
+                         ::testing::ValuesIn(test::tools::AllOptions()));
 }  // namespace multitick
 
 }  // namespace unit
