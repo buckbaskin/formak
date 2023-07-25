@@ -65,7 +65,7 @@ TEST(ManagedFilterTest, StampedReading) {
 
   double reading = 1.0;
 
-  formak::runtime::ManagedFilter<TestImpl>::StampedReading stamped_reading =
+  ManagedFilter<TestImpl>::StampedReading stamped_reading =
       ManagedFilter<TestImpl>::wrap(5.0, Reading(reading));
 
   TestImpl impl;
@@ -79,10 +79,6 @@ TEST(ManagedFilterTest, StampedReading) {
                    reading);
 }
 
-// typename Impl::StateAndVarianceT tick(
-//     double outputTime, const typename Impl::ControlT& control) {
-//   return processUpdate(outputTime, control);
-// }
 namespace tick {
 struct Options {
   double dt;
@@ -118,23 +114,38 @@ TEST_P(ManagedFilterTest, TickNoReadings) {
   }
 }
 
+// typename Impl::StateAndVarianceT tick(
+//     double outputTime, const typename Impl::ControlT& control,
+//     const std::vector<StampedReading>& readings) { ... }
+TEST_P(ManagedFilterTest, TickEmptyReadings) {
+  using formak::runtime::ManagedFilter;
+
+  double start_time = 10.0;
+  StateAndVariance initial_state{
+      .state = 4.0,
+      .covariance = 1.0,
+  };
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
+
+  Control control{.velocity = -1.0};
+  std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
+
+  double dt = GetParam().dt;
+  StateAndVariance next_state = mf.tick(start_time + dt, control, empty);
+
+  EXPECT_NEAR(next_state.state, initial_state.state + dt * control.velocity,
+              1.5e-14)
+      << "  diff: "
+      << (next_state.state - (initial_state.state + dt * control.velocity));
+  if (GetParam().dt != 0.0) {
+    EXPECT_GT(next_state.covariance, initial_state.covariance);
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(TickTimings, ManagedFilterTest,
                          ::testing::Values(Options{-1.5}, Options{-0.1},
                                            Options{0.0}, Options{0.1},
                                            Options{2.7}));
 }  // namespace tick
-
-// typename Impl::StateAndVarianceT tick(
-//     double outputTime, const typename Impl::ControlT& control,
-//     const std::vector<StampedReading>& readings) {
-//   for (const auto& stampedReading : readings) {
-//     _state = processUpdate(stampedReading.timestamp, control);
-//     _currentTime = stampedReading.timestamp;
-//
-//     _state = stampedReading.data->sensor_model(_impl, _state);
-//   }
-//
-//   return tick(outputTime, control);
-// }
 
 }  // namespace unit
