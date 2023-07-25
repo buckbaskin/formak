@@ -52,8 +52,12 @@ class ManagedFilter {
     if (_currentTime == outputTime) {
     } else if (_currentTime < outputTime) {
       double currentTime = _currentTime;
+      std::cout << "expected_iterations = ( " << outputTime << " - "
+                << currentTime << " ) "
+                << " / " << dt << " = " << ((outputTime - currentTime) / dt)
+                << std::endl;
       size_t expected_iterations =
-          static_cast<size_t>(std::ceil((outputTime - currentTime) / dt));
+          static_cast<size_t>(std::floor((outputTime - currentTime) / dt));
       for (size_t count = 0; count < expected_iterations; ++count) {
         currentTime += dt;
         std::cout << "+" << dt << " " << currentTime << " < " << outputTime
@@ -67,10 +71,14 @@ class ManagedFilter {
       }
     } else {  // _currentTime > outputTime
       double currentTime = _currentTime;
+      std::cout << "expected_iterations = ( " << outputTime << " - "
+                << currentTime << " ) "
+                << " / " << dt << " = " << ((outputTime - currentTime) / dt)
+                << std::endl;
       size_t expected_iterations =
-          static_cast<size_t>(std::ceil((outputTime - currentTime) / -dt));
+          static_cast<size_t>(std::floor((outputTime - currentTime) / -dt));
       for (size_t count = 0; count < expected_iterations; ++count) {
-        currentTime += dt;
+        currentTime -= dt;
         std::cout << "-" << dt << " " << currentTime << " > " << outputTime
                   << " " << count << " / "
                   << " " << expected_iterations << std::endl;
