@@ -154,9 +154,6 @@ TEST_P(ManagedFilterTest, TickEmptyReadings) {
   }
 }
 
-// typename Impl::StateAndVarianceT tick(
-//     double outputTime, const typename Impl::ControlT& control,
-//     const std::vector<StampedReading>& readings) { ... }
 TEST_P(ManagedFilterTest, TickOneReading) {
   using formak::runtime::ManagedFilter;
   Options options(GetParam());
@@ -188,5 +185,78 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7),
                        ::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7)));
 }  // namespace tick
+
+namespace multitick {
+enum class ShuffleId {
+  Zero,
+  Sensor0,
+  Sensor1,
+  Sensor2,
+  Sensor3,
+  Output,
+};
+
+struct Options {
+  double output_dt = 0.0;
+  std::array<double, 4> sensor_dt{0.0, 0.0, 0.0, 0.0};
+};
+std::ostream& operator<<(std::ostream& o, const std::array<double, 4>& a) {
+  o << "[" << a[0] << ", " << a[1] << ", " << a[2] << ", " << a[3] << "]";
+  return o;
+}
+std::ostream& operator<<(std::ostream& o, const Options& options) {
+  o << "Options{.output_dt=" << options.output_dt
+    << ", .sensor_dt=" << options.sensor_dt << "}";
+  return o;
+}
+
+std::vector<Options> AllOrderings() {
+  std::vector<Options> result;
+
+  result.push_back(Options{});
+
+  return result;
+}
+
+class ManagedFilterMultiTest : public ::testing::Test,
+                               public ::testing::WithParamInterface<Options> {};
+
+// typename Impl::StateAndVarianceT tick(
+//     double outputTime, const typename Impl::ControlT& control,
+//     const std::vector<StampedReading>& readings) { ... }
+TEST_P(ManagedFilterMultiTest, TickMultiReading) {
+  using formak::runtime::ManagedFilter;
+  Options options = GetParam();
+
+  double start_time = 10.0;
+  StateAndVariance initial_state{
+      .state = 4.0,
+      .covariance = 1.0,
+  };
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
+
+  Control control{.velocity = -1.0};
+  double reading = -3.0;
+
+  std::vector<ManagedFilter<TestImpl>::StampedReading> one{
+      ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[0],
+                                    Reading(reading)),
+      ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[1],
+                                    Reading(reading)),
+      ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[2],
+                                    Reading(reading)),
+      ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[3],
+                                    Reading(reading)),
+  };
+
+  StateAndVariance next_state =
+      mf.tick(start_time + options.output_dt, control, one);
+
+  EXPECT_NE(next_state.state, initial_state.state);
+}
+
+INSTANTIATE_TEST_SUITE_P(TickTimings, ManagedFilterMultiTest,
+                         ::testing::ValuesIn(AllOrderings()));
+}  // namespace multitick
 
 }  // namespace unit
