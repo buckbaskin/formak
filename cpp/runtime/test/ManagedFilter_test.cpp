@@ -109,7 +109,8 @@ TEST_P(ManagedFilterTest, TickNoReadings) {
   double dt = GetParam().dt;
   StateAndVariance next_state = mf.tick(start_time + dt, control);
 
-  EXPECT_DOUBLE_EQ(next_state.state, 4.0 + dt * control.velocity);
+  EXPECT_DOUBLE_EQ(next_state.state,
+                   initial_state.state + dt * control.velocity);
   if (GetParam().dt != 0.0) {
     EXPECT_GT(next_state.covariance, initial_state.covariance);
   }

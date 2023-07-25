@@ -1,4 +1,6 @@
 #include <any>
+#include <cmath>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -50,7 +52,13 @@ class ManagedFilter {
     if (_currentTime == outputTime) {
     } else if (_currentTime < outputTime) {
       double currentTime = _currentTime;
-      for (; currentTime < outputTime; currentTime += dt) {
+      size_t expected_iterations =
+          static_cast<size_t>(std::ceil((outputTime - currentTime) / dt));
+      for (size_t count = 0; count < expected_iterations; ++count) {
+        currentTime += dt;
+        std::cout << "+" << dt << " " << currentTime << " < " << outputTime
+                  << " " << count << " / "
+                  << " " << expected_iterations << std::endl;
         state = _impl.process_model(dt, state, control);
       }
       if (currentTime < outputTime) {
@@ -59,7 +67,13 @@ class ManagedFilter {
       }
     } else {  // _currentTime > outputTime
       double currentTime = _currentTime;
-      for (; currentTime > outputTime; currentTime -= dt) {
+      size_t expected_iterations =
+          static_cast<size_t>(std::ceil((outputTime - currentTime) / -dt));
+      for (size_t count = 0; count < expected_iterations; ++count) {
+        currentTime += dt;
+        std::cout << "-" << dt << " " << currentTime << " > " << outputTime
+                  << " " << count << " / "
+                  << " " << expected_iterations << std::endl;
         state = _impl.process_model(-dt, state, control);
       }
       if (currentTime > outputTime) {
