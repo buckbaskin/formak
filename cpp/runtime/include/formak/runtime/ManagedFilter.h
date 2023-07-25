@@ -73,7 +73,7 @@ class ManagedFilter {
       double currentTime = _currentTime;
       std::cout << "expected_iterations = ( " << outputTime << " - "
                 << currentTime << " ) "
-                << " / " << dt << " = " << ((outputTime - currentTime) / dt)
+                << " / " << dt << " = " << ((outputTime - currentTime) / -dt)
                 << std::endl;
       size_t expected_iterations =
           static_cast<size_t>(std::floor((outputTime - currentTime) / -dt));

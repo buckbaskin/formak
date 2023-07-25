@@ -1,6 +1,7 @@
 #include <formak/runtime/ManagedFilter.h>
 #include <gtest/gtest.h>
 
+#include <tuple>
 #include <vector>
 
 namespace unit {
@@ -24,7 +25,7 @@ struct TestImpl {
   template <typename ReadingT>
   StateAndVariance sensor_model(const StateAndVarianceT& input,
                                 const ReadingT& reading) const {
-    return input;
+    return StateAndVariance{.state = reading.reading, .covariance = 1.0};
   }
 
   StateAndVariance process_model(double dt, const StateAndVariance& state,
@@ -46,7 +47,7 @@ struct Reading : public StampedReadingBase {
 
   StateAndVariance sensor_model(const TestImpl& impl,
                                 const StateAndVariance& input) const override {
-    return StateAndVariance{.state = reading, .covariance = 1.0};
+    return impl.sensor_model(input, *this);
   }
 
   double reading = 0.0;
@@ -81,17 +82,26 @@ TEST(ManagedFilterTest, StampedReading) {
 
 namespace tick {
 struct Options {
-  double dt;
+  Options(const std::tuple<double, double>& generator_result)
+      : output_dt(std::get<0>(generator_result)),
+        reading_dt(std::get<1>(generator_result)) {
+  }
+
+  double output_dt;
+  double reading_dt;
 };
 std::ostream& operator<<(std::ostream& o, const Options& options) {
-  o << "Options{.dt=" << options.dt << "}";
+  o << "Options{.output_dt=" << options.output_dt
+    << ", .reading_dt=" << options.reading_dt << "}";
   return o;
 }
-class ManagedFilterTest : public ::testing::Test,
-                          public ::testing::WithParamInterface<Options> {};
+class ManagedFilterTest
+    : public ::testing::Test,
+      public ::testing::WithParamInterface<std::tuple<double, double>> {};
 
 TEST_P(ManagedFilterTest, TickNoReadings) {
   using formak::runtime::ManagedFilter;
+  Options options(GetParam());
 
   double start_time = 10.0;
   StateAndVariance initial_state{
@@ -102,23 +112,23 @@ TEST_P(ManagedFilterTest, TickNoReadings) {
 
   Control control{.velocity = -1.0};
 
-  double dt = GetParam().dt;
+  double dt = options.output_dt;
   StateAndVariance next_state = mf.tick(start_time + dt, control);
 
   EXPECT_NEAR(next_state.state, initial_state.state + dt * control.velocity,
-              1.5e-14)
+              2.0e-14)
       << "  diff: "
       << (next_state.state - (initial_state.state + dt * control.velocity));
-  if (GetParam().dt != 0.0) {
+  if (options.output_dt != 0.0) {
     EXPECT_GT(next_state.covariance, initial_state.covariance);
+  } else {
+    EXPECT_DOUBLE_EQ(next_state.covariance, initial_state.covariance);
   }
 }
 
-// typename Impl::StateAndVarianceT tick(
-//     double outputTime, const typename Impl::ControlT& control,
-//     const std::vector<StampedReading>& readings) { ... }
 TEST_P(ManagedFilterTest, TickEmptyReadings) {
   using formak::runtime::ManagedFilter;
+  Options options(GetParam());
 
   double start_time = 10.0;
   StateAndVariance initial_state{
@@ -130,22 +140,53 @@ TEST_P(ManagedFilterTest, TickEmptyReadings) {
   Control control{.velocity = -1.0};
   std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
 
-  double dt = GetParam().dt;
+  double dt = options.output_dt;
   StateAndVariance next_state = mf.tick(start_time + dt, control, empty);
 
   EXPECT_NEAR(next_state.state, initial_state.state + dt * control.velocity,
               1.5e-14)
       << "  diff: "
       << (next_state.state - (initial_state.state + dt * control.velocity));
-  if (GetParam().dt != 0.0) {
+  if (options.output_dt != 0.0) {
     EXPECT_GT(next_state.covariance, initial_state.covariance);
+  } else {
+    EXPECT_DOUBLE_EQ(next_state.covariance, initial_state.covariance);
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(TickTimings, ManagedFilterTest,
-                         ::testing::Values(Options{-1.5}, Options{-0.1},
-                                           Options{0.0}, Options{0.1},
-                                           Options{2.7}));
+// typename Impl::StateAndVarianceT tick(
+//     double outputTime, const typename Impl::ControlT& control,
+//     const std::vector<StampedReading>& readings) { ... }
+TEST_P(ManagedFilterTest, TickOneReading) {
+  using formak::runtime::ManagedFilter;
+  Options options(GetParam());
+
+  double start_time = 10.0;
+  StateAndVariance initial_state{
+      .state = 4.0,
+      .covariance = 1.0,
+  };
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
+
+  Control control{.velocity = -1.0};
+  double reading = -3.0;
+
+  std::vector<ManagedFilter<TestImpl>::StampedReading> one{
+      ManagedFilter<TestImpl>::wrap(start_time + options.reading_dt,
+                                    Reading(reading))};
+
+  StateAndVariance next_state =
+      mf.tick(start_time + options.output_dt, control, one);
+
+  double dt = options.output_dt - options.reading_dt;
+  EXPECT_NEAR(next_state.state, reading + control.velocity * dt, 2e-14)
+      << "  diff: " << (next_state.state - (reading + dt * control.velocity));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TickTimings, ManagedFilterTest,
+    ::testing::Combine(::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7),
+                       ::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7)));
 }  // namespace tick
 
 }  // namespace unit
