@@ -10,14 +10,12 @@ struct StateAndVariance {
   double state = 0.0;
   double covariance = 1.0;
 };
-// TODO(buck): Do all filters have a control?
 struct Control {
   double velocity = 0.0;
 };
 
 struct StampedReadingBase;
 
-// Note: ManagedFilter assumes the Impl can be default constructed
 struct TestImpl {
   using StateAndVarianceT = StateAndVariance;
   using ControlT = Control;
@@ -43,8 +41,6 @@ struct StampedReadingBase {
       const TestImpl& impl, const StateAndVariance& input) const = 0;
 };
 struct Reading : public StampedReadingBase {
-  // TODO(buck): Am I forgetting to call the StampedReadingBase constructor in
-  // my generated reading types?
   Reading(double reading_) : StampedReadingBase(), reading(reading_) {
   }
 
@@ -62,9 +58,6 @@ TEST(ManagedFilterTest, Constructor) {
   // Passes if construction and deconstruction are successful
   [[maybe_unused]] formak::runtime::ManagedFilter<TestImpl> mf(
       1.23, StateAndVariance{.state = 4.0, .covariance = 1.0});
-
-  // Note(buck): This test is helpful (found a compiler error because _impl
-  // wasn't initialized...)
 }
 
 TEST(ManagedFilterTest, StampedReading) {

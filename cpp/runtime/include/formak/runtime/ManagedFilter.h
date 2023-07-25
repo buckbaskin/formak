@@ -18,8 +18,6 @@ class ManagedFilter {
   };
   template <typename ReadingT>
   static StampedReading wrap(double timestamp, const ReadingT& reading) {
-    // TODO(buck): This feels like an option to forward constructor arguments of
-    // ReadingT to shared_ptr constructor
     return StampedReading{
         .timestamp = timestamp,
         .data = std::shared_ptr<typename Impl::StampedReadingBaseT>(
