@@ -19,6 +19,9 @@ struct Control {
 
 struct StampedReadingBase;
 
+// TODO(buck): Provide a C++ struct of known format as a constexpr member of the
+// EKFImpl so that these ControlT, max_dt_sec, etc can be looked up in a known
+// format
 struct TestImpl {
   using StateAndVarianceT = StateAndVariance;
   using ControlT = Control;

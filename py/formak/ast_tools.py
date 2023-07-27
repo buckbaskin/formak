@@ -228,6 +228,7 @@ class ConstructorDeclaration(BaseAst):
         if self.args is None:
             self.args = []
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{classname}();"
         elif len(self.args) == 1:
@@ -268,6 +269,7 @@ class ConstructorDefinition(BaseAst):
         if initializer_list_str != "":
             initializer_list_str = f" : {initializer_list_str}"
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.classname}::{self.classname}(){initializer_list_str} {{}}"
         elif len(self.args) == 1:
@@ -303,6 +305,7 @@ class FunctionDef(BaseAst):
         if len(self.modifier) > 0:
             modifier_str = " " + self.modifier
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.return_type} {self.name}(){modifier_str} {{"
         elif len(self.args) == 1:
@@ -352,6 +355,7 @@ class FunctionDeclaration(BaseAst):
         if len(self.modifier) > 0:
             modifier_str = " " + self.modifier
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.return_type} {self.name}(){modifier_str};"
         elif len(self.args) == 1:
@@ -361,8 +365,15 @@ class FunctionDeclaration(BaseAst):
         else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args[:-1]:
-                for line in arg.compile(options, **kwargs):
-                    yield line + ","
+                try:
+                    for line in arg.compile(options, **kwargs):
+                        yield line + ","
+                except AttributeError:
+                    print("self")
+                    print(self)
+                    print("arg")
+                    print(arg)
+                    raise
             yield from self.args[-1].compile(options, **kwargs)
             yield f"){modifier_str};"
 
@@ -415,6 +426,7 @@ class Templated(BaseAst):
     templated: Any
 
     def compile(self, options: CompileState, **kwargs):
+        self.template_args = list(self.template_args)
         if len(self.template_args) == 0:
             yield "template <>"
         elif len(self.template_args) == 1:
