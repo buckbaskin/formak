@@ -1,6 +1,5 @@
 #include <any>
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -11,7 +10,8 @@ class ManagedFilter {
  public:
   ManagedFilter(double initialTimestamp,
                 const typename Impl::StateAndVarianceT& initialState)
-      : _impl(), _currentTime(initialTimestamp), _state(initialState) {
+      : _impl(),
+        _state{.currentTime = initialTimestamp, .state = initialState} {
   }
 
   struct StampedReading {
@@ -29,72 +29,51 @@ class ManagedFilter {
 
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control) {
-    return processUpdate(outputTime, control);
+    return processUpdate(outputTime, control).state;
   }
   typename Impl::StateAndVarianceT tick(
       double outputTime, const typename Impl::ControlT& control,
       const std::vector<StampedReading>& readings) {
     for (const auto& stampedReading : readings) {
       _state = processUpdate(stampedReading.timestamp, control);
-      _currentTime = stampedReading.timestamp;
 
-      _state = stampedReading.data->sensor_model(_impl, _state);
+      // No change in time for sensor readings
+      _state.state = stampedReading.data->sensor_model(_impl, _state.state);
     }
 
     return tick(outputTime, control);
   }
 
  private:
-  typename Impl::StateAndVarianceT processUpdate(
-      double outputTime, const typename Impl::ControlT& control) const {
+  struct State {
+    double currentTime = 0.0;
+    typename Impl::StateAndVarianceT state;
+  };
+
+  State processUpdate(double outputTime,
+                      const typename Impl::ControlT& control) const {
     double dt = 0.1;
-    typename Impl::StateAndVarianceT state = _state;
-    if (_currentTime == outputTime) {
-    } else if (_currentTime < outputTime) {
-      double currentTime = _currentTime;
-      std::cout << "expected_iterations = ( " << outputTime << " - "
-                << currentTime << " ) "
-                << " / " << dt << " = " << ((outputTime - currentTime) / dt)
-                << std::endl;
-      size_t expected_iterations =
-          static_cast<size_t>(std::floor((outputTime - currentTime) / dt));
-      for (size_t count = 0; count < expected_iterations; ++count) {
-        currentTime += dt;
-        std::cout << "+" << dt << " " << currentTime << " < " << outputTime
-                  << " " << count << " / "
-                  << " " << expected_iterations << std::endl;
-        state = _impl.process_model(dt, state, control);
-      }
-      if (currentTime < outputTime) {
-        state = _impl.process_model(outputTime - currentTime, state, control);
-        currentTime = outputTime;
-      }
-    } else {  // _currentTime > outputTime
-      double currentTime = _currentTime;
-      std::cout << "expected_iterations = ( " << outputTime << " - "
-                << currentTime << " ) "
-                << " / " << dt << " = " << ((outputTime - currentTime) / -dt)
-                << std::endl;
-      size_t expected_iterations =
-          static_cast<size_t>(std::floor((outputTime - currentTime) / -dt));
-      for (size_t count = 0; count < expected_iterations; ++count) {
-        currentTime -= dt;
-        std::cout << "-" << dt << " " << currentTime << " > " << outputTime
-                  << " " << count << " / "
-                  << " " << expected_iterations << std::endl;
-        state = _impl.process_model(-dt, state, control);
-      }
-      if (currentTime > outputTime) {
-        state = _impl.process_model(outputTime - currentTime, state, control);
-        currentTime = outputTime;
-      }
+    if (_state.currentTime < outputTime) {
+      dt *= -1;
     }
 
-    return state;
+    typename Impl::StateAndVarianceT state = _state.state;
+
+    size_t expected_iterations = static_cast<size_t>(
+        std::abs(std::floor((outputTime - _state.currentTime) / dt)));
+
+    for (size_t count = 0; count < expected_iterations; ++count) {
+      state = _impl.process_model(dt, state, control);
+    }
+    double iterTime = _state.currentTime + dt * expected_iterations;
+    if (std::abs(outputTime - iterTime) >= 1e-9) {
+      state = _impl.process_model(outputTime - iterTime, state, control);
+    }
+
+    return {.currentTime = outputTime, .state = state};
   }
 
   const Impl _impl;
-  double _currentTime = 0.0;
-  typename Impl::StateAndVarianceT _state;
+  State _state;
 };
 }  // namespace formak::runtime
