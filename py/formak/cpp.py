@@ -1386,7 +1386,7 @@ def ControlConstructor(generator) -> BaseAst:
     )
 
 
-def EKF_process_model(generator):
+def EKF_process_model(generator) -> BaseAst:
     return FunctionDef(
         "StateAndVariance",
         "ExtendedKalmanFilter::process_model",
@@ -1404,7 +1404,7 @@ def EKF_process_model(generator):
     )
 
 
-def EKFPM_model(generator):
+def EKFPM_model(generator) -> BaseAst:
     return FunctionDef(
         "State",
         "ExtendedKalmanFilterProcessModel::model",
@@ -1414,7 +1414,7 @@ def EKFPM_model(generator):
     )
 
 
-def EKFPM_process_jacobian(generator):
+def EKFPM_process_jacobian(generator) -> BaseAst:
     return FunctionDef(
         "typename ExtendedKalmanFilter::ProcessJacobianT",
         "ExtendedKalmanFilterProcessModel::process_jacobian",
@@ -1424,7 +1424,7 @@ def EKFPM_process_jacobian(generator):
     )
 
 
-def EKFPM_control_jacobian(generator):
+def EKFPM_control_jacobian(generator) -> BaseAst:
     return FunctionDef(
         "typename ExtendedKalmanFilter::ControlJacobianT",
         "ExtendedKalmanFilterProcessModel::control_jacobian",
@@ -1434,13 +1434,77 @@ def EKFPM_control_jacobian(generator):
     )
 
 
-def EKFPM_covariance(generator):
+def EKFPM_covariance(generator) -> BaseAst:
     return FunctionDef(
         "typename ExtendedKalmanFilter::CovarianceT",
         "ExtendedKalmanFilterProcessModel::covariance",
         modifier="",
         args=standard_process_args(generator),
         body=generator.control_covariance_body(),
+    )
+
+
+def ReadingDefaultConstructor(reading_type) -> BaseAst:
+    return ConstructorDefinition(
+        reading_type.typename,
+        args=[],
+        initializer_list=[("data", "DataT::Zero()")],
+    )
+
+
+def ReadingConstructor(reading_type) -> BaseAst:
+    return ConstructorDefinition(
+        reading_type.typename,
+        args=[Arg(f"const {reading_type.typename}Options&", "options")],
+        initializer_list=[
+            (
+                "data",
+                ", ".join(
+                    f"options.{name}"
+                    for name in sorted(list(reading_type.sensor_model_mapping.keys()))
+                ),
+            )
+        ],
+    )
+
+
+def ReadingSensorModel_model(generator, reading_type) -> BaseAst:
+    return FunctionDef(
+        reading_type.typename,
+        f"{reading_type.typename}SensorModel::model",
+        modifier="",
+        args=standard_reading_args(generator, reading_type),
+        body=reading_type.SensorModel_model_body,
+    )
+
+
+def ReadingSensorModel_covariance(generator, reading_type) -> BaseAst:
+    return FunctionDef(
+        f"{reading_type.typename}::CovarianceT",
+        f"{reading_type.typename}SensorModel::covariance",
+        modifier="",
+        args=standard_reading_args(generator, reading_type),
+        body=reading_type.SensorModel_covariance_body,
+    )
+
+
+def ReadingSensorModel_jacobian(generator, reading_type) -> BaseAst:
+    return FunctionDef(
+        f"{reading_type.typename}::SensorJacobianT",
+        f"{reading_type.typename}SensorModel::jacobian",
+        modifier="",
+        args=standard_reading_args(generator, reading_type),
+        body=reading_type.SensorModel_jacobian_body,
+    )
+
+
+def Model_model(generator) -> BaseAst:
+    return FunctionDef(
+        "State",
+        "Model::model",
+        modifier="",
+        args=standard_process_args(generator),
+        body=generator.model_body(),
     )
 
 
@@ -1466,61 +1530,13 @@ def source_from_ast(*, generator):
         body.append(EKFPM_covariance(generator))
 
         for reading_type in generator.reading_types():
-            ReadingDefaultConstructor = ConstructorDefinition(
-                reading_type.typename,
-                args=[],
-                initializer_list=[("data", "DataT::Zero()")],
-            )
-            body.append(ReadingDefaultConstructor)
-            ReadingConstructor = ConstructorDefinition(
-                reading_type.typename,
-                args=[Arg(f"const {reading_type.typename}Options&", "options")],
-                initializer_list=[
-                    (
-                        "data",
-                        ", ".join(
-                            f"options.{name}"
-                            for name in sorted(
-                                list(reading_type.sensor_model_mapping.keys())
-                            )
-                        ),
-                    )
-                ],
-            )
-            body.append(ReadingConstructor)
-            ReadingSensorModel_model = FunctionDef(
-                reading_type.typename,
-                f"{reading_type.typename}SensorModel::model",
-                modifier="",
-                args=standard_reading_args(generator, reading_type),
-                body=reading_type.SensorModel_model_body,
-            )
-            body.append(ReadingSensorModel_model)
-            ReadingSensorModel_covariance = FunctionDef(
-                f"{reading_type.typename}::CovarianceT",
-                f"{reading_type.typename}SensorModel::covariance",
-                modifier="",
-                args=standard_reading_args(generator, reading_type),
-                body=reading_type.SensorModel_covariance_body,
-            )
-            body.append(ReadingSensorModel_covariance)
-            ReadingSensorModel_jacobian = FunctionDef(
-                f"{reading_type.typename}::SensorJacobianT",
-                f"{reading_type.typename}SensorModel::jacobian",
-                modifier="",
-                args=standard_reading_args(generator, reading_type),
-                body=reading_type.SensorModel_jacobian_body,
-            )
-            body.append(ReadingSensorModel_jacobian)
+            body.append(ReadingDefaultConstructor(reading_type))
+            body.append(ReadingConstructor(reading_type))
+            body.append(ReadingSensorModel_model(generator, reading_type))
+            body.append(ReadingSensorModel_covariance(generator, reading_type))
+            body.append(ReadingSensorModel_jacobian(generator, reading_type))
     else:  # generator.enable_EKF == False
-        Model_model = FunctionDef(
-            "State",
-            "Model::model",
-            modifier="",
-            args=standard_process_args(generator),
-            body=generator.model_body(),
-        )
-        body.append(Model_model)
+        body.append(Model_model(generator))
 
     namespace = Namespace(name=generator.namespace, body=body)
     includes = [f"#include <{generator.header_include}>"]
