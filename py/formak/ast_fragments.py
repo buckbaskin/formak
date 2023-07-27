@@ -327,37 +327,33 @@ def SensorId(generator) -> BaseAst:
     )
 
 
-# struct Tag {
-#   using StateAndVarianceT = StateAndVariance;
-#   using ControlT = Control;
-#   using StampedReadingBaseT = StampedReadingBase;
-#   static constexpr double max_dt_sec = 0.05;
-# };
-def EKF_Tag(generator) -> BaseAst:
-    return ClassDef(
-        "struct",
-        "Tag",
-        bases=[],
-        body=[
-            UsingDeclaration(
-                "StateAndVarianceT",
-                "StateAndVariance",
-            ),
-            # TODO(buck): Only include this if control is enabled
-            UsingDeclaration(
-                "ControlT",
-                "Control",
-            ),
-            # TODO(buck): Missing using declaration for CalibrationT (maybe)?
-            UsingDeclaration(
-                "StampedReadingBaseT",
-                "StampedReadingBase",
-            ),
-            MemberDeclaration(
-                "static constexpr double", "max_dt_sec", "cpp::Config::max_dt_sec"
-            ),
-        ],
+def _EKF_Tag_body(generator) -> Iterable[BaseAst]:
+    yield UsingDeclaration(
+        "StateAndVarianceT",
+        "StateAndVariance",
     )
+    if generator.enable_calibration():
+        yield UsingDeclaration(
+            "CalibrationT",
+            "Calibration",
+        )
+    if generator.enable_control():
+        yield UsingDeclaration(
+            "ControlT",
+            "Control",
+        )
+        # TODO(buck): Missing using declaration for CalibrationT (maybe)?
+    yield UsingDeclaration(
+        "StampedReadingBaseT",
+        "StampedReadingBase",
+    )
+    yield MemberDeclaration(
+        "static constexpr double", "max_dt_sec", "cpp::Config::max_dt_sec"
+    )
+
+
+def EKF_Tag(generator) -> BaseAst:
+    return ClassDef("struct", "Tag", bases=[], body=_EKF_Tag_body(generator))
 
 
 # TODO(buck): I can make this name "nice" again as just ExtendedKalmanFilter if it has the prefix of a helper file (e.g. fragments.ExtendedKalmanFilter)
