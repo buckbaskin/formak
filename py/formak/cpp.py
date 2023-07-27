@@ -887,10 +887,10 @@ def standard_process_args(generator) -> Iterable[Arg]:
     else:
         yield Arg("const State&", "state")
 
-    if generator.enable_control():
-        yield Arg("const Control&", "control")
     if generator.enable_calibration():
         yield Arg("const Calibration&", "calibration")
+    if generator.enable_control():
+        yield Arg("const Control&", "control")
 
 
 def standard_reading_args(generator, reading_type=None) -> Iterable[Arg]:
