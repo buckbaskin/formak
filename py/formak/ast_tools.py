@@ -155,8 +155,9 @@ class ClassDef(BaseAst):
 
         yield f"{self.tag} {self.name} {bases_str} {{"
 
+        kwargs["classname"] = self.name
         for component in self.body:
-            yield from component.compile(options, classname=self.name, **kwargs)
+            yield from component.compile(options, **kwargs)
 
         yield "};\n"
 

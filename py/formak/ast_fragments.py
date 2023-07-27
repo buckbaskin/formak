@@ -327,14 +327,18 @@ def SensorId(generator) -> BaseAst:
     )
 
 
-# TODO(buck): I can make this name "nice" again as just ExtendedKalmanFilter if it has the prefix of a helper file (e.g. fragments.ExtendedKalmanFilter)
-def ExtendedKalmanFilter_ccode(generator) -> BaseAst:
+# struct Tag {
+#   using StateAndVarianceT = StateAndVariance;
+#   using ControlT = Control;
+#   using StampedReadingBaseT = StampedReadingBase;
+#   static constexpr double max_dt_sec = 0.05;
+# };
+def EKF_Tag(generator) -> BaseAst:
     return ClassDef(
-        "class",
-        "ExtendedKalmanFilter",
+        "struct",
+        "Tag",
         bases=[],
         body=[
-            Public(),
             UsingDeclaration(
                 "StateAndVarianceT",
                 "StateAndVariance",
@@ -349,6 +353,22 @@ def ExtendedKalmanFilter_ccode(generator) -> BaseAst:
                 "StampedReadingBaseT",
                 "StampedReadingBase",
             ),
+            MemberDeclaration(
+                "static constexpr double", "max_dt_sec", "cpp::Config::max_dt_sec"
+            ),
+        ],
+    )
+
+
+# TODO(buck): I can make this name "nice" again as just ExtendedKalmanFilter if it has the prefix of a helper file (e.g. fragments.ExtendedKalmanFilter)
+def ExtendedKalmanFilter_ccode(generator) -> BaseAst:
+    return ClassDef(
+        "class",
+        "ExtendedKalmanFilter",
+        bases=[],
+        body=[
+            Public(),
+            EKF_Tag(generator),
             UsingDeclaration(
                 "CovarianceT",
                 f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
@@ -362,9 +382,6 @@ def ExtendedKalmanFilter_ccode(generator) -> BaseAst:
                 f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
             ),
             UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
-            MemberDeclaration(
-                "static constexpr double", "max_dt_sec", "cpp::Config::max_dt_sec"
-            ),
             StateAndVariance_process_model(generator),
             StateAndVariance_sensor_model(generator),
             Templated(

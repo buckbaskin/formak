@@ -23,19 +23,21 @@ struct StampedReadingBase;
 // EKFImpl so that these ControlT, max_dt_sec, etc can be looked up in a known
 // format
 struct TestImpl {
-  using StateAndVarianceT = StateAndVariance;
-  using ControlT = Control;
-  using StampedReadingBaseT = StampedReadingBase;
-  static constexpr double max_dt_sec = 0.05;
+  struct Tag {
+    using StateAndVarianceT = StateAndVariance;
+    using ControlT = Control;
+    using StampedReadingBaseT = StampedReadingBase;
+    static constexpr double max_dt_sec = 0.05;
+  };
 
   template <typename ReadingT>
-  StateAndVariance sensor_model(const StateAndVarianceT& input,
+  StateAndVariance sensor_model(const StateAndVariance& input,
                                 const ReadingT& reading) const {
     return StateAndVariance{.state = reading.reading, .covariance = 1.0};
   }
 
   StateAndVariance process_model(double dt, const StateAndVariance& state,
-                                 const ControlT& control) const {
+                                 const Control& control) const {
     return {
         .state = state.state + dt * control.velocity,
         .covariance = state.covariance + std::abs(dt),
