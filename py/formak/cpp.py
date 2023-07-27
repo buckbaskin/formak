@@ -151,6 +151,7 @@ class Model:
         assert isinstance(config, Config)
 
         self.enable_EKF = False
+        self.config = config
         self.namespace = namespace
         self.header_include = header_include
 
@@ -700,8 +701,8 @@ def _compile_argparse():
     return args
 
 
-def header_from_ast(*, generator):
-    StateOptions = ClassDef(
+def StateOptions(generator):
+    return ClassDef(
         "struct",
         "StateOptions",
         bases=[],
@@ -710,7 +711,10 @@ def header_from_ast(*, generator):
             for member in generator.arglist_state
         ],
     )
-    State = ClassDef(
+
+
+def State(generator):
+    return ClassDef(
         "struct",
         "State",
         bases=[],
@@ -752,10 +756,13 @@ def header_from_ast(*, generator):
             MemberDeclaration("DataT", "data", "DataT::Zero()"),
         ],
     )
+
+
+def header_from_ast(*, generator):
     body = [
         generator.config.ccode(),
-        StateOptions,
-        State,
+        StateOptions(generator),
+        State(generator),
     ]
 
     if generator.enable_control():
