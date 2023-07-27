@@ -107,11 +107,13 @@ class ManagedFilter {
         std::abs(std::floor((outputTime - _state.currentTime) / max_dt)));
 
     for (size_t count = 0; count < expected_iterations; ++count) {
-      state = _impl.process_model(max_dt, state, control);
+      state = _impl.process_model(max_dt, state, _calibration, control);
     }
     double iterTime = _state.currentTime + max_dt * expected_iterations;
     if (std::abs(outputTime - iterTime) >= 1e-9) {
-      state = _impl.process_model(outputTime - iterTime, state, control);
+      // TODO(buck): Figure out if I need to if constexpr this
+      state = _impl.process_model(outputTime - iterTime, state, _calibration,
+                                  control);
     }
 
     return {.currentTime = outputTime, .state = state};

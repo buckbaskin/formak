@@ -41,3 +41,13 @@ cc_test(
         "@gtest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "managed-filter-no-calibration-test",
+    srcs = ["test/ManagedFilterNoCalibration_test.cpp"],
+    deps = [
+        ":managed-filter",
+        ":test-tools",
+        "@gtest//:gtest_main",
+    ],
+)

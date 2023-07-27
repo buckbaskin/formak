@@ -16,9 +16,6 @@ struct StateAndVariance {
 struct Control {
   double velocity = 0.0;
 };
-struct Calibration {
-  double velocity = 0.0;
-};
 
 struct StampedReadingBase;
 
@@ -32,26 +29,24 @@ struct TestImpl {
 
    public:
     using StateAndVarianceT = StateAndVariance;
-    using CalibrationT = Calibration;
+    using CalibrationT = Key;
     using ControlT = Control;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
-    static constexpr bool enable_calibration = true;
+    static constexpr bool enable_calibration = false;
     static constexpr bool enable_control = true;
   };
 
   template <typename ReadingT>
   StateAndVariance sensor_model(const StateAndVariance& input,
-                                const Calibration& calibration,
                                 const ReadingT& reading) const {
     return StateAndVariance{.state = reading.reading, .covariance = 1.0};
   }
 
   StateAndVariance process_model(double dt, const StateAndVariance& state,
-                                 const Calibration& calibration,
                                  const Control& control) const {
     return {
-        .state = state.state + dt * (control.velocity + calibration.velocity),
+        .state = state.state + dt * control.velocity,
         .covariance = state.covariance + std::abs(dt),
     };
   }
@@ -59,17 +54,15 @@ struct TestImpl {
 
 struct StampedReadingBase {
   virtual StateAndVariance sensor_model(
-      const TestImpl& impl, const StateAndVariance& input,
-      const Calibration& calibration) const = 0;
+      const TestImpl& impl, const StateAndVariance& input) const = 0;
 };
 struct Reading : public StampedReadingBase {
   Reading(double reading_) : StampedReadingBase(), reading(reading_) {
   }
 
   StateAndVariance sensor_model(const TestImpl& impl,
-                                const StateAndVariance& input,
-                                const Calibration& calibration) const override {
-    return impl.sensor_model(input, calibration, *this);
+                                const StateAndVariance& input) const override {
+    return impl.sensor_model(input, *this);
   }
 
   double reading = 0.0;
@@ -98,10 +91,8 @@ TEST(ManagedFilterTest, StampedReading) {
   // Can't directly address the .reading member of the child type. Instead, use
   // the sensor_model interface to access (by stuffing into the .state member of
   // the output)
-  Calibration calibration{.velocity = 0.0};
-  EXPECT_DOUBLE_EQ(
-      stamped_reading.data->sensor_model(impl, state, calibration).state,
-      reading);
+  EXPECT_DOUBLE_EQ(stamped_reading.data->sensor_model(impl, state).state,
+                   reading);
 }
 
 namespace tick {
@@ -132,8 +123,7 @@ TEST_P(ManagedFilterTest, TickNoReadings) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  Calibration calibration{.velocity = 0.0};
-  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
 
   Control control{.velocity = -1.0};
 
@@ -160,8 +150,7 @@ TEST_P(ManagedFilterTest, TickEmptyReadings) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  Calibration calibration{.velocity = 0.0};
-  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
 
   Control control{.velocity = -1.0};
   std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
@@ -189,8 +178,7 @@ TEST_P(ManagedFilterTest, TickOneReading) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  Calibration calibration{.velocity = 0.0};
-  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
 
   Control control{.velocity = -1.0};
   double reading = -3.0;
@@ -229,8 +217,7 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  Calibration calibration{.velocity = 0.0};
-  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+  ManagedFilter<TestImpl> mf(start_time, initial_state);
 
   Control control{.velocity = -1.0};
   double reading = -3.0;
