@@ -3,9 +3,10 @@ import logging
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
-from typing import Any, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 
 from formak.ast_tools import (
+    BaseAst,
     ClassDef,
     CompileState,
     ForwardClassDeclaration,
@@ -690,49 +691,47 @@ def _compile_argparse():
     return args
 
 
-def header_from_ast(*, generator) -> str:
-    # TODO(buck): Convert this list assembly for "body" into a generator
-    body = [
-        generator.config.ccode(),
-        fragments.StateOptions(generator),
-        fragments.State(generator),
-    ]
+def _header_body(*, generator) -> Iterable[BaseAst]:
+    yield generator.config.ccode()
+    yield fragments.StateOptions(generator)
+    yield fragments.State(generator)
 
     if generator.enable_control():
-        body.append(fragments.ControlOptions(generator))
-        body.append(fragments.Control(generator))
+        yield fragments.ControlOptions(generator)
+        yield fragments.Control(generator)
 
     if generator.enable_calibration():
-        body.append(fragments.CalibrationOptions(generator))
-        body.append(fragments.Calibration(generator))
+        yield fragments.CalibrationOptions(generator)
+        yield fragments.Calibration(generator)
 
     if generator.enable_EKF:
-        body.append(fragments.Covariance(generator))
-        body.append(fragments.StateAndVariance(generator))
-        body.append(fragments.SensorId(generator))
-        body.append(
-            ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
-        )
-        body.append(ForwardClassDeclaration("struct", "StampedReadingBase"))
+        yield fragments.Covariance(generator)
+        yield fragments.StateAndVariance(generator)
+        yield fragments.SensorId(generator)
+        yield ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
+        yield ForwardClassDeclaration("struct", "StampedReadingBase")
 
-        body.append(fragments.ExtendedKalmanFilter_ccode(generator))
+        yield fragments.ExtendedKalmanFilter_ccode(generator)
 
-        body.append(fragments.ExtendedKalmanFilterProcessModel(generator))
-        body.append(fragments.StampedReadingBase())
+        yield fragments.ExtendedKalmanFilterProcessModel(generator)
+        yield fragments.StampedReadingBase()
+
         for reading_type in generator.reading_types():
-            body.append(
-                ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
+            yield ForwardClassDeclaration(
+                "struct", f"{reading_type.typename}SensorModel"
             )
-            body.append(fragments.ReadingOptions(reading_type))
-
-            body.append(fragments.Reading(generator, reading_type))
-
-            body.append(fragments.ReadingSensorModel(generator, reading_type))
+            yield fragments.ReadingOptions(reading_type)
+            yield fragments.Reading(generator, reading_type)
+            yield fragments.ReadingSensorModel(generator, reading_type)
 
     else:  # enable_EKF == False
-        body.append(fragments.Model_ccode(generator))
+        yield fragments.Model_ccode(generator)
 
-    namespace = Namespace(name=generator.namespace, body=body)
+
+def header_from_ast(*, generator) -> str:
+    namespace = Namespace(
+        name=generator.namespace, body=_header_body(generator=generator)
+    )
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
