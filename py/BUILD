@@ -14,6 +14,7 @@ FORMAK_VERSION = "0.0.1-alpha00"
 PY_TEST_DEPS = [
     requirement("pytest"),
     requirement("pytest-mock"),
+    requirement("hypothesis"),
 ]
 
 CC_TEST_DEPS = [
@@ -34,21 +35,92 @@ filegroup(
 )
 
 py_library(
+    name = "ui",
+    srcs = ["formak/ui.py"],
+    imports = ["."],
+    deps = [
+        requirement("sympy"),
+    ],
+)
+
+py_library(
+    name = "python",
+    srcs = ["formak/python.py"],
+    imports = ["."],
+    deps = [
+        ":common",
+        ":exceptions",
+        requirement("sympy"),
+        requirement("scipy"),
+        requirement("numpy"),
+    ],
+)
+
+py_library(
+    name = "runtime",
+    srcs = ["formak/runtime.py"],
+    imports = ["."],
+    deps = [
+    ],
+)
+
+py_library(
+    name = "microbenchmark",
+    srcs = ["formak/microbenchmark.py"],
+    imports = ["."],
+    deps = [
+    ],
+)
+
+py_library(
+    name = "common",
+    srcs = ["formak/common.py"],
+    imports = ["."],
+    deps = [
+        ":exceptions",
+        requirement("sympy"),
+    ],
+)
+
+py_library(
+    name = "exceptions",
+    srcs = ["formak/exceptions.py"],
+    imports = ["."],
+    deps = [
+    ],
+)
+
+py_library(
+    name = "ast-tools",
+    srcs = ["formak/ast_tools.py"],
+    imports = ["."],
+    deps = [
+        requirement("Jinja2"),
+    ],
+)
+
+py_library(
+    name = "cpp",
+    srcs = ["formak/cpp.py"],
+    imports = ["."],
+    deps = [
+        ":ast-tools",
+        ":common",
+        ":exceptions",
+        requirement("sympy"),
+    ],
+)
+
+py_library(
     name = "formak",
-    srcs = glob(
-        ["formak/**/*.py"],
-        exclude = ["generate.py"],
-    ),
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("sympy"),
-        requirement("scipy"),
-        requirement("scikit-learn"),
-        requirement("numpy"),
-        requirement("colorama"),
-        requirement("hypothesis"),
-        requirement("Jinja2"),
+        ":cpp",
+        ":microbenchmark",
+        ":python",
+        ":runtime",
+        ":ui",
     ],
 )
 
