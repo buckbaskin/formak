@@ -1103,6 +1103,177 @@ def ExtendedKalmanFilterProcessModel_covariance(generator):
     )
 
 
+def ExtendedKalmanFilterProcessModel(generator):
+    return ClassDef(
+        "class",
+        "ExtendedKalmanFilterProcessModel",
+        bases=[],
+        body=[
+            Public(),
+            ExtendedKalmanFilterProcessModel_model(generator),
+            ExtendedKalmanFilterProcessModel_process_jacobian(generator),
+            ExtendedKalmanFilterProcessModel_control_jacobian(generator),
+            ExtendedKalmanFilterProcessModel_covariance(generator),
+        ],
+    )
+
+
+def StampedReadingBase():
+    return ClassDef(
+        "struct",
+        "StampedReadingBase",
+        bases=[],
+        body=[
+            FunctionDeclaration(
+                "virtual StateAndVariance",
+                "sensor_model",
+                args=[
+                    Arg("const ExtendedKalmanFilter&", "impl"),
+                    Arg("const StateAndVariance&", "state"),
+                ],
+                modifier="const = 0",
+            ),
+        ],
+    )
+
+
+def ReadingOptions(reading_type):
+    return ClassDef(
+        "struct",
+        f"{reading_type.typename}Options",
+        bases=[],
+        body=[
+            MemberDeclaration("double", symbol, 0.0)
+            for symbol in sorted(list(reading_type.sensor_model_mapping.keys()))
+        ],
+    )
+
+
+def Reading(generator, reading_type):
+    return ClassDef(
+        "struct",
+        f"{reading_type.typename}",
+        bases=["StampedReadingBase"],
+        body=[
+            UsingDeclaration("DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"),
+            UsingDeclaration(
+                "CovarianceT",
+                f"Eigen::Matrix<double, {reading_type.size}, {reading_type.size}>",
+            ),
+            UsingDeclaration(
+                "InnovationT",
+                f"Eigen::Matrix<double, {reading_type.size}, 1>",
+            ),
+            UsingDeclaration(
+                "KalmanGainT",
+                f"Eigen::Matrix<double, {generator.state_size}, {reading_type.size}>",
+            ),
+            UsingDeclaration(
+                "SensorJacobianT",
+                f"Eigen::Matrix<double, {reading_type.size}, {generator.state_size}>",
+            ),
+            UsingDeclaration("SensorModel", f"{reading_type.typename}SensorModel"),
+            ConstructorDeclaration(args=[]),
+            ConstructorDeclaration(
+                args=[Arg(f"const {reading_type.typename}Options&", "options")]
+            ),
+            FunctionDef(
+                "StateAndVariance",
+                "sensor_model",
+                args=[
+                    Arg("const ExtendedKalmanFilter&", "impl"),
+                    Arg("const StateAndVariance&", "state"),
+                ],
+                modifier="const override",
+                body=[
+                    Escape("return impl.sensor_model(state, *this);"),
+                ],
+            ),
+        ]
+        + [
+            FunctionDef(
+                "double",
+                name,
+                args=[],
+                modifier="",
+                body=[Return(f"data({idx}, 0)")],
+            )
+            for idx, name in enumerate(
+                sorted(list(reading_type.sensor_model_mapping.keys()))
+            )
+        ]
+        + [
+            FunctionDeclaration(
+                f"static {reading_type.typename}",
+                "model",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+            FunctionDeclaration(
+                f"static {reading_type.typename}::SensorJacobianT",
+                "jacobian",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+            FunctionDeclaration(
+                f"static {reading_type.typename}::CovarianceT",
+                "covariance",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+            MemberDeclaration("DataT", "data", "DataT::Zero()"),
+            MemberDeclaration("constexpr static size_t", "size", reading_type.size),
+            MemberDeclaration(
+                "constexpr static SensorId",
+                "Identifier",
+                reading_type.identifier,
+            ),
+        ],
+    )
+
+
+def ReadingSensorModel(generator, reading_type):
+    return ClassDef(
+        "struct",
+        f"{reading_type.typename}SensorModel",
+        bases=[],
+        body=[
+            FunctionDeclaration(
+                f"static {reading_type.typename}",
+                "model",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+            FunctionDeclaration(
+                f"static {reading_type.typename}::SensorJacobianT",
+                "jacobian",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+            FunctionDeclaration(
+                f"static {reading_type.typename}::CovarianceT",
+                "covariance",
+                args=standard_reading_args(generator, reading_type),
+                modifier="",
+            ),
+        ],
+    )
+
+
+def Model_ccode(generator):
+    return ClassDef(
+        "class",
+        "Model",
+        bases=[],
+        body=[
+            Public(),
+            State_model(
+                generator,
+            ),
+        ],
+    )
+
+
 def header_from_ast(*, generator):
     # TODO(buck): Convert this list assembly for "body" into a generator
     body = [
@@ -1130,194 +1301,27 @@ def header_from_ast(*, generator):
 
         body.append(ExtendedKalmanFilter_ccode(generator))
 
-        ExtendedKalmanFilterProcessModel = ClassDef(
-            "class",
-            "ExtendedKalmanFilterProcessModel",
-            bases=[],
-            body=[
-                Public(),
-                ExtendedKalmanFilterProcessModel_model(generator),
-                ExtendedKalmanFilterProcessModel_process_jacobian(generator),
-                ExtendedKalmanFilterProcessModel_control_jacobian(generator),
-                ExtendedKalmanFilterProcessModel_covariance(generator),
-            ],
-        )
-        body.append(ExtendedKalmanFilterProcessModel)
-        body.append(
-            ClassDef(
-                "struct",
-                "StampedReadingBase",
-                bases=[],
-                body=[
-                    FunctionDeclaration(
-                        "virtual StateAndVariance",
-                        "sensor_model",
-                        args=[
-                            Arg("const ExtendedKalmanFilter&", "impl"),
-                            Arg("const StateAndVariance&", "state"),
-                        ],
-                        modifier="const = 0",
-                    ),
-                ],
-            )
-        )
+        body.append(ExtendedKalmanFilterProcessModel(generator))
+        body.append(StampedReadingBase())
         for reading_type in generator.reading_types():
             body.append(
                 ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
             )
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}Options",
-                    bases=[],
-                    body=[
-                        MemberDeclaration("double", symbol, 0.0)
-                        for symbol in sorted(
-                            list(reading_type.sensor_model_mapping.keys())
-                        )
-                    ],
-                )
-            )
+            body.append(ReadingOptions(reading_type))
 
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}",
-                    bases=["StampedReadingBase"],
-                    body=[
-                        UsingDeclaration(
-                            "DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"
-                        ),
-                        UsingDeclaration(
-                            "CovarianceT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {reading_type.size}>",
-                        ),
-                        UsingDeclaration(
-                            "InnovationT",
-                            f"Eigen::Matrix<double, {reading_type.size}, 1>",
-                        ),
-                        UsingDeclaration(
-                            "KalmanGainT",
-                            f"Eigen::Matrix<double, {generator.state_size}, {reading_type.size}>",
-                        ),
-                        UsingDeclaration(
-                            "SensorJacobianT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {generator.state_size}>",
-                        ),
-                        UsingDeclaration(
-                            "SensorModel", f"{reading_type.typename}SensorModel"
-                        ),
-                        ConstructorDeclaration(args=[]),
-                        ConstructorDeclaration(
-                            args=[
-                                Arg(f"const {reading_type.typename}Options&", "options")
-                            ]
-                        ),
-                        FunctionDef(
-                            "StateAndVariance",
-                            "sensor_model",
-                            args=[
-                                Arg("const ExtendedKalmanFilter&", "impl"),
-                                Arg("const StateAndVariance&", "state"),
-                            ],
-                            modifier="const override",
-                            body=[
-                                Escape("return impl.sensor_model(state, *this);"),
-                            ],
-                        ),
-                    ]
-                    + [
-                        FunctionDef(
-                            "double",
-                            name,
-                            args=[],
-                            modifier="",
-                            body=[Return(f"data({idx}, 0)")],
-                        )
-                        for idx, name in enumerate(
-                            sorted(list(reading_type.sensor_model_mapping.keys()))
-                        )
-                    ]
-                    + [
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}",
-                            "model",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::SensorJacobianT",
-                            "jacobian",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::CovarianceT",
-                            "covariance",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                        MemberDeclaration("DataT", "data", "DataT::Zero()"),
-                        MemberDeclaration(
-                            "constexpr static size_t", "size", reading_type.size
-                        ),
-                        MemberDeclaration(
-                            "constexpr static SensorId",
-                            "Identifier",
-                            reading_type.identifier,
-                        ),
-                    ],
-                )
-            )
+            body.append(Reading(generator, reading_type))
 
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}SensorModel",
-                    bases=[],
-                    body=[
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}",
-                            "model",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::SensorJacobianT",
-                            "jacobian",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::CovarianceT",
-                            "covariance",
-                            args=standard_reading_args(generator, reading_type),
-                            modifier="",
-                        ),
-                    ],
-                )
-            )
+            body.append(ReadingSensorModel(generator, reading_type))
 
     else:  # enable_EKF == False
-        Model = ClassDef(
-            "class",
-            "Model",
-            bases=[],
-            body=[
-                Public(),
-                State_model(
-                    generator,
-                ),
-            ],
-        )
-
-        body.append(Model)
+        body.append(Model_ccode(generator))
 
     namespace = Namespace(name=generator.namespace, body=body)
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
     if generator.enable_EKF:
+        # TODO(buck): Remove this when innovations moved to ManagedFilter
         includes.append("#include <any>")
         includes.append("#include <optional>")
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
