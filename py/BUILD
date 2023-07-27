@@ -100,10 +100,20 @@ py_library(
 )
 
 py_library(
+    name = "ast-fragments",
+    srcs = ["formak/ast_fragments.py"],
+    imports = ["."],
+    deps = [
+        ":ast-tools",
+    ],
+)
+
+py_library(
     name = "cpp",
     srcs = ["formak/cpp.py"],
     imports = ["."],
     deps = [
+        ":ast-fragments",
         ":ast-tools",
         ":common",
         ":exceptions",
