@@ -24,10 +24,17 @@ struct StampedReadingBase;
 // known format
 struct TestImpl {
   struct Tag {
+   private:
+    class Key {};
+
+   public:
     using StateAndVarianceT = StateAndVariance;
     using CalibrationT = Calibration;
+    using ControlT = Key;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
+    static constexpr bool enable_calibration = true;
+    static constexpr bool enable_control = false;
   };
 
   template <typename ReadingT>
@@ -48,15 +55,17 @@ struct TestImpl {
 
 struct StampedReadingBase {
   virtual StateAndVariance sensor_model(
-      const TestImpl& impl, const StateAndVariance& input) const = 0;
+      const TestImpl& impl, const StateAndVariance& input,
+      const Calibration& calibration) const = 0;
 };
 struct Reading : public StampedReadingBase {
   Reading(double reading_) : StampedReadingBase(), reading(reading_) {
   }
 
   StateAndVariance sensor_model(const TestImpl& impl,
-                                const StateAndVariance& input) const override {
-    return impl.sensor_model(input, *this);
+                                const StateAndVariance& input,
+                                const Calibration& calibration) const override {
+    return impl.sensor_model(input, calibration, *this);
   }
 
   double reading = 0.0;
@@ -85,8 +94,10 @@ TEST(ManagedFilterTest, StampedReading) {
   // Can't directly address the .reading member of the child type. Instead, use
   // the sensor_model interface to access (by stuffing into the .state member of
   // the output)
-  EXPECT_DOUBLE_EQ(stamped_reading.data->sensor_model(impl, state).state,
-                   reading);
+  Calibration calibration{.velocity = -1.0};
+  EXPECT_DOUBLE_EQ(
+      stamped_reading.data->sensor_model(impl, state, calibration).state,
+      reading);
 }
 
 namespace tick {
@@ -117,12 +128,11 @@ TEST_P(ManagedFilterTest, TickNoReadings) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  ManagedFilter<TestImpl> mf(start_time, initial_state);
-
   Calibration calibration{.velocity = -1.0};
+  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
 
   double dt = options.output_dt;
-  StateAndVariance next_state = mf.tick(start_time + dt, calibration);
+  StateAndVariance next_state = mf.tick(start_time + dt);
 
   EXPECT_NEAR(next_state.state, initial_state.state + dt * calibration.velocity,
               2.0e-14)
@@ -144,13 +154,13 @@ TEST_P(ManagedFilterTest, TickEmptyReadings) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  ManagedFilter<TestImpl> mf(start_time, initial_state);
-
   Calibration calibration{.velocity = -1.0};
+  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+
   std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
 
   double dt = options.output_dt;
-  StateAndVariance next_state = mf.tick(start_time + dt, calibration, empty);
+  StateAndVariance next_state = mf.tick(start_time + dt, empty);
 
   EXPECT_NEAR(next_state.state, initial_state.state + dt * calibration.velocity,
               1.5e-14)
@@ -172,17 +182,16 @@ TEST_P(ManagedFilterTest, TickOneReading) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  ManagedFilter<TestImpl> mf(start_time, initial_state);
-
   Calibration calibration{.velocity = -1.0};
+  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+
   double reading = -3.0;
 
   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
       ManagedFilter<TestImpl>::wrap(start_time + options.reading_dt,
                                     Reading(reading))};
 
-  StateAndVariance next_state =
-      mf.tick(start_time + options.output_dt, calibration, one);
+  StateAndVariance next_state = mf.tick(start_time + options.output_dt, one);
 
   double dt = options.output_dt - options.reading_dt;
   EXPECT_NEAR(next_state.state, reading + calibration.velocity * dt, 2e-14)
@@ -212,9 +221,9 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
       .state = 4.0,
       .covariance = 1.0,
   };
-  ManagedFilter<TestImpl> mf(start_time, initial_state);
-
   Calibration calibration{.velocity = -1.0};
+  ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+
   double reading = -3.0;
 
   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
@@ -228,8 +237,7 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
                                     Reading(reading)),
   };
 
-  StateAndVariance next_state =
-      mf.tick(start_time + options.output_dt, calibration, one);
+  StateAndVariance next_state = mf.tick(start_time + options.output_dt, one);
 
   EXPECT_NE(next_state.state, initial_state.state);
 }

@@ -26,6 +26,7 @@ struct TestImpl {
   struct Tag {
     using StateAndVarianceT = StateAndVariance;
     using ControlT = Control;
+    using CalibrationT = void;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
   };
