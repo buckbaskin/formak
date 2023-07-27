@@ -28,6 +28,7 @@ cpp_implementation = cpp.compile_ekf(
         "accel": {ui.Symbol("a"): ui.Symbol("a")},
     },
     sensor_noises={"simple": np.eye(1), "accel": np.eye(1)},
+    config={"common_subexpression_elimination": True, "max_dt_sec": 0.05},
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))

@@ -50,6 +50,41 @@ class Config:
 
     common_subexpression_elimination: bool = True
     extra_validation: bool = False
+    max_dt_sec: float = 0.1
+
+    def ccode(self):
+        if self.max_dt_sec < 1e-9:
+            raise ValueError(
+                "Please specify Config(max_dt_sec=...) >= 1e-9. Currently {self.max_dt_sec}"
+            )
+
+        return Namespace(
+            name="cpp",
+            body=[
+                ClassDef(
+                    "struct",
+                    "Config",
+                    bases=[],
+                    body=[
+                        MemberDeclaration(
+                            "static constexpr bool",
+                            "common_subexpression_elimination",
+                            "true"
+                            if self.common_subexpression_elimination
+                            else "false",
+                        ),
+                        MemberDeclaration(
+                            "static constexpr bool",
+                            "extra_validation",
+                            "true" if self.extra_validation else "false",
+                        ),
+                        MemberDeclaration(
+                            "static constexpr double", "max_dt_sec", self.max_dt_sec
+                        ),
+                    ],
+                )
+            ],
+        )
 
 
 @dataclass
@@ -718,6 +753,7 @@ def header_from_ast(*, generator):
         ],
     )
     body = [
+        generator.config.ccode(),
         StateOptions,
         State,
     ]
@@ -998,6 +1034,9 @@ def header_from_ast(*, generator):
                     f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
                 ),
                 UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
+                MemberDeclaration(
+                    "static constexpr double", "max_dt_sec", "cpp::Config::max_dt_sec"
+                ),
                 StateAndVariance_process_model(
                     enable_control=generator.enable_control(),
                     enable_calibration=generator.enable_calibration(),
@@ -1500,15 +1539,12 @@ def _compile_impl(args, *, generator):
     header_str = "\n".join(header_from_ast(generator=generator))
     source_str = "\n".join(source_from_ast(generator=generator))
 
-    with open(args.header, "w") as header_file:
-        with open(args.source, "w") as source_file:
-            # Stack indents so an error in either file will write/close both the same way
+    with open(args.header, "w") as header_file, open(args.source, "w") as source_file:
+        print("Writing header arg {}".format(args.header))
+        header_file.write(header_str)
 
-            print("Writing header arg {}".format(args.header))
-            header_file.write(header_str)
-
-            print("Writing source arg {}".format(args.source))
-            source_file.write(source_str)
+        print("Writing source arg {}".format(args.source))
+        source_file.write(source_str)
 
     return CppCompileResult(
         success=True, header_path=args.header, source_path=args.source

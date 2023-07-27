@@ -7,6 +7,14 @@
 namespace testing {
 using formak::runtime::ManagedFilter;
 
+TEST(ManagedFilterTickTest, ConfigAvailable) {
+  featuretest::cpp::Config c;
+
+  EXPECT_TRUE(c.common_subexpression_elimination);
+  // Configure and test with non-standard max_dt_sec
+  EXPECT_NE(c.max_dt_sec, 0.1);
+}
+
 TEST(ManagedFilterTickTest, TimeOnly) {
   featuretest::State state(featuretest::StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(

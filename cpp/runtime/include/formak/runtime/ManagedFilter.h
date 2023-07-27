@@ -52,20 +52,22 @@ class ManagedFilter {
 
   State processUpdate(double outputTime,
                       const typename Impl::ControlT& control) const {
-    double dt = 0.1;
-    if (_state.currentTime < outputTime) {
-      dt *= -1;
-    }
+    const double max_dt = ([outputTime](const State& state) {
+      if (state.currentTime >= outputTime) {
+        return Impl::max_dt_sec;
+      }
+      return -Impl::max_dt_sec;
+    })(_state);
 
     typename Impl::StateAndVarianceT state = _state.state;
 
     size_t expected_iterations = static_cast<size_t>(
-        std::abs(std::floor((outputTime - _state.currentTime) / dt)));
+        std::abs(std::floor((outputTime - _state.currentTime) / max_dt)));
 
     for (size_t count = 0; count < expected_iterations; ++count) {
-      state = _impl.process_model(dt, state, control);
+      state = _impl.process_model(max_dt, state, control);
     }
-    double iterTime = _state.currentTime + dt * expected_iterations;
+    double iterTime = _state.currentTime + max_dt * expected_iterations;
     if (std::abs(outputTime - iterTime) >= 1e-9) {
       state = _impl.process_model(outputTime - iterTime, state, control);
     }
@@ -74,6 +76,7 @@ class ManagedFilter {
   }
 
   const Impl _impl;
+
   State _state;
 };
 }  // namespace formak::runtime

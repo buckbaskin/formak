@@ -23,6 +23,7 @@ struct TestImpl {
   using StateAndVarianceT = StateAndVariance;
   using ControlT = Control;
   using StampedReadingBaseT = StampedReadingBase;
+  static constexpr double max_dt_sec = 0.05;
 
   template <typename ReadingT>
   StateAndVariance sensor_model(const StateAndVarianceT& input,
