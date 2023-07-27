@@ -743,39 +743,39 @@ def header_from_ast(*, generator) -> str:
     return header.compile(CompileState(indent=2))
 
 
-def source_from_ast(*, generator):
-    body = [
-        fragments.StateDefaultConstructor(),
-        fragments.StateOptionsConstructor(generator),
-    ]
+def _source_body(*, generator):
+    yield fragments.StateDefaultConstructor()
+    yield fragments.StateOptionsConstructor(generator)
 
     if generator.enable_calibration():
-        body.append(fragments.CalibrationDefaultConstructor())
-        body.append(fragments.CalibrationConstructor(generator))
+        yield fragments.CalibrationDefaultConstructor()
+        yield fragments.CalibrationConstructor(generator)
 
     if generator.enable_control():
-        body.append(fragments.ControlDefaultConstructor())
-        body.append(fragments.ControlConstructor(generator))
+        yield fragments.ControlDefaultConstructor()
+        yield fragments.ControlConstructor(generator)
 
     if generator.enable_EKF:
-        body.append(fragments.EKF_process_model(generator))
-        body.append(fragments.EKFPM_model(generator))
-        body.append(fragments.EKFPM_process_jacobian(generator))
-        body.append(fragments.EKFPM_control_jacobian(generator))
-        body.append(fragments.EKFPM_covariance(generator))
+        yield fragments.EKF_process_model(generator)
+        yield fragments.EKFPM_model(generator)
+        yield fragments.EKFPM_process_jacobian(generator)
+        yield fragments.EKFPM_control_jacobian(generator)
+        yield fragments.EKFPM_covariance(generator)
 
         for reading_type in generator.reading_types():
-            body.append(fragments.ReadingDefaultConstructor(reading_type))
-            body.append(fragments.ReadingConstructor(reading_type))
-            body.append(fragments.ReadingSensorModel_model(generator, reading_type))
-            body.append(
-                fragments.ReadingSensorModel_covariance(generator, reading_type)
-            )
-            body.append(fragments.ReadingSensorModel_jacobian(generator, reading_type))
+            yield fragments.ReadingDefaultConstructor(reading_type)
+            yield fragments.ReadingConstructor(reading_type)
+            yield fragments.ReadingSensorModel_model(generator, reading_type)
+            yield fragments.ReadingSensorModel_covariance(generator, reading_type)
+            yield fragments.ReadingSensorModel_jacobian(generator, reading_type)
     else:  # generator.enable_EKF == False
-        body.append(fragments.Model_model(generator))
+        yield fragments.Model_model(generator)
 
-    namespace = Namespace(name=generator.namespace, body=body)
+
+def source_from_ast(*, generator):
+    namespace = Namespace(
+        name=generator.namespace, body=_source_body(generator=generator)
+    )
     includes = [f"#include <{generator.header_include}>"]
     src = SourceFile(includes=includes, namespaces=[namespace])
     return src.compile(CompileState(indent=2))
