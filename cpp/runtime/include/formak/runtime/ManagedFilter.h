@@ -58,10 +58,10 @@ class ManagedFilter {
 
       // No change in time for sensor readings
       if constexpr (Impl::Tag::enable_calibration) {
-        _state.state =
-            stampedReading.data->sensor_model(_impl, _state, _calibration);
+        _state.state = stampedReading.data->sensor_model(_impl, _state.state,
+                                                         _calibration);
       } else {
-        _state.state = stampedReading.data->sensor_model(_impl, _state);
+        _state.state = stampedReading.data->sensor_model(_impl, _state.state);
       }
     }
 

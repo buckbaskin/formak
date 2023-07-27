@@ -24,11 +24,17 @@ struct StampedReadingBase;
 // format
 struct TestImpl {
   struct Tag {
+   private:
+    class Key {};
+
+   public:
     using StateAndVarianceT = StateAndVariance;
+    using CalibrationT = Key;
     using ControlT = Control;
-    using CalibrationT = void;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
+    static constexpr bool enable_calibration = false;
+    static constexpr bool enable_control = true;
   };
 
   template <typename ReadingT>
