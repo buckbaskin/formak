@@ -9,16 +9,23 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
-  template <
-      typename = typename std::enable_if<!Impl::Tag::enable_calibration>::type>
+  // ImplT required here so that the substitution will fail (SFINAE) for this
+  // constructor specifically. If we don't substitute it and instead refer Impl,
+  // the std::enable_if call will lead to unintended behavior. The ManagedFilter
+  // tests with/without Calibration and with/without Control ensure this is
+  // working at compile time.
+  template <typename EnableT = Impl,
+            typename = typename std::enable_if<
+                !EnableT::Tag::enable_calibration>::type>
   ManagedFilter(double initialTimestamp,
                 const typename Impl::Tag::StateAndVarianceT& initialState)
       : _impl(),
         _state{.currentTime = initialTimestamp, .state = initialState} {
     static_assert(!Impl::Tag::enable_calibration);
   }
-  template <
-      typename = typename std::enable_if<Impl::Tag::enable_calibration>::type>
+  template <typename EnableT = Impl,
+            typename =
+                typename std::enable_if<EnableT::Tag::enable_calibration>::type>
   ManagedFilter(double initialTimestamp,
                 const typename Impl::Tag::StateAndVarianceT& initialState,
                 const typename Impl::Tag::CalibrationT& calibration)
