@@ -337,12 +337,15 @@ def _EKF_Tag_body(generator) -> Iterable[BaseAst]:
             "CalibrationT",
             "Calibration",
         )
+    else:
+        yield UsingDeclaration("CalibrationT", "std::false_type")
     if generator.enable_control():
         yield UsingDeclaration(
             "ControlT",
             "Control",
         )
-        # TODO(buck): Missing using declaration for CalibrationT (maybe)?
+    else:
+        yield UsingDeclaration("ControlT", "std::false_type")
     yield UsingDeclaration(
         "StampedReadingBaseT",
         "StampedReadingBase",

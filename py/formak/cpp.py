@@ -739,6 +739,7 @@ def header_from_ast(*, generator) -> str:
         # TODO(buck): Remove this when innovations moved to ManagedFilter
         includes.append("#include <any>")
         includes.append("#include <optional>")
+        includes.append("#include <type_traits>")  # false_type
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
     return header.compile(CompileState(indent=2))
 
