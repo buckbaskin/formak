@@ -6,7 +6,7 @@
 #include <tuple>
 #include <vector>
 
-namespace unit {
+namespace unit::managed_filter {
 
 namespace {
 struct StateAndVariance {
@@ -22,14 +22,8 @@ struct Calibration {
 
 struct StampedReadingBase;
 
-// TODO(buck): Provide a C++ struct of known format as a constexpr member of the
-// EKFImpl so that these ControlT, max_dt_sec, etc can be looked up in a known
-// format
 struct TestImpl {
   struct Tag {
-   private:
-    class Key {};
-
    public:
     using StateAndVarianceT = StateAndVariance;
     using CalibrationT = Calibration;
@@ -79,8 +73,17 @@ struct Reading : public StampedReadingBase {
 TEST(ManagedFilterTest, Constructor) {
   // [[maybe_unused]] because this test is focused on the constructor only.
   // Passes if construction and deconstruction are successful
+  Calibration calibration{.velocity = 0.0};
+  StateAndVariance state_and_variance{.state = 4.0, .covariance = 1.0};
   [[maybe_unused]] formak::runtime::ManagedFilter<TestImpl> mf(
-      1.23, StateAndVariance{.state = 4.0, .covariance = 1.0});
+      1.23, state_and_variance, calibration);
+
+  // template <
+  //     typename = typename
+  //     std::enable_if<Impl::Tag::enable_calibration>::type>
+  // ManagedFilter(double initialTimestamp,
+  //               const typename Impl::Tag::StateAndVarianceT& initialState,
+  //               const typename Impl::Tag::CalibrationT& calibration)
 }
 
 TEST(ManagedFilterTest, StampedReading) {
@@ -256,4 +259,4 @@ INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
                          ::testing::ValuesIn(test::tools::AllOptions()));
 }  // namespace multitick
 
-}  // namespace unit
+}  // namespace unit::managed_filter

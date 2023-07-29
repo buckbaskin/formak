@@ -6,7 +6,7 @@
 #include <tuple>
 #include <vector>
 
-namespace unit {
+namespace unit::managed_filter_no_calibration {
 
 namespace {
 struct StateAndVariance {
@@ -19,9 +19,6 @@ struct Control {
 
 struct StampedReadingBase;
 
-// TODO(buck): Provide a C++ struct of known format as a constexpr member of the
-// EKFImpl so that these ControlT, max_dt_sec, etc can be looked up in a known
-// format
 struct TestImpl {
   struct Tag {
    private:
@@ -243,4 +240,4 @@ INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
                          ::testing::ValuesIn(test::tools::AllOptions()));
 }  // namespace multitick
 
-}  // namespace unit
+}  // namespace unit::managed_filter_no_calibration

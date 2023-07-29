@@ -6,7 +6,7 @@
 #include <tuple>
 #include <vector>
 
-namespace unit {
+namespace unit::managed_filter_no_control {
 
 namespace {
 struct StateAndVariance {
@@ -19,9 +19,6 @@ struct Calibration {
 
 struct StampedReadingBase;
 
-// TODO(buck): Provide a C++ struct of known format as a constexpr member of the
-// EKFImpl so that these CalibrationT, max_dt_sec, etc can be looked up in a
-// known format
 struct TestImpl {
   struct Tag {
    private:
@@ -75,8 +72,9 @@ struct Reading : public StampedReadingBase {
 TEST(ManagedFilterTest, Constructor) {
   // [[maybe_unused]] because this test is focused on the constructor only.
   // Passes if construction and deconstruction are successful
+  Calibration calibration{.velocity = -1.0};
   [[maybe_unused]] formak::runtime::ManagedFilter<TestImpl> mf(
-      1.23, StateAndVariance{.state = 4.0, .covariance = 1.0});
+      1.23, StateAndVariance{.state = 4.0, .covariance = 1.0}, calibration);
 }
 
 TEST(ManagedFilterTest, StampedReading) {
@@ -246,4 +244,4 @@ INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
                          ::testing::ValuesIn(test::tools::AllOptions()));
 }  // namespace multitick
 
-}  // namespace unit
+}  // namespace unit::managed_filter_no_control

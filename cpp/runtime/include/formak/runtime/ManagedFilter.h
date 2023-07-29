@@ -1,6 +1,7 @@
 #include <any>
-#include <cmath>
+#include <cmath>  // floor
 #include <memory>
+#include <type_traits>  // enable_if
 #include <vector>
 
 namespace formak::runtime {
@@ -8,12 +9,16 @@ namespace formak::runtime {
 template <typename Impl>
 class ManagedFilter {
  public:
+  template <
+      typename = typename std::enable_if<!Impl::Tag::enable_calibration>::type>
   ManagedFilter(double initialTimestamp,
                 const typename Impl::Tag::StateAndVarianceT& initialState)
       : _impl(),
         _state{.currentTime = initialTimestamp, .state = initialState} {
     static_assert(!Impl::Tag::enable_calibration);
   }
+  template <
+      typename = typename std::enable_if<Impl::Tag::enable_calibration>::type>
   ManagedFilter(double initialTimestamp,
                 const typename Impl::Tag::StateAndVarianceT& initialState,
                 const typename Impl::Tag::CalibrationT& calibration)
@@ -107,13 +112,21 @@ class ManagedFilter {
         std::abs(std::floor((outputTime - _state.currentTime) / max_dt)));
 
     for (size_t count = 0; count < expected_iterations; ++count) {
-      state = _impl.process_model(max_dt, state, _calibration, control);
+      if constexpr (Impl::Tag::enable_calibration) {
+        state = _impl.process_model(max_dt, state, _calibration, control);
+      } else {
+        state = _impl.process_model(max_dt, state, control);
+      }
     }
     double iterTime = _state.currentTime + max_dt * expected_iterations;
     if (std::abs(outputTime - iterTime) >= 1e-9) {
       // TODO(buck): Figure out if I need to if constexpr this
-      state = _impl.process_model(outputTime - iterTime, state, _calibration,
-                                  control);
+      if constexpr (Impl::Tag::enable_calibration) {
+        state = _impl.process_model(outputTime - iterTime, state, _calibration,
+                                    control);
+      } else {
+        state = _impl.process_model(outputTime - iterTime, state, control);
+      }
     }
 
     return {.currentTime = outputTime, .state = state};
