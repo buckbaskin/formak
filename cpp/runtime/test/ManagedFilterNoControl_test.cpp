@@ -4,6 +4,7 @@
 
 #include <iterator>  // back_inserter
 #include <tuple>
+#include <type_traits>  // false_type
 #include <vector>
 
 namespace unit::managed_filter_no_control {
@@ -21,17 +22,12 @@ struct StampedReadingBase;
 
 struct TestImpl {
   struct Tag {
-   private:
-    class Key {};
-
    public:
     using StateAndVarianceT = StateAndVariance;
     using CalibrationT = Calibration;
-    using ControlT = Key;
+    using ControlT = std::false_type;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
-    static constexpr bool enable_calibration = true;
-    static constexpr bool enable_control = false;
   };
 
   template <typename ReadingT>

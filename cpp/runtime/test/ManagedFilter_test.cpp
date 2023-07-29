@@ -30,8 +30,6 @@ struct TestImpl {
     using ControlT = Control;
     using StampedReadingBaseT = StampedReadingBase;
     static constexpr double max_dt_sec = 0.05;
-    static constexpr bool enable_calibration = true;
-    static constexpr bool enable_control = true;
   };
 
   template <typename ReadingT>
