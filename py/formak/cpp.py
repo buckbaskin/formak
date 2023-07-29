@@ -714,7 +714,7 @@ def _header_body(*, generator) -> Iterable[BaseAst]:
         yield fragments.ExtendedKalmanFilter_ccode(generator)
 
         yield fragments.ExtendedKalmanFilterProcessModel(generator)
-        yield fragments.StampedReadingBase()
+        yield fragments.StampedReadingBase(generator)
 
         for reading_type in generator.reading_types():
             yield ForwardClassDeclaration(

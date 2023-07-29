@@ -454,7 +454,14 @@ def ExtendedKalmanFilterProcessModel(generator) -> BaseAst:
     )
 
 
-def StampedReadingBase() -> BaseAst:
+def _StampedReadingBase_args(generator) -> Iterable[BaseAst]:
+    yield Arg("const ExtendedKalmanFilter&", "impl")
+    yield Arg("const StateAndVariance&", "state")
+    if generator.enable_calibration():
+        yield Arg("const Calibration&", "calibration")
+
+
+def StampedReadingBase(generator) -> BaseAst:
     return ClassDef(
         "struct",
         "StampedReadingBase",
@@ -463,10 +470,7 @@ def StampedReadingBase() -> BaseAst:
             FunctionDeclaration(
                 "virtual StateAndVariance",
                 "sensor_model",
-                args=[
-                    Arg("const ExtendedKalmanFilter&", "impl"),
-                    Arg("const StateAndVariance&", "state"),
-                ],
+                args=_StampedReadingBase_args(generator),
                 modifier="const = 0",
             ),
         ],
@@ -482,6 +486,30 @@ def ReadingOptions(reading_type) -> BaseAst:
             MemberDeclaration("double", symbol, 0.0)
             for symbol in sorted(list(reading_type.sensor_model_mapping.keys()))
         ],
+    )
+
+
+def _Reading_sensor_model_body(generator) -> Iterable[BaseAst]:
+    if generator.enable_calibration():
+        yield Return("impl.sensor_model(state, calibration, *this)")
+    else:
+        yield Return("impl.sensor_model(state, *this)")
+
+
+def _Reading_sensor_model_args(generator) -> Iterable[Arg]:
+    yield Arg("const ExtendedKalmanFilter&", "impl")
+    yield Arg("const StateAndVariance&", "state")
+    if generator.enable_calibration():
+        yield Arg("const Calibration&", "calibration")
+
+
+def _Reading_sensor_model_function_def(generator) -> BaseAst:
+    return FunctionDef(
+        "StateAndVariance",
+        "sensor_model",
+        args=_Reading_sensor_model_args(generator),
+        modifier="const override",
+        body=_Reading_sensor_model_body(generator),
     )
 
 
@@ -513,18 +541,7 @@ def Reading(generator, reading_type) -> BaseAst:
             ConstructorDeclaration(
                 args=[Arg(f"const {reading_type.typename}Options&", "options")]
             ),
-            FunctionDef(
-                "StateAndVariance",
-                "sensor_model",
-                args=[
-                    Arg("const ExtendedKalmanFilter&", "impl"),
-                    Arg("const StateAndVariance&", "state"),
-                ],
-                modifier="const override",
-                body=[
-                    Escape("return impl.sensor_model(state, *this);"),
-                ],
-            ),
+            _Reading_sensor_model_function_def(generator),
         ]
         + [
             FunctionDef(
