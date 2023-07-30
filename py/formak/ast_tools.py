@@ -212,7 +212,7 @@ class UsingDeclaration(BaseAst):
 class ConstructorDeclaration(BaseAst):
     _fields = ("args",)
 
-    args: Optional[List[Arg]] = None
+    args: Optional[Iterable[Arg]] = None
 
     @autoindent
     def compile(self, options: CompileState, classname: str, **kwargs):
@@ -246,7 +246,7 @@ class ConstructorDefinition(BaseAst):
     )
 
     classname: str
-    args: Optional[List[Arg]] = None
+    args: Optional[Iterable[Arg]] = None
     initializer_list: Optional[List[Tuple[str, str]]] = None
 
     @autoindent
@@ -284,7 +284,7 @@ class FunctionDef(BaseAst):
 
     return_type: str
     name: str
-    args: List[Arg]
+    args: Iterable[Arg]
     modifier: str
     body: Iterable[BaseAst]
 
@@ -335,7 +335,7 @@ class FunctionDeclaration(BaseAst):
 
     return_type: str
     name: str
-    args: List[Arg]
+    args: Iterable[Arg]
     modifier: str
 
     @autoindent
@@ -411,7 +411,7 @@ class If(BaseAst):
 class Templated(BaseAst):
     _fields = ("template_args", "templated")
 
-    template_args: List[Arg]
+    template_args: Iterable[Arg]
     templated: Any
 
     def compile(self, options: CompileState, **kwargs):

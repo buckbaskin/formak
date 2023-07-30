@@ -137,7 +137,6 @@ class ManagedFilter {
     }
     double iterTime = _state.currentTime + max_dt * expected_iterations;
     if (std::abs(outputTime - iterTime) >= 1e-9) {
-      // TODO(buck): Figure out if I need to if constexpr this
       if constexpr (!std::is_same_v<typename Impl::Tag::CalibrationT,
                                     std::false_type>) {
         state = _impl.process_model(outputTime - iterTime, state, _calibration,

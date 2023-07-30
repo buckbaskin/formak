@@ -196,9 +196,6 @@ def Calibration(generator) -> BaseAst:
 
 
 def standard_process_args(generator) -> Iterable[Arg]:
-    # TODO(buck): Would mypy catch the case of yielding
-    #       yield Arg("double", "dt"),
-    # which yields a tuple and not an Arg (see trailing comma)
     yield Arg("double", "dt")
     if generator.enable_EKF:
         yield Arg("const StateAndVariance&", "state")
@@ -453,7 +450,7 @@ def ExtendedKalmanFilterProcessModel(generator) -> BaseAst:
     )
 
 
-def _StampedReadingBase_args(generator) -> Iterable[BaseAst]:
+def _StampedReadingBase_args(generator) -> Iterable[Arg]:
     yield Arg("const ExtendedKalmanFilter&", "impl")
     yield Arg("const StateAndVariance&", "state")
     if generator.enable_calibration():
