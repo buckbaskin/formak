@@ -6,9 +6,9 @@ dt, a, b, x, y = ui.symbols(["dt", "a", "b", "x", "y"])
 
 ui_model = ui.Model(
     dt=dt,
-    state=set([x]),
+    state={x},
     control=set(),
-    calibration=set([a, b]),
+    calibration={a, b},
     state_model={x: x + a + b},
 )
 

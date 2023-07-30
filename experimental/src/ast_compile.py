@@ -409,8 +409,7 @@ class HeaderFile(BaseAst):
             yield "#pragma once"
             yield ""
 
-        for include in self.includes:
-            yield include
+        yield from self.includes
         yield ""
 
         for namespace in self.namespaces:

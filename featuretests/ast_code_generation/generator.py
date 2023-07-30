@@ -113,7 +113,7 @@ def source_definition():
             initializer_list=[
                 (
                     "data",
-                    ", ".join((f"options.{member}" for member in MEMBERS)),
+                    ", ".join(f"options.{member}" for member in MEMBERS),
                 )
             ],
         ),

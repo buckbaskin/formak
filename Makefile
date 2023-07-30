@@ -10,17 +10,19 @@ feature_test:
 format:
 	bash actions/format.bash
 
+PYTARGETS := $(shell find py/ featuretests/ experimental/ -type f -name '*.py')
+
 lint:
 	bash actions/format.bash
 	# general code checks
 	flake8 --version
 	flake8 --config=common/setup.cfg py/ featuretests/ | grep -v "local variable '_"
 	# security oriented checks
-	bandit -c common/bandit.yaml -r py/
+	bandit -c common/bandit.yaml -r py/ featuretests/
 	# remove unused
-	autoflake -i -r py/ featuretests/
+	autoflake -i -r py/ featuretests/ experimental/
 	# move to modern patterns
-	pyupgrade $(ag --python -g "." py/ experimental/ featuretests/)
+	pyupgrade $(PYTARGETS)
 	# format docstrings
 	pydocstringformatter -w py/formak/ py/test/formak/ py/test/unit/cpp/ py/test/unit/python/ experimental/ featuretests/
 	# check writing rules

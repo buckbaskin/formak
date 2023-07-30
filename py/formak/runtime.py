@@ -6,7 +6,7 @@ StampedReading = namedtuple("StampedReading", ["timestamp", "sensor_key", "data"
 StateAndVariance = namedtuple("StateAndVariance", ["state", "covariance"])
 
 
-class ManagedFilter(object):
+class ManagedFilter:
     def __init__(self, ekf, start_time: float, state, covariance):
         self._impl = ekf
         self.current_time = start_time

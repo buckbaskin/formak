@@ -162,19 +162,16 @@ def model_definition(*, debug=False):
     )
 
     def state_model_composer():
-        for p in zip(
+        yield from zip(
             sorted(CON_position_in_global_frame.free_symbols, key=lambda x: x.name),
             next_position,
-        ):
-            yield p
+        )
         # Note: I know this is incorrect, but first order it's ok
-        for o in zip(orientation_states, next_orientation):
-            yield o
-        for v in zip(
+        yield from zip(orientation_states, next_orientation)
+        yield from zip(
             sorted(CON_velocity_in_global_frame.free_symbols, key=lambda x: x.name),
             next_velocity,
-        ):
-            yield v
+        )
 
     if debug:
         for k, v in state_model_composer():

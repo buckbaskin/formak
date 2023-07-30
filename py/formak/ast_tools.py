@@ -103,8 +103,7 @@ class HeaderFile(BaseAst):
             yield "#pragma once"
             yield ""
 
-        for include in self.includes:
-            yield include
+        yield from self.includes
         yield ""
 
         for namespace in self.namespaces:
@@ -119,8 +118,7 @@ class SourceFile(BaseAst):
     namespaces: List[Namespace]
 
     def compile(self, options: CompileState, **kwargs):
-        for include in self.includes:
-            yield include
+        yield from self.includes
         yield ""
 
         for namespace in self.namespaces:
@@ -143,7 +141,7 @@ class ClassDef(BaseAst):
     def compile(self, options: CompileState, **kwargs):
         bases_str = ""
         if len(self.bases) > 0:
-            bases_str = ": {}".format(", ".join((f"public {b}" for b in self.bases)))
+            bases_str = ": {}".format(", ".join(f"public {b}" for b in self.bases))
 
         yield f"{self.tag} {self.name} {bases_str} {{"
 
