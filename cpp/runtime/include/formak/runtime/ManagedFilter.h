@@ -45,11 +45,11 @@ class ManagedFilter {
     std::shared_ptr<typename Impl::Tag::StampedReadingBaseT> data;
   };
   template <typename ReadingT>
-  static StampedReading wrap(double timestamp, const ReadingT& reading) {
+  static StampedReading wrap(double timestamp, ReadingT&& reading) {
     return StampedReading{
         .timestamp = timestamp,
         .data = std::shared_ptr<typename Impl::Tag::StampedReadingBaseT>(
-            new ReadingT(reading)),
+            new std::remove_reference_t<ReadingT>(reading)),
     };
   }
 

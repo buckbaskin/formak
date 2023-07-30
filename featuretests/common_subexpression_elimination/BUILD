@@ -13,6 +13,7 @@ py_test_suite(
     srcs = ["simple_test.py"],
     deps = [
         "//py:formak",
+        "//py:microbenchmark",
         ":common",
         requirement("numpy"),
     ] + PY_FEATURE_TEST_DEPS,

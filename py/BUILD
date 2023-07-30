@@ -60,16 +60,13 @@ py_library(
     name = "runtime",
     srcs = ["formak/runtime.py"],
     imports = ["."],
-    deps = [
-    ],
 )
 
 py_library(
     name = "microbenchmark",
     srcs = ["formak/microbenchmark.py"],
     imports = ["."],
-    deps = [
-    ],
+    testonly=True,
 )
 
 py_library(
@@ -127,7 +124,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
-        ":microbenchmark",
         ":python",
         ":runtime",
         ":ui",

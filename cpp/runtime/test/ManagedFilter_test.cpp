@@ -75,13 +75,6 @@ TEST(ManagedFilterTest, Constructor) {
   StateAndVariance state_and_variance{.state = 4.0, .covariance = 1.0};
   [[maybe_unused]] formak::runtime::ManagedFilter<TestImpl> mf(
       1.23, state_and_variance, calibration);
-
-  // template <
-  //     typename = typename
-  //     std::enable_if<Impl::Tag::enable_calibration>::type>
-  // ManagedFilter(double initialTimestamp,
-  //               const typename Impl::Tag::StateAndVarianceT& initialState,
-  //               const typename Impl::Tag::CalibrationT& calibration)
 }
 
 TEST(ManagedFilterTest, StampedReading) {
@@ -89,8 +82,9 @@ TEST(ManagedFilterTest, StampedReading) {
 
   double reading = 1.0;
 
+  Reading message{reading};
   ManagedFilter<TestImpl>::StampedReading stamped_reading =
-      ManagedFilter<TestImpl>::wrap(5.0, Reading(reading));
+      ManagedFilter<TestImpl>::wrap(5.0, message);
 
   TestImpl impl;
   StateAndVariance state;
@@ -102,7 +96,7 @@ TEST(ManagedFilterTest, StampedReading) {
   Calibration calibration{.velocity = 0.0};
   EXPECT_DOUBLE_EQ(
       stamped_reading.data->sensor_model(impl, state, calibration).state,
-      reading);
+      message.reading);
 }
 
 namespace tick {
