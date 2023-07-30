@@ -22,7 +22,7 @@ lint:
 	# move to modern patterns
 	pyupgrade $(ag --python -g "." py/ experimental/ featuretests/)
 	# format docstrings
-	pydocstringformatter -w $(ag --python -g "." py/ featuretests/)
+	pydocstringformatter -w py/formak/ py/test/formak/ py/test/unit/cpp/ py/test/unit/python/ experimental/ featuretests/
 	# check writing rules
 	proselint --config=common/proselint.json  docs/designs/*.md docs/formak/*.md docs/*.md
 	# pre-commit

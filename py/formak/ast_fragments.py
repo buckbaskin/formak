@@ -8,7 +8,6 @@ from formak.ast_tools import (
     ConstructorDeclaration,
     ConstructorDefinition,
     EnumClassDef,
-    Escape,
     FromFileTemplate,
     FunctionDeclaration,
     FunctionDef,

@@ -4,7 +4,7 @@ from typing import List, Any, Optional
 from dataclasses import dataclass
 
 """
-#pragma once
+#pragma once.
 
 #include <Eigen/Dense>    // Matrix
 #include <any>            // any
@@ -12,7 +12,6 @@ from dataclasses import dataclass
 #include <iostream>       // std::cout, debugging
 #include <optional>       // optional
 #include <unordered_map>  // unordered_map
-
 
 namespace featuretest {
   struct StateOptions {
@@ -61,7 +60,6 @@ namespace featuretest {
 
   struct Covariance {
     using DataT = Eigen::Matrix<double, 9, 9>;
-
 
     double& CON_ori_pitch() { return data(0, 0); }
     double CON_ori_pitch() const { return data(0, 0); }

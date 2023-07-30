@@ -7,7 +7,6 @@ from formak.ast_tools import (
     CompileState,
     ConstructorDeclaration,
     ConstructorDefinition,
-    Escape,
     FromFileTemplate,
     FunctionDeclaration,
     FunctionDef,

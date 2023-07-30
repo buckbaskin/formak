@@ -59,7 +59,7 @@ The key classes involved are:
 - `py.Model`: (new) Class encapsulating the model for running a model efficiently in Python code
 - `py.ExtendedKalmanFilter`: (new)
 	- Looking ahead to model fitting, characterize model quality, data variance by fitting an EKF
-	- Constructor should accept state type, state to state process model (`py.Model`? `ui.Model`?), process noise, sensor types, state to sensor sensor models, sensor noise
+	- Constructor should accept state type, state to state process model (`py.Model`? `ui.Model`?), process noise, sensor types, state to sensor models, sensor noise
 	- Process Model Function: take in current state, current variance, dt/update time. Return new state, new variance
 	- Sensor Model Function: take in current state, current variance, sensor id, sensor reading
 

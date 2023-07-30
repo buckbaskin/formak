@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Config:
     """
-    Options for generating C++
+    Options for generating C++.
 
     common_subexpression_elimination:
         Remove common shared computation
@@ -86,7 +86,9 @@ class CppCompileResult:
 
 class BasicBlock:
     """
-    A run of statements without control flow. All statements can be reordered
+    A run of statements without control flow.
+
+    All statements can be reordered
     or changed to improve performance.
     """
 

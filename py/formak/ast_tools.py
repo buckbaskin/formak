@@ -44,9 +44,7 @@ def autoindent(compile_func):
 
 
 class Public(BaseAst):
-    """
-    Include a line for "public:"
-    """
+    """Include a line for "public:"."""
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -54,9 +52,7 @@ class Public(BaseAst):
 
 
 class Private(BaseAst):
-    """
-    Include a line for "private:"
-    """
+    """Include a line for "private:"."""
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -77,9 +73,7 @@ class Arg(BaseAst):
 
 @dataclass
 class Namespace(BaseAst):
-    """
-    Include start and end lines for a C++ namespace
-    """
+    """Include start and end lines for a C++ namespace."""
 
     _fields = ("name", "body")
 
@@ -135,9 +129,7 @@ class SourceFile(BaseAst):
 
 @dataclass
 class ClassDef(BaseAst):
-    """
-    Generate lines to set up a C++ struct or class
-    """
+    """Generate lines to set up a C++ struct or class."""
 
     _fields = ("tag", "name", "bases", "body")
 
@@ -288,9 +280,7 @@ class ConstructorDefinition(BaseAst):
 
 @dataclass
 class FunctionDef(BaseAst):
-    """
-    Generate lines to set up a function definition (separate from a function declaration)
-    """
+    """Generate lines to set up a function definition (separate from a function declaration)."""
 
     _fields = ("return_type", "name", "args", "modifier", "body")
 
@@ -393,7 +383,7 @@ class Return(BaseAst):
 @dataclass
 class If(BaseAst):
     """
-    Generate an if statement
+    Generate an if statement.
 
     Naming follows the Python AST
     """

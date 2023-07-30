@@ -1,11 +1,9 @@
 from datetime import datetime
 from functools import reduce
 
-import numpy as np
 from sympy import cos, sin
-from sympy.solvers.solveset import nonlinsolve
 
-from formak import python, ui
+from formak import ui
 
 
 def rotation(roll, pitch, yaw):
@@ -111,14 +109,14 @@ def model_definition(*, debug=False):
         IMU_orientation_rates_in_CON_frame,
     ) = named_rotation_rate("IMU_in_CON")
 
-    CON_orientation_rates_in_CON_frame = (
-        IMU_orientation_rates_in_CON_frame
-        + IMU_orientation_in_CON_frame * IMU_orientation_rates_in_IMU_frame
-    )
+    # CON_orientation_rates_in_CON_frame = (
+    #     IMU_orientation_rates_in_CON_frame
+    #     + IMU_orientation_in_CON_frame * IMU_orientation_rates_in_IMU_frame
+    # )
 
-    CON_orientation_rates_in_global_frame = (
-        CON_orientation_in_global_frame * CON_orientation_rates_in_CON_frame
-    )
+    # CON_orientation_rates_in_global_frame = (
+    #     CON_orientation_in_global_frame * CON_orientation_rates_in_CON_frame
+    # )
     CON_acceleration_in_global_frame = (
         CON_orientation_in_global_frame * CON_acceleration_in_CON_frame
     )
@@ -149,9 +147,9 @@ def model_definition(*, debug=False):
         set(),
     )
 
-    CON_velocity_in_CON_frame = (
-        CON_orientation_in_global_frame.transpose() * CON_velocity_in_global_frame
-    )
+    # CON_velocity_in_CON_frame = (
+    #     CON_orientation_in_global_frame.transpose() * CON_velocity_in_global_frame
+    # )
 
     next_position = CON_position_in_global_frame + (dt * CON_velocity_in_global_frame)
     next_orientation = orientation_states + dt * (

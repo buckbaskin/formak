@@ -1,7 +1,5 @@
-from sympy import Symbol, cos, sin, symbols
-
 from common import ui_model
-from formak import cpp, ui
+from formak import cpp
 
 
 def main():

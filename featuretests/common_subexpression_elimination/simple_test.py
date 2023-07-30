@@ -1,10 +1,7 @@
 from functools import partial
 
 import numpy as np
-import pytest
 from formak.microbenchmark import microbenchmark
-from formak.ui import *
-from sympy import cos, sin, symbols
 
 from common import ui_model
 from formak import python
@@ -22,7 +19,7 @@ def test_python_CSE():
 
     # random -> random_sample in 1.25
     inputs = np.random.default_rng(seed=1).random((101, 2))
-    inputs = [np.array([[l, r]]).transpose() for l, r in inputs]
+    inputs = [np.array([[left, right]]).transpose() for left, right in inputs]
 
     # run with CSE, without CSE
     print("CSE")

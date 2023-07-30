@@ -40,7 +40,7 @@ In line with the values and the intended user, the intended user experience is
 as follows. The user provides:
 - Model that describes the physics of the system
 - Execution criteria (e.g. memory usage, execution time)
-- Time series data for for the system
+- Time series data for the system
 
 The Five Key Elements the library provides to achieve this user experience are:
 1. Python Interface to define models
@@ -124,9 +124,9 @@ with libraries and benefits of C++:
 - Eigen
 - etc
 
-and end up with an easy to use interface so it's easy to adopt and use.  Working
-together, we can build "Middle-Out". On the frontend, we can add features to the
-Python interface. On the backend, we augment the features with performant
+and end up with an easy to use interface so it's easy to adopt and use. Working
+together, we can build "Middle-Out". On the frontend, we can add features to
+the Python interface. On the backend, we augment the features with performant
 implementations.
 
 - Python, and specifically sympy, is the primary interface for interacting with

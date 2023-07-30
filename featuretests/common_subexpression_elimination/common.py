@@ -12,7 +12,8 @@ def combine_nodes(leaves):
 
 def ui_model():
     """
-    Recursively combine equivalent left and right sub-structures to create a
+    Recursively combine equivalent left and right sub-structures to create a.
+
     structure with maximal amounts of common subexpressions. Every
     sub-expression has at least one common subexpression and the left and right
     states in the model share a common expression.

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from formak.runtime import ManagedFilter, StampedReading
 
 from formak import python, ui

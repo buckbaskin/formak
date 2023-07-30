@@ -6,7 +6,7 @@ from formak import python, ui
 def test_ekf_simple():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
