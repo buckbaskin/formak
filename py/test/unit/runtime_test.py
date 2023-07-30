@@ -1,4 +1,8 @@
+import numpy as np
 from formak.runtime import ManagedFilter
+
+from formak import python, ui
+
 
 # TEST(ManagedFilterTest, Constructor) {
 #   // [[maybe_unused]] because this test is focused on the constructor only.
@@ -30,59 +34,67 @@ from formak.runtime import ManagedFilter
 #       stamped_reading.data->sensor_model(impl, state, calibration).state,
 #       message.reading);
 # }
-def make_ekf():
+def make_ekf(calibration_map):
     dt = ui.Symbol("dt")
 
     tp = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    state = ui.Symbol("state")
 
-    thrust = ui.Symbol("thrust")
+    control_velocity = ui.Symbol("control_velocity")
+    calibration_velocity = ui.Symbol("calibration_velocity")
 
-    state = set(tp.values())
-    control = {thrust}
+    state_model = {state: state + dt * (control_velocity + calibration_velocity)}
 
-    state_model = {
-        tp["mass"]: tp["mass"],
-        tp["z"]: tp["z"] + dt * tp["v"],
-        tp["v"]: tp["v"] + dt * tp["a"],
-        tp["a"]: -9.81 * tp["mass"] + thrust,
-    }
+    state_set = {state}
+    control_set = {control_velocity}
 
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = ui.Model(
+        dt=dt, state=state_set, control=control_set, state_model=state_model
+    )
 
     ekf = python.compile_ekf(
         state_model=model,
-        process_noise={thrust: 1.0},
-        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
+        process_noise={control_velocity: 1.0},
+        sensor_models={"simple": {state: state}},
         sensor_noises={"simple": np.eye(1)},
+        calibration_map=calibration_map,
     )
     return ekf
 
 
 def test_constructor():
-    ekf = make_ekf()
-    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
-    covariance = np.eye(4)
+    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    ekf = make_ekf(calibration_map)
+    state = np.array([[4.0]])
+    covariance = np.array([[1.0]])
     mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
-def test_tick_no_readings():
-    ekf = make_ekf()
-    start_time = 10.0
-    state = 4.0
-    covariance = 1.0
-    calibration_map = {ui.Symbol('velocity'): 0.0}
 
-    mf = ManagedFilter(ekf=ekf, start_time=start_time, state=state, covariance=covariance, calibration_map=calibration_map)
+def test_tick_no_readings():
+    start_time = 10.0
+    state = np.array([[4.0]])
+    covariance = np.array([[1.0]])
+    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    ekf = make_ekf(calibration_map=calibration_map)
+
+    mf = ManagedFilter(
+        ekf=ekf,
+        start_time=start_time,
+        state=state,
+        covariance=covariance,
+    )
 
     control = np.array([[-1.0]])
     # TODO(buck): try this for positive and negative dt
     dt = 0.1
     state0p1 = mf.tick(start_time + dt, control)
 
-    assert np.isclose(state0p1.state, state + dt * control[0,0], atol=2.0e-14)
+    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
     if dt != 0.0:
         assert next_state.covariance > covariance
     else:
         assert next_state.covariance == covariance
+
 
 # TEST_P(ManagedFilterTest, TickNoReadings) {
 #   using formak::runtime::ManagedFilter;

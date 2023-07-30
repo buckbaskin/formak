@@ -64,9 +64,9 @@ py_library(
 
 py_library(
     name = "microbenchmark",
+    testonly = True,
     srcs = ["formak/microbenchmark.py"],
     imports = ["."],
-    testonly=True,
 )
 
 py_library(

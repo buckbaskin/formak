@@ -192,12 +192,17 @@ class Model:
         ):
             try:
                 next_state[i, 0] = result
-            except TypeError:
+            except (TypeError, ValueError) as e:
                 print(
-                    "TypeError when trying to process process model for state %s"
-                    % (state_id,)
+                    "%s when trying to process process model for state %s"
+                    % (
+                        type(e),
+                        state_id,
+                    )
                 )
-                print(f"given: {state}, {self.calibration_vector}, {control_vector}")
+                print(
+                    f"given:\nstate: {state}\ncalibration: {self.calibration_vector}\ncontrol: {control_vector}"
+                )
                 print("expected: float")
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))

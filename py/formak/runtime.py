@@ -7,11 +7,12 @@ StateAndVariance = namedtuple("StateAndVariance", ["state", "covariance"])
 
 
 class ManagedFilter:
-    def __init__(self, ekf, start_time: float, state, covariance):
+    def __init__(self, ekf, start_time: float, state, covariance, calibration_map=None):
         self._impl = ekf
         self.current_time = start_time
         self.state = state
         self.covariance = covariance
+        self.calibration_map = calibration_map
 
     def tick(
         self,
@@ -26,7 +27,9 @@ class ManagedFilter:
             assert isinstance(sensor_reading, StampedReading)
 
             self.current_time, (self.state, self.covariance) = self._process_model(
-                sensor_reading.timestamp, control
+                sensor_reading.timestamp,
+                control=control,
+                calibration_map=calibration_map,
             )
 
             (self.state, self.covariance) = self._impl.sensor_model(
@@ -34,6 +37,7 @@ class ManagedFilter:
                 self.state,
                 self.covariance,
                 sensor_reading.data,
+                calibration_map=calibration_map,
             )
 
         _, state_and_variance = self._process_model(output_time, control)
