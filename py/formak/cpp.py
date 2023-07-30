@@ -88,8 +88,7 @@ class BasicBlock:
     """
     A run of statements without control flow.
 
-    All statements can be reordered
-    or changed to improve performance.
+    All statements can be reordered or changed to improve performance.
     """
 
     def __init__(
