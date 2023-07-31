@@ -29,7 +29,7 @@ class ManagedFilter:
             self.current_time, (self.state, self.covariance) = self._process_model(
                 sensor_reading.timestamp,
                 control=control,
-                calibration_map=calibration_map,
+                calibration_map=self.calibration_map,
             )
 
             (self.state, self.covariance) = self._impl.sensor_model(
@@ -37,7 +37,7 @@ class ManagedFilter:
                 self.state,
                 self.covariance,
                 sensor_reading.data,
-                calibration_map=calibration_map,
+                calibration_map=self.calibration_map,
             )
 
         _, state_and_variance = self._process_model(output_time, control)

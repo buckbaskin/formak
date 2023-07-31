@@ -1,39 +1,9 @@
 import numpy as np
-from formak.runtime import ManagedFilter
+from formak.runtime import ManagedFilter, StampedReading
 
 from formak import python, ui
 
 
-# TEST(ManagedFilterTest, Constructor) {
-#   // [[maybe_unused]] because this test is focused on the constructor only.
-#   // Passes if construction and deconstruction are successful
-#   Calibration calibration{.velocity = 0.0};
-#   StateAndVariance state_and_variance{.state = 4.0, .covariance = 1.0};
-#   [[maybe_unused]] formak::runtime::ManagedFilter<TestImpl> mf(
-#       1.23, state_and_variance, calibration);
-# }
-#
-# TEST(ManagedFilterTest, StampedReading) {
-#   using formak::runtime::ManagedFilter;
-#
-#   double reading = 1.0;
-#
-#   Reading message{reading};
-#   ManagedFilter<TestImpl>::StampedReading stamped_reading =
-#       ManagedFilter<TestImpl>::wrap(5.0, message);
-#
-#   TestImpl impl;
-#   StateAndVariance state;
-#
-#   EXPECT_DOUBLE_EQ(stamped_reading.timestamp, 5.0);
-#   // Can't directly address the .reading member of the child type. Instead, use
-#   // the sensor_model interface to access (by stuffing into the .state member of
-#   // the output)
-#   Calibration calibration{.velocity = 0.0};
-#   EXPECT_DOUBLE_EQ(
-#       stamped_reading.data->sensor_model(impl, state, calibration).state,
-#       message.reading);
-# }
 def make_ekf(calibration_map):
     dt = ui.Symbol("dt")
 
@@ -96,7 +66,7 @@ def test_tick_no_readings():
         assert next_state.covariance == covariance
 
 
-# TEST_P(ManagedFilterTest, TickNoReadings) {
+# TEST_P(ManagedFilterTest, TickEmptyReadings) {
 #   using formak::runtime::ManagedFilter;
 #   Options options(GetParam());
 #
@@ -109,12 +79,13 @@ def test_tick_no_readings():
 #   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
 #
 #   Control control{.velocity = -1.0};
+#   std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
 #
 #   double dt = options.output_dt;
-#   StateAndVariance next_state = mf.tick(start_time + dt, control);
+#   StateAndVariance next_state = mf.tick(start_time + dt, control, empty);
 #
 #   EXPECT_NEAR(next_state.state, initial_state.state + dt * control.velocity,
-#               2.0e-14)
+#               1.5e-14)
 #       << "  diff: "
 #       << (next_state.state - (initial_state.state + dt * control.velocity));
 #   if (options.output_dt != 0.0) {
@@ -123,3 +94,164 @@ def test_tick_no_readings():
 #     EXPECT_DOUBLE_EQ(next_state.covariance, initial_state.covariance);
 #   }
 # }
+def test_tick_empty_readings():
+    start_time = 10.0
+    state = np.array([[4.0]])
+    covariance = np.array([[1.0]])
+    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    ekf = make_ekf(calibration_map=calibration_map)
+
+    mf = ManagedFilter(
+        ekf=ekf,
+        start_time=start_time,
+        state=state,
+        covariance=covariance,
+    )
+
+    control = np.array([[-1.0]])
+    # TODO(buck): try this for positive and negative dt
+    dt = 0.1
+    state0p1 = mf.tick(start_time + dt, control, [])
+
+    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
+    if dt != 0.0:
+        assert next_state.covariance > covariance
+    else:
+        assert next_state.covariance == covariance
+
+
+# TEST_P(ManagedFilterTest, TickOneReading) {
+#   using formak::runtime::ManagedFilter;
+#   Options options(GetParam());
+#
+#   double start_time = 10.0;
+#   StateAndVariance initial_state{
+#       .state = 4.0,
+#       .covariance = 1.0,
+#   };
+#   Calibration calibration{.velocity = 0.0};
+#   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+#
+#   Control control{.velocity = -1.0};
+#   double reading = -3.0;
+#
+#   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
+#       ManagedFilter<TestImpl>::wrap(start_time + options.reading_dt,
+#                                     Reading(reading))};
+#
+#   StateAndVariance next_state =
+#       mf.tick(start_time + options.output_dt, control, one);
+#
+#   double dt = options.output_dt - options.reading_dt;
+#   EXPECT_NEAR(next_state.state, reading + control.velocity * dt, 2e-14)
+#       << "  diff: " << (next_state.state - (reading + dt * control.velocity));
+# }
+def test_tick_one_readings():
+    start_time = 10.0
+    state = np.array([[4.0]])
+    covariance = np.array([[1.0]])
+    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    ekf = make_ekf(calibration_map=calibration_map)
+
+    mf = ManagedFilter(
+        ekf=ekf,
+        start_time=start_time,
+        state=state,
+        covariance=covariance,
+    )
+
+    control = np.array([[-1.0]])
+    # TODO(buck): try this for positive and negative dt
+    dt = 0.1
+    reading_v = -3.0
+    reading1 = StampedReading(2.05, "simple", np.array([[reading_v]]))
+
+    state0p1 = mf.tick(start_time + dt, control, [reading1])
+
+    assert np.isclose(state0p1.state, reading + control[0, 0] * dt, atol=2.0e-14)
+    if dt != 0.0:
+        assert next_state.covariance > covariance
+    else:
+        assert next_state.covariance == covariance
+
+
+# INSTANTIATE_TEST_SUITE_P(
+#     TickTimings, ManagedFilterTest,
+#     ::testing::Combine(::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7),
+#                        ::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7)));
+
+# namespace multitick {
+# using test::tools::OrderOptions;
+#
+# class ManagedFilterMultiTest
+#     : public ::testing::Test,
+#       public ::testing::WithParamInterface<test::tools::OrderOptions> {};
+#
+# TEST_P(ManagedFilterMultiTest, TickMultiReading) {
+#   using formak::runtime::ManagedFilter;
+#   OrderOptions options = GetParam();
+#
+#   double start_time = 10.0;
+#   StateAndVariance initial_state{
+#       .state = 4.0,
+#       .covariance = 1.0,
+#   };
+#   Calibration calibration{.velocity = 0.0};
+#   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
+#
+#   Control control{.velocity = -1.0};
+#   double reading = -3.0;
+#
+#   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
+#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[0],
+#                                     Reading(reading)),
+#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[1],
+#                                     Reading(reading)),
+#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[2],
+#                                     Reading(reading)),
+#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[3],
+#                                     Reading(reading)),
+#   };
+#
+#   StateAndVariance next_state =
+#       mf.tick(start_time + options.output_dt, control, one);
+#
+#   EXPECT_NE(next_state.state, initial_state.state);
+# }
+
+
+def test_tick_multi_reading():
+    start_time = 10.0
+    state = np.array([[4.0]])
+    covariance = np.array([[1.0]])
+    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    ekf = make_ekf(calibration_map=calibration_map)
+
+    mf = ManagedFilter(
+        ekf=ekf,
+        start_time=start_time,
+        state=state,
+        covariance=covariance,
+    )
+
+    control = np.array([[-1.0]])
+    # TODO(buck): try this for positive and negative dt
+    dt = 0.1
+    reading_v = -3.0
+    # TODO(buck): recreate multi-order readings
+    assert False
+    reading1 = StampedReading(2.05, "simple", np.array([[reading_v]]))
+
+    state0p1 = mf.tick(start_time + dt, control, [reading1])
+
+    assert np.isclose(state0p1.state, reading + control[0, 0] * dt, atol=2.0e-14)
+    if dt != 0.0:
+        assert next_state.covariance > covariance
+    else:
+        assert next_state.covariance == covariance
+
+
+#
+# INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
+#                          ::testing::ValuesIn(test::tools::AllOptions()));
+# }  // namespace multitick
