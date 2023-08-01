@@ -817,6 +817,7 @@ def compile_ekf(
         state_model,
         process_noise,
         sensor_models,
+        calibration_map=calibration_map,
         extra_validation=config.extra_validation,
     )
 

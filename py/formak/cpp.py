@@ -853,6 +853,7 @@ def compile_ekf(
         process_noise,
         sensor_models,
         extra_validation=config.extra_validation,
+        calibration_map=calibration_map,
     )
 
     args = _compile_argparse()

@@ -1,4 +1,5 @@
 from itertools import product
+from typing import Dict
 
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, diff
@@ -6,7 +7,13 @@ from sympy.solvers.solveset import nonlinsolve
 
 
 def model_validation(
-    state_model, process_noise, sensor_models, *, verbose=True, extra_validation=False
+    state_model,
+    process_noise,
+    sensor_models,
+    *,
+    verbose=True,
+    extra_validation=False,
+    calibration_map: Dict[Symbol, float],
 ):
     assert isinstance(process_noise, dict)
     allowed_keys = set(
@@ -27,6 +34,19 @@ def model_validation(
             raise ModelConstructionError(
                 f'Key {key} {type(key)} not in allow"list" of keys and combinations for process noise based on state_model.control [{render}]'
             )
+    if set(calibration_map.keys()) != state_model.calibration:
+        map_version = set(calibration_map.keys())
+        missing_calibrations = state_model.calibration - map_version
+        missing_calibrations = ", ".join(
+            sorted([symbol.name for symbol in missing_calibrations])[:3]
+        )
+        extra_mappings = map_version - state_model.calibration
+        extra_mappings = ", ".join(
+            sorted([symbol.name for symbol in extra_mappings])[:3]
+        )
+        raise ModelConstructionError(
+            f"Mismatch in Model calibration: Missing from map? {missing_calibrations} | Missing from setup? {extra_mappings}"
+        )
 
     # Check if sensor models depend on values outside the state, calibration [and map]
     allowed_symbols = set(state_model.state) | set(state_model.calibration)
