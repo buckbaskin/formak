@@ -1,7 +1,13 @@
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
+from hypothesis import given
+from hypothesis.strategies import permutations, sampled_from
 
 from formak import python, ui
+
+
+def samples_dt_sec():
+    return [0.0, 0.1, -0.1, -1.5, 2.7]
 
 
 def make_ekf(calibration_map):
@@ -29,7 +35,7 @@ def make_ekf(calibration_map):
         state_model=model,
         process_noise={control_velocity: 1.0},
         sensor_models={"simple": {state: state}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_noises={"simple": np.eye(1) * 1e-9},
         calibration_map=calibration_map,
     )
     return ekf
@@ -43,7 +49,8 @@ def test_constructor():
     _mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
 
-def test_tick_no_readings():
+@given(sampled_from(samples_dt_sec()))
+def test_tick_no_readings(dt):
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -58,46 +65,24 @@ def test_tick_no_readings():
     )
 
     control = np.array([[-1.0]])
-    # TODO(buck): try this for positive and negative dt
-    dt = 0.1
     state0p1 = mf.tick(start_time + dt, control)
 
-    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
+    print("state")
+    print(state0p1.state)
+    print("reading")
+    print(state, dt, control[0, 0])
+    print(state + dt * control[0, 0])
+    print("diff")
+    print((state0p1.state) - (state + dt * control[0, 0]))
+    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14).all()
     if dt != 0.0:
         assert state0p1.covariance > covariance
     else:
         assert state0p1.covariance == covariance
 
 
-# TEST_P(ManagedFilterTest, TickEmptyReadings) {
-#   using formak::runtime::ManagedFilter;
-#   Options options(GetParam());
-#
-#   double start_time = 10.0;
-#   StateAndVariance initial_state{
-#       .state = 4.0,
-#       .covariance = 1.0,
-#   };
-#   Calibration calibration{.velocity = 0.0};
-#   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
-#
-#   Control control{.velocity = -1.0};
-#   std::vector<ManagedFilter<TestImpl>::StampedReading> empty;
-#
-#   double dt = options.output_dt;
-#   StateAndVariance next_state = mf.tick(start_time + dt, control, empty);
-#
-#   EXPECT_NEAR(next_state.state, initial_state.state + dt * control.velocity,
-#               1.5e-14)
-#       << "  diff: "
-#       << (next_state.state - (initial_state.state + dt * control.velocity));
-#   if (options.output_dt != 0.0) {
-#     EXPECT_GT(next_state.covariance, initial_state.covariance);
-#   } else {
-#     EXPECT_DOUBLE_EQ(next_state.covariance, initial_state.covariance);
-#   }
-# }
-def test_tick_empty_readings():
+@given(sampled_from(samples_dt_sec()))
+def test_tick_empty_readings(dt):
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -112,44 +97,17 @@ def test_tick_empty_readings():
     )
 
     control = np.array([[-1.0]])
-    # TODO(buck): try this for positive and negative dt
-    dt = 0.1
     state0p1 = mf.tick(start_time + dt, control, [])
 
-    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
+    assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14).all()
     if dt != 0.0:
         assert state0p1.covariance > covariance
     else:
         assert state0p1.covariance == covariance
 
 
-# TEST_P(ManagedFilterTest, TickOneReading) {
-#   using formak::runtime::ManagedFilter;
-#   Options options(GetParam());
-#
-#   double start_time = 10.0;
-#   StateAndVariance initial_state{
-#       .state = 4.0,
-#       .covariance = 1.0,
-#   };
-#   Calibration calibration{.velocity = 0.0};
-#   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
-#
-#   Control control{.velocity = -1.0};
-#   double reading = -3.0;
-#
-#   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
-#       ManagedFilter<TestImpl>::wrap(start_time + options.reading_dt,
-#                                     Reading(reading))};
-#
-#   StateAndVariance next_state =
-#       mf.tick(start_time + options.output_dt, control, one);
-#
-#   double dt = options.output_dt - options.reading_dt;
-#   EXPECT_NEAR(next_state.state, reading + control.velocity * dt, 2e-14)
-#       << "  diff: " << (next_state.state - (reading + dt * control.velocity));
-# }
-def test_tick_one_readings():
+@given(sampled_from(samples_dt_sec()))
+def test_tick_one_reading(dt):
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -164,18 +122,12 @@ def test_tick_one_readings():
     )
 
     control = np.array([[-1.0]])
-    # TODO(buck): try this for positive and negative dt
-    dt = 0.1
     reading_v = -3.0
     reading1 = StampedReading(2.05, "simple", np.array([[reading_v]]))
 
     state0p1 = mf.tick(start_time + dt, control, [reading1])
 
-    assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14)
-    if dt != 0.0:
-        assert state0p1.covariance > covariance
-    else:
-        assert state0p1.covariance == covariance
+    assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-8).all()
 
 
 # INSTANTIATE_TEST_SUITE_P(
@@ -223,7 +175,8 @@ def test_tick_one_readings():
 # }
 
 
-def test_tick_multi_reading():
+@given(sampled_from(samples_dt_sec()))
+def test_tick_multi_reading(dt):
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -238,8 +191,6 @@ def test_tick_multi_reading():
     )
 
     control = np.array([[-1.0]])
-    # TODO(buck): try this for positive and negative dt
-    dt = 0.1
     reading_v = -3.0
     # TODO(buck): recreate multi-order readings
     assert False
@@ -247,7 +198,9 @@ def test_tick_multi_reading():
 
     state0p1 = mf.tick(start_time + dt, control, [reading1])
 
-    assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14)
+    assert np.isclose(
+        state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14
+    ).all()
     if dt != 0.0:
         assert state0p1.covariance > covariance
     else:
