@@ -7,7 +7,6 @@ from formak import python, ui
 def make_ekf(calibration_map):
     dt = ui.Symbol("dt")
 
-    tp = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
     state = ui.Symbol("state")
 
     control_velocity = ui.Symbol("control_velocity")
@@ -19,7 +18,11 @@ def make_ekf(calibration_map):
     control_set = {control_velocity}
 
     model = ui.Model(
-        dt=dt, state=state_set, control=control_set, state_model=state_model
+        dt=dt,
+        state=state_set,
+        control=control_set,
+        state_model=state_model,
+        calibration={calibration_velocity},
     )
 
     ekf = python.compile_ekf(
@@ -37,7 +40,7 @@ def test_constructor():
     ekf = make_ekf(calibration_map)
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
-    mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
+    _mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
 
 def test_tick_no_readings():
@@ -61,9 +64,9 @@ def test_tick_no_readings():
 
     assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
     if dt != 0.0:
-        assert next_state.covariance > covariance
+        assert state0p1.covariance > covariance
     else:
-        assert next_state.covariance == covariance
+        assert state0p1.covariance == covariance
 
 
 # TEST_P(ManagedFilterTest, TickEmptyReadings) {
@@ -115,9 +118,9 @@ def test_tick_empty_readings():
 
     assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14)
     if dt != 0.0:
-        assert next_state.covariance > covariance
+        assert state0p1.covariance > covariance
     else:
-        assert next_state.covariance == covariance
+        assert state0p1.covariance == covariance
 
 
 # TEST_P(ManagedFilterTest, TickOneReading) {
@@ -168,11 +171,11 @@ def test_tick_one_readings():
 
     state0p1 = mf.tick(start_time + dt, control, [reading1])
 
-    assert np.isclose(state0p1.state, reading + control[0, 0] * dt, atol=2.0e-14)
+    assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14)
     if dt != 0.0:
-        assert next_state.covariance > covariance
+        assert state0p1.covariance > covariance
     else:
-        assert next_state.covariance == covariance
+        assert state0p1.covariance == covariance
 
 
 # INSTANTIATE_TEST_SUITE_P(
@@ -244,11 +247,11 @@ def test_tick_multi_reading():
 
     state0p1 = mf.tick(start_time + dt, control, [reading1])
 
-    assert np.isclose(state0p1.state, reading + control[0, 0] * dt, atol=2.0e-14)
+    assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14)
     if dt != 0.0:
-        assert next_state.covariance > covariance
+        assert state0p1.covariance > covariance
     else:
-        assert next_state.covariance == covariance
+        assert state0p1.covariance == covariance
 
 
 #
