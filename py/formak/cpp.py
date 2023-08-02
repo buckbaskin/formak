@@ -712,7 +712,7 @@ def _header_body(*, generator) -> Iterable[BaseAst]:
         yield ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
         yield ForwardClassDeclaration("struct", "StampedReadingBase")
 
-        yield fragments.ExtendedKalmanFilter_ccode(generator)
+        yield fragments.ExtendedKalmanFilter(generator)
 
         yield fragments.ExtendedKalmanFilterProcessModel(generator)
         yield fragments.StampedReadingBase(generator)
@@ -726,7 +726,7 @@ def _header_body(*, generator) -> Iterable[BaseAst]:
             yield fragments.ReadingSensorModel(generator, reading_type)
 
     else:  # enable_EKF == False
-        yield fragments.Model_ccode(generator)
+        yield fragments.Model(generator)
 
 
 def header_from_ast(*, generator) -> str:

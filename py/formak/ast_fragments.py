@@ -360,8 +360,7 @@ def EKF_Tag(generator) -> BaseAst:
     return ClassDef("struct", "Tag", bases=[], body=_EKF_Tag_body(generator))
 
 
-# TODO(buck): I can make this name "nice" again as just ExtendedKalmanFilter if it has the prefix of a helper file (e.g. fragments.ExtendedKalmanFilter)
-def ExtendedKalmanFilter_ccode(generator) -> BaseAst:
+def ExtendedKalmanFilter(generator) -> BaseAst:
     return ClassDef(
         "class",
         "ExtendedKalmanFilter",
@@ -614,7 +613,7 @@ def ReadingSensorModel(generator, reading_type) -> BaseAst:
     )
 
 
-def Model_ccode(generator) -> BaseAst:
+def Model(generator) -> BaseAst:
     return ClassDef(
         "class",
         "Model",
