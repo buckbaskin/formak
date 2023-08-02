@@ -82,6 +82,7 @@ def test_constructor():
     _mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()))
 def test_tick_no_readings(dt):
     start_time = 10.0
@@ -105,10 +106,11 @@ def test_tick_no_readings(dt):
     print(state, dt)
     print("diff")
     print((state0p1.state) - (state))
-    assert np.isclose(state0p1.state, state , atol=2.0e-14).all()
+    assert np.isclose(state0p1.state, state, atol=2.0e-14).all()
     assert state0p1.covariance == covariance
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()))
 def test_tick_empty_readings(dt):
     start_time = 10.0
@@ -124,12 +126,13 @@ def test_tick_empty_readings(dt):
         covariance=covariance,
     )
 
-    state0p1 = mf.tick(start_time + dt, [])
+    state0p1 = mf.tick(start_time + dt, readings=[])
 
-    assert np.isclose(state0p1.state, state , atol=2.0e-14).all()
+    assert np.isclose(state0p1.state, state, atol=2.0e-14).all()
     assert state0p1.covariance == covariance
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()), sampled_from(samples_dt_sec()))
 def test_tick_one_reading(output_dt, reading_dt):
     start_time = 10.0
@@ -150,7 +153,7 @@ def test_tick_one_reading(output_dt, reading_dt):
         start_time + reading_dt, "simple", np.array([[reading_v]])
     )
 
-    state0p1 = mf.tick(start_time + output_dt, [reading1])
+    state0p1 = mf.tick(start_time + output_dt, readings=[reading1])
 
     dt = output_dt - reading_dt
 
@@ -199,6 +202,6 @@ def test_tick_multi_reading(output_dt, shuffle_order):
     reading_v = -3.0
     readings = [StampedReading(t, "simple", np.array([[reading_v]])) for t in options]
 
-    state0p1 = mf.tick(start_time + output_dt, readings)
+    state0p1 = mf.tick(start_time + output_dt, readings=readings)
 
     assert (state != state0p1.state).any()

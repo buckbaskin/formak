@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, diff
@@ -8,7 +8,7 @@ from sympy.solvers.solveset import nonlinsolve
 
 def model_validation(
     state_model,
-    process_noise,
+    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     *,
     verbose=True,

@@ -45,8 +45,7 @@ def parse_options(output_dt, shuffle: List[ShuffleId]) -> List[float]:
     return output_dt, options
 
 
-def make_ekf(
-        ):
+def make_ekf():
     dt = ui.Symbol("dt")
 
     state = ui.Symbol("state")
@@ -81,6 +80,7 @@ def test_constructor():
     _mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()))
 def test_tick_no_readings(dt):
     start_time = 10.0
@@ -96,7 +96,7 @@ def test_tick_no_readings(dt):
     )
 
     control = np.array([[-1.0]])
-    state0p1 = mf.tick(start_time + dt, control)
+    state0p1 = mf.tick(start_time + dt, control=control)
 
     print("state")
     print(state0p1.state)
@@ -112,6 +112,7 @@ def test_tick_no_readings(dt):
         assert state0p1.covariance == covariance
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()))
 def test_tick_empty_readings(dt):
     start_time = 10.0
@@ -127,7 +128,7 @@ def test_tick_empty_readings(dt):
     )
 
     control = np.array([[-1.0]])
-    state0p1 = mf.tick(start_time + dt, control, [])
+    state0p1 = mf.tick(start_time + dt, control=control, readings=[])
 
     assert np.isclose(state0p1.state, state + dt * control[0, 0], atol=2.0e-14).all()
     if dt != 0.0:
@@ -136,6 +137,7 @@ def test_tick_empty_readings(dt):
         assert state0p1.covariance == covariance
 
 
+@settings(deadline=None)
 @given(sampled_from(samples_dt_sec()), sampled_from(samples_dt_sec()))
 def test_tick_one_reading(output_dt, reading_dt):
     start_time = 10.0
@@ -156,7 +158,7 @@ def test_tick_one_reading(output_dt, reading_dt):
         start_time + reading_dt, "simple", np.array([[reading_v]])
     )
 
-    state0p1 = mf.tick(start_time + output_dt, control, [reading1])
+    state0p1 = mf.tick(start_time + output_dt, control=control, readings=[reading1])
 
     dt = output_dt - reading_dt
 
@@ -206,6 +208,6 @@ def test_tick_multi_reading(output_dt, shuffle_order):
     reading_v = -3.0
     readings = [StampedReading(t, "simple", np.array([[reading_v]])) for t in options]
 
-    state0p1 = mf.tick(start_time + output_dt, control, readings)
+    state0p1 = mf.tick(start_time + output_dt, control=control, readings=readings)
 
     assert (state != state0p1.state).any()

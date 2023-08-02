@@ -1,7 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -798,7 +798,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 def compile_ekf(
     state_model,
-    process_noise,
+    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     sensor_noises,
     calibration_map=None,

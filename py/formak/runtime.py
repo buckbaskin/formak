@@ -23,9 +23,20 @@ class ManagedFilter:
     def tick(
         self,
         output_time: float,
-        control,
+        *,
+        control=None,
         readings: Optional[List[StampedReading]] = None,
     ):
+        """
+        Update to a given output time, optionally updating with sensor readings
+
+        Note: name-only arguments required to prevent ambiguity in the case of
+        calling the function with readings but no control
+        """
+        if control is None and self._impl.control_size > 0:
+            raise TypeError(
+                "TypeError: tick() missing 1 required positional argument: 'control'"
+            )
         if readings is None:
             readings = []
 
