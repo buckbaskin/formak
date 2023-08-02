@@ -106,8 +106,8 @@ def test_tick_empty_readings(dt):
         assert state0p1.covariance == covariance
 
 
-@given(sampled_from(samples_dt_sec()))
-def test_tick_one_reading(dt):
+@given(sampled_from(samples_dt_sec()), sampled_from(samples_dt_sec()))
+def test_tick_one_reading(output_dt, reading_dt):
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -123,10 +123,25 @@ def test_tick_one_reading(dt):
 
     control = np.array([[-1.0]])
     reading_v = -3.0
-    reading1 = StampedReading(2.05, "simple", np.array([[reading_v]]))
+    reading1 = StampedReading(
+        start_time + reading_dt, "simple", np.array([[reading_v]])
+    )
 
-    state0p1 = mf.tick(start_time + dt, control, [reading1])
+    state0p1 = mf.tick(start_time + output_dt, control, [reading1])
 
+    dt = output_dt - reading_dt
+
+    print("state")
+    print(state[0, 0])
+    print("reading")
+    print(reading_v)
+    print("state0p1")
+    print(state0p1.state)
+    print("reading")
+    print(reading_v, control[0, 0], dt)
+    print(reading_v + control[0, 0] * dt)
+    print("diff")
+    print((state0p1.state) - (reading_v + control[0, 0] * dt))
     assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-8).all()
 
 

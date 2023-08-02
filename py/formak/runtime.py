@@ -1,4 +1,5 @@
 from collections import namedtuple
+from math import floor
 from typing import List, Optional
 
 StampedReading = namedtuple("StampedReading", ["timestamp", "sensor_key", "data"])
@@ -43,13 +44,28 @@ class ManagedFilter:
 
     def _process_model(self, output_time, control):
         # const
-        dt = 0.1
-        current_time = self.current_time
+        max_dt = 0.1
+        if self.current_time > output_time:
+            max_dt = -0.1
+
         state = self.state
         covariance = self.covariance
 
-        while current_time < output_time:
-            current_time += dt
-            state, covariance = self._impl.process_model(dt, state, covariance, control)
+        expected_iterations = abs(floor((output_time - self.current_time) / max_dt))
 
-        return current_time, StateAndVariance(state, covariance)
+        # TODO(buck): test with zero-control models
+        for _ in range(expected_iterations):
+            state, covariance = self._impl.process_model(
+                max_dt, state, covariance, control
+            )
+
+        iter_time = self.current_time + max_dt * expected_iterations
+        if abs(output_time - iter_time) >= 1e-9:
+            state, covariance = self._impl.process_model(
+                output_time - iter_time, state, covariance, control
+            )
+
+        print("expected_iterations", "self.current_time", "output_time", "iter_time")
+        print(expected_iterations, self.current_time, output_time, iter_time)
+
+        return output_time, StateAndVariance(state, covariance)
