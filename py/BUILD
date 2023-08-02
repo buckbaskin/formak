@@ -242,6 +242,21 @@ py_test_suite(
 )
 
 py_test_suite(
+    name = "runtime-test",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/runtime/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":init-tree",
+        ":formak",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
     name = "integration-py",
     size = "medium",
     srcs = glob([
