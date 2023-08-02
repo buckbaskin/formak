@@ -23,13 +23,27 @@ class ShuffleId(Enum):
     Output = auto()
 
 
-SensorOptions = namedtuple("SensorOptions", ["zero", "one", "two", "three"])
-
-
-def parse_options(shuffle: List[ShuffleId]) -> SensorOptions:
-    # TODO(buck): the parsing
-    1 / 0
-    return SensorOptions(0.0, 0.0, 0.0, 0.0)
+def parse_options(output_dt, shuffle: List[ShuffleId]) -> List[float]:
+    options = [0.0, 0.0, 0.0, 0.0]
+    for i, elem in enumerate(shuffle):
+        index_dt = i * 0.1
+        if elem == ShuffleId.Zero:
+            output_dt -= index_dt
+            for j in range(4):
+                options[j] -= index_dt
+        elif elem == ShuffleId.Output:
+            output_dt += index_dt
+        elif elem == ShuffleId.Sensor0:
+            options[0] += index_dt
+        elif elem == ShuffleId.Sensor1:
+            options[1] += index_dt
+        elif elem == ShuffleId.Sensor2:
+            options[2] += index_dt
+        elif elem == ShuffleId.Sensor3:
+            options[3] += index_dt
+        else:
+            raise ValueError(f"parse_options got invalid element: {elem} at index {i}")
+    return output_dt, options
 
 
 def make_ekf(calibration_map):
@@ -181,7 +195,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     ),
 )
 def test_tick_multi_reading(output_dt, shuffle_order):
-    options = parse_options(shuffle_order)
+    output_dt, options = parse_options(output_dt, shuffle_order)
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
