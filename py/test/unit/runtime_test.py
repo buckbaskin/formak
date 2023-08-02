@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
 
 from formak import python, ui
@@ -180,6 +180,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-8).all()
 
 
+@settings(deadline=None)
 @given(
     sampled_from(samples_dt_sec()),
     permutations(

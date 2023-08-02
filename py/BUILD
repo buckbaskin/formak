@@ -67,6 +67,7 @@ py_library(
     testonly = True,
     srcs = ["formak/microbenchmark.py"],
     imports = ["."],
+    visibility = ["//visibility:public"],
 )
 
 py_library(
