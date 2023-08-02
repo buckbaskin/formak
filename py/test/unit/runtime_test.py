@@ -1,3 +1,7 @@
+from collections import namedtuple
+from enum import Enum, auto
+from typing import List
+
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
 from hypothesis import given
@@ -8,6 +12,24 @@ from formak import python, ui
 
 def samples_dt_sec():
     return [0.0, 0.1, -0.1, -1.5, 2.7]
+
+
+class ShuffleId(Enum):
+    Zero = 0
+    Sensor0 = auto()
+    Sensor1 = auto()
+    Sensor2 = auto()
+    Sensor3 = auto()
+    Output = auto()
+
+
+SensorOptions = namedtuple("SensorOptions", ["zero", "one", "two", "three"])
+
+
+def parse_options(shuffle: List[ShuffleId]) -> SensorOptions:
+    # TODO(buck): the parsing
+    1 / 0
+    return SensorOptions(0.0, 0.0, 0.0, 0.0)
 
 
 def make_ekf(calibration_map):
@@ -145,53 +167,21 @@ def test_tick_one_reading(output_dt, reading_dt):
     assert np.isclose(state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-8).all()
 
 
-# INSTANTIATE_TEST_SUITE_P(
-#     TickTimings, ManagedFilterTest,
-#     ::testing::Combine(::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7),
-#                        ::testing::Values(-1.5, -0.1, 0.0, 0.1, 2.7)));
-
-# namespace multitick {
-# using test::tools::OrderOptions;
-#
-# class ManagedFilterMultiTest
-#     : public ::testing::Test,
-#       public ::testing::WithParamInterface<test::tools::OrderOptions> {};
-#
-# TEST_P(ManagedFilterMultiTest, TickMultiReading) {
-#   using formak::runtime::ManagedFilter;
-#   OrderOptions options = GetParam();
-#
-#   double start_time = 10.0;
-#   StateAndVariance initial_state{
-#       .state = 4.0,
-#       .covariance = 1.0,
-#   };
-#   Calibration calibration{.velocity = 0.0};
-#   ManagedFilter<TestImpl> mf(start_time, initial_state, calibration);
-#
-#   Control control{.velocity = -1.0};
-#   double reading = -3.0;
-#
-#   std::vector<ManagedFilter<TestImpl>::StampedReading> one{
-#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[0],
-#                                     Reading(reading)),
-#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[1],
-#                                     Reading(reading)),
-#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[2],
-#                                     Reading(reading)),
-#       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[3],
-#                                     Reading(reading)),
-#   };
-#
-#   StateAndVariance next_state =
-#       mf.tick(start_time + options.output_dt, control, one);
-#
-#   EXPECT_NE(next_state.state, initial_state.state);
-# }
-
-
-@given(sampled_from(samples_dt_sec()))
-def test_tick_multi_reading(dt):
+@given(
+    sampled_from(samples_dt_sec()),
+    permutations(
+        [
+            ShuffleId.Zero,
+            ShuffleId.Sensor0,
+            ShuffleId.Sensor1,
+            ShuffleId.Sensor2,
+            ShuffleId.Sensor3,
+            ShuffleId.Output,
+        ]
+    ),
+)
+def test_tick_multi_reading(output_dt, shuffle_order):
+    options = parse_options(shuffle_order)
     start_time = 10.0
     state = np.array([[4.0]])
     covariance = np.array([[1.0]])
@@ -207,22 +197,8 @@ def test_tick_multi_reading(dt):
 
     control = np.array([[-1.0]])
     reading_v = -3.0
-    # TODO(buck): recreate multi-order readings
-    assert False
-    reading1 = StampedReading(2.05, "simple", np.array([[reading_v]]))
+    readings = [StampedReading(t, "simple", np.array([[reading_v]])) for t in options]
 
-    state0p1 = mf.tick(start_time + dt, control, [reading1])
+    state0p1 = mf.tick(start_time + output_dt, control, readings)
 
-    assert np.isclose(
-        state0p1.state, reading_v + control[0, 0] * dt, atol=2.0e-14
-    ).all()
-    if dt != 0.0:
-        assert state0p1.covariance > covariance
-    else:
-        assert state0p1.covariance == covariance
-
-
-#
-# INSTANTIATE_TEST_SUITE_P(MultiTickTimings, ManagedFilterMultiTest,
-#                          ::testing::ValuesIn(test::tools::AllOptions()));
-# }  // namespace multitick
+    assert (state != state0p1.state).any()

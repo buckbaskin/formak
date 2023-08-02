@@ -230,7 +230,7 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
   Control control{.velocity = -1.0};
   double reading = -3.0;
 
-  std::vector<ManagedFilter<TestImpl>::StampedReading> one{
+  std::vector<ManagedFilter<TestImpl>::StampedReading> many{
       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[0],
                                     Reading(reading)),
       ManagedFilter<TestImpl>::wrap(start_time + options.sensor_dt[1],
@@ -242,7 +242,7 @@ TEST_P(ManagedFilterMultiTest, TickMultiReading) {
   };
 
   StateAndVariance next_state =
-      mf.tick(start_time + options.output_dt, control, one);
+      mf.tick(start_time + options.output_dt, control, many);
 
   EXPECT_NE(next_state.state, initial_state.state);
 }
