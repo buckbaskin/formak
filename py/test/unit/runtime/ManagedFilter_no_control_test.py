@@ -155,8 +155,6 @@ def test_tick_one_reading(output_dt, reading_dt):
 
     state0p1 = mf.tick(start_time + output_dt, readings=[reading1])
 
-    dt = output_dt - reading_dt
-
     print("state")
     print(state[0, 0])
     print("reading")

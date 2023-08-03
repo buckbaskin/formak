@@ -39,5 +39,8 @@ def test_ekf_simple():
     )
 
     state_variance_next, state_variance_next = python_ekf.sensor_model(
-        "simple", state_vector, state_variance, np.array([[0.0]])
+        state=state_vector,
+        covariance=state_variance,
+        sensor_key="simple",
+        sensor_reading=np.array([[0.0]]),
     )

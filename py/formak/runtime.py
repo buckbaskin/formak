@@ -28,7 +28,7 @@ class ManagedFilter:
         readings: Optional[List[StampedReading]] = None,
     ):
         """
-        Update to a given output time, optionally updating with sensor readings
+        Update to a given output time, optionally updating with sensor readings.
 
         Note: name-only arguments required to prevent ambiguity in the case of
         calling the function with readings but no control
@@ -49,10 +49,10 @@ class ManagedFilter:
             )
 
             (self.state, self.covariance) = self._impl.sensor_model(
-                sensor_reading.sensor_key,
-                self.state,
-                self.covariance,
-                sensor_reading.data,
+                state=self.state,
+                covariance=self.covariance,
+                sensor_key=sensor_reading.sensor_key,
+                sensor_reading=sensor_reading.data,
             )
 
         _, state_and_variance = self._process_model(output_time, control)

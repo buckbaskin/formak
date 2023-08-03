@@ -526,7 +526,7 @@ class ExtendedKalmanFilter:
 
         return StateAndCovariance(next_state, next_covariance)
 
-    def sensor_model(self, sensor_key, state, covariance, sensor_reading):
+    def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
         Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
@@ -735,7 +735,10 @@ class ExtendedKalmanFilter:
                 sensor_input = sensor_input.reshape((sensor_size, 1))
 
                 state, covariance = self.sensor_model(
-                    key, state, covariance, sensor_input
+                    state=state,
+                    covariance=covariance,
+                    sensor_key=key,
+                    sensor_reading=sensor_input,
                 )
                 # Normalized by the uncertainty at the time of the measurement
                 # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))

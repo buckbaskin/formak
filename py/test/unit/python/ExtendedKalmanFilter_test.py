@@ -106,17 +106,17 @@ def test_EKF_sensor():
     state_vector = np.array([[0.0, 0.0]]).transpose()
 
     next_state, next_cov = ekf.sensor_model(
-        "simple",
         state=state_vector,
         covariance=covariance,
+        sensor_key="simple",
         sensor_reading=np.array([[reading]]),
     )
     assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
 
     next_state, next_cov = ekf.sensor_model(
-        "combined",
         state=state_vector,
         covariance=covariance,
+        sensor_key="combined",
         sensor_reading=np.array([[reading]]),
     )
     assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
