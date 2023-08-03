@@ -72,6 +72,7 @@ def make_ekf(calibration_map):
         sensor_models={"simple": {state: state}},
         sensor_noises={"simple": np.eye(1) * 1e-9},
         calibration_map=calibration_map,
+        config={"max_dt_sec": 0.01},
     )
     return ekf
 

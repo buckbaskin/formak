@@ -60,7 +60,7 @@ class ManagedFilter:
 
     def _process_model(self, output_time, control):
         # const
-        max_dt = 0.1
+        max_dt = self._impl.config.max_dt_sec
         if self.current_time > output_time:
             max_dt = -0.1
 

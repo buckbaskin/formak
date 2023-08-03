@@ -30,6 +30,7 @@ class Config:
     common_subexpression_elimination: bool = True
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
+    max_dt_sec: float = 0.1
 
 
 class BasicBlock:
@@ -287,6 +288,8 @@ class ExtendedKalmanFilter:
         config,
         calibration_map=None,
     ):
+        self.config = config
+
         if calibration_map is None:
             calibration_map = {}
 
