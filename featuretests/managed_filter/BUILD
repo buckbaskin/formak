@@ -29,3 +29,14 @@ cc_test(
             ":example",
         ] + CC_FEATURE_TEST_DEPS,
 )
+
+cc_test(
+    name = "tick-overhead-test-cpp",
+    srcs = ["tick_overhead_test.cpp"],
+    deps =
+        [
+            "//cpp/runtime:managed-filter",
+        "//cpp:utils-microbenchmark",
+            ":example",
+        ] + CC_FEATURE_TEST_DEPS,
+)
