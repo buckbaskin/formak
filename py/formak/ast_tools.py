@@ -1,3 +1,8 @@
+"""
+AST Tools.
+
+Building blocks for representing a subset of C++ (and not necessarily a valid set by itself) to make for easier assembly than trying to add a combination of options to templates
+"""
 import ast
 import os
 from dataclasses import dataclass
@@ -44,9 +49,7 @@ def autoindent(compile_func):
 
 
 class Public(BaseAst):
-    """
-    Include a line for "public:"
-    """
+    """Include a line for "public:"."""
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -54,9 +57,7 @@ class Public(BaseAst):
 
 
 class Private(BaseAst):
-    """
-    Include a line for "private:"
-    """
+    """Include a line for "private:"."""
 
     @autoindent
     def compile(self, options: CompileState, **kwargs):
@@ -77,9 +78,7 @@ class Arg(BaseAst):
 
 @dataclass
 class Namespace(BaseAst):
-    """
-    Include start and end lines for a C++ namespace
-    """
+    """Include start and end lines for a C++ namespace."""
 
     _fields = ("name", "body")
 
@@ -109,8 +108,7 @@ class HeaderFile(BaseAst):
             yield "#pragma once"
             yield ""
 
-        for include in self.includes:
-            yield include
+        yield from self.includes
         yield ""
 
         for namespace in self.namespaces:
@@ -125,8 +123,7 @@ class SourceFile(BaseAst):
     namespaces: List[Namespace]
 
     def compile(self, options: CompileState, **kwargs):
-        for include in self.includes:
-            yield include
+        yield from self.includes
         yield ""
 
         for namespace in self.namespaces:
@@ -135,9 +132,7 @@ class SourceFile(BaseAst):
 
 @dataclass
 class ClassDef(BaseAst):
-    """
-    Generate lines to set up a C++ struct or class
-    """
+    """Generate lines to set up a C++ struct or class."""
 
     _fields = ("tag", "name", "bases", "body")
 
@@ -151,12 +146,13 @@ class ClassDef(BaseAst):
     def compile(self, options: CompileState, **kwargs):
         bases_str = ""
         if len(self.bases) > 0:
-            raise NotImplementedError()
+            bases_str = ": {}".format(", ".join(f"public {b}" for b in self.bases))
 
         yield f"{self.tag} {self.name} {bases_str} {{"
 
+        kwargs["classname"] = self.name
         for component in self.body:
-            yield from component.compile(options, classname=self.name, **kwargs)
+            yield from component.compile(options, **kwargs)
 
         yield "};\n"
 
@@ -221,13 +217,14 @@ class UsingDeclaration(BaseAst):
 class ConstructorDeclaration(BaseAst):
     _fields = ("args",)
 
-    args: Optional[List[Arg]] = None
+    args: Optional[Iterable[Arg]] = None
 
     @autoindent
     def compile(self, options: CompileState, classname: str, **kwargs):
         if self.args is None:
             self.args = []
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{classname}();"
         elif len(self.args) == 1:
@@ -254,7 +251,7 @@ class ConstructorDefinition(BaseAst):
     )
 
     classname: str
-    args: Optional[List[Arg]] = None
+    args: Optional[Iterable[Arg]] = None
     initializer_list: Optional[List[Tuple[str, str]]] = None
 
     @autoindent
@@ -268,6 +265,7 @@ class ConstructorDefinition(BaseAst):
         if initializer_list_str != "":
             initializer_list_str = f" : {initializer_list_str}"
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.classname}::{self.classname}(){initializer_list_str} {{}}"
         elif len(self.args) == 1:
@@ -285,15 +283,13 @@ class ConstructorDefinition(BaseAst):
 
 @dataclass
 class FunctionDef(BaseAst):
-    """
-    Generate lines to set up a function definition (separate from a function declaration)
-    """
+    """Generate lines to set up a function definition (separate from a function declaration)."""
 
     _fields = ("return_type", "name", "args", "modifier", "body")
 
     return_type: str
     name: str
-    args: List[Arg]
+    args: Iterable[Arg]
     modifier: str
     body: Iterable[BaseAst]
 
@@ -303,6 +299,7 @@ class FunctionDef(BaseAst):
         if len(self.modifier) > 0:
             modifier_str = " " + self.modifier
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.return_type} {self.name}(){modifier_str} {{"
         elif len(self.args) == 1:
@@ -343,7 +340,7 @@ class FunctionDeclaration(BaseAst):
 
     return_type: str
     name: str
-    args: List[Arg]
+    args: Iterable[Arg]
     modifier: str
 
     @autoindent
@@ -352,6 +349,7 @@ class FunctionDeclaration(BaseAst):
         if len(self.modifier) > 0:
             modifier_str = " " + self.modifier
 
+        self.args = list(self.args)
         if len(self.args) == 0:
             yield f"{self.return_type} {self.name}(){modifier_str};"
         elif len(self.args) == 1:
@@ -361,8 +359,15 @@ class FunctionDeclaration(BaseAst):
         else:
             yield f"{self.return_type} {self.name}("
             for arg in self.args[:-1]:
-                for line in arg.compile(options, **kwargs):
-                    yield line + ","
+                try:
+                    for line in arg.compile(options, **kwargs):
+                        yield line + ","
+                except AttributeError:
+                    print("self")
+                    print(self)
+                    print("arg")
+                    print(arg)
+                    raise
             yield from self.args[-1].compile(options, **kwargs)
             yield f"){modifier_str};"
 
@@ -381,7 +386,7 @@ class Return(BaseAst):
 @dataclass
 class If(BaseAst):
     """
-    Generate an if statement
+    Generate an if statement.
 
     Naming follows the Python AST
     """
@@ -411,11 +416,11 @@ class If(BaseAst):
 class Templated(BaseAst):
     _fields = ("template_args", "templated")
 
-    template_args: List[Arg]
+    template_args: Iterable[Arg]
     templated: Any
 
-    @autoindent
     def compile(self, options: CompileState, **kwargs):
+        self.template_args = list(self.template_args)
         if len(self.template_args) == 0:
             yield "template <>"
         elif len(self.template_args) == 1:

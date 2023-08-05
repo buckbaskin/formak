@@ -12,7 +12,7 @@ std::ostream& operator<<(std::ostream& o, std::chrono::nanoseconds time) {
   o << std::setprecision(6);
   o << std::fixed;
 
-  o << (time.count() / 1.0e6) << " ms" << std::endl;
+  o << (time.count() / 1.0e6) << " ms";
 
   o << std::defaultfloat;
   o << std::setprecision(default_precision);

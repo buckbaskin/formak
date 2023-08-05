@@ -8,12 +8,12 @@ py_library(
     deps = ["//py:formak"],
 )
 
-py_test(
+py_test_suite(
     name = "py-test",
     srcs = ["simple_test.py"],
-    main = "simple_test.py",
     deps = [
         "//py:formak",
+        "//py:microbenchmark",
         ":common",
         requirement("numpy"),
     ] + PY_FEATURE_TEST_DEPS,

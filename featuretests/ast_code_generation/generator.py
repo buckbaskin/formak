@@ -1,5 +1,4 @@
 import logging
-from collections import namedtuple
 from itertools import chain
 
 from formak.ast_tools import (
@@ -8,7 +7,6 @@ from formak.ast_tools import (
     CompileState,
     ConstructorDeclaration,
     ConstructorDefinition,
-    Escape,
     FromFileTemplate,
     FunctionDeclaration,
     FunctionDef,
@@ -115,7 +113,7 @@ def source_definition():
             initializer_list=[
                 (
                     "data",
-                    ", ".join((f"options.{member}" for member in MEMBERS)),
+                    ", ".join(f"options.{member}" for member in MEMBERS),
                 )
             ],
         ),

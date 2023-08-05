@@ -1,7 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -17,7 +17,7 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 @dataclass
 class Config:
     """
-    Options for generating C++
+    Options for generating C++.
 
     common_subexpression_elimination:
         Remove common shared computation
@@ -30,12 +30,14 @@ class Config:
     common_subexpression_elimination: bool = True
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
+    max_dt_sec: float = 0.1
 
 
 class BasicBlock:
     """
-    A run of statements without control flow. All statements can be reordered
-    or changed to improve performance.
+    A run of statements without control flow.
+
+    All statements can be reordered or changed to improve performance.
     """
 
     def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
@@ -191,12 +193,17 @@ class Model:
         ):
             try:
                 next_state[i, 0] = result
-            except TypeError:
+            except (TypeError, ValueError) as e:
                 print(
-                    "TypeError when trying to process process model for state %s"
-                    % (state_id,)
+                    "%s when trying to process process model for state %s"
+                    % (
+                        type(e),
+                        state_id,
+                    )
                 )
-                print(f"given: {state}, {self.calibration_vector}, {control_vector}")
+                print(
+                    f"given:\nstate: {state}\ncalibration: {self.calibration_vector}\ncontrol: {control_vector}"
+                )
                 print("expected: float")
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
@@ -275,12 +282,14 @@ class ExtendedKalmanFilter:
     def __init__(
         self,
         state_model,
-        process_noise: Dict[Symbol, float],
+        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
         sensor_noises,
         config,
         calibration_map=None,
     ):
+        self.config = config
+
         if calibration_map is None:
             calibration_map = {}
 
@@ -517,7 +526,7 @@ class ExtendedKalmanFilter:
 
         return StateAndCovariance(next_state, next_covariance)
 
-    def sensor_model(self, sensor_key, state, covariance, sensor_reading):
+    def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
         Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
@@ -726,7 +735,10 @@ class ExtendedKalmanFilter:
                 sensor_input = sensor_input.reshape((sensor_size, 1))
 
                 state, covariance = self.sensor_model(
-                    key, state, covariance, sensor_input
+                    state=state,
+                    covariance=covariance,
+                    sensor_key=key,
+                    sensor_reading=sensor_input,
                 )
                 # Normalized by the uncertainty at the time of the measurement
                 # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
@@ -792,7 +804,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 def compile_ekf(
     state_model,
-    process_noise,
+    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     sensor_noises,
     calibration_map=None,
@@ -811,6 +823,7 @@ def compile_ekf(
         state_model,
         process_noise,
         sensor_models,
+        calibration_map=calibration_map,
         extra_validation=config.extra_validation,
     )
 

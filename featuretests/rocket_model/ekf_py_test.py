@@ -54,6 +54,6 @@ def test_python_EKF():
     state_covariance = np.eye(9)
     control_vector = np.zeros((6, 1))
 
-    state_vector_next = python_implementation.process_model(
+    _state_vector_next = python_implementation.process_model(
         dt=0.01, state=state_vector, covariance=state_covariance, control=control_vector
     )
