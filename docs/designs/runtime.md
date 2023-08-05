@@ -186,3 +186,26 @@ easy to calculate model evolution by hand.
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2023-08-04
+
+Getting this feature 80% done was pretty quick. Getting what felt like the rest
+of the 20% took longer than I hoped.
+
+Things I liked:
+- Covering all combinations for sensor ordering in Python and C++ for testing
+- Using the `hypothesis` testing library to handle the permutations logic for me
+- The implementation was much improved by going from Python -> C++ -> C++ detailed testing -> Python detailed testing. Each step of the way improved the design in some way.
+- Feature tests were a good proxy stand in for considering how the user would use the interface
+- The `wrap` function call. It almost feels magical being able to create a list of many types of readings
+- I could lean on some of the existing tests to tell me when I broke things with the AST. Otherwise I don't know when I would have found out
+- Testing just the constructor was instructive. It surfaced (via compiler warning/error) that the `Impl _impl` internally to the `ManagedFilter` wasn't getting initialized properly
+
+Added to the design:
+- A `::Tag` type for the filter to aggregate all the various signaling the type needs to do to coordinate with the `ManagedFilter`. We'll see if this design choice holds up.
+- [`SFINAE`](https://en.cppreference.com/w/cpp/language/sfinae): Substitution Failure Is Not An Error. In order to support code generation that may or may not have a `Calibration` type or a `Control` type I opted to use SFINAE to selectively add or remove different interfaces. This was simplified somewhat by using if-constexpr internally, but the interfaces are still messy and it feels very close to repeated code copy-pasting. This generation with different interfaces for the end user is adding additional complication for me, but I hope it continues to fall under the heading of accept complexity on my side to achieve an easier to use / more focused version for users.
+
+Things missing from the final version:
+- Performance guaruntees
+- Some testing of edge cases
+- A memory management concept. In practice, it seems like the `ManagedFilter` will be managing both the runtime logic and the memory initialization and layout

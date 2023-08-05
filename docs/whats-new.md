@@ -14,6 +14,11 @@ The FormaK runtime will continue to be expanded over time to offer new features
 (e.g. around netcode and better managing sensor readings) as well as offering
 additional opt-in services (e.g. logging).
 
+Other Improvements:
+- Reorganize how the AST is packaged with reusable fragments
+- Fix misconfigured CI
+- Fix misconfigured Linting
+
 ## 2023-06-29 Common Subexpression Elimination
 
 Commit [`80fdd9d`](https://github.com/buckbaskin/formak/commit/80fdd9dca89b3f15b53baed0ebea56ead8a7f432)
