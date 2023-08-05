@@ -1,10 +1,30 @@
 #include <any>
-#include <cmath>  // floor
+#include <chrono>  // nanoseconds
+#include <cmath>   // floor
+#include <iostream>
 #include <memory>
 #include <type_traits>  // enable_if
 #include <vector>
 
 namespace formak::runtime {
+
+class ScopeTimer {
+ public:
+  ScopeTimer(std::vector<std::chrono::nanoseconds>* record)
+      : _record(record), _start(std::chrono::steady_clock::now()) {
+    std::cout << "Within ScopeTimer()" << std::endl;
+  }
+  ~ScopeTimer() {
+    std::chrono::steady_clock::time_point end =
+        std::chrono::steady_clock::now();
+    _record->emplace_back(end - _start);
+    std::cout << "Within ~ScopeTimer()" << std::endl;
+  }
+
+ private:
+  std::vector<std::chrono::nanoseconds>* _record;
+  std::chrono::steady_clock::time_point _start;
+};
 
 template <typename Impl>
 class ManagedFilter {
@@ -57,11 +77,15 @@ class ManagedFilter {
       double outputTime, const typename Impl::Tag::ControlT& control) {
     static_assert(
         !std::is_same_v<typename Impl::Tag::ControlT, std::false_type>);
+    ScopeTimer s(&_timeLog.tickTimeControl);
+
     return processUpdate(outputTime, control).state;
   }
   typename Impl::Tag::StateAndVarianceT tick(double outputTime) {
     static_assert(
         std::is_same_v<typename Impl::Tag::ControlT, std::false_type>);
+    ScopeTimer s(&_timeLog.tickTime);
+
     return processUpdate(outputTime).state;
   }
 
@@ -70,6 +94,8 @@ class ManagedFilter {
       const std::vector<StampedReading>& readings) {
     static_assert(
         !std::is_same_v<typename Impl::Tag::ControlT, std::false_type>);
+    ScopeTimer s(&_timeLog.tickTimeControlReadings);
+
     for (const auto& stampedReading : readings) {
       _state = processUpdate(stampedReading.timestamp, control);
 
@@ -82,6 +108,7 @@ class ManagedFilter {
         _state.state = stampedReading.data->sensor_model(_impl, _state.state);
       }
     }
+    std::cout << "Within tickTimeControlReadings" << std::endl;
 
     return tick(outputTime, control);
   }
@@ -89,6 +116,8 @@ class ManagedFilter {
       double outputTime, const std::vector<StampedReading>& readings) {
     static_assert(
         std::is_same_v<typename Impl::Tag::ControlT, std::false_type>);
+    ScopeTimer s(&_timeLog.tickTimeReadings);
+
     for (const auto& stampedReading : readings) {
       _state = processUpdate(stampedReading.timestamp);
 
@@ -103,6 +132,16 @@ class ManagedFilter {
     }
 
     return tick(outputTime);
+  }
+
+  struct TimeLog {
+    std::vector<std::chrono::nanoseconds> tickTimeControl;
+    std::vector<std::chrono::nanoseconds> tickTime;
+    std::vector<std::chrono::nanoseconds> tickTimeControlReadings;
+    std::vector<std::chrono::nanoseconds> tickTimeReadings;
+  };
+  TimeLog viewTimeData() {
+    return _timeLog;
   }
 
  private:
@@ -178,5 +217,7 @@ class ManagedFilter {
   const typename Impl::Tag::CalibrationT _calibration{};
 
   State _state;
+
+  TimeLog _timeLog;
 };
 }  // namespace formak::runtime

@@ -27,6 +27,7 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
   using namespace formak::utils::io_helpers;
 
   size_t size = 100;
+  size_t extra_runs = 1;
 
   State state(StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
@@ -49,7 +50,11 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
                                     SimpleOptions{}),
                 });
       },
-      tickInput(size));
+      tickInput(size), extra_runs);
+
+  auto timeLog = mf.viewTimeData();
+  EXPECT_EQ(timeLog.tickTimeControl.size(), size * extra_runs);
+  ASSERT_EQ(timeLog.tickTimeControlReadings.size(), size * extra_runs);
 
   featuretest::ExtendedKalmanFilter ekf;
   double currentTime = 3.0;
@@ -82,7 +87,7 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
         combined = ekf.process_model(process_dt, combined, control);
         currentTime = currentTime + process_dt;
       },
-      tickInput(size));
+      tickInput(size), extra_runs);
 
   double manager_p01_fastest = manager_times[1].count() / 1.0e6;
   double manager_range =
