@@ -69,7 +69,6 @@ class ManagedFilter:
 
         expected_iterations = abs(floor((output_time - self.current_time) / max_dt))
 
-        # TODO(buck): test with zero-control models
         for _ in range(expected_iterations):
             state, covariance = self._impl.process_model(
                 max_dt, state, covariance, control

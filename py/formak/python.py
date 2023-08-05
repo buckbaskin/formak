@@ -282,7 +282,7 @@ class ExtendedKalmanFilter:
     def __init__(
         self,
         state_model,
-        process_noise: Dict[Symbol, float],
+        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
         sensor_noises,
         config,

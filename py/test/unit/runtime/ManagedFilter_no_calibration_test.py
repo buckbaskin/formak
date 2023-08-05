@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
@@ -22,7 +22,9 @@ class ShuffleId(Enum):
     Output = auto()
 
 
-def parse_options(output_dt, shuffle: List[ShuffleId]) -> List[float]:
+def parse_options(
+    output_dt: float, shuffle: List[ShuffleId]
+) -> Tuple[float, List[float]]:
     options = [0.0, 0.0, 0.0, 0.0]
     for i, elem in enumerate(shuffle):
         index_dt = i * 0.1
