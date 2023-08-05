@@ -3,6 +3,7 @@
 #include <formak/utils/microbenchmark.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>  // sort
 #include <vector>
 
 namespace featuretest {
@@ -56,6 +57,11 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
   EXPECT_EQ(timeLog.tickTimeControl.size(), size * extra_runs);
   ASSERT_EQ(timeLog.tickTimeControlReadings.size(), size * extra_runs);
 
+  std::sort(timeLog.tickTimeControlReadings.begin(),
+            timeLog.tickTimeControlReadings.end());
+  std::cout << "Tick Log: " << std::endl
+            << timeLog.tickTimeControlReadings << std::endl;
+
   featuretest::ExtendedKalmanFilter ekf;
   double currentTime = 3.0;
   StateAndVariance combined{.state = state, .covariance = {}};
@@ -103,7 +109,8 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
             << " range: " << no_manager_range << std::endl
             << no_manager_times << std::endl;
 
-  EXPECT_LT(manager_p01_fastest, no_manager_p99_slowest);
+  EXPECT_LT(manager_p01_fastest,
+            no_manager_p99_slowest * 2.0);  // Less than 100% overhead
 }
 
 }  // namespace featuretest

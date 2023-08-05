@@ -12,13 +12,11 @@ class ScopeTimer {
  public:
   ScopeTimer(std::vector<std::chrono::nanoseconds>* record)
       : _record(record), _start(std::chrono::steady_clock::now()) {
-    std::cout << "Within ScopeTimer()" << std::endl;
   }
   ~ScopeTimer() {
     std::chrono::steady_clock::time_point end =
         std::chrono::steady_clock::now();
     _record->emplace_back(end - _start);
-    std::cout << "Within ~ScopeTimer()" << std::endl;
   }
 
  private:
@@ -124,7 +122,6 @@ class ManagedFilter {
         _state.state = stampedReading.data->sensor_model(_impl, _state.state);
       }
     }
-    std::cout << "Within tickTimeControlReadings" << std::endl;
 
     return tick(outputTime, control);
   }
