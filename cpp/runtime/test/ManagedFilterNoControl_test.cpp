@@ -65,6 +65,11 @@ struct Reading : public StampedReadingBase {
 };
 }  // namespace
 
+TEST(ManagedFilterTest, CompatibilityChecks) {
+  static_assert(formak::runtime::ManagedFilter<TestImpl>::compatible);
+  ASSERT_TRUE(formak::runtime::ManagedFilter<TestImpl>::runtime_compatible());
+}
+
 TEST(ManagedFilterTest, Constructor) {
   // [[maybe_unused]] because this test is focused on the constructor only.
   // Passes if construction and deconstruction are successful

@@ -7,6 +7,14 @@
 namespace testing {
 using formak::runtime::ManagedFilter;
 
+TEST(ManagedFilterTickTest, CompatibilityChecks) {
+  static_assert(formak::runtime::ManagedFilter<
+                featuretest::ExtendedKalmanFilter>::compatible);
+
+  ASSERT_TRUE(formak::runtime::ManagedFilter<
+              featuretest::ExtendedKalmanFilter>::runtime_compatible());
+}
+
 TEST(ManagedFilterTickTest, ConfigAvailable) {
   featuretest::cpp::Config c;
 

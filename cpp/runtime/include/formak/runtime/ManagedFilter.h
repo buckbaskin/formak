@@ -1,3 +1,5 @@
+#include <formak/utils/type_checks.h>
+
 #include <any>
 #include <chrono>  // nanoseconds
 #include <cmath>   // floor
@@ -29,6 +31,22 @@ class ScopeTimer {
 template <typename Impl>
 class ManagedFilter {
  public:
+  static constexpr bool compatible = ([]() {
+    using RequiredStateType [[maybe_unused]] =
+        typename Impl::Tag::StateAndVarianceT;
+    using RequiredCalibrationType [[maybe_unused]] =
+        typename Impl::Tag::CalibrationT;
+    using RequiredControlType [[maybe_unused]] = typename Impl::Tag::ControlT;
+    using RequiredStampedReadingBaseType [[maybe_unused]] =
+        typename Impl::Tag::StampedReadingBaseT;
+    return formak::utils::type_checks::DefaultConstructable<Impl>::value &&
+           Impl::Tag::max_dt_sec > 0;
+  })();
+  static constexpr bool runtime_compatible() {
+    static_assert(compatible);
+    return true;
+  }
+
   // ImplT required here so that the substitution will fail (SFINAE) for this
   // constructor specifically. If we don't substitute it and instead refer Impl,
   // the std::enable_if call will lead to unintended behavior. The ManagedFilter
