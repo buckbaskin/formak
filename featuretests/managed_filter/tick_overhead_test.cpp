@@ -23,7 +23,10 @@ std::vector<TickOptions> tickInput(size_t size) {
 }
 
 TEST(ManagedFilterTickTest, MultipleReadings) {
-  // using formak::utils::io_helpers;
+  using formak::utils::microbenchmark;
+  using namespace formak::utils::io_helpers;
+
+  size_t size = 100;
 
   State state(StateOptions{.v = 1.0});
   formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
@@ -34,34 +37,66 @@ TEST(ManagedFilterTickTest, MultipleReadings) {
 
   Control control;
 
-  std::vector<std::chrono::nanoseconds> manager_times =
-      formak::utils::microbenchmark(
-          [&mf, &control](const TickOptions& options) {
-            mf.tick(options.output_dt, control,
-                    {
-                        mf.wrap<Simple>(options.reading_dt_base + 0.05,
-                                        SimpleOptions{}),
-                        mf.wrap<Simple>(options.reading_dt_base + 0.06,
-                                        SimpleOptions{}),
-                        mf.wrap<Simple>(options.reading_dt_base + 0.07,
-                                        SimpleOptions{}),
-                    });
-          },
-          tickInput(100));
+  std::vector<std::chrono::nanoseconds> manager_times = microbenchmark(
+      [&mf, &control](const TickOptions& options) {
+        mf.tick(options.output_dt, control,
+                {
+                    mf.wrap<Simple>(options.reading_dt_base + 0.05,
+                                    SimpleOptions{}),
+                    mf.wrap<Simple>(options.reading_dt_base + 0.06,
+                                    SimpleOptions{}),
+                    mf.wrap<Simple>(options.reading_dt_base + 0.07,
+                                    SimpleOptions{}),
+                });
+      },
+      tickInput(size));
+
+  featuretest::ExtendedKalmanFilter ekf;
+  double currentTime = 3.0;
+  StateAndVariance combined{.state = state, .covariance = {}};
 
   std::vector<std::chrono::nanoseconds> no_manager_times = microbenchmark(
-      [&no_manager_model](const TickOptions& options) {
-        no_manager_model.model(0.1, options);
+      [&ekf, &currentTime, &combined, &control](const TickOptions& options) {
+        double process_dt = options.reading_dt_base + 0.05 - currentTime;
+        combined = ekf.process_model(process_dt, combined, control);
+        currentTime = currentTime + process_dt;
+
+        featuretest::Simple zero_sensor_reading(SimpleOptions{});
+        combined = ekf.sensor_model(combined, zero_sensor_reading);
+
+        process_dt = options.reading_dt_base + 0.06 - currentTime;
+        combined = ekf.process_model(process_dt, combined, control);
+        currentTime = currentTime + process_dt;
+
+        featuretest::Simple one_sensor_reading(SimpleOptions{});
+        combined = ekf.sensor_model(combined, one_sensor_reading);
+
+        process_dt = options.reading_dt_base + 0.07 - currentTime;
+        combined = ekf.process_model(process_dt, combined, control);
+        currentTime = currentTime + process_dt;
+
+        featuretest::Simple two_sensor_reading(SimpleOptions{});
+        combined = ekf.sensor_model(combined, two_sensor_reading);
+
+        process_dt = options.output_dt - currentTime;
+        combined = ekf.process_model(process_dt, combined, control);
+        currentTime = currentTime + process_dt;
       },
-      tickInput(100));
+      tickInput(size));
 
   double manager_p01_fastest = manager_times[1].count() / 1.0e6;
-  double no_manager_p99_slowest = no_manager_times[98].count() / 1.0e6;
+  double manager_range =
+      (manager_times[size - 1] - manager_times[0]).count() / 1.0e6;
+  double no_manager_p99_slowest = no_manager_times[size - 2].count() / 1.0e6;
+  double no_manager_range =
+      (no_manager_times[size - 1] - no_manager_times[0]).count() / 1.0e6;
 
-  // std::cout << "Manager    " << manager_p01_fastest << std::endl
-  //           << manager_times << std::endl;
-  // std::cout << "No Manager " << no_manager_p99_slowest << std::endl
-  //           << no_manager_times << std::endl;
+  std::cout << "Manager    " << manager_p01_fastest
+            << " range: " << manager_range << std::endl
+            << manager_times << std::endl;
+  std::cout << "No Manager " << no_manager_p99_slowest
+            << " range: " << no_manager_range << std::endl
+            << no_manager_times << std::endl;
 
   EXPECT_LT(manager_p01_fastest, no_manager_p99_slowest);
 }
