@@ -49,14 +49,14 @@ any additional features as the library evolved with the following static
 function:
 
 ```cpp
-static_assert(formak::runtime::ManagedFilter::compatible<FilterType>::value);
+static_assert(formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter>::compatible);
 ```
 
 Required runtime properties for instance of the filter type can be checked with
 the following static function:
 
 ```cpp
-ASSERT_TRUE(formak::runtime::ManagedFilter::compatible<FilterType>::at_runtime());
+ASSERT_TRUE(formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter>::runtime_compatible());
 ```
 
 ### Python Interface

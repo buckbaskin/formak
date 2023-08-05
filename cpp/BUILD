@@ -35,22 +35,3 @@ cc_test(
         "@gtest//:gtest_main",
     ],
 )
-
-cc_library(
-    name = "utils-type-checks",
-    hdrs = [
-        "include/formak/utils/type_checks.h",
-    ],
-    strip_include_prefix = "include",
-    visibility = ["//visibility:public"],
-    deps = ["@eigen"],
-)
-
-cc_test(
-    name = "utils-type-checks-test",
-    srcs = ["test/utils/type_checks_test.cpp"],
-    deps = [
-        ":utils-type-checks",
-        "@gtest//:gtest_main",
-    ],
-)

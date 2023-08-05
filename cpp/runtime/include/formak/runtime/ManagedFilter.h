@@ -1,5 +1,3 @@
-#include <formak/utils/type_checks.h>
-
 #include <any>
 #include <chrono>  // nanoseconds
 #include <cmath>   // floor
@@ -39,8 +37,8 @@ class ManagedFilter {
     using RequiredControlType [[maybe_unused]] = typename Impl::Tag::ControlT;
     using RequiredStampedReadingBaseType [[maybe_unused]] =
         typename Impl::Tag::StampedReadingBaseT;
-    return formak::utils::type_checks::DefaultConstructable<Impl>::value &&
-           Impl::Tag::max_dt_sec > 0;
+
+    return std::is_constructible_v<Impl> && Impl::Tag::max_dt_sec > 0;
   })();
   static constexpr bool runtime_compatible() {
     static_assert(compatible);
