@@ -6,7 +6,7 @@ from formak import python, ui
 def test_ekf_simple():
     dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
     thrust = ui.Symbol("thrust")
 
@@ -39,5 +39,8 @@ def test_ekf_simple():
     )
 
     state_variance_next, state_variance_next = python_ekf.sensor_model(
-        "simple", state_vector, state_variance, np.array([[0.0]])
+        state=state_vector,
+        covariance=state_variance,
+        sensor_key="simple",
+        sensor_reading=np.array([[0.0]]),
     )

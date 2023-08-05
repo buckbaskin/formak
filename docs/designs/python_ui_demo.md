@@ -18,7 +18,7 @@ In line with those values, the intended user experience is as follows. The user
 provides:
 - Model that describes the physics of the system
 - Execution criteria (e.g. memory usage, execution time)
-- Time series data for for the system
+- Time series data for the system
 
 This design provides the first of the Five Keys: the Python Interface to define models.
 
@@ -54,6 +54,6 @@ This feature is specific to the Python interface. There will be two feature test
 
 ## Post Merge Review
 
-This feature was ultimately very simple because it leaned on `sympy` quite a
-bit. The primary change from the plan was that there was already demo code to
-borrow from for feature tests which made writing them much quicker.
+This feature was ultimately simple to implement because it leaned on `sympy`
+quite a bit. The primary change from the plan was that there was already demo
+code to borrow from for feature tests which made writing them much quicker.

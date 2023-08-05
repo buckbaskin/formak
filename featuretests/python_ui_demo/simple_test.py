@@ -1,13 +1,12 @@
-import pytest
-from formak.ui import *
+from formak import ui
 
 
 def test_UI_simple():
-    dt = Symbol("dt")
+    dt = ui.Symbol("dt")
 
-    tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = Symbol("thrust")
+    thrust = ui.Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -19,6 +18,4 @@ def test_UI_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = Model(dt=dt, state=state, control=control, state_model=state_model)
-
-    return 0
+    _model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)

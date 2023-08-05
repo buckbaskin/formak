@@ -2,33 +2,24 @@ import argparse
 import logging
 from collections import namedtuple
 from dataclasses import dataclass
-from itertools import chain, count
-from typing import Any, List, Optional, Tuple
+from itertools import count
+from typing import Any, Iterable, List, Optional, Tuple
 
 from formak.ast_tools import (
-    Arg,
+    BaseAst,
     ClassDef,
     CompileState,
-    ConstructorDeclaration,
-    ConstructorDefinition,
-    EnumClassDef,
     ForwardClassDeclaration,
-    FromFileTemplate,
-    FunctionDeclaration,
-    FunctionDef,
     HeaderFile,
     MemberDeclaration,
     Namespace,
-    Private,
-    Public,
     Return,
     SourceFile,
-    Templated,
-    UsingDeclaration,
 )
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, ccode, cse, diff, simplify
 
+from formak import ast_fragments as fragments
 from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
@@ -39,7 +30,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Config:
     """
-    Options for generating C++
+    Options for generating C++.
 
     common_subexpression_elimination:
         Remove common shared computation
@@ -49,6 +40,41 @@ class Config:
 
     common_subexpression_elimination: bool = True
     extra_validation: bool = False
+    max_dt_sec: float = 0.1
+
+    def ccode(self):
+        if self.max_dt_sec < 1e-9:
+            raise ValueError(
+                "Please specify Config(max_dt_sec=...) >= 1e-9. Currently {self.max_dt_sec}"
+            )
+
+        return Namespace(
+            name="cpp",
+            body=[
+                ClassDef(
+                    "struct",
+                    "Config",
+                    bases=[],
+                    body=[
+                        MemberDeclaration(
+                            "static constexpr bool",
+                            "common_subexpression_elimination",
+                            "true"
+                            if self.common_subexpression_elimination
+                            else "false",
+                        ),
+                        MemberDeclaration(
+                            "static constexpr bool",
+                            "extra_validation",
+                            "true" if self.extra_validation else "false",
+                        ),
+                        MemberDeclaration(
+                            "static constexpr double", "max_dt_sec", self.max_dt_sec
+                        ),
+                    ],
+                )
+            ],
+        )
 
 
 @dataclass
@@ -60,8 +86,9 @@ class CppCompileResult:
 
 class BasicBlock:
     """
-    A run of statements without control flow. All statements can be reordered
-    or changed to improve performance.
+    A run of statements without control flow.
+
+    All statements can be reordered or changed to improve performance.
     """
 
     def __init__(
@@ -115,6 +142,7 @@ class Model:
         assert isinstance(config, Config)
 
         self.enable_EKF = False
+        self.config = config
         self.namespace = namespace
         self.header_include = header_include
 
@@ -174,21 +202,21 @@ class Model:
             [
                 (
                     member,
-                    Symbol("input_state.{}()".format(member)),
+                    Symbol("state.{}()".format(member)),
                 )
                 for member in self.arglist_state
             ]
             + [
                 (
                     member,
-                    Symbol("input_calibration.{}()".format(member)),
+                    Symbol("calibration.{}()".format(member)),
                 )
                 for member in self.arglist_calibration
             ]
             + [
                 (
                     member,
-                    Symbol("input_control.{}()".format(member)),
+                    Symbol("control.{}()".format(member)),
                 )
                 for member in self.arglist_control
             ]
@@ -332,21 +360,21 @@ class ExtendedKalmanFilter:
             [
                 (
                     member,
-                    Symbol("input.state.{}()".format(member)),
+                    Symbol("state.state.{}()".format(member)),
                 )
                 for member in self.arglist_state
             ]
             + [
                 (
                     member,
-                    Symbol("input_calibration.{}()".format(member)),
+                    Symbol("calibration.{}()".format(member)),
                 )
                 for member in self.arglist_calibration
             ]
             + [
                 (
                     member,
-                    Symbol("input_control.{}()".format(member)),
+                    Symbol("control.{}()".format(member)),
                 )
                 for member in self.arglist_control
             ]
@@ -366,21 +394,21 @@ class ExtendedKalmanFilter:
             [
                 (
                     member,
-                    Symbol("input.state.{}()".format(member)),
+                    Symbol("state.state.{}()".format(member)),
                 )
                 for member in self.arglist_state
             ]
             + [
                 (
                     member,
-                    Symbol("input_calibration.{}()".format(member)),
+                    Symbol("calibration.{}()".format(member)),
                 )
                 for member in self.arglist_calibration
             ]
             + [
                 (
                     member,
-                    Symbol("input_control.{}()".format(member)),
+                    Symbol("control.{}()".format(member)),
                 )
                 for member in self.arglist_control
             ]
@@ -404,21 +432,21 @@ class ExtendedKalmanFilter:
             [
                 (
                     member,
-                    Symbol("input.state.{}()".format(member)),
+                    Symbol("state.state.{}()".format(member)),
                 )
                 for member in self.arglist_state
             ]
             + [
                 (
                     member,
-                    Symbol("input_calibration.{}()".format(member)),
+                    Symbol("calibration.{}()".format(member)),
                 )
                 for member in self.arglist_calibration
             ]
             + [
                 (
                     member,
-                    Symbol("input_control.{}()".format(member)),
+                    Symbol("control.{}()".format(member)),
                 )
                 for member in self.arglist_control
             ]
@@ -474,13 +502,13 @@ class ExtendedKalmanFilter:
         subs_set = [
             (
                 member,
-                Symbol("input.state.{}()".format(member)),
+                Symbol("state.state.{}()".format(member)),
             )
             for member in self.arglist_state
         ] + [
             (
                 member,
-                Symbol("input_calibration.{}()".format(member)),
+                Symbol("calibration.{}()".format(member)),
             )
             for member in self.arglist_calibration
         ]
@@ -560,13 +588,13 @@ class ExtendedKalmanFilter:
         subs_set = [
             (
                 member,
-                Symbol("input.state.{}()".format(member)),
+                Symbol("state.state.{}()".format(member)),
             )
             for member in self.arglist_state
         ] + [
             (
                 member,
-                Symbol("input_calibration.{}()".format(member)),
+                Symbol("calibration.{}()".format(member)),
             )
             for member in self.arglist_calibration
         ]
@@ -664,781 +692,92 @@ def _compile_argparse():
     return args
 
 
-def header_from_ast(*, generator):
-    StateOptions = ClassDef(
-        "struct",
-        "StateOptions",
-        bases=[],
-        body=[
-            MemberDeclaration("double", member, 0.0)
-            for member in generator.arglist_state
-        ],
-    )
-    State = ClassDef(
-        "struct",
-        "State",
-        bases=[],
-        body=[
-            MemberDeclaration("static constexpr size_t", "rows", generator.state_size),
-            MemberDeclaration("static constexpr size_t", "cols", 1),
-            UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
-            ConstructorDeclaration(),  # No args constructor gets default constructor
-            ConstructorDeclaration(args=[Arg("const StateOptions&", "options")]),
-        ]
-        + list(
-            chain.from_iterable(
-                [
-                    (
-                        FunctionDef(
-                            "double&",
-                            name,
-                            args=[],
-                            modifier="",
-                            body=[
-                                Return(f"data({idx}, 0)"),
-                            ],
-                        ),
-                        FunctionDef(
-                            "double",
-                            name,
-                            args=[],
-                            modifier="const",
-                            body=[
-                                Return(f"data({idx}, 0)"),
-                            ],
-                        ),
-                    )
-                    for idx, name in enumerate(generator.arglist_state)
-                ]
-            )
-        )
-        + [
-            MemberDeclaration("DataT", "data", "DataT::Zero()"),
-        ],
-    )
-    body = [
-        StateOptions,
-        State,
-    ]
+def _header_body(*, generator) -> Iterable[BaseAst]:
+    yield generator.config.ccode()
+    yield fragments.StateOptions(generator)
+    yield fragments.State(generator)
 
     if generator.enable_control():
-        ControlOptions = ClassDef(
-            "struct",
-            "ControlOptions",
-            bases=[],
-            body=[
-                MemberDeclaration("double", member, 0.0)
-                for member in generator.arglist_control
-            ],
-        )
-        Control = ClassDef(
-            "struct",
-            "Control",
-            bases=[],
-            body=[
-                MemberDeclaration(
-                    "static constexpr size_t", "rows", generator.control_size
-                ),
-                MemberDeclaration("static constexpr size_t", "cols", 1),
-                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
-                ConstructorDeclaration(),  # No args constructor gets default constructor
-                ConstructorDeclaration(args=[Arg("const ControlOptions&", "options")]),
-            ]
-            + list(
-                chain.from_iterable(
-                    [
-                        (
-                            FunctionDef(
-                                "double&",
-                                name,
-                                args=[],
-                                modifier="",
-                                body=[
-                                    Return(f"data({idx}, 0)"),
-                                ],
-                            ),
-                            FunctionDef(
-                                "double",
-                                name,
-                                args=[],
-                                modifier="const",
-                                body=[
-                                    Return(f"data({idx}, 0)"),
-                                ],
-                            ),
-                        )
-                        for idx, name in enumerate(generator.arglist_control)
-                    ]
-                )
-            )
-            + [
-                MemberDeclaration("DataT", "data", "DataT::Zero()"),
-            ],
-        )
-        body.append(ControlOptions)
-        body.append(Control)
+        yield fragments.ControlOptions(generator)
+        yield fragments.Control(generator)
+
     if generator.enable_calibration():
-        CalibrationOptions = ClassDef(
-            "struct",
-            "CalibrationOptions",
-            bases=[],
-            body=[
-                MemberDeclaration("double", member, 0.0)
-                for member in generator.arglist_calibration
-            ],
-        )
-        Calibration = ClassDef(
-            "struct",
-            "Calibration",
-            bases=[],
-            body=[
-                MemberDeclaration(
-                    "static constexpr size_t", "rows", generator.calibration_size
-                ),
-                MemberDeclaration("static constexpr size_t", "cols", 1),
-                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
-                ConstructorDeclaration(),  # No args constructor gets default constructor
-                ConstructorDeclaration(
-                    args=[Arg("const CalibrationOptions&", "options")]
-                ),
-            ]
-            + list(
-                chain.from_iterable(
-                    [
-                        (
-                            FunctionDef(
-                                "double&",
-                                name,
-                                args=[],
-                                modifier="",
-                                body=[
-                                    Return(f"data({idx}, 0)"),
-                                ],
-                            ),
-                            FunctionDef(
-                                "double",
-                                name,
-                                args=[],
-                                modifier="const",
-                                body=[
-                                    Return(f"data({idx}, 0)"),
-                                ],
-                            ),
-                        )
-                        for idx, name in enumerate(generator.arglist_calibration)
-                    ]
-                )
-            )
-            + [
-                MemberDeclaration("DataT", "data", "DataT::Zero()"),
-            ],
-        )
-        body.append(CalibrationOptions)
-        body.append(Calibration)
-
-    def State_model(*, enable_control, enable_calibration):
-        args = [
-            Arg("double", "dt"),
-            Arg("const State&", "input_state"),
-        ]
-
-        if enable_control:
-            args.append(Arg("const Control&", "input_control"))
-        if enable_calibration:
-            args.append(Arg("const Calibration&", "input_calibration"))
-
-        return FunctionDeclaration(
-            "State",
-            "model",
-            args=args,
-            modifier="",
-        )
-
-    def StateAndVariance_process_model(*, enable_control, enable_calibration):
-        args = [
-            Arg("double", "dt"),
-            Arg("const StateAndVariance&", "input_state"),
-        ]
-
-        if enable_calibration:
-            args.append(Arg("const Calibration&", "input_calibration"))
-        if enable_control:
-            args.append(Arg("const Control&", "input_control"))
-
-        return FunctionDeclaration(
-            "StateAndVariance",
-            "process_model",
-            args=args,
-            modifier="",
-        )
-
-    def StateAndVariance_sensor_model(*, enable_control, enable_calibration):
-        args = [
-            Arg("const StateAndVariance&", "input"),
-        ]
-
-        if enable_calibration:
-            args.append(Arg("const Calibration&", "input_calibration"))
-
-        args.append(Arg("const ReadingT&", "input_reading"))
-
-        return Templated(
-            [Arg("typename", "ReadingT")],
-            FunctionDef(
-                "StateAndVariance",
-                "sensor_model",
-                args=args,
-                modifier="",
-                body=[
-                    FromFileTemplate(
-                        "sensor_model.hpp",
-                        inserts={
-                            "enable_calibration": generator.enable_calibration(),
-                        },
-                    ),
-                ],
-            ),
-        )
+        yield fragments.CalibrationOptions(generator)
+        yield fragments.Calibration(generator)
 
     if generator.enable_EKF:
-        Covariance = ClassDef(
-            "struct",
-            "Covariance",
-            bases=[],
-            body=[
-                MemberDeclaration(
-                    "static constexpr size_t", "rows", generator.state_size
-                ),
-                MemberDeclaration(
-                    "static constexpr size_t", "cols", generator.state_size
-                ),
-                UsingDeclaration("DataT", "Eigen::Matrix<double, rows, cols>"),
-            ]
-            + list(
-                chain.from_iterable(
-                    [
-                        (
-                            FunctionDef(
-                                "double&",
-                                name,
-                                args=[],
-                                modifier="",
-                                body=[
-                                    Return(f"data({idx}, {idx})"),
-                                ],
-                            ),
-                            FunctionDef(
-                                "double",
-                                name,
-                                args=[],
-                                modifier="const",
-                                body=[
-                                    Return(f"data({idx}, {idx})"),
-                                ],
-                            ),
-                        )
-                        for idx, name in enumerate(generator.arglist_state)
-                    ]
-                )
-            )
-            + [
-                MemberDeclaration("DataT", "data", "DataT::Identity()"),
-            ],
-        )
-        body.append(Covariance)
-        StateAndVariance = ClassDef(
-            "struct",
-            "StateAndVariance",
-            bases=[],
-            body=[
-                MemberDeclaration("State", "state"),
-                MemberDeclaration("Covariance", "covariance"),
-            ],
-        )
-        body.append(StateAndVariance)
-        SensorId = EnumClassDef(
-            "SensorId",
-            members=[f"{name.upper()}" for name, _, _ in generator.sensorlist],
-        )
-        body.append(SensorId)
+        yield fragments.Covariance(generator)
+        yield fragments.StateAndVariance(generator)
+        yield fragments.SensorId(generator)
+        yield ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
+        yield ForwardClassDeclaration("struct", "StampedReadingBase")
+
+        yield fragments.ExtendedKalmanFilter(generator)
+
+        yield fragments.ExtendedKalmanFilterProcessModel(generator)
+        yield fragments.StampedReadingBase(generator)
+
         for reading_type in generator.reading_types():
-            body.append(
-                ForwardClassDeclaration("struct", f"{reading_type.typename}SensorModel")
+            yield ForwardClassDeclaration(
+                "struct", f"{reading_type.typename}SensorModel"
             )
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}Options",
-                    bases=[],
-                    body=[
-                        MemberDeclaration("double", symbol, 0.0)
-                        for symbol in sorted(
-                            list(reading_type.sensor_model_mapping.keys())
-                        )
-                    ],
-                )
-            )
+            yield fragments.ReadingOptions(reading_type)
+            yield fragments.Reading(generator, reading_type)
+            yield fragments.ReadingSensorModel(generator, reading_type)
 
-            standard_args = [Arg("const StateAndVariance&", "input")]
-            if generator.enable_calibration():
-                standard_args.append(Arg("const Calibration&", "input_calibration"))
-            standard_args.append(
-                Arg(f"const {reading_type.typename}&", "input_reading")
-            )
-
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}",
-                    bases=[],
-                    body=[
-                        UsingDeclaration(
-                            "DataT", f"Eigen::Matrix<double, {reading_type.size}, 1>"
-                        ),
-                        UsingDeclaration(
-                            "CovarianceT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {reading_type.size}>",
-                        ),
-                        UsingDeclaration(
-                            "InnovationT",
-                            f"Eigen::Matrix<double, {reading_type.size}, 1>",
-                        ),
-                        UsingDeclaration(
-                            "KalmanGainT",
-                            f"Eigen::Matrix<double, {generator.state_size}, {reading_type.size}>",
-                        ),
-                        UsingDeclaration(
-                            "SensorJacobianT",
-                            f"Eigen::Matrix<double, {reading_type.size}, {generator.state_size}>",
-                        ),
-                        UsingDeclaration(
-                            "SensorModel", f"{reading_type.typename}SensorModel"
-                        ),
-                        ConstructorDeclaration(args=[]),
-                        ConstructorDeclaration(
-                            args=[
-                                Arg(f"const {reading_type.typename}Options&", "options")
-                            ]
-                        ),
-                    ]
-                    + [
-                        FunctionDef(
-                            "double",
-                            name,
-                            args=[],
-                            modifier="",
-                            body=[Return(f"data({idx}, 0)")],
-                        )
-                        for idx, name in enumerate(
-                            sorted(list(reading_type.sensor_model_mapping.keys()))
-                        )
-                    ]
-                    + [
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}",
-                            "model",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::SensorJacobianT",
-                            "jacobian",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::CovarianceT",
-                            "covariance",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                        MemberDeclaration("DataT", "data", "DataT::Zero()"),
-                        MemberDeclaration(
-                            "constexpr static size_t", "size", reading_type.size
-                        ),
-                        MemberDeclaration(
-                            "constexpr static SensorId",
-                            "Identifier",
-                            reading_type.identifier,
-                        ),
-                    ],
-                )
-            )
-
-            standard_args = [Arg("const StateAndVariance&", "input")]
-            if generator.enable_calibration():
-                standard_args.append(Arg("const Calibration&", "input_calibration"))
-            standard_args.append(
-                Arg(f"const {reading_type.typename}&", "input_reading")
-            )
-            body.append(
-                ClassDef(
-                    "struct",
-                    f"{reading_type.typename}SensorModel",
-                    bases=[],
-                    body=[
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}",
-                            "model",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::SensorJacobianT",
-                            "jacobian",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                        FunctionDeclaration(
-                            f"static {reading_type.typename}::CovarianceT",
-                            "covariance",
-                            args=standard_args,
-                            modifier="",
-                        ),
-                    ],
-                )
-            )
-
-        body.append(
-            ForwardClassDeclaration("class", "ExtendedKalmanFilterProcessModel")
-        )
-
-        ExtendedKalmanFilter = ClassDef(
-            "class",
-            "ExtendedKalmanFilter",
-            bases=[],
-            body=[
-                Public(),
-                UsingDeclaration(
-                    "CovarianceT",
-                    f"Eigen::Matrix<double, {generator.control_size}, {generator.control_size}>",
-                ),
-                UsingDeclaration(
-                    "ProcessJacobianT",
-                    f"Eigen::Matrix<double, {generator.state_size}, {generator.state_size}>",
-                ),
-                UsingDeclaration(
-                    "ControlJacobianT",
-                    f"Eigen::Matrix<double, {generator.state_size}, {generator.control_size}>",
-                ),
-                UsingDeclaration("ProcessModel", "ExtendedKalmanFilterProcessModel"),
-                StateAndVariance_process_model(
-                    enable_control=generator.enable_control(),
-                    enable_calibration=generator.enable_calibration(),
-                ),
-                StateAndVariance_sensor_model(
-                    enable_control=generator.enable_control(),
-                    enable_calibration=generator.enable_calibration(),
-                ),
-                Templated(
-                    [Arg("typename", "ReadingT")],
-                    FunctionDef(
-                        "std::optional<typename ReadingT::InnovationT>",
-                        "innovations",
-                        args=[],
-                        modifier="",
-                        body=[
-                            FromFileTemplate(
-                                "innovations.hpp",
-                                inserts={},
-                            )
-                        ],
-                    ),
-                ),
-                Private(),
-                MemberDeclaration(
-                    "std::unordered_map<SensorId, std::any>", "_innovations"
-                ),
-            ],
-        )
-        body.append(ExtendedKalmanFilter)
-
-        def ExtendedKalmanFilterProcessModel_model(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration("static State", "model", args=args, modifier="")
-
-        def ExtendedKalmanFilterProcessModel_process_jacobian(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::ProcessJacobianT",
-                "process_jacobian",
-                args=args,
-                modifier="",
-            )
-
-        def ExtendedKalmanFilterProcessModel_control_jacobian(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::ControlJacobianT",
-                "control_jacobian",
-                args=args,
-                modifier="",
-            )
-
-        def ExtendedKalmanFilterProcessModel_covariance(
-            *, enable_calibration, enable_control
-        ):
-            args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-            if enable_calibration:
-                args.append(Arg("const Calibration&", "input_calibration"))
-            if enable_control:
-                args.append(Arg("const Control&", "input_control"))
-            return FunctionDeclaration(
-                "static typename ExtendedKalmanFilter::CovarianceT",
-                "covariance",
-                args=args,
-                modifier="",
-            )
-
-        ExtendedKalmanFilterProcessModel = ClassDef(
-            "class",
-            "ExtendedKalmanFilterProcessModel",
-            bases=[],
-            body=[
-                Public(),
-                ExtendedKalmanFilterProcessModel_model(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_process_jacobian(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_control_jacobian(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-                ExtendedKalmanFilterProcessModel_covariance(
-                    enable_calibration=generator.enable_calibration(),
-                    enable_control=generator.enable_control(),
-                ),
-            ],
-        )
-        body.append(ExtendedKalmanFilterProcessModel)
     else:  # enable_EKF == False
-        Model = ClassDef(
-            "class",
-            "Model",
-            bases=[],
-            body=[
-                Public(),
-                State_model(
-                    enable_control=generator.enable_control(),
-                    enable_calibration=generator.enable_calibration(),
-                ),
-            ],
-        )
+        yield fragments.Model(generator)
 
-        body.append(Model)
 
-    namespace = Namespace(name=generator.namespace, body=body)
+def header_from_ast(*, generator) -> str:
+    namespace = Namespace(
+        name=generator.namespace, body=_header_body(generator=generator)
+    )
     includes = [
         "#include <Eigen/Dense>    // Matrix",
     ]
     if generator.enable_EKF:
+        # TODO(buck): Remove this when innovations moved to ManagedFilter
         includes.append("#include <any>")
         includes.append("#include <optional>")
+        includes.append("#include <type_traits>")  # false_type
     header = HeaderFile(pragma=True, includes=includes, namespaces=[namespace])
     return header.compile(CompileState(indent=2))
 
 
-def source_from_ast(*, generator):
-    body = [
-        ConstructorDefinition(
-            "State", args=[], initializer_list=[("data", "DataT::Zero()")]
-        ),
-        ConstructorDefinition(
-            "State",
-            args=[Arg("const StateOptions&", "options")],
-            initializer_list=[
-                (
-                    "data",
-                    ", ".join(f"options.{name}" for name in generator.arglist_state),
-                ),
-            ],
-        ),
-    ]
+def _source_body(*, generator):
+    yield fragments.StateDefaultConstructor()
+    yield fragments.StateOptionsConstructor(generator)
 
     if generator.enable_calibration():
-        CalibrationDefaultConstructor = ConstructorDefinition(
-            "Calibration", args=[], initializer_list=[("data", "DataT::Zero()")]
-        )
-        CalibrationConstructor = ConstructorDefinition(
-            "Calibration",
-            args=[Arg("const CalibrationOptions&", "options")],
-            initializer_list=[
-                (
-                    "data",
-                    ", ".join(
-                        f"options.{name}" for name in generator.arglist_calibration
-                    ),
-                ),
-            ],
-        )
-        body.append(CalibrationDefaultConstructor)
-        body.append(CalibrationConstructor)
+        yield fragments.CalibrationDefaultConstructor()
+        yield fragments.CalibrationConstructor(generator)
 
     if generator.enable_control():
-        ControlDefaultConstructor = ConstructorDefinition(
-            "Control", args=[], initializer_list=[("data", "DataT::Zero()")]
-        )
-        ControlConstructor = ConstructorDefinition(
-            "Control",
-            args=[Arg("const ControlOptions&", "options")],
-            initializer_list=[
-                (
-                    "data",
-                    ", ".join(f"options.{name}" for name in generator.arglist_control),
-                ),
-            ],
-        )
-        body.append(ControlDefaultConstructor)
-        body.append(ControlConstructor)
+        yield fragments.ControlDefaultConstructor()
+        yield fragments.ControlConstructor(generator)
 
     if generator.enable_EKF:
-        standard_args = [Arg("double", "dt"), Arg("const StateAndVariance&", "input")]
-        if generator.enable_calibration():
-            standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if generator.enable_control():
-            standard_args.append(Arg("const Control&", "input_control"))
-        EKF_process_model = FunctionDef(
-            "StateAndVariance",
-            "ExtendedKalmanFilter::process_model",
-            modifier="",
-            args=standard_args,
-            body=[
-                FromFileTemplate(
-                    "process_model.cpp",
-                    inserts={
-                        "enable_control": generator.enable_control(),
-                        "enable_calibration": generator.enable_calibration(),
-                    },
-                ),
-            ],
-        )
-        body.append(EKF_process_model)
-        EKFPM_model = FunctionDef(
-            "State",
-            "ExtendedKalmanFilterProcessModel::model",
-            modifier="",
-            args=standard_args,
-            body=generator.process_model_body(),
-        )
-        body.append(EKFPM_model)
-        EKFPM_process_jacobian = FunctionDef(
-            "typename ExtendedKalmanFilter::ProcessJacobianT",
-            "ExtendedKalmanFilterProcessModel::process_jacobian",
-            modifier="",
-            args=standard_args,
-            body=generator.process_jacobian_body(),
-        )
-        body.append(EKFPM_process_jacobian)
-        EKFPM_control_jacobian = FunctionDef(
-            "typename ExtendedKalmanFilter::ControlJacobianT",
-            "ExtendedKalmanFilterProcessModel::control_jacobian",
-            modifier="",
-            args=standard_args,
-            body=generator.control_jacobian_body(),
-        )
-        body.append(EKFPM_control_jacobian)
-        EKFPM_covariance = FunctionDef(
-            "typename ExtendedKalmanFilter::CovarianceT",
-            "ExtendedKalmanFilterProcessModel::covariance",
-            modifier="",
-            args=standard_args,
-            body=generator.control_covariance_body(),
-        )
-        body.append(EKFPM_covariance)
+        yield fragments.EKF_process_model(generator)
+        yield fragments.EKFPM_model(generator)
+        yield fragments.EKFPM_process_jacobian(generator)
+        yield fragments.EKFPM_control_jacobian(generator)
+        yield fragments.EKFPM_covariance(generator)
 
         for reading_type in generator.reading_types():
-            standard_args = [
-                Arg("const StateAndVariance&", "input"),
-            ]
-            if generator.enable_calibration():
-                standard_args.append(Arg("const Calibration&", "input_calibration"))
-            standard_args.append(
-                Arg(f"const {reading_type.typename}&", "input_reading")
-            )
-            ReadingDefaultConstructor = ConstructorDefinition(
-                reading_type.typename,
-                args=[],
-                initializer_list=[("data", "DataT::Zero()")],
-            )
-            body.append(ReadingDefaultConstructor)
-            ReadingConstructor = ConstructorDefinition(
-                reading_type.typename,
-                args=[Arg(f"const {reading_type.typename}Options&", "options")],
-                initializer_list=[
-                    (
-                        "data",
-                        ", ".join(
-                            f"options.{name}"
-                            for name in sorted(
-                                list(reading_type.sensor_model_mapping.keys())
-                            )
-                        ),
-                    )
-                ],
-            )
-            body.append(ReadingConstructor)
-            ReadingSensorModel_model = FunctionDef(
-                reading_type.typename,
-                f"{reading_type.typename}SensorModel::model",
-                modifier="",
-                args=standard_args,
-                body=reading_type.SensorModel_model_body,
-            )
-            body.append(ReadingSensorModel_model)
-            ReadingSensorModel_covariance = FunctionDef(
-                f"{reading_type.typename}::CovarianceT",
-                f"{reading_type.typename}SensorModel::covariance",
-                modifier="",
-                args=standard_args,
-                body=reading_type.SensorModel_covariance_body,
-            )
-            body.append(ReadingSensorModel_covariance)
-            ReadingSensorModel_jacobian = FunctionDef(
-                f"{reading_type.typename}::SensorJacobianT",
-                f"{reading_type.typename}SensorModel::jacobian",
-                modifier="",
-                args=standard_args,
-                body=reading_type.SensorModel_jacobian_body,
-            )
-            body.append(ReadingSensorModel_jacobian)
+            yield fragments.ReadingDefaultConstructor(reading_type)
+            yield fragments.ReadingConstructor(reading_type)
+            yield fragments.ReadingSensorModel_model(generator, reading_type)
+            yield fragments.ReadingSensorModel_covariance(generator, reading_type)
+            yield fragments.ReadingSensorModel_jacobian(generator, reading_type)
     else:  # generator.enable_EKF == False
-        standard_args = [Arg("double", "dt"), Arg("const State&", "input_state")]
-        if generator.enable_calibration():
-            standard_args.append(Arg("const Calibration&", "input_calibration"))
-        if generator.enable_control():
-            standard_args.append(Arg("const Control&", "input_control"))
-        Model_model = FunctionDef(
-            "State",
-            "Model::model",
-            modifier="",
-            args=standard_args,
-            body=generator.model_body(),
-        )
-        body.append(Model_model)
+        yield fragments.Model_model(generator)
 
-    namespace = Namespace(name=generator.namespace, body=body)
+
+def source_from_ast(*, generator):
+    namespace = Namespace(
+        name=generator.namespace, body=_source_body(generator=generator)
+    )
     includes = [f"#include <{generator.header_include}>"]
     src = SourceFile(includes=includes, namespaces=[namespace])
     return src.compile(CompileState(indent=2))
@@ -1456,15 +795,12 @@ def _compile_impl(args, *, generator):
     header_str = "\n".join(header_from_ast(generator=generator))
     source_str = "\n".join(source_from_ast(generator=generator))
 
-    with open(args.header, "w") as header_file:
-        with open(args.source, "w") as source_file:
-            # Stack indents so an error in either file will write/close both the same way
+    with open(args.header, "w") as header_file, open(args.source, "w") as source_file:
+        print("Writing header arg {}".format(args.header))
+        header_file.write(header_str)
 
-            print("Writing header arg {}".format(args.header))
-            header_file.write(header_str)
-
-            print("Writing source arg {}".format(args.source))
-            source_file.write(source_str)
+        print("Writing source arg {}".format(args.source))
+        source_file.write(source_str)
 
     return CppCompileResult(
         success=True, header_path=args.header, source_path=args.source
@@ -1517,6 +853,7 @@ def compile_ekf(
         process_noise,
         sensor_models,
         extra_validation=config.extra_validation,
+        calibration_map=calibration_map,
     )
 
     args = _compile_argparse()

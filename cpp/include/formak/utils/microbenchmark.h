@@ -19,12 +19,12 @@ std::vector<double> random_input(size_t size);
 /// \brief Time the lambda function for each input
 template <typename InputT, typename Func>
 std::vector<std::chrono::nanoseconds> microbenchmark(
-    Func&& lambda, const std::vector<InputT>& inputs) {
+    Func&& lambda, const std::vector<InputT>& inputs, size_t count = 128) {
   std::vector<std::chrono::nanoseconds> times;
 
   for (const InputT& i : inputs) {
     const auto start = std::chrono::steady_clock::now();
-    for (int count = 0; count < 128; ++count) {
+    for (size_t j = 0; j < count; ++j) {
       lambda(i);
     }
     const auto end = std::chrono::steady_clock::now();

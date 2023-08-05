@@ -36,10 +36,9 @@ physical model derived from first principles describes both one complex model,
 as well as a space of models derived via simplifications, enhancements or even
 disconnected approximations from the original model. Using data from the system
 we hope to describe, we can select the appropriate model from the space. This
-process is very analogous to a machine learning model, where we have one idea of
-how to approximate the system and want to select machine learning models (in a
-more algorithmic sense of the term models) and their parameters to best fit
-data.
+process is analogous to a machine learning model, where we have one idea of how
+to approximate the system and want to select machine learning models (in a more
+algorithmic sense of the term models) and their parameters to best fit data.
 
 ### The Dream
 
@@ -313,10 +312,10 @@ Conceptually, a detailed, physical model derived from first principles describes
 both one complex model, as well as a space of models derived via
 simplifications, enhancements or even disconnected approximations from the
 original model. Using data from the system we hope to describe, we can select
-the appropriate model from the space. This process is very analogous to a
-machine learning model, where we have one idea of how to approximate the system
-and want to select machine learning models (in a more algorithmic sense of the
-term models) and their parameters to best fit data.
+the appropriate model from the space. This process is analogous to a machine
+learning model, where we have one idea of how to approximate the system and
+want to select machine learning models (in a more algorithmic sense of the term
+models) and their parameters to best fit data.
 
 As a psuedo-roadmap for future integrations, model selection, dimensionality
 reduction and the preprocessing steps to augment a model with extra features

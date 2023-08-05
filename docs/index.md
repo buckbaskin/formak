@@ -41,7 +41,7 @@ as follows. The user provides:
 
 - Model that describes the physics of the system
 - Execution criteria (e.g. memory usage, execution time)
-- Time series data for for the system
+- Time series data for the system
 
 and in return the user gets an optimal model.
 

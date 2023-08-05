@@ -1,40 +1,40 @@
-const State& state = input.state;                 // mu
-const Covariance& covariance = input.covariance;  // Sigma
+const State& mu = state.state;
+const Covariance& Sigma = state.covariance;
 
 // z_est = sensor_model()
 const ReadingT reading_est =
-    ReadingT::SensorModel::model(input,
+    ReadingT::SensorModel::model(state,
                                  // clang-format off
 {% if enable_calibration %}
                                  // clang-format on
-                                 input_calibration,
+                                 calibration,
                                  // clang-format off
-{% endif %}    // clang-format on
-                                 input_reading);  // z_est
+{% endif %}  // clang-format on
+                                 reading);      // z_est
 
 // H = Jacobian(z_est w.r.t. state)
 const typename ReadingT::SensorJacobianT H =
-    ReadingT::SensorModel::jacobian(input,
+    ReadingT::SensorModel::jacobian(state,
                                     // clang-format off
 {% if enable_calibration %}
                                     // clang-format on
-                                    input_calibration,
+                                    calibration,
                                     // clang-format off
 {% endif %}  // clang-format on
-                                    input_reading);
+                                    reading);
 
 // Project State Noise into Sensor Space
 // S = H * Sigma * H.T + Q_t
 const typename ReadingT::CovarianceT sensor_estimate_covariance =
-    H * covariance.data * H.transpose() +
-    ReadingT::SensorModel::covariance(input,
+    H * Sigma.data * H.transpose() +
+    ReadingT::SensorModel::covariance(state,
                                       // clang-format off
 {% if enable_calibration %}
                                       // clang-format on
-                                      input_calibration,
+                                      calibration,
                                       // clang-format off
 {% endif %}  // clang-format on
-                                      input_reading);
+                                      reading);
 
 // S_inv = inverse(S)
 const typename ReadingT::CovarianceT S_inv =
@@ -43,23 +43,23 @@ const typename ReadingT::CovarianceT S_inv =
 // Kalman Gain
 // K = Sigma * H.T * S_inv
 const typename ReadingT::KalmanGainT kalman_gain =
-    covariance.data * H.transpose() * S_inv;
+    Sigma.data * H.transpose() * S_inv;
 
 // Innovation
 // innovation = z - z_est
 const typename ReadingT::InnovationT innovation =
-    input_reading.data - reading_est.data;
+    reading.data - reading_est.data;
 _innovations[ReadingT::Identifier] = innovation;
 
 // Update State Estimate
 // next_state = state + K * innovation
 State next_state;
-next_state.data = state.data + kalman_gain * innovation;
+next_state.data = mu.data + kalman_gain * innovation;
 
 // Update Covariance
 // next_covariance = Sigma - K * H * Sigma
 Covariance next_covariance;
-next_covariance.data = covariance.data - kalman_gain * H * covariance.data;
+next_covariance.data = Sigma.data - kalman_gain * H * Sigma.data;
 
 // TODO(buck): Measurement Likelihood (optional)
 

@@ -5,7 +5,7 @@ Alpha! FormaK key functionality is under active development.
 The intended user experience is as follows. The user provides:
 - Model that describes the physics of the system
 - Execution criteria (e.g. memory usage, execution time)
-- Time series data for for the system
+- Time series data for the system
 
 The Five Key Elements the library provides to achieve this user experience are:
 1. Python Interface to define models

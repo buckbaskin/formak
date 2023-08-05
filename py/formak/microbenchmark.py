@@ -2,9 +2,7 @@ from datetime import datetime
 
 
 def microbenchmark(function, input_iterable):
-    """
-    Time the lambda function for each input
-    """
+    """Time the lambda function for each input."""
     if len(input_iterable) == 0:
         raise ValueError("Input Iterable must have at least one value")
 

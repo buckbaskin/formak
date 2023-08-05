@@ -5,7 +5,8 @@
 Start with either a `HeaderFile` or `SourceFile`, along with at least one
 `namespace`.
 
-Then keep building up the tree structure recursively.
+Then keep building up the tree structure recursively. I recommend starting with
+`ast_fragments` and only implementing new combinations when necessary.
 
 If you don't think something is supported, I'd recommend starting with
 `FromFileTemplate`. If you need to insert an arbitrary string, you can pass it

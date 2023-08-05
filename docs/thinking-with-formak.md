@@ -5,7 +5,7 @@ concepts that will come up and how FormaK thinks about the problem space.
 
 FormaK helps take a model from concept stage to production. This is done by
 taking the model through different stages of development.
-1. Model definition - detailed model of features
+1. Model definition - detailed model of features that represents a space of possible models
 2. Model optimization - fit against data to select parameters
 3. Model compilation - compile to Python or C++
 4. Model calibration
