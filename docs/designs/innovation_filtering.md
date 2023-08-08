@@ -1,6 +1,6 @@
 # Innovation Filtering
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-08-04
 Updated: 2023-08-04
 Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
