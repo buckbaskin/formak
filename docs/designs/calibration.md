@@ -1,6 +1,6 @@
 # Calibration
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-05-06
 Updated: 2023-05-06
 Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)

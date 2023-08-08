@@ -1,6 +1,6 @@
 # C++ Library for Model Evaluation
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-01-08
 Updated: 2023-04-05
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)

@@ -1,6 +1,6 @@
 # Python UI Demo
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
 Status: Merged

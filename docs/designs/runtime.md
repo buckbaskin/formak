@@ -1,6 +1,6 @@
 # FormaK Managed Runtime
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-07-13
 Updated: 2023-07-15
 Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)

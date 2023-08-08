@@ -1,6 +1,6 @@
 # Generate C++ from AST
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-06-12
 Updated: 2023-06-12
 Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
