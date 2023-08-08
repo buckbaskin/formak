@@ -1,6 +1,6 @@
 # Scikit-Learn integration
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2022-09-26
 Updated: 2022-12-21
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)

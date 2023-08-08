@@ -1,6 +1,6 @@
 # FormaK V0
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2022-08-24
 Updated: 2022-08-26
 

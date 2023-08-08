@@ -1,6 +1,6 @@
 # Python Library for Model Evaluation
 
-Author: Buck Baskin @bebaskin
+Author: Buck Baskin @buck@fosstodon.org
 Created: 2022-08-26
 Updated: 2022-09-13
 Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
