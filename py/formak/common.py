@@ -6,6 +6,14 @@ from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 
 
+class UiModelBase:
+    """
+    Use as a base class for ui.Model, but in a separate file from ui.Model so that formak.python doesn't directly depend on formak.ui just for typing
+    """
+
+    pass
+
+
 def model_validation(
     state_model,
     process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],

@@ -41,6 +41,7 @@ class Config:
     common_subexpression_elimination: bool = True
     extra_validation: bool = False
     max_dt_sec: float = 0.1
+    innovation_filtering: float = 5.0
 
     def ccode(self):
         if self.max_dt_sec < 1e-9:
@@ -70,6 +71,11 @@ class Config:
                         ),
                         MemberDeclaration(
                             "static constexpr double", "max_dt_sec", self.max_dt_sec
+                        ),
+                        MemberDeclaration(
+                            "static constexpr double",
+                            "innovation_filtering",
+                            self.innovation_filtering,
                         ),
                     ],
                 )

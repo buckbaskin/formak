@@ -31,6 +31,7 @@ class Config:
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
     max_dt_sec: float = 0.1
+    innovation_filtering: float = 5.0
 
 
 class BasicBlock:
@@ -803,7 +804,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 
 def compile_ekf(
-    state_model,
+    state_model: common.UiModelBase,
     process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     sensor_noises,

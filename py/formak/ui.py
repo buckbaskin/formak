@@ -4,8 +4,10 @@ from formak.exceptions import ModelDefinitionError
 from sympy import Matrix, Symbol, simplify, symbols
 from sympy.parsing.sympy_parser import parse_expr
 
+from formak.common import UiModelBase
 
-class Model:
+
+class Model(UiModelBase):
     def __init__(
         self,
         dt,
