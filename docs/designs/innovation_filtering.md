@@ -76,7 +76,7 @@ but it will be fairly math heavy to ensure the changes are working as intended.
 
 #### Math
 
-The math has been outlined above:
+The math has been outlined above [1]:
 $$\tilde{y} = y - Hx$$
 $$C = HPH^{T} + R$$
 $$\tilde{y}^{T} C^{-1} \tilde{y} - m > k \sqrt{2m}$$
@@ -171,6 +171,9 @@ $$ \xi_{K_{r}} = NIS
 F_{K}^{\chi^{2}} = Prob{\chi^{2}_n < \overline{\xi_K}
 d_{i(k)} = F_{K}^{\chi^{2}} - \dfrac{i(k)}{N_{K}}
 Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert$$
+
+This consistency calculation is based on [2]
+[Optimal Tuning Of A Kalman Filter Using Genetic Algorithms by Yaakov Oshman and Ilan Shaviv](https://arc.aiaa.org/doi/10.2514/6.2000-4558), but implemented with the NIS metric from [1].
 
 ### Visualization
 
