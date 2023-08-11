@@ -1,8 +1,62 @@
+#include <featuretest/nonlinear.h>
 #include <gtest/gtest.h>
 
 namespace featuretest {
 
+double radians(double degrees) {
+  // Precision isn't important, but probably should be changed for a std math
+  // operation
+  return degrees / 180 * 3.14159;
+}
+
 TEST(InnovationFilteringTest, ObviousInnovationRejections) {
+  // ekf, compass_model = make_ekf()
+  // # Note: state = heading, x, y
+  // state = np.array([[0.0, 1.0, 0.0]]).transpose()
+  // covariance = np.eye(3)
+  featuretest::State state(
+      featuretest::StateOptions{.x = 1.0, .y = 0.0, .heading = 0.0});
+
+  // control = np.array([[0.0, 1.0]]).transpose()
+  featuretest::Control control{.velocity = 0.0, ._heading_err = 1.0};
+
+  // mf = runtime.ManagedFilter(
+  //     ekf=ekf, start_time=0.0, state=state, covariance=covariance
+  // )
+  formak::runtime::ManagedFilter<featuretest::ExtendedKalmanFilter> mf(
+      0.0, {
+               .state = state,
+               .covariance = {},
+           });
+
+  // readings = np.random.default_rng(seed=3).normal(
+  //     loc=0.0, scale=TRUE_SCALE / 2.0, size=(100,)
+  // )
+  std::vector<double> readings;
+
+  // readings[readings.shape[0] // 4] = radians(180.0)
+  // readings[readings.shape[0] // 3] = radians(180.0)
+  // readings[readings.shape[0] // 2] = radians(180.0)
+  readings[readings.size() / 4] = radians(180.0);
+  readings[readings.size() / 3] = radians(180.0);
+  readings[readings.size() / 2] = radians(180.0);
+
+  // TODO(buck): for loop
+  // for idx, r in enumerate(readings):
+  //     s = mf.tick(
+  //         0.1 * idx,
+  //         control=control,
+  //         readings=[
+  //             runtime.StampedReading(0.1 * idx - 0.05, "compass",
+  //             np.array([[r]]))
+  //         ],
+  //     )
+  auto state0p1 = mf.tick(0.1, control);
+
+  // TODO(buck): assertions in for loop
+  //     if abs(compass_model(s.state)) >= TRUE_SCALE * 4:
+  //         print({"idx": idx, "reading": degrees(r)})
+  //     assert abs(compass_model(s.state)) < TRUE_SCALE * 4
   FAIL() << "Not Implemented";
 }
 
