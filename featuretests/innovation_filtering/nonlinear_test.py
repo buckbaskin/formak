@@ -49,7 +49,7 @@ def make_ekf():
     return ekf, compass_model.model
 
 
-def test_tick_time_only():
+def test_obvious_innovation_rejections():
     ekf, compass_model = make_ekf()
     # Note: state = heading, x, y
     state = np.array([[0.0, 1.0, 0.0]]).transpose()
