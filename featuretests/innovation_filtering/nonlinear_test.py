@@ -35,7 +35,7 @@ def make_ekf():
 
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
-    config = python.Config(innovation_filtering=True)
+    config = python.Config(innovation_filtering=4)
 
     ekf = python.compile_ekf(
         state_model=model,

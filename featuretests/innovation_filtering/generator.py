@@ -1,34 +1,46 @@
+"""
+Innovation Filtering Featuretest
+
+Create a model with states:
+- x, y, heading, velocity model
+
+Provide heading readings, expect rejecting 180 degree heading errors.
+Nonlinear model provides clear divergence signal. If innovation filtering isn't
+working as expected, then the model will flip into the wrong direction.
+"""
+from math import degrees, radians
+
 import numpy as np
+from sympy import cos, sin
 
 from formak import cpp, ui
 
+TRUE_SCALE = radians(5.0)
+
 dt = ui.Symbol("dt")
 
-tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
-
-thrust = ui.Symbol("thrust")
-
-state = set(tp.values())
-control = {thrust}
+x, y, heading, velocity, _heading_err = ui.symbols(
+    ["x", "y", "heading", "velocity", "_heading_err"]
+)
+state = {x, y, heading}
+control = {velocity, _heading_err}
 
 state_model = {
-    tp["mass"]: tp["mass"],
-    tp["z"]: tp["z"] + dt * tp["v"],
-    tp["v"]: tp["v"] + dt * tp["a"],
-    tp["a"]: -9.81 * tp["mass"] + thrust,
+    x: x + dt * velocity * cos(heading),
+    y: y + dt * velocity * sin(heading),
+    heading: heading + _heading_err,
 }
 
 model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
+config = cpp.Config(innovation_filtering=4)
+
 cpp_implementation = cpp.compile_ekf(
     state_model=model,
-    process_noise={thrust: 1.0},
-    sensor_models={
-        "simple": {ui.Symbol("v"): ui.Symbol("v")},
-        "accel": {ui.Symbol("a"): ui.Symbol("a")},
-    },
-    sensor_noises={"simple": np.eye(1), "accel": np.eye(1)},
-    config={"common_subexpression_elimination": True, "max_dt_sec": 0.05},
+    process_noise={velocity: 1.0, _heading_err: 0.1},
+    sensor_models={"compass": {heading: heading}},
+    sensor_noises={"compass": TRUE_SCALE * np.eye(1)},
+    config=config,
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
