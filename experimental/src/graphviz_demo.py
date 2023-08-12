@@ -47,7 +47,7 @@ def enumerate_expression(expr, subgraph_name='<>', *, path=None, approx_cse=Fals
     path.append(render_expr(expr))
 
     for idx, child in enumerate(expr.args):
-        # path.append(idx)
+        path.append(str(idx))
 
         for child_id, child_expr, child_children in enumerate_expression(child, subgraph_name, path=path, approx_cse=approx_cse):
             yield child_id, child_expr, child_children
@@ -55,7 +55,7 @@ def enumerate_expression(expr, subgraph_name='<>', *, path=None, approx_cse=Fals
                 # This is false when yielding a grand-child (child's child)
                 child_ids.append(child_id)
 
-        # path.pop()
+        path.pop()
 
     if len(expr.args) > 0 or not approx_cse:
         id_ = f'{subgraph_name}|' + '|'.join(path)
