@@ -80,7 +80,4 @@ class ManagedFilter:
                 output_time - iter_time, state, covariance, control
             )
 
-        print("expected_iterations", "self.current_time", "output_time", "iter_time")
-        print(expected_iterations, self.current_time, output_time, iter_time)
-
         return output_time, StateAndVariance(state, covariance)
