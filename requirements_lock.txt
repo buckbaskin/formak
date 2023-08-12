@@ -20,6 +20,10 @@ exceptiongroup==1.1.1 \
     # via
     #   hypothesis
     #   pytest
+graphviz==0.20.1 \
+    --hash=sha256:587c58a223b51611c0cf461132da386edd896a029524ca61a1462b880bf97977 \
+    --hash=sha256:8c58f14adaa3b947daf26c19bc1e98c4e0702cdc31cf99153e6f06904d492bf8
+    # via -r requirements.in
 hypothesis==6.47.5 \
     --hash=sha256:87049b781ee11ec1c7948565b889ab02e428a1e32d427ab4de8fdb3649242d06 \
     --hash=sha256:e0c1e253fc97e7ecdb9e2bbff2cf815d8739e0d1d3d093d67c3af5bb6a7211b0
