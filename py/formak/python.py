@@ -1,6 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
+from math import sqrt
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -570,9 +571,18 @@ class ExtendedKalmanFilter:
         )
         S_inv = np.linalg.inv(S_t)
 
-        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
-
         self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
+
+        if self.config.innovation_filtering is not None:
+            editing_threshold = self.config.innovation_filtering
+            normalized_innovation = innovation.transpose() * S_inv * innovation
+            expected_innovation = (
+                editing_threshold * sqrt(2 * sensor_size) + sensor_size
+            )
+            if normalized_innovation > expected_innovation:
+                return StateAndCovariance(state, covariance)
+
+        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
 
         next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
         assert next_covariance.shape == covariance.shape
