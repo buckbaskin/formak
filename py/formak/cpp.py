@@ -741,6 +741,7 @@ def header_from_ast(*, generator) -> str:
     )
     includes = [
         "#include <Eigen/Dense>    // Matrix",
+        "#include <iostream>",
     ]
     if generator.enable_EKF:
         # TODO(buck): Remove this when innovations moved to ManagedFilter

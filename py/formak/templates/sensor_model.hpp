@@ -51,6 +51,35 @@ const typename ReadingT::InnovationT innovation =
     reading.data - reading_est.data;
 _innovations[ReadingT::Identifier] = innovation;
 
+if constexpr (cpp::Config::innovation_filtering > 0.0) {
+  constexpr double editing_threshold = cpp::Config::innovation_filtering;
+  constexpr size_t reading_size = ReadingT::size;
+  // y.T * C^{-1} * y - m > k * sqrt(2 * m)
+  // y.T * C^{-1} * y > k * sqrt(2 * m) + m
+  // Time Dependent > Consteval
+  std::cout << "innovation size: "
+            << (innovation.transpose() * innovation)(0, 0) << std::endl;
+  std::cout << "normalized innovation: "
+            << (innovation.transpose() * sensor_estimate_covariance.inverse() *
+                innovation)(0, 0)
+            << std::endl;
+  std::cout << innovation.transpose() << " * "
+            << sensor_estimate_covariance.inverse() << " * " << innovation
+            << " > " << editing_threshold << " * " << sqrt(2 * reading_size)
+            << " + " << reading_size << std::endl;
+  double normalizedInnovation =
+      (innovation.transpose() * sensor_estimate_covariance.inverse() *
+       innovation)(0, 0);
+  constexpr double innovationExpectation =
+      editing_threshold * std::sqrt(2 * reading_size) + reading_size;
+  std::cout << "normalized: " << normalizedInnovation
+            << " expected: " << innovationExpectation << std::endl;
+  if (normalizedInnovation > innovationExpectation) {
+    // Skip update
+    return state;
+  }
+}
+
 // Update State Estimate
 // next_state = state + K * innovation
 State next_state;
