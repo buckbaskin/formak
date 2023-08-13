@@ -5,7 +5,7 @@ Created: 2023-08-04
 Updated: 2023-08-04
 Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
-Status: 1. Design
+Status: 2. Write a feature test(s)
 
 
 ## Overview
@@ -39,18 +39,21 @@ expects and then can reject readings with a divergence that is too large to be
 acceptable.
 
 How should the filter measure this divergence? The filter can use the
-measurement innovation $$\tilde{y} = y - h(x)$$ where y is the measurement, h
-is the measurement model and x is the current state estimate and $\tilde{y}$ is
-the resulting innovation. Given the innovation, the definition of too large can
-be calculated from the expected covariance: $$\tilde{y}^{T} C^{-1} \tilde{y} -
-m > k \sqrt{2m}$$ where $C$ is the expected covariance of the measurement, $m$
-is the dimension of the measurement vector and $k$ is the editing threshold. If
+measurement innovation $$\tilde{z} = z_{t} - \hat{z_{t}}$$ where $z_{t}$ is the
+measurement, $\hat{z_{t}}$ the predicted reading and $\tilde{z}$ is the
+resulting innovation. Given the innovation, the definition of too large can be
+calculated from the expected covariance: $$\tilde{z}^{T} S^{-1} \tilde{z} - m >
+k \sqrt{2m}$$ where $S$ is the expected covariance of the measurement, $m$ is
+the dimension of the measurement vector and $k$ is the editing threshold. If
 this inequality is true, then the measurement is "too large" and should be
-filtered (edited). [1]
+filtered (edited). [1] [2]
 
 [1] This approach to innovation filtering, referred to as editing in the text,
 is adapted from "Advanced Kalman Filtering, Least Squares and Modeling" by
 Bruce P. Gibbs (referred to as [1] or AKFLSM)
+[2] The notion follows the conventioned defined in the
+[Mathematical Glossary](../mathematical-glossary.md) which itself is based on
+"Probabilistic Robotics" by Thrun et. al.
 
 Innovations take advantage of the property that errors are white (normally
 distributed) when all models are correct and, when operating in steady state,
@@ -77,14 +80,25 @@ but it will be fairly math heavy to ensure the changes are working as intended.
 #### Math
 
 The math has been outlined above [1]:
-$$\tilde{y} = y - Hx$$
-$$C = HPH^{T} + R$$
-$$\tilde{y}^{T} C^{-1} \tilde{y} - m > k \sqrt{2m}$$
+$$\tilde{z} = z - \hat{z}$$
+$$S = H \overline{\Sigma} H^{T} + Q$$
+$$\tilde{z}^{T} S^{-1} \tilde{z} - m > k \sqrt{2m}$$
 
 To provide the maximum value from the innovation filtering, the calculation of
 whether or not to reject the sensor update should be made as early as possible
-(as soon as $\tilde{y}$ is calculated). That way there is no unnecessary wasted
+(as soon as $\tilde{z}$ is calculated). That way there is no unnecessary wasted
 computation.
+
+Revision:
+The above notation:
+$$\tilde{z}^{T} S^{-1} \tilde{z} - m > k \sqrt{2m}$$
+
+can be reorganized as
+
+$$\tilde{z}^{T} S^{-1} \tilde{z} > k \sqrt{2m} + m$$
+
+Which has the benefit that the left side is reading-dependent and the right
+side is a constant expression for each reading.
 
 #### Filter Health
 
@@ -225,3 +239,8 @@ Additional testing should be performed on measurements and filters of multiple s
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2023-08-13
+
+Revise to a consistent mathematical notation. Also document a revision in how
+the math for innovation filtering is stated.
