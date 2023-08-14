@@ -452,10 +452,53 @@ class ExtendedKalmanFilter:
 
         state = np.zeros((self.state_size, 1))
         for idx, key in enumerate(allowed_keys):
-            print(key, kwargs)
             if key in kwargs:
-                state[key, 0] = kwargs[key]
+                state[idx, 0] = kwargs[key]
         return state
+
+    def make_variance(self, **kwargs):
+        allowed_keys = [str(arg) for arg in self.arglist_state]
+        for key in kwargs:
+            if key not in allowed_keys:
+                raise TypeError(
+                    f"make_state() got an unexpected keyword argument {key}"
+                )
+
+        state = np.eye(self.state_size)
+        for idx, key in enumerate(allowed_keys):
+            if key in kwargs:
+                state[idx, idx] = kwargs[key]
+        return state
+
+    def make_control(self, **kwargs):
+        allowed_keys = [str(arg) for arg in self._state_model.arglist_control]
+        for key in kwargs:
+            if key not in allowed_keys:
+                raise TypeError(
+                    f"make_control() got an unexpected keyword argument {key}"
+                )
+
+        control = np.zeros((self.control_size, 1))
+        for idx, key in enumerate(allowed_keys):
+            if key in kwargs:
+                control[idx, 0] = kwargs[key]
+        return control
+
+    def make_reading(self, sensor_key, **kwargs):
+        readings = self.params["sensor_models"][sensor_key].readings
+
+        allowed_keys = [str(r) for r in readings]
+        for key in kwargs:
+            if key not in allowed_keys:
+                raise TypeError(
+                    f"make_reading() got an unexpected keyword argument {key}"
+                )
+
+        control = np.zeros((len(readings), 1))
+        for idx, key in enumerate(allowed_keys):
+            if key in kwargs:
+                control[idx, 0] = kwargs[key]
+        return control
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
