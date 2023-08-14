@@ -442,6 +442,21 @@ class ExtendedKalmanFilter:
         self.innovations = {}
         self.sensor_prediction_uncertainty = {}
 
+    def make_state(self, **kwargs):
+        allowed_keys = [str(arg) for arg in self.arglist_state]
+        for key in kwargs:
+            if key not in allowed_keys:
+                raise TypeError(
+                    f"make_state() got an unexpected keyword argument {key}"
+                )
+
+        state = np.zeros((self.state_size, 1))
+        for idx, key in enumerate(allowed_keys):
+            print(key, kwargs)
+            if key in kwargs:
+                state[key, 0] = kwargs[key]
+        return state
+
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
             self._impl_process_jacobian.execute(

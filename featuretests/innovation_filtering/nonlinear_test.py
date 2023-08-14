@@ -51,8 +51,7 @@ def make_ekf():
 
 def test_obvious_innovation_rejections():
     ekf, compass_model = make_ekf()
-    # Note: state = heading, x, y
-    state = ekf.make_state({"x": 1.0, "y": 0.0, "heading": 0.0})
+    state = ekf.make_state(x=1.0, y=0.0, heading=0.0, example=0.0)
     covariance = ekf.make_variance({"x": 1.0, "y": 1.0, "heading": 1.0})
     control = ekf.make_control({"velocity": 1.0})
     mf = runtime.ManagedFilter(
