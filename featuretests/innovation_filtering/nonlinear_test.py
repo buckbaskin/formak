@@ -41,7 +41,7 @@ def make_ekf():
         state_model=model,
         process_noise={velocity: 1.0, _heading_err: 0.1},
         sensor_models={"compass": {heading: heading}},
-        sensor_noises={"compass": TRUE_SCALE * np.eye(1)},
+        sensor_noises={"compass": {heading: 1.0}},
         config=config,
     )
     compass_model = python.SensorModel(model, {heading: heading}, {}, config)
@@ -52,9 +52,9 @@ def make_ekf():
 def test_obvious_innovation_rejections():
     ekf, compass_model = make_ekf()
     # Note: state = heading, x, y
-    state = np.array([[0.0, 1.0, 0.0]]).transpose()
-    covariance = np.eye(3)
-    control = np.array([[0.0, 1.0]]).transpose()
+    state = ekf.make_state({"x": 1.0, "y": 0.0, "heading": 0.0})
+    covariance = ekf.make_variance({"x": 1.0, "y": 1.0, "heading": 1.0})
+    control = ekf.make_control({"velocity": 1.0})
     mf = runtime.ManagedFilter(
         ekf=ekf, start_time=0.0, state=state, covariance=covariance
     )
@@ -72,7 +72,9 @@ def test_obvious_innovation_rejections():
             0.1 * idx,
             control=control,
             readings=[
-                runtime.StampedReading(0.1 * idx - 0.05, "compass", np.array([[r]]))
+                runtime.StampedReading(
+                    0.1 * idx - 0.05, "compass", ekf.make_reading("compass", r)
+                )
             ],
         )
 

@@ -286,7 +286,7 @@ class ExtendedKalmanFilter:
         state_model,
         process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
-        sensor_noises,
+        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         config,
         calibration_map=None,
     ):
@@ -392,6 +392,8 @@ class ExtendedKalmanFilter:
         self, state_model, sensor_models, sensor_noises, calibration_map, config
     ):
         assert set(sensor_models.keys()) == set(sensor_noises.keys())
+        assert isinstance(sensor_noises, dict)
+        assert len(sensor_noises) == len(sensor_models)
 
         self.params["sensor_models"] = {
             k: SensorModel(
@@ -403,10 +405,8 @@ class ExtendedKalmanFilter:
             for k, model in sensor_models.items()
         }
         for k in self.params["sensor_models"].keys():
-            assert sensor_noises[k].shape == (
-                self.params["sensor_models"][k].sensor_size,
-                self.params["sensor_models"][k].sensor_size,
-            )
+            assert isinstance(sensor_noises[k], dict)
+            assert len(sensor_noises[k]) == self.params["sensor_models"][k].sensor_size
 
         self.params["sensor_noises"] = sensor_noises
 
