@@ -162,15 +162,19 @@ an approach like scikit-learn's
 
 #### Metric / Score Function
 
-Metric to minimize: Normalize innovation squared (NIS). NIS is defined as
+Metric to minimize: Normalized Innovation Squared (NIS). NIS is defined as
 
-$$e_z = z - h(x)
-S = H P H^{T} + R
-NIS = e_z^{T} S^{-1} e_z$$
+$$\tilde{z} = z - \hat{z}
+S = H \overline{\Sigma} H^{T} + Q
+NIS = \tilde{z}^{T} S^{-1} \tilde{z}$$
 
-Roughly, it looks at the magnitude of the reading error $e_z$ vs the expected
-variation $S$. FormaK uses the NIS metric because it doesn't require ground
-truth data. An alternative, "NEES" looks at the errors vs ground truth.
+Roughly, it looks at the magnitude of the reading error $\tilde{z}$ vs the
+expected variation $S$. FormaK uses the NIS metric because it doesn't require
+ground truth data. An alternative, Normalized Estimation Error Squared (NEES)
+looks at the errors vs ground truth. [3]
+
+[3] NEES definition taken from "Kalman Filter Tuning with Bayesian
+Optimization" by Chen et. al.
 
 One small problem with this measure:
 1. The score will decrease consistently as the size of the error goes down (this is good, this means that the model is more accurate
