@@ -408,7 +408,12 @@ class ExtendedKalmanFilter:
             assert isinstance(sensor_noises[k], dict)
             assert len(sensor_noises[k]) == self.params["sensor_models"][k].sensor_size
 
-        self.params["sensor_noises"] = sensor_noises
+        matrix_sensor_noises = {}
+        for sensor_key, mapping in sensor_noises.items():
+            matrix_sensor_noises[sensor_key] = self.make_reading_variance(
+                sensor_key, mapping
+            )
+        self.params["sensor_noises"] = matrix_sensor_noises
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
@@ -494,11 +499,27 @@ class ExtendedKalmanFilter:
                     f"make_reading() got an unexpected keyword argument {key}"
                 )
 
-        control = np.zeros((len(readings), 1))
+        reading = np.zeros((len(readings), 1))
         for idx, key in enumerate(allowed_keys):
             if key in kwargs:
-                control[idx, 0] = kwargs[key]
-        return control
+                reading[idx, 0] = kwargs[key]
+        return reading
+
+    def make_reading_variance(self, sensor_key, mapping):
+        readings = self.params["sensor_models"][sensor_key].readings
+
+        allowed_keys = readings
+        for key in mapping:
+            if key not in allowed_keys:
+                raise TypeError(
+                    f"make_reading_variance() got an unexpected key argument {key} type {type(key)}"
+                )
+
+        covariance = np.eye(len(readings))
+        for idx, key in enumerate(allowed_keys):
+            if key in mapping:
+                covariance[idx, idx] = mapping[key]
+        return covariance
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
