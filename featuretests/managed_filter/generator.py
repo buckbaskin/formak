@@ -27,7 +27,7 @@ cpp_implementation = cpp.compile_ekf(
         "simple": {ui.Symbol("v"): ui.Symbol("v")},
         "accel": {ui.Symbol("a"): ui.Symbol("a")},
     },
-    sensor_noises={"simple": np.eye(1), "accel": np.eye(1)},
+    sensor_noises={"simple": {tp["v"]: 1.0}, "accel": {tp["a"]: 1.0}},
     config={"common_subexpression_elimination": True, "max_dt_sec": 0.05},
 )
 

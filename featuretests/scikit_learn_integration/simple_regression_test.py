@@ -26,7 +26,7 @@ def test_like_sklearn_regression():
             "z": {ui.Symbol("z"): ui.Symbol("z")},
             "v": {ui.Symbol("v"): ui.Symbol("v")},
         },
-        "sensor_noises": {"z": np.eye(1), "v": np.eye(1)},
+        "sensor_noises": {"z": {ui.Symbol("z"): 1.0}, "v": {ui.Symbol("v"): 1.0}},
     }
     model = python.compile_ekf(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params

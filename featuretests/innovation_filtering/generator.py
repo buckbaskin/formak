@@ -39,7 +39,7 @@ cpp_implementation = cpp.compile_ekf(
     state_model=model,
     process_noise={velocity: 1.0, _heading_err: 0.1},
     sensor_models={"compass": {heading: heading}},
-    sensor_noises={"compass": TRUE_SCALE * np.eye(1)},
+    sensor_noises={"compass": {heading: TRUE_SCALE}},
     config=config,
 )
 
