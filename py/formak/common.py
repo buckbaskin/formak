@@ -117,3 +117,27 @@ def named_vector(name, arglist):
             return f"{name}({kwargs})"
 
     return types.new_class(name, bases=(_NamedVector,))
+
+
+def named_covariance(name, arglist):
+    class _NamedCovariance:
+        def __init__(self, **kwargs):
+            self._kwargs = kwargs
+
+            allowed_keys = [str(arg) for arg in arglist]
+            for key in kwargs:
+                if key not in allowed_keys:
+                    raise TypeError(
+                        f"{name}() got an unexpected keyword argument {key}"
+                    )
+
+            self.data = np.eye(len(arglist))
+            for idx, key in enumerate(allowed_keys):
+                if key in kwargs:
+                    self.data[idx, idx] = kwargs[key]
+
+        def __repr__(self):
+            kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
+            return f"{name}({kwargs})"
+
+    return types.new_class(name, bases=(_NamedCovariance,))
