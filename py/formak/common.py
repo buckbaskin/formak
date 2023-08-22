@@ -1,6 +1,8 @@
+import types
 from itertools import product
 from typing import Dict, Tuple, Union
 
+import numpy as np
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
@@ -91,3 +93,27 @@ def model_validation(
             raise ModelConstructionError(
                 f"Model has solutions in state space where covariance will collapse to zero. Example Solutions:\n -{solution_repr}"
             )
+
+
+def named_vector(name, arglist):
+    class _NamedVector:
+        def __init__(self, **kwargs):
+            self._kwargs = kwargs
+
+            allowed_keys = [str(arg) for arg in arglist]
+            for key in kwargs:
+                if key not in allowed_keys:
+                    raise TypeError(
+                        f"{name}() got an unexpected keyword argument {key}"
+                    )
+
+            self.data = np.zeros((len(arglist), 1))
+            for idx, key in enumerate(allowed_keys):
+                if key in kwargs:
+                    self.data[idx, 0] = kwargs[key]
+
+        def __repr__(self):
+            kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
+            return f"{name}({kwargs})"
+
+    return types.new_class(name, bases=(_NamedVector,))
