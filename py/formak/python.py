@@ -130,6 +130,10 @@ class Model:
             + self.arglist_control
         )
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+
         self.calibration_vector = np.zeros((0, 0))
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -177,39 +181,27 @@ class Model:
                 )
             control_vector = np.zeros((0, 1))
 
-        assert isinstance(dt, float)
-        assert isinstance(state, np.ndarray)
-        assert isinstance(control_vector, np.ndarray)
-
-        assert state.shape == (self.state_size, 1)
-        assert control_vector.shape == (self.control_size, 1)
-
-        next_state = np.zeros((self.state_size, 1))
-        for i, (state_id, result) in enumerate(
-            zip(
-                self.arglist_state,
-                self._impl.execute(
-                    dt, *state, *self.calibration_vector, *control_vector
-                ),
+        try:
+            assert isinstance(dt, float)
+            assert isinstance(state, self.State)
+            assert isinstance(control_vector, self.Control)
+        except AssertionError:
+            print(
+                f"model({type(dt)} {dt}, {type(state)} {state}, {type(control_vector)} {control_vector}"
             )
-        ):
-            try:
-                next_state[i, 0] = result
-            except (TypeError, ValueError) as e:
-                print(
-                    "%s when trying to process process model for state %s"
-                    % (
-                        type(e),
-                        state_id,
-                    )
+            raise
+
+        next_state = self.State(
+            **{
+                state_id: result
+                for state_id, result in zip(
+                    self.arglist_state,
+                    self._impl.execute(
+                        dt, *state, *self.calibration_vector, *control_vector
+                    ),
                 )
-                print(
-                    f"given:\nstate: {state}\ncalibration: {self.calibration_vector}\ncontrol: {control_vector}"
-                )
-                print("expected: float")
-                if "result" in locals():
-                    print("found: {}, {}".format(type(result), result))
-                raise
+            }
+        )
 
         return next_state
 
@@ -303,9 +295,15 @@ class ExtendedKalmanFilter:
         self.control_size = len(state_model.control)
         self.calibration_size = len(state_model.calibration)
         self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
         self.arglist_calibration = sorted(
             list(state_model.calibration), key=lambda x: x.name
         )
+
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         self.params = {
             "process_noise": None,
@@ -338,8 +336,8 @@ class ExtendedKalmanFilter:
 
         process_noise_matrix = np.eye(self._state_model.control_size)
 
-        for iIdx, iSymbol in enumerate(self._state_model.arglist_control):
-            for jIdx, jSymbol in enumerate(self._state_model.arglist_control):
+        for iIdx, iSymbol in enumerate(self.arglist_control):
+            for jIdx, jSymbol in enumerate(self.arglist_control):
                 if (iSymbol, jSymbol) in process_noise:
                     value = process_noise[(iSymbol, jSymbol)]
                 elif (jSymbol, iSymbol) in process_noise:
@@ -369,9 +367,7 @@ class ExtendedKalmanFilter:
 
         symbolic_control_jacobian = []
         if self.control_size > 0:
-            symbolic_control_jacobian = process_matrix.jacobian(
-                self._state_model.arglist_control
-            )
+            symbolic_control_jacobian = process_matrix.jacobian(self.arglist_control)
 
         self._impl_process_jacobian = BasicBlock(
             arglist=self._state_model.arglist,
@@ -476,7 +472,7 @@ class ExtendedKalmanFilter:
         return state
 
     def make_control(self, **kwargs):
-        allowed_keys = [str(arg) for arg in self._state_model.arglist_control]
+        allowed_keys = [str(arg) for arg in self.arglist_control]
         for key in kwargs:
             if key not in allowed_keys:
                 raise TypeError(
@@ -566,9 +562,9 @@ class ExtendedKalmanFilter:
             control = np.zeros((0, 1))
 
         try:
-            assert isinstance(state, np.ndarray)
-            assert isinstance(covariance, np.ndarray)
-            assert isinstance(control, np.ndarray)
+            assert isinstance(state, self.State)
+            assert isinstance(covariance, self.Covariance)
+            assert isinstance(control, self.Control)
         except AssertionError:
             print(
                 "process_model(dt: %s, state: %s, covariance: %s, control: %s)"
@@ -576,36 +572,28 @@ class ExtendedKalmanFilter:
             )
             raise
 
-        try:
-            assert state.shape == (self.state_size, 1)
-            assert covariance.shape == (self.state_size, self.state_size)
-            assert control.shape == (self.control_size, 1)
-        except AssertionError:
-            print(
-                "process_model(dt: %s, state: %s, covariance: %s, control: %s)"
-                % (dt, state.shape, covariance.shape, control.shape)
-            )
-            raise
-
         # TODO(buck): CSE across the whole process computation (model, jacobians)
         G_t = self.process_jacobian(dt, state, control)
         V_t = self.control_jacobian(dt, state, control)
 
-        next_state_covariance = np.matmul(G_t, np.matmul(covariance, G_t.transpose()))
-        assert next_state_covariance.shape == covariance.shape
+        next_state_covariance = np.matmul(
+            G_t, np.matmul(covariance.data, G_t.transpose())
+        )
+        assert next_state_covariance.shape == covariance.shape()
 
         next_control_covariance = np.matmul(
             V_t, np.matmul(self.params["process_noise"], V_t.transpose())
         )
-        assert next_control_covariance.shape == covariance.shape
+        assert next_control_covariance.shape == covariance.shape()
 
         next_covariance = next_state_covariance + next_control_covariance
-        assert next_covariance.shape == covariance.shape
+        assert next_covariance.shape == covariance.shape()
 
-        next_state = self._state_model.model(dt, state, control)
-        assert next_state.shape == state.shape
+        next_state = self.State.from_data(self._state_model.model(dt, state, control))
 
-        return StateAndCovariance(next_state, next_covariance)
+        return StateAndCovariance(
+            next_state, self.Covariance.from_data(next_covariance)
+        )
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]

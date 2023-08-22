@@ -1,3 +1,4 @@
+import abc
 import types
 from itertools import product
 from typing import Dict, Tuple, Union
@@ -95,9 +96,31 @@ def model_validation(
             )
 
 
+class _NamedArrayBase(abc.ABC):
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
+        return f"{self.name}({kwargs})"
+
+    def __iter__(self):
+        return iter(self.data)
+
+    @classmethod
+    def shape(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def from_data(cls, data):
+        assert data.shape == cls.shape()
+        return cls(_data=data)
+
+
 def named_vector(name, arglist):
-    class _NamedVector:
-        def __init__(self, **kwargs):
+    class _NamedVector(_NamedArrayBase):
+        def __init__(self, *, _data=None, **kwargs):
+            super().__init__(name)
             self._kwargs = kwargs
 
             allowed_keys = [str(arg) for arg in arglist]
@@ -107,21 +130,38 @@ def named_vector(name, arglist):
                         f"{name}() got an unexpected keyword argument {key}"
                     )
 
-            self.data = np.zeros((len(arglist), 1))
+            if _data is not None:
+                assert len(kwargs) == 0
+                self.data = _data
+            else:
+                self.data = np.zeros((len(arglist), 1))
+
             for idx, key in enumerate(allowed_keys):
                 if key in kwargs:
                     self.data[idx, 0] = kwargs[key]
 
-        def __repr__(self):
-            kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
-            return f"{name}({kwargs})"
+        @classmethod
+        def __subclasshook__(cls, Other):
+            print(Other, Other.__name__)
+            print(Other.arglist)
+            1 / 0
+            return (
+                Other.__name__ == name
+                and arglist == Other.arglist
+                and cls.shape() == Other.shape()
+            )
+
+        @classmethod
+        def shape(cls):
+            return (len(arglist), 1)
 
     return types.new_class(name, bases=(_NamedVector,))
 
 
 def named_covariance(name, arglist):
-    class _NamedCovariance:
-        def __init__(self, **kwargs):
+    class _NamedCovariance(_NamedArrayBase):
+        def __init__(self, *, _data=None, **kwargs):
+            super().__init__(name)
             self._kwargs = kwargs
 
             allowed_keys = [str(arg) for arg in arglist]
@@ -131,13 +171,29 @@ def named_covariance(name, arglist):
                         f"{name}() got an unexpected keyword argument {key}"
                     )
 
-            self.data = np.eye(len(arglist))
+            if _data is not None:
+                assert len(kwargs) == 0
+                self.data = _data
+            else:
+                self.data = np.eye(len(arglist))
+
             for idx, key in enumerate(allowed_keys):
                 if key in kwargs:
                     self.data[idx, idx] = kwargs[key]
 
-        def __repr__(self):
-            kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
-            return f"{name}({kwargs})"
+        @classmethod
+        def __subclasshook__(cls, Other):
+            print(Other, Other.__name__)
+            print(Other.arglist)
+            1 / 0
+            return (
+                Other.__name__ == name
+                and arglist == Other.arglist
+                and cls.shape() == Other.shape()
+            )
+
+        @classmethod
+        def shape(cls):
+            return (len(arglist), len(arglist))
 
     return types.new_class(name, bases=(_NamedCovariance,))
