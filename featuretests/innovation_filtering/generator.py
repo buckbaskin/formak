@@ -10,7 +10,6 @@ working as expected, then the model will flip into the wrong direction.
 """
 from math import degrees, radians
 
-import numpy as np
 from sympy import cos, sin
 
 from formak import cpp, ui

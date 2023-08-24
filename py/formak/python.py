@@ -224,6 +224,8 @@ class SensorModel:
         self.State = common.named_vector("State", self.arglist_state)
         self.Covariance = common.named_covariance("Covariance", self.arglist_state)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.Reading = common.named_vector("Reading", self.readings)
+        self.ReadingCovariance = common.named_vector("ReadingCovariance", self.readings)
 
         self.calibration_vector = np.array(
             [[calibration_map[k] for k in self.arglist_calibration]]
@@ -403,15 +405,17 @@ class ExtendedKalmanFilter:
             )
             for k, model in sensor_models.items()
         }
-        for k in self.params["sensor_models"].keys():
-            assert isinstance(sensor_noises[k], dict)
-            assert len(sensor_noises[k]) == self.params["sensor_models"][k].sensor_size
 
         matrix_sensor_noises = {}
-        for sensor_key, mapping in sensor_noises.items():
-            matrix_sensor_noises[sensor_key] = self.make_reading_variance(
-                sensor_key, mapping
+        for key, model in self.params["sensor_models"].items():
+            assert isinstance(sensor_noises[key], dict)
+            assert (
+                len(sensor_noises[key]) == self.params["sensor_models"][key].sensor_size
             )
+            matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
+                sensor_noises[key]
+            )
+
         self.params["sensor_noises"] = matrix_sensor_noises
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
@@ -446,79 +450,8 @@ class ExtendedKalmanFilter:
         self.innovations = {}
         self.sensor_prediction_uncertainty = {}
 
-    def make_state(self, **kwargs):
-        allowed_keys = [str(arg) for arg in self.arglist_state]
-        for key in kwargs:
-            if key not in allowed_keys:
-                raise TypeError(
-                    f"make_state() got an unexpected keyword argument {key}"
-                )
-
-        state = np.zeros((self.state_size, 1))
-        for idx, key in enumerate(allowed_keys):
-            if key in kwargs:
-                state[idx, 0] = kwargs[key]
-        return state
-
-    def make_variance(self, **kwargs):
-        allowed_keys = [str(arg) for arg in self.arglist_state]
-        for key in kwargs:
-            if key not in allowed_keys:
-                raise TypeError(
-                    f"make_state() got an unexpected keyword argument {key}"
-                )
-
-        state = np.eye(self.state_size)
-        for idx, key in enumerate(allowed_keys):
-            if key in kwargs:
-                state[idx, idx] = kwargs[key]
-        return state
-
-    def make_control(self, **kwargs):
-        allowed_keys = [str(arg) for arg in self.arglist_control]
-        for key in kwargs:
-            if key not in allowed_keys:
-                raise TypeError(
-                    f"make_control() got an unexpected keyword argument {key}"
-                )
-
-        control = np.zeros((self.control_size, 1))
-        for idx, key in enumerate(allowed_keys):
-            if key in kwargs:
-                control[idx, 0] = kwargs[key]
-        return control
-
-    def make_reading(self, sensor_key, **kwargs):
-        readings = self.params["sensor_models"][sensor_key].readings
-
-        allowed_keys = [str(r) for r in readings]
-        for key in kwargs:
-            if key not in allowed_keys:
-                raise TypeError(
-                    f"make_reading() got an unexpected keyword argument {key}"
-                )
-
-        reading = np.zeros((len(readings), 1))
-        for idx, key in enumerate(allowed_keys):
-            if key in kwargs:
-                reading[idx, 0] = kwargs[key]
-        return reading
-
-    def make_reading_variance(self, sensor_key, mapping):
-        readings = self.params["sensor_models"][sensor_key].readings
-
-        allowed_keys = readings
-        for key in mapping:
-            if key not in allowed_keys:
-                raise TypeError(
-                    f"make_reading_variance() got an unexpected key argument {key} type {type(key)}"
-                )
-
-        covariance = np.eye(len(readings))
-        for idx, key in enumerate(allowed_keys):
-            if key in mapping:
-                covariance[idx, idx] = mapping[key]
-        return covariance
+    def make_reading(self, key, **kwargs):
+        return self.params["sensor_models"][key].Reading(**kwargs)
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
@@ -607,7 +540,7 @@ class ExtendedKalmanFilter:
         try:
             assert isinstance(state, self.State)
             assert isinstance(covariance, self.Covariance)
-            assert isinstance(sensor_reading, np.ndarray)
+            assert isinstance(sensor_reading, model_impl.Reading)
         except AssertionError:
             print(
                 "sensor_model(state: %s, covariance: %s, sensor_key: %s, sensor_reading: %s)"
@@ -620,17 +553,8 @@ class ExtendedKalmanFilter:
             )
             raise
 
-        try:
-            assert sensor_reading.shape == (sensor_size, 1)
-            assert Q_t.shape == (sensor_size, sensor_size)
-        except AssertionError:
-            print(
-                "sensor_model(state: %s, covariance: %s, sensor_key, sensor_reading: %s)"
-                % (state.shape, covariance.shape, sensor_reading.shape)
-            )
-            raise
-
         expected_reading = model_impl.model(state)
+        assert isinstance(expected_reading, model_impl.Reading)
 
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)

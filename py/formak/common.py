@@ -117,6 +117,10 @@ class _NamedArrayBase(abc.ABC):
         assert data.shape == cls.shape()
         return cls(_data=data)
 
+    @classmethod
+    def from_dict(cls, mapping):
+        return cls(**{str(k): v for k, v in mapping.items()})
+
 
 def named_vector(name, arglist):
     class _NamedVector(_NamedArrayBase):

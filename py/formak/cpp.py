@@ -172,6 +172,10 @@ class Model:
             + self.arglist_control
         )
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
                 map_lite = "\n  , ".join(
@@ -306,6 +310,11 @@ class ExtendedKalmanFilter:
             + self.arglist_calibration
             + self.arglist_control
         )
+
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
