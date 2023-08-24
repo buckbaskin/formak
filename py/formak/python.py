@@ -221,6 +221,10 @@ class SensorModel:
         )
         self.arglist = self.arglist_state + self.arglist_calibration
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+
         self.calibration_vector = np.array(
             [[calibration_map[k] for k in self.arglist_calibration]]
         ).transpose()
@@ -238,14 +242,13 @@ class SensorModel:
         ## "Pre-flight" Checks
 
         # Pre-check model for type errors
-        self.model(np.zeros((self.state_size, 1)))
+        self.model(self.State())
 
     def __len__(self):
         return len(self.sensor_models)
 
     def model(self, state_vector):
         assert isinstance(state_vector, self.State)
-        assert state_vector.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
         for i, (reading_id, result) in enumerate(
@@ -633,7 +636,7 @@ class ExtendedKalmanFilter:
         assert H_t.shape == (sensor_size, self.state_size)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
-            np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t
+            np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t
         )
         S_inv = np.linalg.inv(S_t)
 
@@ -648,15 +651,19 @@ class ExtendedKalmanFilter:
             if normalized_innovation > expected_innovation:
                 return StateAndCovariance(state, covariance)
 
-        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
+        K_t = _kalman_gain = np.matmul(
+            covariance.data, np.matmul(H_t.transpose(), S_inv)
+        )
 
-        next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
-        assert next_covariance.shape == covariance.shape
+        next_covariance = covariance.data - np.matmul(
+            K_t, np.matmul(H_t, covariance.data)
+        )
 
-        next_state = state + np.matmul(K_t, innovation)
-        assert next_state.shape == state.shape
+        next_state = state.data + np.matmul(K_t, innovation)
 
-        return StateAndCovariance(next_state, next_covariance)
+        return StateAndCovariance(
+            self.State.from_data(next_state), self.Covariance.from_data(next_covariance)
+        )
 
     ### scikit-learn / sklearn interface ###
 

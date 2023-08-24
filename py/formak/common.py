@@ -122,6 +122,7 @@ def named_vector(name, arglist):
     class _NamedVector(_NamedArrayBase):
         _name = name
         _arglist = arglist
+
         def __init__(self, *, _data=None, **kwargs):
             super().__init__(name, kwargs)
 
@@ -150,7 +151,6 @@ def named_vector(name, arglist):
                 and cls.shape() == Other.shape()
             )
 
-
         @classmethod
         def shape(cls):
             return (len(arglist), 1)
@@ -162,6 +162,7 @@ def named_covariance(name, arglist):
     class _NamedCovariance(_NamedArrayBase):
         _name = name
         _arglist = arglist
+
         def __init__(self, *, _data=None, **kwargs):
             super().__init__(name, kwargs)
 
@@ -189,6 +190,7 @@ def named_covariance(name, arglist):
                 and cls._arglist == Other._arglist
                 and cls.shape() == Other.shape()
             )
+
         @classmethod
         def shape(cls):
             return (len(arglist), len(arglist))
