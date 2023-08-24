@@ -97,8 +97,9 @@ def model_validation(
 
 
 class _NamedArrayBase(abc.ABC):
-    def __init__(self, name):
+    def __init__(self, name, kwargs):
         self.name = name
+        self._kwargs = kwargs
 
     def __repr__(self):
         kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
@@ -119,9 +120,10 @@ class _NamedArrayBase(abc.ABC):
 
 def named_vector(name, arglist):
     class _NamedVector(_NamedArrayBase):
+        _name = name
+        _arglist = arglist
         def __init__(self, *, _data=None, **kwargs):
-            super().__init__(name)
-            self._kwargs = kwargs
+            super().__init__(name, kwargs)
 
             allowed_keys = [str(arg) for arg in arglist]
             for key in kwargs:
@@ -142,14 +144,12 @@ def named_vector(name, arglist):
 
         @classmethod
         def __subclasshook__(cls, Other):
-            print(Other, Other.__name__)
-            print(Other.arglist)
-            1 / 0
             return (
                 Other.__name__ == name
-                and arglist == Other.arglist
+                and cls._arglist == Other._arglist
                 and cls.shape() == Other.shape()
             )
+
 
         @classmethod
         def shape(cls):
@@ -160,9 +160,10 @@ def named_vector(name, arglist):
 
 def named_covariance(name, arglist):
     class _NamedCovariance(_NamedArrayBase):
+        _name = name
+        _arglist = arglist
         def __init__(self, *, _data=None, **kwargs):
-            super().__init__(name)
-            self._kwargs = kwargs
+            super().__init__(name, kwargs)
 
             allowed_keys = [str(arg) for arg in arglist]
             for key in kwargs:
@@ -183,15 +184,11 @@ def named_covariance(name, arglist):
 
         @classmethod
         def __subclasshook__(cls, Other):
-            print(Other, Other.__name__)
-            print(Other.arglist)
-            1 / 0
             return (
                 Other.__name__ == name
-                and arglist == Other.arglist
+                and cls._arglist == Other._arglist
                 and cls.shape() == Other.shape()
             )
-
         @classmethod
         def shape(cls):
             return (len(arglist), len(arglist))

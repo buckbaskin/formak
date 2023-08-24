@@ -193,7 +193,7 @@ class Model:
 
         next_state = self.State(
             **{
-                state_id: result
+                str(state_id): result
                 for state_id, result in zip(
                     self.arglist_state,
                     self._impl.execute(
@@ -244,7 +244,7 @@ class SensorModel:
         return len(self.sensor_models)
 
     def model(self, state_vector):
-        assert isinstance(state_vector, np.ndarray)
+        assert isinstance(state_vector, self.State)
         assert state_vector.shape == (self.state_size, 1)
 
         reading = np.zeros((self.sensor_size, 1))
@@ -589,7 +589,8 @@ class ExtendedKalmanFilter:
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape()
 
-        next_state = self.State.from_data(self._state_model.model(dt, state, control))
+        next_state = self._state_model.model(dt, state, control)
+        assert isinstance(next_state, self.State)
 
         return StateAndCovariance(
             next_state, self.Covariance.from_data(next_covariance)
@@ -601,8 +602,8 @@ class ExtendedKalmanFilter:
         Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
 
         try:
-            assert isinstance(state, np.ndarray)
-            assert isinstance(covariance, np.ndarray)
+            assert isinstance(state, self.State)
+            assert isinstance(covariance, self.Covariance)
             assert isinstance(sensor_reading, np.ndarray)
         except AssertionError:
             print(
@@ -617,8 +618,6 @@ class ExtendedKalmanFilter:
             raise
 
         try:
-            assert state.shape == (self.state_size, 1)
-            assert covariance.shape == (self.state_size, self.state_size)
             assert sensor_reading.shape == (sensor_size, 1)
             assert Q_t.shape == (sensor_size, sensor_size)
         except AssertionError:
