@@ -271,7 +271,7 @@ class SensorModel:
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
                 raise
-        return reading
+        return self.Reading.from_data(reading)
 
 
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
@@ -560,11 +560,11 @@ class ExtendedKalmanFilter:
         assert H_t.shape == (sensor_size, self.state_size)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
-            np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t
+            np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
         )
         S_inv = np.linalg.inv(S_t)
 
-        self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
+        self.innovations[sensor_key] = innovation = sensor_reading.data - expected_reading.data
 
         if self.config.innovation_filtering is not None:
             editing_threshold = self.config.innovation_filtering

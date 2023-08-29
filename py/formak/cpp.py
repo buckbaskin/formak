@@ -536,9 +536,10 @@ class ExtendedKalmanFilter:
         for name, sensor_model_mapping, sensor_noise in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
+            arglist_sensor = sorted(list(sensor_model_mapping.keys()))
             members = "\n".join(
                 "double& %s() { return data(%d, 0); }" % (name, idx)
-                for idx, name in enumerate(sorted(list(sensor_model_mapping.keys())))
+                for idx, name in enumerate(arglist_sensor)
             )
             size = len(sensor_model_mapping)
             if verbose:
@@ -564,10 +565,12 @@ class ExtendedKalmanFilter:
                 )
                 + "}"
             )
-            # TODO(buck): Move this line handling to the template?
             SensorModel_model_body = list(body.compile()) + [return_]
+
+            SensorCovariance = common.named_covariance(f'{name}Covariance', arglist_sensor)
+
             SensorModel_covariance_body = self._translate_sensor_covariance(
-                typename, sensor_noise
+                typename, SensorCovariance.from_dict(sensor_noise)
             )
             SensorModel_jacobian_body = self._translate_sensor_jacobian(
                 typename, sensor_model_mapping
@@ -633,10 +636,10 @@ class ExtendedKalmanFilter:
         yield Return("jacobian")
 
     def _translate_sensor_covariance_impl(self, covariance):
-        rows, cols = covariance.shape
+        rows, cols = covariance.shape()
         for i in range(rows):
             for j in range(cols):
-                yield f"covariance({i}, {j})", covariance[i, j]
+                yield f"covariance({i}, {j})", covariance.data[i, j]
 
     def _translate_sensor_covariance(self, typename, covariance):
         yield MemberDeclaration(f"{typename}::CovarianceT", "covariance")

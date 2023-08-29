@@ -79,6 +79,6 @@ def test_obvious_innovation_rejections():
             ],
         )
 
-        if abs(compass_model(s.state)) >= TRUE_SCALE * 4:
+        if abs(compass_model(s.state).data) >= TRUE_SCALE * 4:
             print({"idx": idx, "reading": degrees(r)})
-        assert abs(compass_model(s.state)) < TRUE_SCALE * 4
+        assert abs(compass_model(s.state).data) < TRUE_SCALE * 4
