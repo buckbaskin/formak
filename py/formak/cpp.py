@@ -567,7 +567,9 @@ class ExtendedKalmanFilter:
             )
             SensorModel_model_body = list(body.compile()) + [return_]
 
-            SensorCovariance = common.named_covariance(f'{name}Covariance', arglist_sensor)
+            SensorCovariance = common.named_covariance(
+                f"{name}Covariance", arglist_sensor
+            )
 
             SensorModel_covariance_body = self._translate_sensor_covariance(
                 typename, SensorCovariance.from_dict(sensor_noise)

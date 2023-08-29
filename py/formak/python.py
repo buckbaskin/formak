@@ -564,7 +564,9 @@ class ExtendedKalmanFilter:
         )
         S_inv = np.linalg.inv(S_t)
 
-        self.innovations[sensor_key] = innovation = sensor_reading.data - expected_reading.data
+        self.innovations[sensor_key] = innovation = (
+            sensor_reading.data - expected_reading.data
+        )
 
         if self.config.innovation_filtering is not None:
             editing_threshold = self.config.innovation_filtering
