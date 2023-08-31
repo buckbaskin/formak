@@ -71,6 +71,7 @@ def make_ekf():
         process_noise={control_velocity: 1.0},
         sensor_models={"simple": {state: state}},
         sensor_noises={"simple": {state: 1e-9}},
+        config={"innovation_filtering": None},
     )
     return ekf
 
@@ -104,16 +105,16 @@ def test_tick_no_readings(dt):
     print(state0p1.state)
     print("reading")
     print(state, dt, control.data[0, 0])
-    print(state + dt * control.data[0, 0])
+    print(state.data + dt * control.data[0, 0])
     print("diff")
-    print((state0p1.state) - (state + dt * control.data[0, 0]))
+    print((state0p1.state.data) - (state.data + dt * control.data[0, 0]))
     assert np.isclose(
         state0p1.state.data, state.data + dt * control.data[0, 0], atol=2.0e-14
     ).all()
     if dt != 0.0:
-        assert state0p1.covariance > covariance
+        assert state0p1.covariance.data > covariance.data
     else:
-        assert state0p1.covariance == covariance
+        assert state0p1.covariance.data == covariance.data
 
 
 @settings(deadline=None)
@@ -138,9 +139,9 @@ def test_tick_empty_readings(dt):
         state0p1.state.data, state.data + dt * control.data[0, 0], atol=2.0e-14
     ).all()
     if dt != 0.0:
-        assert state0p1.covariance > covariance
+        assert state0p1.covariance.data > covariance.data
     else:
-        assert state0p1.covariance == covariance
+        assert state0p1.covariance.data == covariance.data
 
 
 @settings(deadline=None)
@@ -169,7 +170,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     dt = output_dt - reading_dt
 
     print("state")
-    print(state[0, 0])
+    print(state.data[0, 0])
     print("reading")
     print(reading_v)
     print("state0p1")
@@ -178,7 +179,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     print(reading_v, control.data[0, 0], dt)
     print(reading_v + control.data[0, 0] * dt)
     print("diff")
-    print((state0p1.state) - (reading_v + control.data[0, 0] * dt))
+    print((state0p1.state.data) - (reading_v + control.data[0, 0] * dt))
     assert np.isclose(
         state0p1.state.data, reading_v + control.data[0, 0] * dt, atol=2.0e-8
     ).all()
@@ -221,4 +222,4 @@ def test_tick_multi_reading(output_dt, shuffle_order):
 
     state0p1 = mf.tick(start_time + output_dt, control=control, readings=readings)
 
-    assert (state != state0p1.state).any()
+    assert (state.data != state0p1.state.data).any()

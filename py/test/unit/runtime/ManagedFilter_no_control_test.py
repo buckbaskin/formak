@@ -72,6 +72,7 @@ def make_ekf(calibration_map):
         sensor_models={"simple": {state: state}},
         sensor_noises={"simple": {state: 1e-9}},
         calibration_map=calibration_map,
+        config={"innovation_filtering": None},
     )
     return ekf
 
@@ -107,9 +108,9 @@ def test_tick_no_readings(dt):
     print("reading")
     print(state, dt)
     print("diff")
-    print((state0p1.state) - (state))
+    print((state0p1.state.data) - (state.data))
     assert np.isclose(state0p1.state.data, state.data, atol=2.0e-14).all()
-    assert state0p1.covariance == covariance
+    assert state0p1.covariance.data == covariance.data
 
 
 @settings(deadline=None)
@@ -131,7 +132,7 @@ def test_tick_empty_readings(dt):
     state0p1 = mf.tick(start_time + dt, readings=[])
 
     assert np.isclose(state0p1.state.data, state.data, atol=2.0e-14).all()
-    assert state0p1.covariance == covariance
+    assert state0p1.covariance.data == covariance.data
 
 
 @settings(deadline=None)
@@ -158,7 +159,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     state0p1 = mf.tick(start_time + output_dt, readings=[reading1])
 
     print("state")
-    print(state[0, 0])
+    print(state.data[0, 0])
     print("reading")
     print(reading_v)
     print("state0p1")
@@ -166,7 +167,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     print("reading")
     print(reading_v)
     print("diff")
-    print((state0p1.state) - (reading_v))
+    print((state0p1.state.data) - (reading_v))
     assert np.isclose(state0p1.state.data, reading_v, atol=2.0e-8).all()
 
 
@@ -207,4 +208,4 @@ def test_tick_multi_reading(output_dt, shuffle_order):
 
     state0p1 = mf.tick(start_time + output_dt, readings=readings)
 
-    assert (state != state0p1.state).any()
+    assert (state.data != state0p1.state.data).any()

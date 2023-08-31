@@ -147,16 +147,16 @@ def named_vector(name, arglist):
 
         @classmethod
         def __subclasshook__(cls, Other):
-            print(
-                "cls",
-                name,
-                cls._arglist,
-                cls.shape,
-                "Other",
-                Other.__name__,
-                Other._arglist if hasattr(Other, "_arglist") else None,
-                Other.shape if hasattr(Other, "shape") else None,
-            )
+            # print(
+            #     "cls",
+            #     name,
+            #     cls._arglist,
+            #     cls.shape,
+            #     "Other",
+            #     Other.__name__,
+            #     Other._arglist if hasattr(Other, "_arglist") else None,
+            #     Other.shape if hasattr(Other, "shape") else None,
+            # )
             return (
                 Other.__name__ == name
                 and cls._arglist == Other._arglist
