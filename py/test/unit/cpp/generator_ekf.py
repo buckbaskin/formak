@@ -14,6 +14,7 @@ cpp_implementation = cpp.compile_ekf(
         "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
     },
     sensor_noises={"simple": {"reading1": 1}, "combined": {"reading2": 4.0}},
+    config={"innovation_filtering": None}
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
