@@ -179,7 +179,7 @@ class Model:
                 raise TypeError(
                     "model() missing 1 required positional argument: 'control_vector'"
                 )
-            control_vector = np.zeros((0, 1))
+            control_vector = self.Control()
 
         try:
             assert isinstance(dt, float)
@@ -495,7 +495,7 @@ class ExtendedKalmanFilter:
 
     def process_model(self, dt, state, covariance, control=None):
         if control is None:
-            control = np.zeros((0, 1))
+            control = self.Control()
 
         try:
             assert isinstance(state, self.State)
@@ -515,15 +515,15 @@ class ExtendedKalmanFilter:
         next_state_covariance = np.matmul(
             G_t, np.matmul(covariance.data, G_t.transpose())
         )
-        assert next_state_covariance.shape == covariance.shape()
+        assert next_state_covariance.shape == covariance.shape
 
         next_control_covariance = np.matmul(
             V_t, np.matmul(self.params["process_noise"], V_t.transpose())
         )
-        assert next_control_covariance.shape == covariance.shape()
+        assert next_control_covariance.shape == covariance.shape
 
         next_covariance = next_state_covariance + next_control_covariance
-        assert next_covariance.shape == covariance.shape()
+        assert next_covariance.shape == covariance.shape
 
         next_state = self._state_model.model(dt, state, control)
         assert isinstance(next_state, self.State)

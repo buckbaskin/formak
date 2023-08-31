@@ -70,7 +70,7 @@ def make_ekf(calibration_map):
         state_model=model,
         process_noise={},
         sensor_models={"simple": {state: state}},
-        sensor_noises={"simple": np.eye(1) * 1e-9},
+        sensor_noises={"simple": {state: 1e-9}},
         calibration_map=calibration_map,
     )
     return ekf
@@ -79,8 +79,8 @@ def make_ekf(calibration_map):
 def test_constructor():
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map)
-    state = np.array([[4.0]])
-    covariance = np.array([[1.0]])
+    state = ekf.State(state=4.0)
+    covariance = ekf.Covariance(state=1.0)
     _mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
 
@@ -88,10 +88,10 @@ def test_constructor():
 @given(sampled_from(samples_dt_sec()))
 def test_tick_no_readings(dt):
     start_time = 10.0
-    state = np.array([[4.0]])
-    covariance = np.array([[1.0]])
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
+    state = ekf.State(state=4.0)
+    covariance = ekf.Covariance(state=1.0)
 
     mf = ManagedFilter(
         ekf=ekf,
@@ -108,7 +108,7 @@ def test_tick_no_readings(dt):
     print(state, dt)
     print("diff")
     print((state0p1.state) - (state))
-    assert np.isclose(state0p1.state, state, atol=2.0e-14).all()
+    assert np.isclose(state0p1.state.data, state.data, atol=2.0e-14).all()
     assert state0p1.covariance == covariance
 
 
@@ -116,10 +116,10 @@ def test_tick_no_readings(dt):
 @given(sampled_from(samples_dt_sec()))
 def test_tick_empty_readings(dt):
     start_time = 10.0
-    state = np.array([[4.0]])
-    covariance = np.array([[1.0]])
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
+    state = ekf.State(state=4.0)
+    covariance = ekf.Covariance(state=1.0)
 
     mf = ManagedFilter(
         ekf=ekf,
@@ -130,7 +130,7 @@ def test_tick_empty_readings(dt):
 
     state0p1 = mf.tick(start_time + dt, readings=[])
 
-    assert np.isclose(state0p1.state, state, atol=2.0e-14).all()
+    assert np.isclose(state0p1.state.data, state.data, atol=2.0e-14).all()
     assert state0p1.covariance == covariance
 
 
@@ -138,10 +138,10 @@ def test_tick_empty_readings(dt):
 @given(sampled_from(samples_dt_sec()), sampled_from(samples_dt_sec()))
 def test_tick_one_reading(output_dt, reading_dt):
     start_time = 10.0
-    state = np.array([[4.0]])
-    covariance = np.array([[1.0]])
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
+    state = ekf.State(state=4.0)
+    covariance = ekf.Covariance(state=1.0)
 
     mf = ManagedFilter(
         ekf=ekf,
@@ -152,7 +152,7 @@ def test_tick_one_reading(output_dt, reading_dt):
 
     reading_v = -3.0
     reading1 = StampedReading(
-        start_time + reading_dt, "simple", np.array([[reading_v]])
+        start_time + reading_dt, "simple", ekf.make_reading("simple", state=reading_v)
     )
 
     state0p1 = mf.tick(start_time + output_dt, readings=[reading1])
@@ -167,7 +167,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     print(reading_v)
     print("diff")
     print((state0p1.state) - (reading_v))
-    assert np.isclose(state0p1.state, reading_v, atol=2.0e-8).all()
+    assert np.isclose(state0p1.state.data, reading_v, atol=2.0e-8).all()
 
 
 @settings(deadline=None)
@@ -187,10 +187,10 @@ def test_tick_one_reading(output_dt, reading_dt):
 def test_tick_multi_reading(output_dt, shuffle_order):
     output_dt, options = parse_options(output_dt, shuffle_order)
     start_time = 10.0
-    state = np.array([[4.0]])
-    covariance = np.array([[1.0]])
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
+    state = ekf.State(state=4.0)
+    covariance = ekf.Covariance(state=1.0)
 
     mf = ManagedFilter(
         ekf=ekf,
@@ -200,7 +200,10 @@ def test_tick_multi_reading(output_dt, shuffle_order):
     )
 
     reading_v = -3.0
-    readings = [StampedReading(t, "simple", np.array([[reading_v]])) for t in options]
+    readings = [
+        StampedReading(t, "simple", ekf.make_reading("simple", state=reading_v))
+        for t in options
+    ]
 
     state0p1 = mf.tick(start_time + output_dt, readings=readings)
 

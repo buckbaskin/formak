@@ -638,7 +638,7 @@ class ExtendedKalmanFilter:
         yield Return("jacobian")
 
     def _translate_sensor_covariance_impl(self, covariance):
-        rows, cols = covariance.shape()
+        rows, cols = covariance.shape
         for i in range(rows):
             for j in range(cols):
                 yield f"covariance({i}, {j})", covariance.data[i, j]

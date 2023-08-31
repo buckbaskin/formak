@@ -109,12 +109,9 @@ class _NamedArrayBase(abc.ABC):
         return iter(self.data)
 
     @classmethod
-    def shape(cls):
-        raise NotImplementedError()
-
-    @classmethod
     def from_data(cls, data):
-        assert data.shape == cls.shape()
+        if data.shape != cls.shape:
+            raise ValueError(f"Expected shape {cls.shape}, got shape {data.shape}")
         return cls(_data=data)
 
     @classmethod
@@ -126,6 +123,7 @@ def named_vector(name, arglist):
     class _NamedVector(_NamedArrayBase):
         _name = name
         _arglist = arglist
+        shape = (len(arglist), 1)
 
         def __init__(self, *, _data=None, **kwargs):
             super().__init__(name, kwargs)
@@ -153,21 +151,17 @@ def named_vector(name, arglist):
                 "cls",
                 name,
                 cls._arglist,
-                cls.shape(),
+                cls.shape,
                 "Other",
                 Other.__name__,
-                Other._arglist,
-                Other.shape(),
+                Other._arglist if hasattr(Other, "_arglist") else None,
+                Other.shape if hasattr(Other, "shape") else None,
             )
             return (
                 Other.__name__ == name
                 and cls._arglist == Other._arglist
-                and cls.shape() == Other.shape()
+                and cls.shape == Other.shape
             )
-
-        @classmethod
-        def shape(cls):
-            return (len(arglist), 1)
 
     return types.new_class(name, bases=(_NamedVector,))
 
@@ -176,6 +170,7 @@ def named_covariance(name, arglist):
     class _NamedCovariance(_NamedArrayBase):
         _name = name
         _arglist = arglist
+        shape = (len(arglist), len(arglist))
 
         def __init__(self, *, _data=None, **kwargs):
             super().__init__(name, kwargs)
@@ -202,11 +197,7 @@ def named_covariance(name, arglist):
             return (
                 Other.__name__ == name
                 and cls._arglist == Other._arglist
-                and cls.shape() == Other.shape()
+                and cls.shape == Other.shape
             )
-
-        @classmethod
-        def shape(cls):
-            return (len(arglist), len(arglist))
 
     return types.new_class(name, bases=(_NamedCovariance,))

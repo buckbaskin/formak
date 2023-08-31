@@ -190,10 +190,10 @@ TEST_P(CppModelFailureCasesSensor, RerunCases) {
               first_innovation.norm() == 0.0);
 }
 
-INSTANTIATE_TEST_SUITE_P(PreviousFailureCases, CppModelFailureCasesSensor,
-                         ::testing::Values(Options{0.0, 0.0},
-                                           Options{-538778789133922.0,
-                                                   -538778789133922.0}));
+INSTANTIATE_TEST_SUITE_P(
+    PreviousFailureCases, CppModelFailureCasesSensor,
+    ::testing::Values(Options{0.0, 0.0}, Options{-4.0, 0.0},
+                      Options{-538778789133922.0, -538778789133922.0}));
 
 }  // namespace ekf_sensor_property_test
 
