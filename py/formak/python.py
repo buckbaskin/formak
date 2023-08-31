@@ -450,7 +450,10 @@ class ExtendedKalmanFilter:
         self.innovations = {}
         self.sensor_prediction_uncertainty = {}
 
-    def make_reading(self, key, **kwargs):
+    def make_reading(self, key, *, data=None, **kwargs):
+        if len(kwargs) == 0 and data is not None:
+            return self.params["sensor_models"][key].Reading.from_data(data)
+
         return self.params["sensor_models"][key].Reading(**kwargs)
 
     def process_jacobian(self, dt, state, control):
@@ -596,7 +599,7 @@ class ExtendedKalmanFilter:
     def _flatten_scoring_params(self, params):
         flattened = list(np.diagonal(params["process_noise"]))
         for key in sorted(list(params["sensor_models"])):
-            flattened.extend(np.diagonal(params["sensor_noises"][key]))
+            flattened.extend(np.diagonal(params["sensor_noises"][key].data))
 
         return flattened
 
@@ -611,9 +614,9 @@ class ExtendedKalmanFilter:
         np.fill_diagonal(params["process_noise"], controls)
 
         for key in sorted(list(self.params["sensor_models"])):
-            sensor_size = len(np.diagonal(params["sensor_noises"][key]))
+            sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
-            np.fill_diagonal(params["sensor_noises"][key], sensor)
+            np.fill_diagonal(params["sensor_noises"][key].data, sensor)
 
         return params
 
@@ -684,7 +687,7 @@ class ExtendedKalmanFilter:
         matrix_weight = 1e-2
         matrix_score = np.sum(np.square(self.params["process_noise"]))
         for sensor_noise in self.params["sensor_noises"].values():
-            matrix_score += np.sum(np.square(sensor_noise))
+            matrix_score += np.sum(np.square(sensor_noise.data))
 
         if explain_score:
             return (
@@ -745,7 +748,7 @@ class ExtendedKalmanFilter:
                     the_rest[sensor_size:],
                 )
                 sensor_input = self.make_reading(
-                    key, sensor_input.reshape((sensor_size, 1))
+                    key, data=sensor_input.reshape((sensor_size, 1))
                 )
 
                 state, covariance = self.sensor_model(
