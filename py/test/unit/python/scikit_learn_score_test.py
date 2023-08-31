@@ -18,7 +18,7 @@ def test_score():
     params = {
         "process_noise": {v: 1.0},
         "sensor_models": {"simple": {x: x}},
-        "sensor_noises": {"simple": np.eye(1)},
+        "sensor_noises": {"simple": {x: 1}},
     }
 
     model = python.compile_ekf(
@@ -58,7 +58,7 @@ def test_score_two_sensor():
     params = {
         "process_noise": {ui.Symbol("a"): 1.0},
         "sensor_models": {"position": {x: x}, "velocity": {v: v}},
-        "sensor_noises": {"position": np.eye(1), "velocity": np.eye(1)},
+        "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
     model = python.compile_ekf(
@@ -100,7 +100,7 @@ def test_score_two_sensor_explained():
     params = {
         "process_noise": {ui.Symbol("a"): 1.0},
         "sensor_models": {"position": {x: x}, "velocity": {v: v}},
-        "sensor_noises": {"position": np.eye(1), "velocity": np.eye(1)},
+        "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
     model = python.compile_ekf(

@@ -75,7 +75,9 @@ class Config:
                         MemberDeclaration(
                             "static constexpr double",
                             "innovation_filtering",
-                            self.innovation_filtering if self.innovation_filtering else 0.0,
+                            self.innovation_filtering
+                            if self.innovation_filtering
+                            else 0.0,
                         ),
                     ],
                 )

@@ -715,8 +715,8 @@ class ExtendedKalmanFilter:
 
         dt = 0.1
 
-        state = np.zeros((self.state_size, 1))
-        covariance = np.eye(self.state_size)
+        state = self.State()
+        covariance = self.Covariance()
 
         innovations = []
         states = [state]
@@ -727,7 +727,9 @@ class ExtendedKalmanFilter:
                 X[idx, : self.control_size],
                 X[idx, self.control_size :],
             )
-            controls_input = controls_input.reshape((self.control_size, 1))
+            controls_input = self.Control.from_data(
+                controls_input.reshape((self.control_size, 1))
+            )
 
             state, covariance = self.process_model(
                 dt, state, covariance, controls_input
@@ -742,7 +744,9 @@ class ExtendedKalmanFilter:
                     the_rest[:sensor_size],
                     the_rest[sensor_size:],
                 )
-                sensor_input = sensor_input.reshape((sensor_size, 1))
+                sensor_input = self.make_reading(
+                    key, sensor_input.reshape((sensor_size, 1))
+                )
 
                 state, covariance = self.sensor_model(
                     state=state,
