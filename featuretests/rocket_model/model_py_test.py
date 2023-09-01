@@ -25,8 +25,8 @@ def test_python_Model():
         calibration_map=calibration_map,
     )
 
-    state_vector = np.zeros((9, 1))
-    control_vector = np.zeros((6, 1))
+    state_vector = python_implementation.State()
+    control_vector = python_implementation.Control()
 
     _state_vector_next = python_implementation.model(
         dt=0.01,

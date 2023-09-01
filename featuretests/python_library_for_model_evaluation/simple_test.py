@@ -24,7 +24,7 @@ def test_python_Model_simple():
 
     python_implementation = python.compile(model)
 
-    state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
-    control_vector = np.array([[0.0]])
+    state_vector = python_implementation.State()
+    control_vector = python_implementation.Control()
 
     _state_vector_next = python_implementation.model(0.1, state_vector, control_vector)

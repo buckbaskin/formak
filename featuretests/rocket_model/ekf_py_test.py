@@ -50,9 +50,9 @@ def test_python_EKF():
         calibration_map=calibration_map,
     )
 
-    state_vector = np.zeros((9, 1))
-    state_covariance = np.eye(9)
-    control_vector = np.zeros((6, 1))
+    state_vector = python_implementation.State()
+    state_covariance = python_implementation.Covariance()
+    control_vector = python_implementation.Control()
 
     _state_vector_next = python_implementation.process_model(
         dt=0.01, state=state_vector, covariance=state_covariance, control=control_vector
