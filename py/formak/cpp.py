@@ -758,6 +758,7 @@ def header_from_ast(*, generator) -> str:
     includes = [
         "#include <Eigen/Dense>    // Matrix",
         "#include <iostream>",
+        "#include <formak/innovation_filtering.h>",
     ]
     if generator.enable_EKF:
         # TODO(buck): Remove this when innovations moved to ManagedFilter

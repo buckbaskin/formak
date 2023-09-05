@@ -35,3 +35,13 @@ cc_test(
         "@gtest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "innovation-filtering",
+    hdrs = [
+        "include/formak/innovation_filtering.h",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = [],
+)
