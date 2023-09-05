@@ -1,5 +1,10 @@
-import numpy as np
+"""
+Feature Test.
 
+Create a Python implementation of an EKF.
+
+Passes if the EKF runs without exceptions
+"""
 from formak import python, ui
 
 

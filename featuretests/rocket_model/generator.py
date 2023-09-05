@@ -1,6 +1,5 @@
 from itertools import repeat
 
-import numpy as np
 from model_definition import (
     model_definition,
     named_acceleration,

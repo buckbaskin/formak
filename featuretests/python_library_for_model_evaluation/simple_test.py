@@ -1,5 +1,10 @@
-import numpy as np
+"""
+Feature Test.
 
+Create a Python model
+
+Passes if the Python model runs
+"""
 from formak import python, ui
 
 

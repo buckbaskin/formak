@@ -1,3 +1,15 @@
+/// Innovation Filtering Feature Test
+///
+/// Create a model with states:
+/// - x, y, heading, velocity model
+///
+/// Provide heading readings, expect rejecting 180 degree heading errors.
+/// Nonlinear model provides clear divergence signal. If innovation filtering
+/// isn't working as expected, then the model will flip into the wrong
+/// direction.
+///
+/// Passes if the model rejects the high innovation updates.
+
 #include <featuretest/nonlinear.h>
 #include <formak/runtime/ManagedFilter.h>
 #include <gtest/gtest.h>

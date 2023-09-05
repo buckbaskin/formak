@@ -1,6 +1,12 @@
+"""
+Feature Test.
+
+Define a C++ implementation of a rocket model
+
+Passes if the C++ implementation is written to disk without an exception
+"""
 from itertools import repeat
 
-import numpy as np
 from model_definition import (
     model_definition,
     named_acceleration,

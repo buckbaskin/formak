@@ -1,4 +1,11 @@
-import numpy as np
+"""
+Feature Test.
+
+Define a Python implementation of a rocket model. This previously demonstrated
+some performance limitations for the Python generation with a bigger model.
+
+Passes if the Python implementation is created and runs without an exception
+"""
 from model_definition import model_definition
 
 from formak import python, ui

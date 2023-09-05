@@ -1,5 +1,3 @@
-import numpy as np
-
 from formak import cpp, ui
 
 dt = ui.Symbol("dt")

@@ -1,3 +1,9 @@
+/// Feature Test: AST Code Generation
+///
+/// The code in example.h is generated via the FormaK AST tooling.
+/// Passes if the test compiles without warnings and pass some basic
+/// functionality in testing.
+
 #include <example.h>
 #include <gtest/gtest.h>
 
