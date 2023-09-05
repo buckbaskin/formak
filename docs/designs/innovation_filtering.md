@@ -53,7 +53,7 @@ is adapted from "Advanced Kalman Filtering, Least Squares and Modeling" by
 Bruce P. Gibbs (referred to as [1] or AKFLSM)
 [2] The notion follows the conventioned defined in the
 [Mathematical Glossary](../mathematical-glossary.md) which itself is based on
-"Probabilistic Robotics" by Thrun et. al.
+"Probabilistic Robotics" by Thrun et al.
 
 Innovations take advantage of the property that errors are white (normally
 distributed) when all models are correct and, when operating in steady state,
@@ -174,7 +174,7 @@ ground truth data. An alternative, Normalized Estimation Error Squared (NEES)
 looks at the errors vs ground truth. [3]
 
 [3] NEES definition taken from "Kalman Filter Tuning with Bayesian
-Optimization" by Chen et. al.
+Optimization" by Chen et al.
 
 One small problem with this measure:
 1. The score will decrease consistently as the size of the error goes down (this is good, this means that the model is more accurate

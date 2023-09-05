@@ -10,11 +10,7 @@ from sympy.solvers.solveset import nonlinsolve
 
 
 class UiModelBase:
-    """
-    Use as a base class for ui.Model, but in a separate file from ui.Model so that formak.python doesn't directly depend on formak.ui just for typing
-    """
-
-    pass
+    """Use as a base class for ui.Model, but in a separate file from ui.Model so that formak.python doesn't directly depend on formak.ui just for typing."""
 
 
 def model_validation(
@@ -118,6 +114,10 @@ class _NamedArrayBase(abc.ABC):
     def from_dict(cls, mapping):
         return cls(**{str(k): v for k, v in mapping.items()})
 
+    @classmethod
+    def __subclasshook__(cls, Other):
+        raise NotImplementedError()
+
 
 def named_vector(name, arglist):
     class _NamedVector(_NamedArrayBase):
@@ -147,16 +147,6 @@ def named_vector(name, arglist):
 
         @classmethod
         def __subclasshook__(cls, Other):
-            # print(
-            #     "cls",
-            #     name,
-            #     cls._arglist,
-            #     cls.shape,
-            #     "Other",
-            #     Other.__name__,
-            #     Other._arglist if hasattr(Other, "_arglist") else None,
-            #     Other.shape if hasattr(Other, "shape") else None,
-            # )
             return (
                 Other.__name__ == name
                 and cls._arglist == Other._arglist

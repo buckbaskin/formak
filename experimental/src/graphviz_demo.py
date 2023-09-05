@@ -24,7 +24,7 @@ def render_expr(expr):
         elif expr.func == sympy.core.symbol.Symbol:
             return str(expr)
         else:
-            raise ValueError("what do unknown? %s" % (expr,))
+            raise ValueError("what do unknown? {}".format(expr))
 
     else:
         if expr.func == sympy.core.add.Add:
