@@ -10,16 +10,16 @@ TEST(EditDistance, SingleInnovation) {
 
   double editing_threshold = 1.0;
   InnovationT innovation = InnovationT::Zero();
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   bool result =
-      edit::removeInnovation(editing_threshold, innovation, covariance);
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv);
   EXPECT_FALSE(result);
 
   innovation(0, 0) = 2.0;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 TEST(EditDistance, DoubleInnovation) {
@@ -33,15 +33,15 @@ TEST(EditDistance, DoubleInnovation) {
   InnovationT innovation = InnovationT::Zero();
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) - 0.01;
 
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   EXPECT_FALSE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 TEST(EditDistance, TripleInnovation) {
@@ -53,15 +53,15 @@ TEST(EditDistance, TripleInnovation) {
   InnovationT innovation = InnovationT::Zero();
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) - 0.01;
 
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   EXPECT_FALSE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 TEST(EditDistance, EditThreshold1) {
@@ -75,15 +75,15 @@ TEST(EditDistance, EditThreshold1) {
   InnovationT innovation = InnovationT::Zero();
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) - 0.01;
 
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   EXPECT_FALSE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 
   innovation(0, 0) = sqrt(sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 TEST(EditDistance, EditThreshold3) {
@@ -95,15 +95,15 @@ TEST(EditDistance, EditThreshold3) {
   InnovationT innovation = InnovationT::Zero();
   innovation(0, 0) = sqrt(editing_threshold * sqrt(2 * size) + size) - 0.01;
 
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   EXPECT_FALSE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 
   innovation(0, 0) = sqrt(editing_threshold * sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 TEST(EditDistance, EditThreshold5) {
@@ -115,15 +115,15 @@ TEST(EditDistance, EditThreshold5) {
   InnovationT innovation = InnovationT::Zero();
   innovation(0, 0) = sqrt(editing_threshold * sqrt(2 * size) + size) - 0.01;
 
-  CovarianceT covariance = CovarianceT::Identity();
+  CovarianceT covariance_inv = CovarianceT::Identity();
 
   EXPECT_FALSE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 
   innovation(0, 0) = sqrt(editing_threshold * sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
-      edit::removeInnovation(editing_threshold, innovation, covariance));
+      edit::removeInnovation(editing_threshold, innovation, covariance_inv));
 }
 
 }  // namespace formak::innovation_filtering
