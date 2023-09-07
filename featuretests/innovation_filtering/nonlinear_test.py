@@ -74,11 +74,7 @@ def test_obvious_innovation_rejections():
         s = mf.tick(
             0.1 * idx,
             control=control,
-            readings=[
-                runtime.StampedReading(
-                    0.1 * idx - 0.05, "compass", ekf.make_reading("compass", heading=r)
-                )
-            ],
+            readings=[runtime.StampedReading(0.1 * idx - 0.05, "compass", heading=r)],
         )
 
         if abs(compass_model(s.state).data) >= TRUE_SCALE * 4:

@@ -171,9 +171,7 @@ def test_tick_one_reading(output_dt, reading_dt):
 
     control = ekf.Control(control_velocity=-1.0)
     reading_v = -3.0
-    reading1 = StampedReading(
-        start_time + reading_dt, "simple", ekf.make_reading("simple", state=reading_v)
-    )
+    reading1 = StampedReading(start_time + reading_dt, "simple", state=reading_v)
 
     state0p1 = mf.tick(start_time + output_dt, control=control, readings=[reading1])
 
@@ -226,10 +224,7 @@ def test_tick_multi_reading(output_dt, shuffle_order):
 
     control = ekf.Control(control_velocity=-1.0)
     reading_v = -3.0
-    readings = [
-        StampedReading(t, "simple", ekf.make_reading("simple", state=reading_v))
-        for t in options
-    ]
+    readings = [StampedReading(t, "simple", state=reading_v) for t in options]
 
     state0p1 = mf.tick(start_time + output_dt, control=control, readings=readings)
 

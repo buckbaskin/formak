@@ -53,8 +53,7 @@ _innovations[ReadingT::Identifier] = innovation;
 
 if constexpr (cpp::Config::innovation_filtering > 0.0) {
   if (formak::innovation_filtering::edit::removeInnovation(
-          cpp::Config::innovation_filtering, ReadingT::size, innovation,
-          S_inv)) {
+          cpp::Config::innovation_filtering, innovation, S_inv)) {
     // Skip update
     return state;
   }

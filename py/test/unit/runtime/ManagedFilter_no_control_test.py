@@ -152,9 +152,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     )
 
     reading_v = -3.0
-    reading1 = StampedReading(
-        start_time + reading_dt, "simple", ekf.make_reading("simple", state=reading_v)
-    )
+    reading1 = StampedReading(start_time + reading_dt, "simple", state=reading_v)
 
     state0p1 = mf.tick(start_time + output_dt, readings=[reading1])
 
@@ -201,10 +199,7 @@ def test_tick_multi_reading(output_dt, shuffle_order):
     )
 
     reading_v = -3.0
-    readings = [
-        StampedReading(t, "simple", ekf.make_reading("simple", state=reading_v))
-        for t in options
-    ]
+    readings = [StampedReading(t, "simple", state=reading_v) for t in options]
 
     state0p1 = mf.tick(start_time + output_dt, readings=readings)
 

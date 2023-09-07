@@ -77,11 +77,11 @@ def test_tick_one_sensor_reading():
     control = ekf.Control()
     mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
-    reading1 = StampedReading(2.05, "simple", ekf.make_reading("simple"))
+    reading1 = StampedReading(2.05, "simple")
 
     state0p1 = mf.tick(2.1, control=control, readings=[reading1])
 
-    reading2 = StampedReading(2.15, "simple", ekf.make_reading("simple"))
+    reading2 = StampedReading(2.15, "simple")
 
     state0p2 = mf.tick(2.2, control=control, readings=[reading2])
 
@@ -96,17 +96,17 @@ def test_tick_multiple_sensor_reading():
     mf = ManagedFilter(ekf=ekf, start_time=3.0, state=state, covariance=covariance)
 
     readings1 = [
-        StampedReading(3.05, "simple", ekf.make_reading("simple")),
-        StampedReading(3.06, "simple", ekf.make_reading("simple")),
-        StampedReading(3.07, "simple", ekf.make_reading("simple")),
+        StampedReading(3.05, "simple"),
+        StampedReading(3.06, "simple"),
+        StampedReading(3.07, "simple"),
     ]
 
     state0p1 = mf.tick(3.1, control=control, readings=readings1)
 
     readings2 = [
-        StampedReading(3.15, "simple", ekf.make_reading("simple")),
-        StampedReading(3.16, "simple", ekf.make_reading("simple")),
-        StampedReading(3.17, "simple", ekf.make_reading("simple")),
+        StampedReading(3.15, "simple"),
+        StampedReading(3.16, "simple"),
+        StampedReading(3.17, "simple"),
     ]
 
     state0p2 = mf.tick(3.2, control=control, readings=readings2)
