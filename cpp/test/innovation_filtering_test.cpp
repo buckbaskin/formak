@@ -28,13 +28,17 @@ TEST(EditDistance, DoubleInnovation) {
   using CovarianceT = Eigen::Matrix<double, size, size>;
 
   double editing_threshold = 1.0;
+  // y.T * C^{-1} * y - m > k * sqrt(2 * m)
+  // y * 1 * y - 2 > 1.0 * sqrt(2 * 2)
   InnovationT innovation = InnovationT::Zero();
+  innovation(0, 0) = sqrt(sqrt(2 * size) + size) - 0.01;
+
   CovarianceT covariance = CovarianceT::Identity();
 
   EXPECT_FALSE(
       edit::removeInnovation(editing_threshold, innovation, covariance));
 
-  innovation(0, 0) = 2.0;
+  innovation(0, 0) = sqrt(sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
       edit::removeInnovation(editing_threshold, innovation, covariance));
@@ -47,12 +51,14 @@ TEST(EditDistance, TripleInnovation) {
 
   double editing_threshold = 1.0;
   InnovationT innovation = InnovationT::Zero();
+  innovation(0, 0) = sqrt(sqrt(2 * size) + size) - 0.01;
+
   CovarianceT covariance = CovarianceT::Identity();
 
   EXPECT_FALSE(
       edit::removeInnovation(editing_threshold, innovation, covariance));
 
-  innovation(0, 0) = 2.0;
+  innovation(0, 0) = sqrt(sqrt(2 * size) + size) + 0.01;
 
   EXPECT_TRUE(
       edit::removeInnovation(editing_threshold, innovation, covariance));
