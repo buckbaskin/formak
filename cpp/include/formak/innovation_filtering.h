@@ -1,4 +1,6 @@
-namespace innovation_filtering::edit {
+#pragma once
+
+namespace formak::innovation_filtering::edit {
 template <typename InnovationT, typename CovarianceT>
 bool removeInnovation(double editing_threshold, size_t reading_size,
                       const InnovationT& innovation,
@@ -9,8 +11,8 @@ bool removeInnovation(double editing_threshold, size_t reading_size,
   double normalizedInnovation =
       (innovation.transpose() * sensor_estimate_covariance.inverse() *
        innovation)(0, 0);
-  constexpr double innovationExpectation =
+  double innovationExpectation =
       editing_threshold * std::sqrt(2 * reading_size) + reading_size;
   return normalizedInnovation > innovationExpectation;
 }
-}  // namespace innovation_filtering::edit
+}  // namespace formak::innovation_filtering::edit
