@@ -43,5 +43,14 @@ cc_library(
     ],
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = ["@eigen"],
+)
+
+cc_test(
+    name = "innovation-filtering-test",
+    srcs = ["test/innovation_filtering_test.cpp"],
+    deps = [
+        ":innovation-filtering",
+        "@gtest//:gtest_main",
+    ],
 )
