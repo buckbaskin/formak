@@ -535,6 +535,13 @@ class ExtendedKalmanFilter:
             next_state, self.Covariance.from_data(next_covariance)
         )
 
+    def remove_innovation(self, innovation, S_inv):
+        editing_threshold = self.config.innovation_filtering
+        normalized_innovation = innovation.transpose() * S_inv * innovation
+        (sensor_size, _) = innovation.shape
+        expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
+        return normalized_innovation > expected_innovation
+
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
         sensor_size = len(model_impl.readings)
@@ -572,12 +579,7 @@ class ExtendedKalmanFilter:
         )
 
         if self.config.innovation_filtering is not None:
-            editing_threshold = self.config.innovation_filtering
-            normalized_innovation = innovation.transpose() * S_inv * innovation
-            expected_innovation = (
-                editing_threshold * sqrt(2 * sensor_size) + sensor_size
-            )
-            if normalized_innovation > expected_innovation:
+            if self.remove_innovation(innovation, S_inv):
                 return StateAndCovariance(state, covariance)
 
         K_t = _kalman_gain = np.matmul(
