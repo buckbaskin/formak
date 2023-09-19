@@ -2,10 +2,9 @@
 
 Author: Buck Baskin @buck@fosstodon.org
 Created: 2023-08-04
-Updated: 2023-08-04
+Updated: 2023-09-19
 Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
 See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
-Status: 2. Write a feature test(s)
 
 
 ## Overview
@@ -284,3 +283,9 @@ mostly because I want to call it done enough, move to the next thing and
 revisit it (and test it more) if I find that it isn't working as intended.
 
 Beware the forest of refactoring.
+
+## 2023-09-19
+
+The second aspect of this design around model selection was dropped in favor of
+completing the innovation filtering portion of the design. Model selection
+integration will be revisited in a future design.
