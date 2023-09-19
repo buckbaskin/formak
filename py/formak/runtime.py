@@ -8,7 +8,7 @@ from math import floor
 from typing import List, Optional
 
 
-class StampedReading(object):
+class StampedReading:
     def __init__(self, timestamp, sensor_key, *, _data=None, **kwargs):
         self.timestamp = timestamp
         self.sensor_key = sensor_key

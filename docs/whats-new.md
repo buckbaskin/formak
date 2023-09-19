@@ -2,6 +2,18 @@
 
 Release Notes
 
+## 2023-09-18 Innovation Filtering
+
+Innovation filtering provides error rejection for the Kalman Filter. If
+measurements come in that are sufficiently improbable based on the current
+variance of the system then the measurement will be ignored. This is useful for
+cases such as recieving a heading that is 180 degrees opposed to the current
+estimated heading of the vehicle. Maybe it's helpful, but it's likely an
+erroneous reading.
+
+API Change:
+- Refactored error prone creation of sensor data in favor of a new key-based method
+
 ## 2023-08-04 Introducing FormaK Runtime
 
 Commit [`50eeadc`](https://github.com/buckbaskin/formak/commit/50eeadc69655d288a32b20f5b821b77977dba349)

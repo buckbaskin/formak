@@ -39,7 +39,7 @@ def test_constructor():
     calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map)
 
-    innovation = np.zeros((1,1))
+    innovation = np.zeros((1, 1))
     S_inv = np.eye(1)
 
     assert not ekf.remove_innovation(innovation, S_inv)

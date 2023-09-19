@@ -248,3 +248,39 @@ Additional testing should be performed on measurements and filters of multiple s
 
 Revise to a consistent mathematical notation. Also document a revision in how
 the math for innovation filtering is stated.
+
+### 2023-09-18
+
+[Someone Dead Ruined My Life... Again.](https://www.youtube.com/watch?v=qEV9qoup2mQ)
+
+A refactor ruined my ~life~ implementation of this feature.
+
+In the previous implementation
+[PR #17](https://github.com/buckbaskin/formak/pull/17/), I'd run into an issue
+where the state elements and reading elements were not in the order I expected
+or specified. For a state `{"mass", "z", "v", "a"}` the state would be
+generated as `["a", "mass", "v", "z"]`, so `np.array([[0.0, 1.0, 0.0,0.0]])`
+sets the `mass` to `1.0`, but if I renamed `z` to `b` it'd be silently setting
+`b` to 1.0 instead.
+
+This potential for reordering will ultimately be a feature (where the code
+generation can reorder values to better pack into memory) but for now it was
+only a surprise and it led to a failing test (better to fail the test than to
+silently fail though).
+
+When I went to implement innovation filtering, I again ran into this issue.
+Logically, the only solution would be to refactor how all data types are stored
+and passed around in the Python implementation of FormaK.
+
+And so, I walked deep into the forest of refactoring. To cut a long story
+short, this took way longer than I wanted. The first notes I have for the start
+of the refactor is 2023-08-13 and the end of the refactor dates roughly to
+2023-09-07, so I spent nearly 3.5 weeks on this refactor to "avoid confusion"
+and instead introduced lots of internal confusion as I was refactoring and
+instead introduced much consternation.
+
+Today marks the end of the design, partly because I have some tests passing but
+mostly because I want to call it done enough, move to the next thing and
+revisit it (and test it more) if I find that it isn't working as intended.
+
+Beware the forest of refactoring.
