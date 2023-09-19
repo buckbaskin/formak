@@ -1,3 +1,10 @@
+"""
+Feature Test.
+
+Create a model with excessive duplication, then generate it with and without
+common subexpression elimination.
+Passes if CSE demonstrates a significant outperformance in all examples.
+"""
 from functools import partial
 
 import numpy as np
@@ -19,7 +26,9 @@ def test_python_CSE():
 
     # random -> random_sample in 1.25
     inputs = np.random.default_rng(seed=1).random((101, 2))
-    inputs = [np.array([[left, right]]).transpose() for left, right in inputs]
+    inputs = [
+        cse_implementation.State(left=left, right=right) for left, right in inputs
+    ]
 
     # run with CSE, without CSE
     print("CSE")

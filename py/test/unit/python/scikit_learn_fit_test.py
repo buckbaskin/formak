@@ -21,7 +21,7 @@ def test_fit():
     params = {
         "process_noise": {v: 1.0},
         "sensor_models": {"simple": {x: x}},
-        "sensor_noises": {"simple": np.eye(1)},
+        "sensor_noises": {"simple": {x: 1}},
     }
 
     model = python.compile_ekf(

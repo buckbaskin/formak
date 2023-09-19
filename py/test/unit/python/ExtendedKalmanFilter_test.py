@@ -46,38 +46,38 @@ def test_EKF_process_with_control():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
-    covariance = np.eye(2)
+    control_vector = ekf.Control(a=0.2)
+    covariance = ekf.Covariance()
 
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = ekf.State()
     assert_almost_equal(
         ekf.process_model(
             dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
+        )[0].data.transpose(),
         [[0.0, 0.02]],
     )
 
-    state_vector = np.array([[0.0, 1.0]]).transpose()
+    state_vector = ekf.State(y=1.0)
     assert_almost_equal(
         ekf.process_model(
             dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
+        )[0].data.transpose(),
         [[0.0, 1.02]],
     )
 
-    state_vector = np.array([[1.0, 0.0]]).transpose()
+    state_vector = ekf.State(x=1.0)
     assert_almost_equal(
         ekf.process_model(
             dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
+        )[0].data.transpose(),
         [[0.0, 0.02]],
     )
 
-    state_vector = np.array([[1.0, 1.0]]).transpose()
+    state_vector = ekf.State(x=1.0, y=1.0)
     assert_almost_equal(
         ekf.process_model(
             dt=dt, state=state_vector, covariance=covariance, control=control_vector
-        )[0].transpose(),
+        )[0].data.transpose(),
         [[1.0, 1.02]],
     )
 
@@ -97,30 +97,30 @@ def test_EKF_sensor():
             "simple": {"reading1": ui.Symbol("x")},
             "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
         },
-        sensor_noises={"simple": np.eye(1), "combined": np.eye(1)},
+        sensor_noises={"simple": {"reading1": 1.0}, "combined": {"reading2": 1.0}},
         config=config,
     )
 
-    covariance = np.eye(2)
+    covariance = ekf.Covariance()
     reading = 1.0
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = ekf.State()
 
     next_state, next_cov = ekf.sensor_model(
         state=state_vector,
         covariance=covariance,
         sensor_key="simple",
-        sensor_reading=np.array([[reading]]),
+        sensor_reading=ekf.make_reading("simple", reading1=reading),
     )
-    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
+    assert abs(reading - next_state.data[0]) < abs(reading - state_vector.data[0])
 
     next_state, next_cov = ekf.sensor_model(
         state=state_vector,
         covariance=covariance,
         sensor_key="combined",
-        sensor_reading=np.array([[reading]]),
+        sensor_reading=ekf.make_reading("combined", reading2=reading),
     )
-    assert abs(reading - next_state[0]) < abs(reading - state_vector[0])
-    assert abs(reading - next_state[1]) < abs(reading - state_vector[1])
+    assert abs(reading - next_state.data[0]) < abs(reading - state_vector.data[0])
+    assert abs(reading - next_state.data[1]) < abs(reading - state_vector.data[1])
 
 
 def test_EKF_process_jacobian():
@@ -140,27 +140,27 @@ def test_EKF_process_jacobian():
         config=config,
     )
 
-    control_vector = np.array([[0.2]])
+    control_vector = ekf.Control(a=0.2)
 
-    state_vector = np.array([[0.0, 0.0]]).transpose()
+    state_vector = ekf.State()
     assert_almost_equal(
         ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
         [[0.0, 0.0], [0.0, 1.0]],
     )
 
-    state_vector = np.array([[0.0, 1.0]]).transpose()
+    state_vector = ekf.State(y=1.0)
     assert_almost_equal(
         ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
         [[1.0, 0.0], [0.0, 1.0]],
     )
 
-    state_vector = np.array([[1.0, 0.0]]).transpose()
+    state_vector = ekf.State(x=1.0)
     assert_almost_equal(
         ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
         [[0.0, 1.0], [0.0, 1.0]],
     )
 
-    state_vector = np.array([[1.0, 1.0]]).transpose()
+    state_vector = ekf.State(x=1.0, y=1.0)
     assert_almost_equal(
         ekf.process_jacobian(dt=dt, state=state_vector, control=control_vector),
         [[1.0, 1.0], [0.0, 1.0]],
@@ -184,21 +184,21 @@ def test_SensorModel_calibration():
             config=config,
         )
 
-        return model.model(np.zeros((1, 1)))
+        return model.model(model.State())
 
     calibration = {
         "a": -1.4,
     }
     calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
 
-    assert read_once(calibration_map) == -1.4
+    assert read_once(calibration_map).data == -1.4
 
     calibration = {
         "a": 1.2,
     }
     calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
 
-    assert read_once(calibration_map) == 1.2
+    assert read_once(calibration_map).data == 1.2
 
 
 def test_EKF_sensor_jacobian_calibration():
@@ -216,7 +216,7 @@ def test_EKF_sensor_jacobian_calibration():
             process_noise={},
             calibration_map=calibration_map,
             sensor_models={"key": {"reading": ui.Symbol("a") * ui.Symbol("x")}},
-            sensor_noises={"key": np.eye(1)},
+            sensor_noises={"key": {"reading": 1}},
             config=config,
         )
 

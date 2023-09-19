@@ -14,3 +14,5 @@ setuptools>=65.5.1
 ## numba support
 # enables support for color highlighting in backtraces/error messages
 colorama==0.4.5
+
+graphviz==0.20.1

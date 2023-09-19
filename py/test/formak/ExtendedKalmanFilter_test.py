@@ -37,9 +37,9 @@ def test_EKF_process_property(state_x, state_y, control_a):
         config=config,
     )
 
-    control_vector = np.array([[control_a]])
-    covariance = np.eye(2)
-    state_vector = np.array([[state_x, state_y]]).transpose()
+    control_vector = ekf.Control(a=control_a)
+    covariance = ekf.Covariance(x=1, y=1)
+    state_vector = ekf.State(x=state_x, y=state_y)
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         # reject infinite / NaN inputs
@@ -105,13 +105,13 @@ def test_EKF_sensor_property(x, y, a):
         state_model=ui_Model,
         process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_noises={"simple": {ui.Symbol("x"): 1.0}},
         config=config,
     )
 
-    control_vector = np.array([[a]])
-    covariance = np.eye(2)
-    state_vector = np.array([[x, y]]).transpose()
+    control_vector = ekf.Control(a=a)
+    covariance = ekf.Covariance(x=1, y=1)
+    state_vector = ekf.State(x=x, y=y)
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         # reject infinite / NaN inputs
@@ -121,7 +121,10 @@ def test_EKF_sensor_property(x, y, a):
         reject()
 
     next_state, next_cov = ekf.sensor_model(
-        "simple", state=state_vector, covariance=covariance, sensor_reading=np.eye(1)
+        "simple",
+        state=state_vector,
+        covariance=covariance,
+        sensor_reading=ekf.make_reading("simple", 1),
     )
     first_innovation = ekf.innovations["simple"]
 
@@ -150,7 +153,10 @@ def test_EKF_sensor_property(x, y, a):
         raise
 
     ekf.sensor_model(
-        "simple", state=next_state, covariance=next_cov, sensor_reading=np.eye(1)
+        "simple",
+        state=next_state,
+        covariance=next_cov,
+        sensor_reading=ekf.make_reading("simple", 1),
     )
     second_innovation = ekf.innovations["simple"]
 
@@ -180,13 +186,13 @@ def test_EKF_sensor_property_failing_example():
         state_model=ui_Model,
         process_noise={ui.Symbol("a"): 1.0},
         sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_noises={"simple": {ui.Symbol("x"): 1.0}},
         config=config,
     )
 
-    control_vector = np.array([[a]])
-    covariance = np.eye(2)
-    state_vector = np.array([[x, y]]).transpose()
+    control_vector = ekf.Control(a=a)
+    covariance = ekf.Covariance(x=1, y=1)
+    state_vector = ekf.State(x=x, y=y)
 
     if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
         # reject infinite inputs
@@ -196,7 +202,10 @@ def test_EKF_sensor_property_failing_example():
         reject()
 
     next_state, next_cov = ekf.sensor_model(
-        "simple", state=state_vector, covariance=covariance, sensor_reading=np.eye(1)
+        "simple",
+        state=state_vector,
+        covariance=covariance,
+        sensor_reading=ekf.make_reading("simple", 1),
     )
     first_innovation = ekf.innovations["simple"]
 
@@ -225,7 +234,10 @@ def test_EKF_sensor_property_failing_example():
         raise
 
     ekf.sensor_model(
-        "simple", state=next_state, covariance=next_cov, sensor_reading=np.eye(1)
+        "simple",
+        state=next_state,
+        covariance=next_cov,
+        sensor_reading=ekf.make_reading("simple", 1),
     )
     second_innovation = ekf.innovations["simple"]
 

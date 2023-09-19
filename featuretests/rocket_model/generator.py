@@ -1,6 +1,5 @@
 from itertools import repeat
 
-import numpy as np
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -44,7 +43,7 @@ cpp_implementation = cpp.compile_ekf(
     sensor_models={
         "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
     },
-    sensor_noises={"altitude": np.eye(1)},
+    sensor_noises={"altitude": {"altitude": 1.0}},
     calibration_map=calibration_map,
     config=cpp.Config(common_subexpression_elimination=True),
 )

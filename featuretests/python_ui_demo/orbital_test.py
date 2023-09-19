@@ -1,3 +1,10 @@
+"""
+Feature Test.
+
+Lay out a new model based on a simplified rocket
+
+Passes if the Model is constructed without exceptions
+"""
 from collections import defaultdict
 
 from formak import ui

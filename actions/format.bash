@@ -17,8 +17,8 @@ black $DEFAULT ;
 echo "isort"
 isort --profile black py/ featuretests/ languagesupport/
 
-echo "codespell"
-codespell py/ featuretests/ languagesupport/
+# echo "codespell"
+# codespell py/ featuretests/ languagesupport/
 
 echo "clang-format"
 SEARCHRESULT=$(ag --cpp -g ".*" $DEFAULT) ;

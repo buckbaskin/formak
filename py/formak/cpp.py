@@ -41,6 +41,7 @@ class Config:
     common_subexpression_elimination: bool = True
     extra_validation: bool = False
     max_dt_sec: float = 0.1
+    innovation_filtering: float = 5.0
 
     def ccode(self):
         if self.max_dt_sec < 1e-9:
@@ -70,6 +71,13 @@ class Config:
                         ),
                         MemberDeclaration(
                             "static constexpr double", "max_dt_sec", self.max_dt_sec
+                        ),
+                        MemberDeclaration(
+                            "static constexpr double",
+                            "innovation_filtering",
+                            self.innovation_filtering
+                            if self.innovation_filtering
+                            else 0.0,
                         ),
                     ],
                 )
@@ -165,6 +173,10 @@ class Model:
             + self.arglist_calibration
             + self.arglist_control
         )
+
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -300,6 +312,11 @@ class ExtendedKalmanFilter:
             + self.arglist_calibration
             + self.arglist_control
         )
+
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -521,9 +538,10 @@ class ExtendedKalmanFilter:
         for name, sensor_model_mapping, sensor_noise in self.sensorlist:
             typename = name.title()
             identifier = f"SensorId::{name.upper()}"
+            arglist_sensor = sorted(list(sensor_model_mapping.keys()))
             members = "\n".join(
                 "double& %s() { return data(%d, 0); }" % (name, idx)
-                for idx, name in enumerate(sorted(list(sensor_model_mapping.keys())))
+                for idx, name in enumerate(arglist_sensor)
             )
             size = len(sensor_model_mapping)
             if verbose:
@@ -549,10 +567,14 @@ class ExtendedKalmanFilter:
                 )
                 + "}"
             )
-            # TODO(buck): Move this line handling to the template?
             SensorModel_model_body = list(body.compile()) + [return_]
+
+            SensorCovariance = common.named_covariance(
+                f"{name}Covariance", arglist_sensor
+            )
+
             SensorModel_covariance_body = self._translate_sensor_covariance(
-                typename, sensor_noise
+                typename, SensorCovariance.from_dict(sensor_noise)
             )
             SensorModel_jacobian_body = self._translate_sensor_jacobian(
                 typename, sensor_model_mapping
@@ -621,7 +643,7 @@ class ExtendedKalmanFilter:
         rows, cols = covariance.shape
         for i in range(rows):
             for j in range(cols):
-                yield f"covariance({i}, {j})", covariance[i, j]
+                yield f"covariance({i}, {j})", covariance.data[i, j]
 
     def _translate_sensor_covariance(self, typename, covariance):
         yield MemberDeclaration(f"{typename}::CovarianceT", "covariance")
@@ -735,9 +757,9 @@ def header_from_ast(*, generator) -> str:
     )
     includes = [
         "#include <Eigen/Dense>    // Matrix",
+        "#include <formak/innovation_filtering.h>",
     ]
     if generator.enable_EKF:
-        # TODO(buck): Remove this when innovations moved to ManagedFilter
         includes.append("#include <any>")
         includes.append("#include <optional>")
         includes.append("#include <type_traits>")  # false_type

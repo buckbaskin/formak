@@ -1,3 +1,11 @@
+/// Feature Test
+///
+/// Define a C++ implementation of a rocket model. This previously demonstrated
+/// some performance limitations for the C++ generation with a bigger model.
+///
+/// Passes if the C++ implementation is compiled and runs meeting basic model
+/// checks
+
 #include <featuretest/cpp-rocket-model.h>  // Generated
 #include <gtest/gtest.h>
 

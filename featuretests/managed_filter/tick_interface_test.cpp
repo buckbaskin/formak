@@ -1,3 +1,11 @@
+/// Feature Test
+///
+/// Run the new ManagedFilter with a generated EKF. Run it with and without
+/// sensor readings.
+///
+/// Passes if the ManagedFilter updates the state (other testing checks if it's
+/// working correctly).
+
 #include <featuretest/example.h>  // Generated
 #include <formak/runtime/ManagedFilter.h>
 #include <gtest/gtest.h>

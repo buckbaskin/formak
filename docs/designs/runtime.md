@@ -203,7 +203,7 @@ Things I liked:
 
 Added to the design:
 - A `::Tag` type for the filter to aggregate all the various signaling the type needs to do to coordinate with the `ManagedFilter`. We'll see if this design choice holds up.
-- [`SFINAE`](https://en.cppreference.com/w/cpp/language/sfinae): Substitution Failure Is Not An Error. In order to support code generation that may or may not have a `Calibration` type or a `Control` type I opted to use SFINAE to selectively add or remove different interfaces. This was simplified somewhat by using if-constexpr internally, but the interfaces are still messy and it feels very close to repeated code copy-pasting. This generation with different interfaces for the end user is adding additional complication for me, but I hope it continues to fall under the heading of accept complexity on my side to achieve an easier to use / more focused version for users.
+- [`SFINAE`](https://en.cppreference.com/w/cpp/language/sfinae): Substitution Failure Is Not An Error. In order to support code generation that may or may not have a `Calibration` type or a `Control` type I opted to use SFINAE to selectively add or remove different interfaces. This was simplified somewhat by using if-constexpr internally, but the interfaces are still messy and it feels close to repeated code copy-pasting. This generation with different interfaces for the end user is adding additional complication for me, but I hope it continues to fall under the heading of accept complexity on my side to achieve an easier to use / more focused version for users.
 
 Things missing from the final version:
 - Performance guaruntees

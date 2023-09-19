@@ -30,11 +30,16 @@ def test_Model_impl_property(x, y, a):
         config,
     )
 
-    control_vector = np.array([[a]])
-    state_vector = np.array([[x, y]]).transpose()
-    if not np.isfinite(state_vector).all() or not np.isfinite(control_vector).all():
+    control_vector = model.Control(a=a)
+    state_vector = model.State(x=x, y=y)
+    if (
+        not np.isfinite(state_vector.data).all()
+        or not np.isfinite(control_vector.data).all()
+    ):
         reject()
-    if (np.abs(state_vector) > 1e100).any() or (np.abs(control_vector) > 1e100).any():
+    if (np.abs(state_vector.data) > 1e100).any() or (
+        np.abs(control_vector.data) > 1e100
+    ).any():
         reject()
 
     next_state = model.model(dt=dt, state=state_vector, control_vector=control_vector)

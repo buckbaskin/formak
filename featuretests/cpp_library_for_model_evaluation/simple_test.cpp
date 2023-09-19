@@ -1,3 +1,8 @@
+/// Feature Test
+///
+/// Generate a Model in C++ and test a model iteration.
+/// Passes if the model matches the definition.
+
 #include <formak/cpp-model.h>  // Generated
 #include <gtest/gtest.h>
 

@@ -1,9 +1,16 @@
+import abc
+import types
 from itertools import product
 from typing import Dict, Tuple, Union
 
+import numpy as np
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
+
+
+class UiModelBase:
+    """Use as a base class for ui.Model, but in a separate file from ui.Model so that formak.python doesn't directly depend on formak.ui just for typing."""
 
 
 def model_validation(
@@ -83,3 +90,104 @@ def model_validation(
             raise ModelConstructionError(
                 f"Model has solutions in state space where covariance will collapse to zero. Example Solutions:\n -{solution_repr}"
             )
+
+
+class _NamedArrayBase(abc.ABC):
+    def __init__(self, name, kwargs):
+        self.name = name
+        self._kwargs = kwargs
+
+    def __repr__(self):
+        kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
+        return f"{self.name}({kwargs})"
+
+    def __iter__(self):
+        return iter(self.data)
+
+    @classmethod
+    def from_data(cls, data):
+        if data.shape != cls.shape:
+            raise ValueError(f"Expected shape {cls.shape}, got shape {data.shape}")
+        return cls(_data=data)
+
+    @classmethod
+    def from_dict(cls, mapping):
+        return cls(**{str(k): v for k, v in mapping.items()})
+
+    @classmethod
+    def __subclasshook__(cls, Other):
+        raise NotImplementedError()
+
+
+def named_vector(name, arglist):
+    class _NamedVector(_NamedArrayBase):
+        _name = name
+        _arglist = arglist
+        shape = (len(arglist), 1)
+
+        def __init__(self, *, _data=None, **kwargs):
+            super().__init__(name, kwargs)
+
+            allowed_keys = [str(arg) for arg in arglist]
+            for key in kwargs:
+                if key not in allowed_keys:
+                    raise TypeError(
+                        f"{name}() got an unexpected keyword argument {key}"
+                    )
+
+            if _data is not None:
+                assert len(kwargs) == 0
+                self.data = _data
+            else:
+                self.data = np.zeros((len(arglist), 1))
+
+            for idx, key in enumerate(allowed_keys):
+                if key in kwargs:
+                    self.data[idx, 0] = kwargs[key]
+
+        @classmethod
+        def __subclasshook__(cls, Other):
+            return (
+                Other.__name__ == name
+                and cls._arglist == Other._arglist
+                and cls.shape == Other.shape
+            )
+
+    return types.new_class(name, bases=(_NamedVector,))
+
+
+def named_covariance(name, arglist):
+    class _NamedCovariance(_NamedArrayBase):
+        _name = name
+        _arglist = arglist
+        shape = (len(arglist), len(arglist))
+
+        def __init__(self, *, _data=None, **kwargs):
+            super().__init__(name, kwargs)
+
+            allowed_keys = [str(arg) for arg in arglist]
+            for key in kwargs:
+                if key not in allowed_keys:
+                    raise TypeError(
+                        f"{name}() got an unexpected keyword argument {key}"
+                    )
+
+            if _data is not None:
+                assert len(kwargs) == 0
+                self.data = _data
+            else:
+                self.data = np.eye(len(arglist))
+
+            for idx, key in enumerate(allowed_keys):
+                if key in kwargs:
+                    self.data[idx, idx] = kwargs[key]
+
+        @classmethod
+        def __subclasshook__(cls, Other):
+            return (
+                Other.__name__ == name
+                and cls._arglist == Other._arglist
+                and cls.shape == Other.shape
+            )
+
+    return types.new_class(name, bases=(_NamedCovariance,))

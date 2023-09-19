@@ -1,5 +1,3 @@
-import numpy as np
-
 from formak import cpp, ui
 
 dt = ui.Symbol("dt")
@@ -18,13 +16,15 @@ state_model = {
     tp["a"]: -9.81 * tp["mass"] + thrust,
 }
 
+v = ui.Symbol("v")
+
 model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
 cpp_implementation = cpp.compile_ekf(
     state_model=model,
     process_noise={thrust: 1.0},
-    sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-    sensor_noises={"simple": np.eye(1)},
+    sensor_models={"simple": {v: v}},
+    sensor_noises={"simple": {v: 1.0}},
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))

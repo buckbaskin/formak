@@ -1,6 +1,12 @@
+"""
+Feature Test.
+
+Define a C++ implementation of a rocket model
+
+Passes if the C++ implementation is written to disk without an exception
+"""
 from itertools import repeat
 
-import numpy as np
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -46,6 +52,6 @@ def test_cpp_EKF():
         sensor_models={
             "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
         },
-        sensor_noises={"altitude": np.eye(1)},
+        sensor_noises={"altitude": {ui.Symbol("altitude"): 1.0}},
         calibration_map=calibration_map,
     )

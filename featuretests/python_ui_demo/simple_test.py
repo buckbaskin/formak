@@ -1,3 +1,10 @@
+"""
+Feature Test.
+
+Lay out a new model
+
+Passes if the Model is constructed without exceptions
+"""
 from formak import ui
 
 

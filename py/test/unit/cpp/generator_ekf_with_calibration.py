@@ -1,5 +1,3 @@
-import numpy as np
-
 from formak import cpp, ui
 
 dt, a, b, x, y = ui.symbols(["dt", "a", "b", "x", "y"])
@@ -16,7 +14,7 @@ cpp_implementation = cpp.compile_ekf(
     state_model=ui_model,
     process_noise={},
     sensor_models={"y": {y: x + b}},
-    sensor_noises={"y": np.eye(1)},
+    sensor_noises={"y": {y: 1}},
     calibration_map={ui.Symbol("a"): 5.0, ui.Symbol("b"): 0.5},
     config={},
 )

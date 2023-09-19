@@ -1,3 +1,8 @@
+/// Feature Test
+///
+/// Generate an EKF in C++. Test a model iteration and a sensor update.
+/// Passes if the updates match the expected model
+
 #include <formak/cpp-ekf.h>  // Generated
 #include <gtest/gtest.h>
 

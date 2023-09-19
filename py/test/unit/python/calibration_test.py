@@ -1,5 +1,3 @@
-import numpy as np
-
 from formak import python, ui
 
 
@@ -24,16 +22,16 @@ def test_Model_creation_calibration():
 
     dt = 0.1
 
-    state_vector = np.array([[0.0]])
-    assert (model.model(dt=dt, state=state_vector).transpose() == [0.0]).all()
+    state_vector = model.State(x=0.0)
+    assert (model.model(dt=dt, state=state_vector).data.transpose() == [0.0]).all()
 
     model = python.compile(
         ui_model,
         calibration_map={ui.Symbol("a"): 5.0, ui.Symbol("b"): 0.5},
         config={},
     )
-    state_vector = np.array([[-1.0]])
-    assert (model.model(dt=dt, state=state_vector).transpose() == [4.5]).all()
+    state_vector = model.State(x=-1.0)
+    assert (model.model(dt=dt, state=state_vector).data.transpose() == [4.5]).all()
 
 
 def test_EKF_creation_calibration():
@@ -53,19 +51,19 @@ def test_EKF_creation_calibration():
         state_model=ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
-        sensor_noises={y: np.eye(1)},
+        sensor_noises={y: {y: 1}},
         calibration_map={a: 0.0, b: 0.0},
         config={},
     )
 
     dt = 0.1
-    state_covariance = np.eye(1)
+    state_covariance = ekf.Covariance(x=1)
 
-    state_vector = np.array([[0.0]])
+    state_vector = ekf.State(x=0.0)
     assert (
         ekf.process_model(
             dt=dt, state=state_vector, covariance=state_covariance
-        ).state.transpose()
+        ).state.data.transpose()
         == [0.0]
     ).all()
 
@@ -73,14 +71,14 @@ def test_EKF_creation_calibration():
         ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
-        sensor_noises={y: np.eye(1)},
+        sensor_noises={y: {y: 1}},
         calibration_map={a: 5.0, b: 0.5},
         config={},
     )
-    state_vector = np.array([[-1.0]])
+    state_vector = ekf.State(x=-1.0)
     assert (
         ekf.process_model(
             dt=dt, state=state_vector, covariance=state_covariance
-        ).state.transpose()
+        ).state.data.transpose()
         == [4.5]
     ).all()

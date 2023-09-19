@@ -1,4 +1,11 @@
-import numpy as np
+"""
+Feature Test.
+
+Define a Python implementation of a rocket model. This previously demonstrated
+some performance limitations for the Python generation with a bigger model.
+
+Passes if the Python implementation is created and runs without an exception
+"""
 from model_definition import model_definition
 
 from formak import python, ui
@@ -25,8 +32,8 @@ def test_python_Model():
         calibration_map=calibration_map,
     )
 
-    state_vector = np.zeros((9, 1))
-    control_vector = np.zeros((6, 1))
+    state_vector = python_implementation.State()
+    control_vector = python_implementation.Control()
 
     _state_vector_next = python_implementation.model(
         dt=0.01,

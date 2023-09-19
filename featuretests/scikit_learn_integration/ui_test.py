@@ -1,3 +1,12 @@
+"""
+Feature Test.
+
+Generate a Python model and run it against a handful of tests that exercise a
+scikit-learn-like interface
+
+Passes if the interfaces return results that match the expected shape of each
+scikit-learn interface
+"""
 import numpy as np
 
 from formak import python, ui
@@ -23,7 +32,7 @@ def test_UI_like_sklearn():
     params = {
         "process_noise": {thrust: 1.0},
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        "sensor_noises": {"simple": np.eye(1)},
+        "sensor_noises": {"simple": {ui.Symbol("v"): 1.0}},
     }
 
     model = python.compile_ekf(

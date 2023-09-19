@@ -18,7 +18,7 @@ def test_transform():
     params = {
         "process_noise": {v: 1e-6},
         "sensor_models": {"simple": {x: x}},
-        "sensor_noises": {"simple": np.eye(1)},
+        "sensor_noises": {"simple": {x: 1}},
     }
 
     model = python.compile_ekf(
@@ -51,7 +51,7 @@ def test_transform_kalman_filter_args():
     params = {
         "process_noise": {v: 1.0},
         "sensor_models": {"simple": {x: x}},
-        "sensor_noises": {"simple": np.eye(1)},
+        "sensor_noises": {"simple": {x: 1}},
     }
 
     model = python.compile_ekf(
@@ -64,9 +64,15 @@ def test_transform_kalman_filter_args():
     innovations, states, covariances = model.transform(X, include_states=True)
 
     assert innovations.shape == (n_samples, n_features - len(control))
-    assert states.shape == (n_samples + 1, len(state), 1)
-    assert covariances.shape == (n_samples + 1, len(state), len(state))
+    assert states.shape == (n_samples + 1,)
+    assert isinstance(states[0], model.State)
+    assert covariances.shape == (n_samples + 1,)
+    assert isinstance(covariances[0], model.Covariance)
 
     assert not np.allclose(innovations, np.zeros_like(innovations))
-    assert not np.allclose(states, np.zeros_like(states))
-    assert not np.allclose(covariances, np.zeros_like(covariances))
+    assert not np.allclose(
+        [s.data for s in states], np.zeros((n_samples + 1, len(state), 1))
+    )
+    assert not np.allclose(
+        [c.data for c in covariances], np.zeros((n_samples + 1, len(state), len(state)))
+    )

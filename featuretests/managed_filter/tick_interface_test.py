@@ -1,3 +1,11 @@
+"""
+Feature Test.
+
+Run the new ManagedFilter with a generated EKF. Run it with and without sensor readings.
+
+Passes if the ManagedFilter updates the state (other testing checks if it's
+working correctly).
+"""
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
 
@@ -21,22 +29,24 @@ def make_ekf():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
+    v = ui.Symbol("v")
+
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
     ekf = python.compile_ekf(
         state_model=model,
         process_noise={thrust: 1.0},
-        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_models={"simple": {v: v}},
+        sensor_noises={"simple": {v: 1.0}},
     )
     return ekf
 
 
 def test_tick_time_only():
     ekf = make_ekf()
-    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
-    covariance = np.eye(4)
-    control = np.array([[0.0]])
+    state = ekf.State(v=1.0)
+    covariance = ekf.Covariance()
+    control = ekf.Control()
     mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
     state0p1 = mf.tick(0.1, control=control)
@@ -48,9 +58,9 @@ def test_tick_time_only():
 
 def test_tick_empty_sensor_readings():
     ekf = make_ekf()
-    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
-    covariance = np.eye(4)
-    control = np.array([[0.0]])
+    state = ekf.State(v=1.0)
+    covariance = ekf.Covariance()
+    control = ekf.Control()
     mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
     state0p1 = mf.tick(2.1, control=control, readings=[])
@@ -62,16 +72,16 @@ def test_tick_empty_sensor_readings():
 
 def test_tick_one_sensor_reading():
     ekf = make_ekf()
-    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
-    covariance = np.eye(4)
-    control = np.array([[0.0]])
+    state = ekf.State(v=1.0)
+    covariance = ekf.Covariance()
+    control = ekf.Control()
     mf = ManagedFilter(ekf=ekf, start_time=2.0, state=state, covariance=covariance)
 
-    reading1 = StampedReading(2.05, "simple", np.zeros((1, 1)))
+    reading1 = StampedReading(2.05, "simple")
 
     state0p1 = mf.tick(2.1, control=control, readings=[reading1])
 
-    reading2 = StampedReading(2.15, "simple", np.zeros((1, 1)))
+    reading2 = StampedReading(2.15, "simple")
 
     state0p2 = mf.tick(2.2, control=control, readings=[reading2])
 
@@ -80,23 +90,23 @@ def test_tick_one_sensor_reading():
 
 def test_tick_multiple_sensor_reading():
     ekf = make_ekf()
-    state = np.array([[0.0, 1.0, 0.0, 0.0]]).transpose()
-    covariance = np.eye(4)
-    control = np.array([[0.0]])
+    state = ekf.State(v=1.0)
+    covariance = ekf.Covariance()
+    control = ekf.Control()
     mf = ManagedFilter(ekf=ekf, start_time=3.0, state=state, covariance=covariance)
 
     readings1 = [
-        StampedReading(3.05, "simple", np.zeros((1, 1))),
-        StampedReading(3.06, "simple", np.zeros((1, 1))),
-        StampedReading(3.07, "simple", np.zeros((1, 1))),
+        StampedReading(3.05, "simple"),
+        StampedReading(3.06, "simple"),
+        StampedReading(3.07, "simple"),
     ]
 
     state0p1 = mf.tick(3.1, control=control, readings=readings1)
 
     readings2 = [
-        StampedReading(3.15, "simple", np.zeros((1, 1))),
-        StampedReading(3.16, "simple", np.zeros((1, 1))),
-        StampedReading(3.17, "simple", np.zeros((1, 1))),
+        StampedReading(3.15, "simple"),
+        StampedReading(3.16, "simple"),
+        StampedReading(3.17, "simple"),
     ]
 
     state0p2 = mf.tick(3.2, control=control, readings=readings2)

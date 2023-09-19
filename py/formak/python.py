@@ -1,6 +1,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
+from math import sqrt
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -31,6 +32,7 @@ class Config:
     python_modules = DEFAULT_MODULES
     extra_validation: bool = False
     max_dt_sec: float = 0.1
+    innovation_filtering: float = 5.0
 
 
 class BasicBlock:
@@ -128,6 +130,10 @@ class Model:
             + self.arglist_control
         )
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+
         self.calibration_vector = np.zeros((0, 0))
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -173,41 +179,29 @@ class Model:
                 raise TypeError(
                     "model() missing 1 required positional argument: 'control_vector'"
                 )
-            control_vector = np.zeros((0, 1))
+            control_vector = self.Control()
 
-        assert isinstance(dt, float)
-        assert isinstance(state, np.ndarray)
-        assert isinstance(control_vector, np.ndarray)
-
-        assert state.shape == (self.state_size, 1)
-        assert control_vector.shape == (self.control_size, 1)
-
-        next_state = np.zeros((self.state_size, 1))
-        for i, (state_id, result) in enumerate(
-            zip(
-                self.arglist_state,
-                self._impl.execute(
-                    dt, *state, *self.calibration_vector, *control_vector
-                ),
+        try:
+            assert isinstance(dt, float)
+            assert isinstance(state, self.State)
+            assert isinstance(control_vector, self.Control)
+        except AssertionError:
+            print(
+                f"model({type(dt)} {dt}, {type(state)} {state}, {type(control_vector)} {control_vector}"
             )
-        ):
-            try:
-                next_state[i, 0] = result
-            except (TypeError, ValueError) as e:
-                print(
-                    "%s when trying to process process model for state %s"
-                    % (
-                        type(e),
-                        state_id,
-                    )
+            raise
+
+        next_state = self.State(
+            **{
+                str(state_id): result
+                for state_id, result in zip(
+                    self.arglist_state,
+                    self._impl.execute(
+                        dt, *state, *self.calibration_vector, *control_vector
+                    ),
                 )
-                print(
-                    f"given:\nstate: {state}\ncalibration: {self.calibration_vector}\ncontrol: {control_vector}"
-                )
-                print("expected: float")
-                if "result" in locals():
-                    print("found: {}, {}".format(type(result), result))
-                raise
+            }
+        )
 
         return next_state
 
@@ -227,6 +221,12 @@ class SensorModel:
         )
         self.arglist = self.arglist_state + self.arglist_calibration
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.Reading = common.named_vector("Reading", self.readings)
+        self.ReadingCovariance = common.named_vector("ReadingCovariance", self.readings)
+
         self.calibration_vector = np.array(
             [[calibration_map[k] for k in self.arglist_calibration]]
         ).transpose()
@@ -244,14 +244,13 @@ class SensorModel:
         ## "Pre-flight" Checks
 
         # Pre-check model for type errors
-        self.model(np.zeros((self.state_size, 1)))
+        self.model(self.State())
 
     def __len__(self):
         return len(self.sensor_models)
 
     def model(self, state_vector):
-        assert isinstance(state_vector, np.ndarray)
-        assert state_vector.shape == (self.state_size, 1)
+        assert isinstance(state_vector, self.State)
 
         reading = np.zeros((self.sensor_size, 1))
         for i, (reading_id, result) in enumerate(
@@ -272,7 +271,7 @@ class SensorModel:
                 if "result" in locals():
                     print("found: {}, {}".format(type(result), result))
                 raise
-        return reading
+        return self.Reading.from_data(reading)
 
 
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
@@ -284,7 +283,7 @@ class ExtendedKalmanFilter:
         state_model,
         process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
-        sensor_noises,
+        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         config,
         calibration_map=None,
     ):
@@ -301,9 +300,15 @@ class ExtendedKalmanFilter:
         self.control_size = len(state_model.control)
         self.calibration_size = len(state_model.calibration)
         self.arglist_state = sorted(list(state_model.state), key=lambda x: x.name)
+        self.arglist_control = sorted(list(state_model.control), key=lambda x: x.name)
         self.arglist_calibration = sorted(
             list(state_model.calibration), key=lambda x: x.name
         )
+
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         self.params = {
             "process_noise": None,
@@ -336,8 +341,8 @@ class ExtendedKalmanFilter:
 
         process_noise_matrix = np.eye(self._state_model.control_size)
 
-        for iIdx, iSymbol in enumerate(self._state_model.arglist_control):
-            for jIdx, jSymbol in enumerate(self._state_model.arglist_control):
+        for iIdx, iSymbol in enumerate(self.arglist_control):
+            for jIdx, jSymbol in enumerate(self.arglist_control):
                 if (iSymbol, jSymbol) in process_noise:
                     value = process_noise[(iSymbol, jSymbol)]
                 elif (jSymbol, iSymbol) in process_noise:
@@ -367,9 +372,7 @@ class ExtendedKalmanFilter:
 
         symbolic_control_jacobian = []
         if self.control_size > 0:
-            symbolic_control_jacobian = process_matrix.jacobian(
-                self._state_model.arglist_control
-            )
+            symbolic_control_jacobian = process_matrix.jacobian(self.arglist_control)
 
         self._impl_process_jacobian = BasicBlock(
             arglist=self._state_model.arglist,
@@ -390,6 +393,8 @@ class ExtendedKalmanFilter:
         self, state_model, sensor_models, sensor_noises, calibration_map, config
     ):
         assert set(sensor_models.keys()) == set(sensor_noises.keys())
+        assert isinstance(sensor_noises, dict)
+        assert len(sensor_noises) == len(sensor_models)
 
         self.params["sensor_models"] = {
             k: SensorModel(
@@ -400,13 +405,18 @@ class ExtendedKalmanFilter:
             )
             for k, model in sensor_models.items()
         }
-        for k in self.params["sensor_models"].keys():
-            assert sensor_noises[k].shape == (
-                self.params["sensor_models"][k].sensor_size,
-                self.params["sensor_models"][k].sensor_size,
+
+        matrix_sensor_noises = {}
+        for key, model in self.params["sensor_models"].items():
+            assert isinstance(sensor_noises[key], dict)
+            assert (
+                len(sensor_noises[key]) == self.params["sensor_models"][key].sensor_size
+            )
+            matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
+                sensor_noises[key]
             )
 
-        self.params["sensor_noises"] = sensor_noises
+        self.params["sensor_noises"] = matrix_sensor_noises
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
@@ -439,6 +449,12 @@ class ExtendedKalmanFilter:
 
         self.innovations = {}
         self.sensor_prediction_uncertainty = {}
+
+    def make_reading(self, key, *, data=None, **kwargs):
+        if len(kwargs) == 0 and data is not None:
+            return self.params["sensor_models"][key].Reading.from_data(data)
+
+        return self.params["sensor_models"][key].Reading(**kwargs)
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
@@ -482,12 +498,12 @@ class ExtendedKalmanFilter:
 
     def process_model(self, dt, state, covariance, control=None):
         if control is None:
-            control = np.zeros((0, 1))
+            control = self.Control()
 
         try:
-            assert isinstance(state, np.ndarray)
-            assert isinstance(covariance, np.ndarray)
-            assert isinstance(control, np.ndarray)
+            assert isinstance(state, self.State)
+            assert isinstance(covariance, self.Covariance)
+            assert isinstance(control, self.Control)
         except AssertionError:
             print(
                 "process_model(dt: %s, state: %s, covariance: %s, control: %s)"
@@ -495,22 +511,13 @@ class ExtendedKalmanFilter:
             )
             raise
 
-        try:
-            assert state.shape == (self.state_size, 1)
-            assert covariance.shape == (self.state_size, self.state_size)
-            assert control.shape == (self.control_size, 1)
-        except AssertionError:
-            print(
-                "process_model(dt: %s, state: %s, covariance: %s, control: %s)"
-                % (dt, state.shape, covariance.shape, control.shape)
-            )
-            raise
-
         # TODO(buck): CSE across the whole process computation (model, jacobians)
         G_t = self.process_jacobian(dt, state, control)
         V_t = self.control_jacobian(dt, state, control)
 
-        next_state_covariance = np.matmul(G_t, np.matmul(covariance, G_t.transpose()))
+        next_state_covariance = np.matmul(
+            G_t, np.matmul(covariance.data, G_t.transpose())
+        )
         assert next_state_covariance.shape == covariance.shape
 
         next_control_covariance = np.matmul(
@@ -522,9 +529,18 @@ class ExtendedKalmanFilter:
         assert next_covariance.shape == covariance.shape
 
         next_state = self._state_model.model(dt, state, control)
-        assert next_state.shape == state.shape
+        assert isinstance(next_state, self.State)
 
-        return StateAndCovariance(next_state, next_covariance)
+        return StateAndCovariance(
+            next_state, self.Covariance.from_data(next_covariance)
+        )
+
+    def remove_innovation(self, innovation, S_inv):
+        editing_threshold = self.config.innovation_filtering
+        normalized_innovation = innovation.transpose() * S_inv * innovation
+        (sensor_size, _) = innovation.shape
+        expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
+        return normalized_innovation > expected_innovation
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
         model_impl = self.params["sensor_models"][sensor_key]
@@ -532,9 +548,9 @@ class ExtendedKalmanFilter:
         Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
 
         try:
-            assert isinstance(state, np.ndarray)
-            assert isinstance(covariance, np.ndarray)
-            assert isinstance(sensor_reading, np.ndarray)
+            assert isinstance(state, self.State)
+            assert isinstance(covariance, self.Covariance)
+            assert isinstance(sensor_reading, model_impl.Reading)
         except AssertionError:
             print(
                 "sensor_model(state: %s, covariance: %s, sensor_key: %s, sensor_reading: %s)"
@@ -547,46 +563,45 @@ class ExtendedKalmanFilter:
             )
             raise
 
-        try:
-            assert state.shape == (self.state_size, 1)
-            assert covariance.shape == (self.state_size, self.state_size)
-            assert sensor_reading.shape == (sensor_size, 1)
-            assert Q_t.shape == (sensor_size, sensor_size)
-        except AssertionError:
-            print(
-                "sensor_model(state: %s, covariance: %s, sensor_key, sensor_reading: %s)"
-                % (state.shape, covariance.shape, sensor_reading.shape)
-            )
-            raise
-
         expected_reading = model_impl.model(state)
+        assert isinstance(expected_reading, model_impl.Reading)
 
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
-            np.matmul(H_t, np.matmul(covariance, H_t.transpose())) + Q_t
+            np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
         )
         S_inv = np.linalg.inv(S_t)
 
-        K_t = _kalman_gain = np.matmul(covariance, np.matmul(H_t.transpose(), S_inv))
+        self.innovations[sensor_key] = innovation = (
+            sensor_reading.data - expected_reading.data
+        )
 
-        self.innovations[sensor_key] = innovation = sensor_reading - expected_reading
+        if self.config.innovation_filtering is not None:
+            if self.remove_innovation(innovation, S_inv):
+                return StateAndCovariance(state, covariance)
 
-        next_covariance = covariance - np.matmul(K_t, np.matmul(H_t, covariance))
-        assert next_covariance.shape == covariance.shape
+        K_t = _kalman_gain = np.matmul(
+            covariance.data, np.matmul(H_t.transpose(), S_inv)
+        )
 
-        next_state = state + np.matmul(K_t, innovation)
-        assert next_state.shape == state.shape
+        next_covariance = covariance.data - np.matmul(
+            K_t, np.matmul(H_t, covariance.data)
+        )
 
-        return StateAndCovariance(next_state, next_covariance)
+        next_state = state.data + np.matmul(K_t, innovation)
+
+        return StateAndCovariance(
+            self.State.from_data(next_state), self.Covariance.from_data(next_covariance)
+        )
 
     ### scikit-learn / sklearn interface ###
 
     def _flatten_scoring_params(self, params):
         flattened = list(np.diagonal(params["process_noise"]))
         for key in sorted(list(params["sensor_models"])):
-            flattened.extend(np.diagonal(params["sensor_noises"][key]))
+            flattened.extend(np.diagonal(params["sensor_noises"][key].data))
 
         return flattened
 
@@ -601,9 +616,9 @@ class ExtendedKalmanFilter:
         np.fill_diagonal(params["process_noise"], controls)
 
         for key in sorted(list(self.params["sensor_models"])):
-            sensor_size = len(np.diagonal(params["sensor_noises"][key]))
+            sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
-            np.fill_diagonal(params["sensor_noises"][key], sensor)
+            np.fill_diagonal(params["sensor_noises"][key].data, sensor)
 
         return params
 
@@ -674,7 +689,7 @@ class ExtendedKalmanFilter:
         matrix_weight = 1e-2
         matrix_score = np.sum(np.square(self.params["process_noise"]))
         for sensor_noise in self.params["sensor_noises"].values():
-            matrix_score += np.sum(np.square(sensor_noise))
+            matrix_score += np.sum(np.square(sensor_noise.data))
 
         if explain_score:
             return (
@@ -705,8 +720,8 @@ class ExtendedKalmanFilter:
 
         dt = 0.1
 
-        state = np.zeros((self.state_size, 1))
-        covariance = np.eye(self.state_size)
+        state = self.State()
+        covariance = self.Covariance()
 
         innovations = []
         states = [state]
@@ -717,7 +732,9 @@ class ExtendedKalmanFilter:
                 X[idx, : self.control_size],
                 X[idx, self.control_size :],
             )
-            controls_input = controls_input.reshape((self.control_size, 1))
+            controls_input = self.Control.from_data(
+                controls_input.reshape((self.control_size, 1))
+            )
 
             state, covariance = self.process_model(
                 dt, state, covariance, controls_input
@@ -732,7 +749,9 @@ class ExtendedKalmanFilter:
                     the_rest[:sensor_size],
                     the_rest[sensor_size:],
                 )
-                sensor_input = sensor_input.reshape((sensor_size, 1))
+                sensor_input = self.make_reading(
+                    key, data=sensor_input.reshape((sensor_size, 1))
+                )
 
                 state, covariance = self.sensor_model(
                     state=state,
@@ -803,7 +822,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 
 def compile_ekf(
-    state_model,
+    state_model: common.UiModelBase,
     process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     sensor_noises,

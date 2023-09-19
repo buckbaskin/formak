@@ -7,7 +7,18 @@ from collections import namedtuple
 from math import floor
 from typing import List, Optional
 
-StampedReading = namedtuple("StampedReading", ["timestamp", "sensor_key", "data"])
+
+class StampedReading:
+    def __init__(self, timestamp, sensor_key, *, _data=None, **kwargs):
+        self.timestamp = timestamp
+        self.sensor_key = sensor_key
+        self._data = _data
+        self.kwargs = kwargs
+
+    @classmethod
+    def from_data(cls, timestamp, sensor_key, data):
+        return cls(_data=data)
+
 
 StateAndVariance = namedtuple("StateAndVariance", ["state", "covariance"])
 
@@ -48,11 +59,16 @@ class ManagedFilter:
                 control=control,
             )
 
+            if sensor_reading._data is None:
+                sensor_reading._data = self._impl.make_reading(
+                    sensor_reading.sensor_key, **sensor_reading.kwargs
+                )
+
             (self.state, self.covariance) = self._impl.sensor_model(
                 state=self.state,
                 covariance=self.covariance,
                 sensor_key=sensor_reading.sensor_key,
-                sensor_reading=sensor_reading.data,
+                sensor_reading=sensor_reading._data,
             )
 
         _, state_and_variance = self._process_model(output_time, control)
@@ -79,8 +95,5 @@ class ManagedFilter:
             state, covariance = self._impl.process_model(
                 output_time - iter_time, state, covariance, control
             )
-
-        print("expected_iterations", "self.current_time", "output_time", "iter_time")
-        print(expected_iterations, self.current_time, output_time, iter_time)
 
         return output_time, StateAndVariance(state, covariance)

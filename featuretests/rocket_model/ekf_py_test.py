@@ -1,6 +1,13 @@
+"""
+Feature Test.
+
+Define a Python implementation of a rocket model. This previously demonstrated
+some performance limitations for the Python generation with a bigger model.
+
+Passes if the Python implementation is created and runs without an exception
+"""
 from itertools import repeat
 
-import numpy as np
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -46,13 +53,13 @@ def test_python_EKF():
         sensor_models={
             "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
         },
-        sensor_noises={"altitude": np.eye(1)},
+        sensor_noises={"altitude": {ui.Symbol("altitude"): 1.0}},
         calibration_map=calibration_map,
     )
 
-    state_vector = np.zeros((9, 1))
-    state_covariance = np.eye(9)
-    control_vector = np.zeros((6, 1))
+    state_vector = python_implementation.State()
+    state_covariance = python_implementation.Covariance()
+    control_vector = python_implementation.Control()
 
     _state_vector_next = python_implementation.process_model(
         dt=0.01, state=state_vector, covariance=state_covariance, control=control_vector

@@ -1,5 +1,10 @@
-import numpy as np
+"""
+Feature Test.
 
+Create a Python implementation of an EKF.
+
+Passes if the EKF runs without exceptions
+"""
 from formak import python, ui
 
 
@@ -22,17 +27,19 @@ def test_ekf_simple():
 
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
+    v = ui.Symbol("v")
+
     python_ekf = python.compile_ekf(
         state_model=model,
         process_noise={thrust: 1.0},
-        sensor_models={"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        sensor_noises={"simple": np.eye(1)},
+        sensor_models={"simple": {v: v}},
+        sensor_noises={"simple": {v: 1.0}},
     )
     assert isinstance(python_ekf, python.ExtendedKalmanFilter)
 
-    state_vector = np.array([[0.0, 0.0, 0.0, 0.0]]).transpose()
-    state_variance = np.eye(4)
-    control_vector = np.array([[0.0]])
+    state_vector = python_ekf.State()
+    state_variance = python_ekf.Covariance()
+    control_vector = python_ekf.Control()
 
     state_vector_next, state_variance_next = python_ekf.process_model(
         0.1, state_vector, state_variance, control_vector
@@ -42,5 +49,5 @@ def test_ekf_simple():
         state=state_vector,
         covariance=state_variance,
         sensor_key="simple",
-        sensor_reading=np.array([[0.0]]),
+        sensor_reading=python_ekf.make_reading("simple", v=0.0),
     )

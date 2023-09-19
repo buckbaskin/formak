@@ -1,3 +1,9 @@
+/// Feature Test
+///
+/// Create a model with excessive duplication, then generate it with and without
+/// common subexpression elimination.
+/// Passes if CSE demonstrates a significant outperformance in all examples.
+
 #include <cse/cse-model.h>  // Generated
 #include <formak/utils/microbenchmark.h>
 #include <gtest/gtest.h>

@@ -199,3 +199,12 @@ py_binary(
     srcs = ["src/ast_compile.py"],
     main = "src/ast_compile.py",
 )
+
+py_binary(
+    name = "graphviz-demo",
+    srcs = ["src/graphviz_demo.py"],
+    main = "src/graphviz_demo.py",
+    deps = [
+        requirement("graphviz"),
+    ],
+)
