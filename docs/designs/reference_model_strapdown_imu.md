@@ -1,6 +1,6 @@
 # Innovation Filtering
 
-Author: Buck Baskin @buck@fosstodon.org
+Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
 Created: 2023-09-19
 Updated: 2023-09-19
 Parent Design: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
@@ -18,9 +18,10 @@ The Five Key Elements the library provides to achieve this user experience are:
 4. C++ and Python to C++ interoperability for performance
 5. C++ interfaces to support a variety of model uses
 
-This design focuses on an example of the "Python Interface to define models" to define a reference model for a strapdown IMU. This serves two purposes:
+This design focuses on an example of the "Python Interface to define models" to
+define a reference model for a strapdown IMU. This serves two purposes:
 1. Provide a reference for implementing a strapdown IMU as a part of other models
-2. Further exercise the FormaK interface
+2. Further exercise the FormaK interface to sand down rough edges
 
 As a third consideration, this will also provide a reference design for how
 other reference models will be designed and presented in the future.
@@ -31,7 +32,8 @@ other reference models will be designed and presented in the future.
 
 What is a strapdown IMU?
 
-IMU mounted to the vehicle of interest
+A strapdown IMU is an IMU mounted to the vehicle of interest (instead of being
+mounted on a gimbal or on some reference point).
 
 ### Definitions
 
@@ -41,7 +43,7 @@ The site is a joint resource from the mechanical engineering departments at
 Rose-Hulman Institute of Technology and UC Berkeley.
 
 ![Definition of terminology and axis](assets/reference_model_strapdown_imu/tracked-body.png)
-[Source](https://rotations.berkeley.edu/wp-content/uploads/2017/10/tracked-body.png)
+- [Source](https://rotations.berkeley.edu/wp-content/uploads/2017/10/tracked-body.png)
 
 - $e_{i}$ axis of rigid body (1, 2, 3)
 - $\omega$ vector of rotations of the rigid body
@@ -52,11 +54,17 @@ Rose-Hulman Institute of Technology and UC Berkeley.
 
 The reference design uses 3-2-1 Euler angles.
 
-TODO(buck): embed these visualizations and finish explanation
+![Rotations](assets/reference_model_strapdown_imu/rotations.svg)
+- [Source](https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-5bc0ef31513d8f6aa027b50b28f7dba9_l3.svg)
 
-![Rotations](https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-5bc0ef31513d8f6aa027b50b28f7dba9_l3.svg)
+![Accelerations](assets/reference_model_strapdown_imu/accelerations.svg)
+- [Source](https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-7dc4cf09b3717d6ebc1d7ca32a1e3dda_l3.svg)
 
-![Accelerations](https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-7dc4cf09b3717d6ebc1d7ca32a1e3dda_l3.svg)
+With the accelerations defined, we can then integrate the acceleration once into velocity and then twice into position.
+
+$$v_{t + 1} = v_{t} + dt * a_{t}$$
+
+$$x_{t + 1} = x_{t} + dt * x_{t} + \dfrac{1}{2} dt^{2} * a_{t}$$
 
 ## Feature Tests
 
