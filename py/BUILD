@@ -120,12 +120,26 @@ py_library(
 )
 
 py_library(
+    name = "reference-models",
+    srcs = glob(
+        ["formak/reference_models/*.py"],
+        allow_empty = False,
+    ),
+    imports = ["."],
+    deps = [
+        ":python",
+        requirement("sympy"),
+    ],
+)
+
+py_library(
     name = "formak",
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
         ":python",
+        ":reference-models",
         ":runtime",
         ":ui",
     ],
