@@ -1,6 +1,6 @@
 from sympy import Pow, cos, integrate, sec, simplify, sin, tan
 
-from formak import ui
+from formak import python, ui
 
 dt = ui.Symbol("dt")
 
@@ -71,6 +71,7 @@ state = set(
     + global_velocity
     + global_accel
 )
+control = set(imu_gyro + imu_accel)
 state_model = {
     # Rotation
     yaw_rate: gyro_body_rates[0, 0],
@@ -96,15 +97,30 @@ state_model = {
     + integrate(global_velocity[2] + integrate(global_accel[2], dt), dt),
 }
 
+process_noise = {
+    imu_gyro[0]: 0.1,
+    imu_gyro[1]: 0.1,
+    imu_gyro[2]: 0.1,
+    imu_accel[0]: 1.0,
+    imu_accel[1]: 1.0,
+    imu_accel[2]: 1.0,
+}
+
 
 if __name__ == "__main__":
-    print(gyro_rotations.shape)
-    print(gyro_rotations)
-    print(ui.Matrix(imu_gyro).shape)
-    print(ui.Matrix(imu_gyro))
+    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+
+    print("state", sorted(list(state), key=lambda s: str(s)))
+    print("control", sorted(list(control), key=lambda s: str(s)))
 
     print("state_model")
     for k in sorted(list(state_model.keys()), key=lambda k: str(k)):
         v = state_model[k]
         print("key", k, "value", v)
-    1 / 0
+
+    ekf = python.compile_ekf(
+        state_model=model,
+        process_noise=process_noise,
+        sensor_models={},
+        sensor_noises={},
+    )
