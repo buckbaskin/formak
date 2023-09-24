@@ -107,4 +107,4 @@ _process_noise = {
     imu_accel[2]: 1.0,
 }
 
-ui_model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+symbolic_model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)

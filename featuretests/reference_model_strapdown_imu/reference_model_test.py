@@ -1,4 +1,6 @@
-from formak.reference_model import strapdown_imu
+from formak.reference_models import strapdown_imu
+
+from formak import python
 
 
 def test_example_usage_of_reference_model():
@@ -22,13 +24,15 @@ def test_example_usage_of_reference_model():
         imu_accel[2]: 1.0,
     }
 
-    model = python.compile_model(
-        state_model=strapdown_imu.ui_model,
+    model = python.compile(
+        symbolic_model=strapdown_imu.symbolic_model,
     )
+    assert model is not None
 
     ekf = python.compile_ekf(
-        state_model=ui_model,
+        state_model=strapdown_imu.symbolic_model,
         process_noise=process_noise,
         sensor_models={},
         sensor_noises={},
     )
+    assert ekf is not None
