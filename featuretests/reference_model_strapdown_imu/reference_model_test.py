@@ -6,32 +6,7 @@ from formak.reference_models import strapdown_imu
 from formak import python
 
 
-def render_diff(state, expected_state):
-    def diff_source():
-        for key, model, expected in zip(
-            state._arglist, state.data, expected_state.data
-        ):
-            float(model)
-            float(expected)
-            if np.allclose([model], [expected]):
-                continue
-            yield key, model, expected, model - expected
-
-    print("Key".ljust(30), "Model".ljust(20), "Expected".ljust(20))
-    for key, model, expected, diff in sorted(
-        list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
-    ):
-        print(str(key).ljust(30), str(model).rjust(20), str(expected).rjust(20))
-
-
 def test_example_usage_of_reference_model():
-    print("state", sorted(list(strapdown_imu.state), key=lambda s: str(s)))
-    print("control", sorted(list(strapdown_imu.control), key=lambda s: str(s)))
-
-    print("state_model")
-    for k in sorted(list(strapdown_imu.state_model.keys()), key=lambda k: str(k)):
-        v = strapdown_imu.state_model[k]
-        print("key", k, "value", v)
     imu = python.compile(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={strapdown_imu.g: 9.81},
@@ -63,9 +38,6 @@ def test_example_usage_of_reference_model():
     control_args = {imu_gyro[2]: pi, imu_accel[1]: specific_force}
     control = imu.Control.from_dict(control_args)
 
-    print("dt", dt)
-    print("state 0", state, state.data)
-    print("control", control, control.data)
     state = imu.model(dt, state, control)
     assert state is not None
 
@@ -89,9 +61,6 @@ def test_example_usage_of_reference_model():
             r"x_{A}_{3}": 0.0,
         }
     )
-
-    print("Diff")
-    render_diff(state=state, expected_state=expected_state)
 
     assert np.allclose(state.data, expected_state.data)
     1 / 0

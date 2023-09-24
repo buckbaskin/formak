@@ -128,6 +128,7 @@ py_library(
     imports = ["."],
     deps = [
         ":python",
+        ":ui",
         requirement("sympy"),
     ],
 )
@@ -267,6 +268,21 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":formak",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "reference-models-test",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/reference_models/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":init-tree",
+        ":reference-models",
     ] + PY_TEST_DEPS,
 )
 
