@@ -98,7 +98,9 @@ class _NamedArrayBase(abc.ABC):
         self._kwargs = kwargs
 
     def __repr__(self):
-        kwargs = ", ".join(f"{k}={v}" for k, v in self._kwargs.items())
+        kwargs = ", ".join(
+            f"{k}={float(v)}" for k, v in sorted(list(self._kwargs.items()))
+        )
         return f"{self.name}({kwargs})"
 
     def __iter__(self):

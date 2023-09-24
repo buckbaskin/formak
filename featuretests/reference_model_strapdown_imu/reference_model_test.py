@@ -1,8 +1,27 @@
-from math import pi, radians
+from math import cos, pi, radians, sin
 
+import numpy as np
 from formak.reference_models import strapdown_imu
 
 from formak import python
+
+
+def render_diff(state, expected_state):
+    def diff_source():
+        for key, model, expected in zip(
+            state._arglist, state.data, expected_state.data
+        ):
+            float(model)
+            float(expected)
+            if np.allclose([model], [expected]):
+                continue
+            yield key, model, expected, model - expected
+
+    print("Key".ljust(30), "Model".ljust(20), "Expected".ljust(20))
+    for key, model, expected, diff in sorted(
+        list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
+    ):
+        print(str(key).ljust(30), str(model).rjust(20), str(expected).rjust(20))
 
 
 def test_example_usage_of_reference_model():
@@ -29,13 +48,14 @@ def test_example_usage_of_reference_model():
     yaw_rate = pi
 
     # trvel = r * \theta
-    # velocity = radius * yaw_rate
+    velocity = radius * yaw_rate
     specific_force = radius * yaw_rate * yaw_rate
 
     state = imu.State.from_dict(
         {
             r"x_{A}_{1}": radius,
             r"x_{A}_{2}": 0.0,
+            r"\dot{x}_{A}_{2}": velocity,
             r"\theta": radians(90),
         }
     )
@@ -43,10 +63,32 @@ def test_example_usage_of_reference_model():
     control_args = {imu_gyro[2]: pi, imu_accel[1]: specific_force}
     control = imu.Control.from_dict(control_args)
 
-    print("state 0", state)
+    print("dt", dt)
+    print("state 0", state, state.data)
+    print("control", control, control.data)
     state = imu.model(dt, state, control)
     assert state is not None
-    print("state 1", state)
+
+    expected_yaw = radians(90) + yaw_rate * dt
+    expected_state = imu.State.from_dict(
+        {
+            r"\ddot{x}_{A}_{1}": 0.0,
+            r"\ddot{x}_{A}_{2}": 0.0,
+            r"\ddot{x}_{A}_{3}": 0.0,
+            r"\dot{x}_{A}_{1}": velocity * -sin(expected_yaw),
+            r"\dot{x}_{A}_{2}": velocity * cos(expected_yaw),
+            r"\dot{x}_{A}_{3}": 0.0,
+            r"x_{A}_{1}": radius * cos(expected_yaw),
+            r"x_{A}_{2}": radius * sin(expected_yaw),
+            r"x_{A}_{3}": 0.0,
+        }
+    )
+
+    print("Diff")
+    render_diff(state=state, expected_state=expected_state)
+
+    assert np.allclose(state.data, expected_state.data)
+    1 / 0
 
 
 def test_example_usage_of_reference_model_as_ekf():
