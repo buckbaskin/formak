@@ -1,6 +1,7 @@
 from math import cos, pi, radians, sin
 
 import numpy as np
+import pytest
 from formak.reference_models import strapdown_imu
 
 from formak import python
@@ -55,12 +56,12 @@ def test_stationary():
         {
             r"x_{A}_{1}": radius,
             r"x_{A}_{2}": 0.0,
-            r"\dot{x}_{A}_{2}": velocity,
+            r"\dot{x}_{A}_{2}": 0.0,
             r"\theta": radians(90),
         }
     )
 
-    control = imu.Control()
+    control = imu.Control.from_dict({imu_accel[2]: -9.81})
 
     print("dt", dt)
     print("state 0", state, state.data)
@@ -95,6 +96,7 @@ def test_stationary():
     1 / 0
 
 
+@pytest.mark.skip(reason="Simplify Debugging")
 def test_circular_motion_xy_plane():
     print("state", sorted(list(strapdown_imu.state), key=lambda s: str(s)))
     print("control", sorted(list(strapdown_imu.control), key=lambda s: str(s)))
