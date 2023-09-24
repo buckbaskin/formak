@@ -143,7 +143,8 @@ def named_vector(name, arglist):
 
             for idx, key in enumerate(allowed_keys):
                 if key in kwargs:
-                    self.data[idx, 0] = kwargs[key]
+                    val = kwargs[key]
+                    self.data[idx, 0] = val
 
         @classmethod
         def __subclasshook__(cls, Other):
