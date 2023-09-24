@@ -73,6 +73,7 @@ state = set(
     + global_accel
 )
 control = set(imu_gyro + imu_accel)
+calibration = set([g])
 state_model = {
     # Rotation
     yaw_rate: _gyro_body_rates[0, 0],
@@ -107,4 +108,10 @@ _process_noise = {
     imu_accel[2]: 1.0,
 }
 
-symbolic_model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+symbolic_model = ui.Model(
+    dt=dt,
+    state=state,
+    control=control,
+    state_model=state_model,
+    calibration=calibration,
+)

@@ -814,6 +814,14 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
     if calibration_map is None:
         calibration_map = {}
 
+    common.model_validation(
+        symbolic_model,
+        {},
+        {},
+        calibration_map=calibration_map,
+        extra_validation=config.extra_validation,
+    )
+
     return Model(
         symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
     )

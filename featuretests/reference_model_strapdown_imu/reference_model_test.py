@@ -75,5 +75,6 @@ def test_example_usage_of_reference_model_as_ekf():
         process_noise=process_noise,
         sensor_models={},
         sensor_noises={},
+        calibration_map={strapdown_imu.g: 9.81},
     )
     assert ekf is not None
