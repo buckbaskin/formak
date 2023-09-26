@@ -15,7 +15,7 @@ def test_Model_creation_calibration_mismatch():
     )
 
     with pytest.raises(exceptions.ModelConstructionError):
-        model = python.compile(
+        python.compile(
             ui_model,
             calibration_map={ui.Symbol("a"): 0.0, ui.Symbol("b"): 0.0},
             config={},

@@ -9,7 +9,7 @@ def matrix_print(mat):
     rows, cols = mat.shape
     col_size = 80 // cols
     for row in range(rows):
-        print(" ".join((str(col).ljust(col_size - 1) for col in mat[row, :])))
+        print(" ".join(str(col).ljust(col_size - 1) for col in mat[row, :]))
 
 
 def axis_set(name):
@@ -44,8 +44,6 @@ g = ui.Symbol("g")  # gravity
 
 _accel_gravity = ui.Matrix([0, 0, -g])
 assert _accel_gravity.shape == (3, 1)
-print("gravity")
-matrix_print(_accel_gravity)
 
 _yaw_rotation = ui.Matrix(
     [
@@ -74,8 +72,6 @@ _accel_body_rates = (
     + _accel_gravity
 )
 assert _accel_body_rates.shape == (3, 1)
-matrix_print(_accel_body_rates)
-1 / 0
 
 state = set(
     [yaw, pitch, roll, yaw_rate, pitch_rate, roll_rate]
@@ -84,7 +80,7 @@ state = set(
     + global_accel
 )
 control = set(imu_gyro + imu_accel)
-calibration = set([g])
+calibration = {g}
 state_model = {
     # Rotation
     yaw_rate: _gyro_body_rates[0, 0],
