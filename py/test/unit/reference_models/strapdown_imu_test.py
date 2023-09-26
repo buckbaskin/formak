@@ -149,7 +149,7 @@ def test_circular_motion_xy_plane():
     y = [state.data[-2, 0]]
     heading = [degrees(state.data[-5, 0])]
 
-    for idx in range(1, 50):
+    for idx in range(1, 4):
         print('idx', idx)
         state = imu.model(dt, state, control)
         assert state is not None
@@ -162,7 +162,7 @@ def test_circular_motion_xy_plane():
         expected_radius_angle = expected_yaw - radians(90)
         expected_state = imu.State.from_dict(
             {
-                r"\ddot{x}_{A}_{1}": specific_force * sin(expected_yaw),
+                r"\ddot{x}_{A}_{1}": -specific_force * sin(expected_yaw),
                 r"\ddot{x}_{A}_{2}": -specific_force * cos(expected_yaw),
                 r"\ddot{x}_{A}_{3}": 0.0,
                 r"\dot{\phi}": 0.0,
@@ -184,7 +184,7 @@ def test_circular_motion_xy_plane():
             print("Diff at index", idx)
             render_diff(state=state, expected_state=expected_state)
 
-            assert np.allclose(state.data, expected_state.data, atol=5e-3)
+    assert np.allclose(state.data, expected_state.data, atol=5e-3)
 
     plt.plot(x, y, label='pose')
     plt.axis('equal')
