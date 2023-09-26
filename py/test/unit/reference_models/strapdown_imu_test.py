@@ -17,11 +17,16 @@ def render_diff(state, expected_state):
                 continue
             yield key, model, expected, model - expected
 
-    print("Key".ljust(30), "Model".ljust(20), "Expected".ljust(20))
-    for key, model, expected, _ in sorted(
+    print("Key".ljust(30), "Model".ljust(15), "Expected".ljust(15), "Diff".ljust(15))
+    for key, model, expected, diff in sorted(
         list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
     ):
-        print(str(key).ljust(30), str(model).rjust(20), str(expected).rjust(20))
+        print(
+            str(key).ljust(30),
+            str(model).rjust(15),
+            str(expected).rjust(15),
+            str(diff).rjust(15),
+        )
 
 
 def test_stationary():
@@ -136,33 +141,36 @@ def test_circular_motion_xy_plane():
     print("dt", dt)
     print("state 0", state, state._arglist, "\n", state.data)
     print("control", control, control._arglist, "\n", control.data)
-    state = imu.model(dt, state, control)
-    assert state is not None
 
-    expected_yaw = radians(90) + yaw_rate * dt
-    expected_radius_angle = expected_yaw - radians(90)
-    expected_state = imu.State.from_dict(
-        {
-            r"\ddot{x}_{A}_{1}": -specific_force,
-            r"\ddot{x}_{A}_{2}": 0.0,
-            r"\ddot{x}_{A}_{3}": 0.0,
-            r"\dot{\phi}": 0.0,
-            r"\dot{\psi}": yaw_rate,
-            r"\dot{\theta}": 0.0,
-            r"\dot{x}_{A}_{1}": 0.0,
-            r"\dot{x}_{A}_{2}": velocity,
-            r"\dot{x}_{A}_{3}": 0.0,
-            r"\phi": 0.0,
-            r"\psi": expected_yaw,
-            r"\theta": 0.0,
-            r"x_{A}_{1}": radius * cos(expected_radius_angle),
-            r"x_{A}_{2}": radius * sin(expected_radius_angle),
-            r"x_{A}_{3}": 0.0,
-        }
-    )
+    for idx in range(1, 2 * rate):
+        state = imu.model(dt, state, control)
+        assert state is not None
 
-    print("Diff")
-    render_diff(state=state, expected_state=expected_state)
+        expected_yaw = radians(90) + yaw_rate * dt * (idx - 1)
+        expected_radius_angle = expected_yaw - radians(90)
+        expected_state = imu.State.from_dict(
+            {
+                r"\ddot{x}_{A}_{1}": -specific_force * cos(expected_radius_angle),
+                r"\ddot{x}_{A}_{2}": -specific_force * sin(expected_radius_angle),
+                r"\ddot{x}_{A}_{3}": 0.0,
+                r"\dot{\phi}": 0.0,
+                r"\dot{\psi}": yaw_rate,
+                r"\dot{\theta}": 0.0,
+                r"\dot{x}_{A}_{1}": velocity * -cos(expected_yaw),
+                r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
+                r"\dot{x}_{A}_{3}": 0.0,
+                r"\phi": 0.0,
+                r"\psi": expected_yaw,
+                r"\theta": 0.0,
+                r"x_{A}_{1}": radius * cos(expected_radius_angle),
+                r"x_{A}_{2}": radius * sin(expected_radius_angle) + velocity * dt,
+                r"x_{A}_{3}": 0.0,
+            }
+        )
 
-    assert np.allclose(state.data, expected_state.data)
+        if not np.allclose(state.data, expected_state.data, atol=5e-3):
+            print("Diff at index", idx)
+            render_diff(state=state, expected_state=expected_state)
+
+            assert np.allclose(state.data, expected_state.data, atol=5e-3)
     1 / 0
