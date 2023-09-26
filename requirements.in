@@ -7,6 +7,8 @@ sympy==1.10.1
 scipy==1.10.1
 numpy==1.23.1
 importlib-metadata==4.12.0
+matplotlib
+PyQt5
 
 jinja2==3.1.2
 setuptools>=65.5.1

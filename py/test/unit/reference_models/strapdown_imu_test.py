@@ -1,7 +1,9 @@
-from math import cos, pi, radians, sin
+from math import cos, pi, radians, sin, degrees
 
+import matplotlib.pyplot as plt
 import numpy as np
 from formak.reference_models import strapdown_imu
+from matplotlib import pyplot as plt
 
 from formak import python
 
@@ -142,16 +144,26 @@ def test_circular_motion_xy_plane():
     print("state 0", state, state._arglist, "\n", state.data)
     print("control", control, control._arglist, "\n", control.data)
 
-    for idx in range(1, 2 * rate):
+    times = [0.0]
+    x = [state.data[-3, 0]]
+    y = [state.data[-2, 0]]
+    heading = [degrees(state.data[-5, 0])]
+
+    for idx in range(1, 50):
+        print('idx', idx)
         state = imu.model(dt, state, control)
         assert state is not None
+        times.append(dt * idx)
+        x.append(state.data[-3, 0])
+        y.append(state.data[-2, 0])
+        heading.append(degrees(state.data[-5, 0]))
 
         expected_yaw = radians(90) + yaw_rate * dt * (idx - 1)
         expected_radius_angle = expected_yaw - radians(90)
         expected_state = imu.State.from_dict(
             {
-                r"\ddot{x}_{A}_{1}": -specific_force * cos(expected_radius_angle),
-                r"\ddot{x}_{A}_{2}": -specific_force * sin(expected_radius_angle),
+                r"\ddot{x}_{A}_{1}": specific_force * sin(expected_yaw),
+                r"\ddot{x}_{A}_{2}": -specific_force * cos(expected_yaw),
                 r"\ddot{x}_{A}_{3}": 0.0,
                 r"\dot{\phi}": 0.0,
                 r"\dot{\psi}": yaw_rate,
@@ -173,4 +185,10 @@ def test_circular_motion_xy_plane():
             render_diff(state=state, expected_state=expected_state)
 
             assert np.allclose(state.data, expected_state.data, atol=5e-3)
+
+    plt.plot(x, y, label='pose')
+    plt.axis('equal')
+    plt.legend()
+    plt.savefig("foo.png")
+    print("Write image")
     1 / 0

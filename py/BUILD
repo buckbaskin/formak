@@ -12,9 +12,11 @@ load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 FORMAK_VERSION = "0.0.1-alpha00"
 
 PY_TEST_DEPS = [
+    requirement("hypothesis"),
+    requirement("matplotlib"),
+    requirement("PyQt5"),
     requirement("pytest"),
     requirement("pytest-mock"),
-    requirement("hypothesis"),
 ]
 
 CC_TEST_DEPS = [
