@@ -1,11 +1,10 @@
-from math import cos, pi, radians, sin, degrees
+from math import cos, degrees, pi, radians, sin
 
-import matplotlib.pyplot as plt
 import numpy as np
 from formak.reference_models import strapdown_imu
 from matplotlib import pyplot as plt
 
-from formak import python
+from formak import python, ui
 
 
 def render_diff(state, expected_state):
@@ -101,6 +100,69 @@ def test_stationary():
     assert np.allclose(state.data, expected_state.data)
 
 
+def plot_timeseries(*, times, states, expected_states, arglist, x_name, file_id):
+    x = ui.Symbol(x_name)
+
+    plt.plot(
+        times,
+        states[:, arglist.index(x)],
+        label="model",
+    )
+    plt.plot(
+        times,
+        expected_states[:, arglist.index(x)],
+        label="reference",
+        alpha=0.5,
+    )
+    plt.scatter(
+        times,
+        states[:, arglist.index(x)],
+        label="model",
+    )
+    plt.scatter(
+        times,
+        expected_states[:, arglist.index(x)],
+        label="reference",
+        alpha=0.5,
+    )
+    plt.legend()
+    plt.savefig(f"{file_id}.png")
+    print(f"Write Timeseries {file_id}.png")
+
+
+def plot_pair(*, states, expected_states, arglist, x_name, y_name, file_id):
+    x = ui.Symbol(x_name)
+    y = ui.Symbol(y_name)
+
+    plt.plot(
+        states[:, arglist.index(x)],
+        states[:, arglist.index(y)],
+        label="model",
+    )
+    plt.plot(
+        expected_states[:, arglist.index(x)],
+        expected_states[:, arglist.index(y)],
+        label="reference",
+        alpha=0.5,
+    )
+    plt.scatter(
+        states[:, arglist.index(x)],
+        states[:, arglist.index(y)],
+        label="model",
+    )
+    plt.scatter(
+        expected_states[:, arglist.index(x)],
+        expected_states[:, arglist.index(y)],
+        label="reference",
+        alpha=0.5,
+    )
+    plt.axis("equal")
+    plt.legend()
+    plt.savefig(f"{file_id}.png")
+    plt.close()
+    print(f"Write Pair {file_id}.png")
+
+
 def test_circular_motion_xy_plane():
     print("state", sorted(list(strapdown_imu.state), key=lambda s: str(s)))
     print("control", sorted(list(strapdown_imu.control), key=lambda s: str(s)))
@@ -145,50 +207,72 @@ def test_circular_motion_xy_plane():
     print("control", control, control._arglist, "\n", control.data)
 
     times = [0.0]
-    x = [state.data[-3, 0]]
-    y = [state.data[-2, 0]]
-    heading = [degrees(state.data[-5, 0])]
+    states = [state.data]
+    expected_states = [state.data]
 
-    for idx in range(1, 4):
-        print('idx', idx)
+    for idx in range(1, 150):
+        # print("idx", idx)
         state = imu.model(dt, state, control)
         assert state is not None
         times.append(dt * idx)
-        x.append(state.data[-3, 0])
-        y.append(state.data[-2, 0])
-        heading.append(degrees(state.data[-5, 0]))
 
         expected_yaw = radians(90) + yaw_rate * dt * (idx - 1)
         expected_radius_angle = expected_yaw - radians(90)
         expected_state = imu.State.from_dict(
             {
                 r"\ddot{x}_{A}_{1}": -specific_force * sin(expected_yaw),
-                r"\ddot{x}_{A}_{2}": -specific_force * cos(expected_yaw),
+                r"\ddot{x}_{A}_{2}": specific_force * cos(expected_yaw),
                 r"\ddot{x}_{A}_{3}": 0.0,
                 r"\dot{\phi}": 0.0,
                 r"\dot{\psi}": yaw_rate,
                 r"\dot{\theta}": 0.0,
-                r"\dot{x}_{A}_{1}": velocity * -cos(expected_yaw),
+                r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
                 r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
                 r"\dot{x}_{A}_{3}": 0.0,
                 r"\phi": 0.0,
                 r"\psi": expected_yaw,
                 r"\theta": 0.0,
-                r"x_{A}_{1}": radius * cos(expected_radius_angle),
-                r"x_{A}_{2}": radius * sin(expected_radius_angle) + velocity * dt,
+                r"x_{A}_{1}": radius * sin(expected_yaw),
+                r"x_{A}_{2}": radius * -cos(expected_yaw) + velocity * dt,
                 r"x_{A}_{3}": 0.0,
             }
         )
+        states.append(state.data)
+        expected_states.append(expected_state.data)
 
-        if not np.allclose(state.data, expected_state.data, atol=5e-3):
-            print("Diff at index", idx)
-            render_diff(state=state, expected_state=expected_state)
+        # if not np.allclose(state.data, expected_state.data, atol=5e-3):
+        #     print("Diff at index", idx)
+        #     render_diff(state=state, expected_state=expected_state)
 
-    assert np.allclose(state.data, expected_state.data, atol=5e-3)
+    # assert np.allclose(state.data, expected_state.data, atol=5e-3)
 
-    plt.plot(x, y, label='pose')
-    plt.axis('equal')
-    plt.legend()
-    plt.savefig("foo.png")
+    states = np.array(states)
+    expected_states = np.array(expected_states)
+
+    print(state._arglist)
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name="x_{A}_{1}",
+        y_name="x_{A}_{2}",
+        file_id="pose_xy",
+    )
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name=r"\dot{x}_{A}_{1}",
+        y_name=r"\dot{x}_{A}_{2}",
+        file_id="vel_xy",
+    )
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name=r"\ddot{x}_{A}_{1}",
+        y_name=r"\ddot{x}_{A}_{2}",
+        file_id="accel_xy",
+    )
     print("Write image")
     1 / 0
