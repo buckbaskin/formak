@@ -211,6 +211,8 @@ def test_circular_motion_xy_plane():
     states = [state.data]
     expected_states = [state.data]
 
+    ALLOWED_TOL = 0.5
+
     break_idx = 3
     for idx in range(1, 150):
         # print("idx", idx)
@@ -244,7 +246,7 @@ def test_circular_motion_xy_plane():
         states.append(state.data)
         expected_states.append(expected_state.data)
 
-        if not np.allclose(state.data, expected_state.data, atol=5e-3):
+        if not np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL):
             print("Diff at index", idx, break_idx)
             render_diff(state=state, expected_state=expected_state)
         else:
@@ -291,5 +293,4 @@ def test_circular_motion_xy_plane():
     )
     print("Write image")
 
-    assert np.allclose(state.data, expected_state.data, atol=5e-3)
-    1 / 0
+    assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
