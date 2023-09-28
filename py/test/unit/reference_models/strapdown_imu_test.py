@@ -196,6 +196,7 @@ def test_circular_motion_xy_plane():
             r"x_{A}_{2}": 0.0,
             r"\dot{x}_{A}_{2}": velocity,
             r"\psi": radians(90),
+            r"\dot{\psi}": yaw_rate,
         }
     )
 
@@ -210,31 +211,33 @@ def test_circular_motion_xy_plane():
     states = [state.data]
     expected_states = [state.data]
 
-    break_idx = None
+    break_idx = 3
     for idx in range(1, 150):
         # print("idx", idx)
         state = imu.model(dt, state, control)
         assert state is not None
         times.append(dt * idx)
 
-        expected_yaw = radians(90) + yaw_rate * dt * (idx - 1)
+        expected_yaw = radians(90) + yaw_rate * dt * idx
         expected_radius_angle = expected_yaw - radians(90)
         expected_state = imu.State.from_dict(
             {
-                r"\ddot{x}_{A}_{1}": -specific_force * sin(expected_yaw),
-                r"\ddot{x}_{A}_{2}": specific_force * cos(expected_yaw),
+                r"\ddot{x}_{A}_{1}": -specific_force
+                * sin(expected_yaw - yaw_rate * dt),
+                r"\ddot{x}_{A}_{2}": specific_force * cos(expected_yaw - yaw_rate * dt),
                 r"\ddot{x}_{A}_{3}": 0.0,
                 r"\dot{\phi}": 0.0,
                 r"\dot{\psi}": yaw_rate,
                 r"\dot{\theta}": 0.0,
-                r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
-                r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
+                r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw - yaw_rate * dt),
+                r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw - yaw_rate * dt),
                 r"\dot{x}_{A}_{3}": 0.0,
                 r"\phi": 0.0,
                 r"\psi": expected_yaw,
                 r"\theta": 0.0,
-                r"x_{A}_{1}": radius * sin(expected_yaw),
-                r"x_{A}_{2}": radius * -cos(expected_yaw) + velocity * dt,
+                r"x_{A}_{1}": radius * sin(expected_yaw - yaw_rate * dt),
+                r"x_{A}_{2}": radius * -cos(expected_yaw - yaw_rate * dt)
+                + velocity * dt,
                 r"x_{A}_{3}": 0.0,
             }
         )
@@ -242,7 +245,7 @@ def test_circular_motion_xy_plane():
         expected_states.append(expected_state.data)
 
         if not np.allclose(state.data, expected_state.data, atol=5e-3):
-            print("Diff at index", idx)
+            print("Diff at index", idx, break_idx)
             render_diff(state=state, expected_state=expected_state)
         else:
             break_idx = idx + 3
