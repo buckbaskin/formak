@@ -210,6 +210,7 @@ def test_circular_motion_xy_plane():
     states = [state.data]
     expected_states = [state.data]
 
+    break_idx = None
     for idx in range(1, 150):
         # print("idx", idx)
         state = imu.model(dt, state, control)
@@ -240,11 +241,14 @@ def test_circular_motion_xy_plane():
         states.append(state.data)
         expected_states.append(expected_state.data)
 
-        # if not np.allclose(state.data, expected_state.data, atol=5e-3):
-        #     print("Diff at index", idx)
-        #     render_diff(state=state, expected_state=expected_state)
+        if not np.allclose(state.data, expected_state.data, atol=5e-3):
+            print("Diff at index", idx)
+            render_diff(state=state, expected_state=expected_state)
+        else:
+            break_idx = idx + 3
 
-    # assert np.allclose(state.data, expected_state.data, atol=5e-3)
+        if break_idx is not None and idx >= break_idx:
+            break
 
     states = np.array(states)
     expected_states = np.array(expected_states)
@@ -274,5 +278,15 @@ def test_circular_motion_xy_plane():
         y_name=r"\ddot{x}_{A}_{2}",
         file_id="accel_xy",
     )
+    plot_timeseries(
+        times=times,
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name=r"\psi",
+        file_id="yaw_t",
+    )
     print("Write image")
+
+    assert np.allclose(state.data, expected_state.data, atol=5e-3)
     1 / 0
