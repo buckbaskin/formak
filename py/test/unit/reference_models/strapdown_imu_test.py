@@ -298,4 +298,3 @@ def test_circular_motion_xy_plane():
     print("Write image")
 
     assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
-    1 / 0
