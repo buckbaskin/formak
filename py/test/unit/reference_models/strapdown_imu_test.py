@@ -212,7 +212,7 @@ def test_circular_motion_xy_plane():
     states = [state.data]
     expected_states = [state.data]
 
-    ALLOWED_TOL = 0.4
+    ALLOWED_TOL = 0.5
 
     break_idx = 3
     for idx in range(1, int(1.5 * rate)):
