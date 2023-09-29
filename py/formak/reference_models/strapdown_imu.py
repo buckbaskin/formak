@@ -95,15 +95,15 @@ state_model = {
     global_accel[1]: _accel_body_rates[1, 0],
     global_accel[2]: _accel_body_rates[2, 0],
     # Translation Integration
-    global_velocity[0]: global_velocity[0] + integrate(global_accel[0], dt),
-    global_velocity[1]: global_velocity[1] + integrate(global_accel[1], dt),
-    global_velocity[2]: global_velocity[2] + integrate(global_accel[2], dt),
+    global_velocity[0]: global_velocity[0] + integrate(_accel_body_rates[0, 0], dt),
+    global_velocity[1]: global_velocity[1] + integrate(_accel_body_rates[1, 0], dt),
+    global_velocity[2]: global_velocity[2] + integrate(_accel_body_rates[2, 0], dt),
     global_pose[0]: global_pose[0]
-    + integrate(global_velocity[0] + integrate(global_accel[0], dt), dt),
+    + integrate(global_velocity[0] + integrate(_accel_body_rates[0, 0], dt), dt),
     global_pose[1]: global_pose[1]
-    + integrate(global_velocity[1] + integrate(global_accel[1], dt), dt),
+    + integrate(global_velocity[1] + integrate(_accel_body_rates[1, 0], dt), dt),
     global_pose[2]: global_pose[2]
-    + integrate(global_velocity[2] + integrate(global_accel[2], dt), dt),
+    + integrate(global_velocity[2] + integrate(_accel_body_rates[2, 0], dt), dt),
 }
 
 _process_noise = {

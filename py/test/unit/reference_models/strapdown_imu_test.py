@@ -192,11 +192,12 @@ def test_circular_motion_xy_plane():
 
     state = imu.State.from_dict(
         {
-            r"x_{A}_{1}": radius,
-            r"x_{A}_{2}": 0.0,
+            r"\ddot{x}_{A}_{1}": -specific_force,
+            r"\dot{\psi}": yaw_rate,
             r"\dot{x}_{A}_{2}": velocity,
             r"\psi": radians(90),
-            r"\dot{\psi}": yaw_rate,
+            r"x_{A}_{1}": radius,
+            r"x_{A}_{2}": 0.0,
         }
     )
 
@@ -211,10 +212,10 @@ def test_circular_motion_xy_plane():
     states = [state.data]
     expected_states = [state.data]
 
-    ALLOWED_TOL = 0.5
+    ALLOWED_TOL = 0.4
 
     break_idx = 3
-    for idx in range(1, 150):
+    for idx in range(1, int(1.5 * rate)):
         # print("idx", idx)
         state = imu.model(dt, state, control)
         assert state is not None
@@ -231,8 +232,8 @@ def test_circular_motion_xy_plane():
                 r"\dot{\phi}": 0.0,
                 r"\dot{\psi}": yaw_rate,
                 r"\dot{\theta}": 0.0,
-                r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw - yaw_rate * dt),
-                r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw - yaw_rate * dt),
+                r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
+                r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
                 r"\dot{x}_{A}_{3}": 0.0,
                 r"\phi": 0.0,
                 r"\psi": expected_yaw,
@@ -254,6 +255,9 @@ def test_circular_motion_xy_plane():
 
         if break_idx is not None and idx >= break_idx:
             break
+    else:
+        print("Diff at exit", idx, break_idx)
+        render_diff(state=state, expected_state=expected_state)
 
     states = np.array(states)
     expected_states = np.array(expected_states)
@@ -294,3 +298,4 @@ def test_circular_motion_xy_plane():
     print("Write image")
 
     assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
+    1 / 0
