@@ -1,4 +1,4 @@
-from math import cos, degrees, pi, radians, sin
+from math import cos, pi, radians, sin
 
 import numpy as np
 from formak.reference_models import strapdown_imu

@@ -6,5 +6,6 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_test_suite(
     name = "reference-model-test",
     srcs = ["reference_model_test.py"],
+    data = ["NASA_sample.csv"],
     deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
 )
