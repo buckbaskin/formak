@@ -9,7 +9,7 @@ https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vic
 """
 import csv
 import os
-from math import hypot
+from math import asin, atan, cos, hypot, sin
 
 import numpy as np
 from formak.reference_models import strapdown_imu
@@ -75,6 +75,164 @@ def stream_control():
             yield time_ns, parsed_row
 
 
+def ypr_from_matrix(mat):
+    c11 = mat[0, 0]
+    c21 = mat[1, 0]
+    c31 = mat[2, 0]
+    c32 = mat[2, 1]
+    c33 = mat[2, 2]
+
+    roll = atan(c32 / c33)
+    pitch = -asin(c31)
+    yaw = atan(c21 / c11)
+    return yaw, pitch, roll
+
+
+def matrix_from_ypr(yaw, pitch, roll):
+    yaw_mat = np.array(
+        [
+            [cos(1), -sin(1), 0],
+            [sin(1), cos(1), 0],
+            [0, 0, 1],
+        ]
+    )
+    pitch_mat = np.array(
+        [
+            [cos(1), 0, sin(1)],
+            [0, 1, 0],
+            [-sin(1), 0, cos(1)],
+        ]
+    )
+    roll_mat = np.array(
+        [
+            [1, 0, 0],
+            [0, cos(1), -sin(1)],
+            [0, sin(1), cos(1)],
+        ]
+    )
+    mat = yaw_mat @ pitch_mat @ roll_mat
+    mat = yaw_mat @ roll_mat @ pitch_mat
+    # [y, p, r] -0.53962658
+    # [y, r, p] 0.05619665
+    # [p, y, r] -0.53962658
+    # [p, r, y] -1.13544982
+    # [r, p, y] -0.53962658
+    # [r, y, p] -0.53962658
+    return mat
+
+
+# yaw
+assert np.allclose(
+    [1, 0, 0],
+    ypr_from_matrix(
+        np.array(
+            [
+                [cos(1), -sin(1), 0],
+                [sin(1), cos(1), 0],
+                [0, 0, 1],
+            ]
+        )
+    ),
+)
+assert np.allclose(
+    [-1, 0, 0],
+    ypr_from_matrix(
+        np.array(
+            [
+                [cos(-1), -sin(-1), 0],
+                [sin(-1), cos(-1), 0],
+                [0, 0, 1],
+            ]
+        )
+    ),
+)
+# pitch
+assert np.allclose(
+    [0, 1, 0],
+    ypr_from_matrix(
+        np.array(
+            [
+                [cos(1), 0, sin(1)],
+                [0, 1, 0],
+                [-sin(1), 0, cos(1)],
+            ]
+        )
+    ),
+)
+assert np.allclose(
+    [0, -1, 0],
+    ypr_from_matrix(
+        np.array(
+            [
+                [cos(-1), 0, sin(-1)],
+                [0, 1, 0],
+                [-sin(-1), 0, cos(-1)],
+            ]
+        )
+    ),
+)
+# roll
+assert np.allclose(
+    [0, 0, 1],
+    ypr_from_matrix(
+        np.array(
+            [
+                [1, 0, 0],
+                [0, cos(1), -sin(1)],
+                [0, sin(1), cos(1)],
+            ]
+        )
+    ),
+)
+assert np.allclose(
+    [0, 0, -1],
+    ypr_from_matrix(
+        np.array(
+            [
+                [1, 0, 0],
+                [0, cos(-1), -sin(-1)],
+                [0, sin(-1), cos(-1)],
+            ]
+        )
+    ),
+)
+
+
+def starting_yaw_pitch_roll():
+
+    att_dcm_CON_IMU = np.array(
+        [
+            [-0.2477, -0.1673, 0.9543],
+            [-0.0478, 0.9859, 0.1604],
+            [-0.9677, -0.0059, -0.2522],
+        ]
+    )
+
+    yaw, pitch, roll = ypr_from_matrix(att_dcm_CON_IMU)
+
+    recreation = matrix_from_ypr(yaw=yaw, pitch=pitch, roll=roll)
+    print("att")
+    print(att_dcm_CON_IMU)
+    print("rec")
+    print(recreation)
+    print("diff")
+    print(att_dcm_CON_IMU - recreation)
+    # if not np.allclose(att_dcm_CON_IMU, recreation):
+    #     for i in range(3):
+    #         for j in range(3):
+    #             print(
+    #                 i,
+    #                 j,
+    #                 " | ",
+    #                 att_dcm_CON_IMU[i, j],
+    #                 recreation[i, j],
+    #                 att_dcm_CON_IMU[i, j] - recreation[i, j],
+    #             )
+    assert np.allclose(att_dcm_CON_IMU, recreation)
+
+    return yaw, pitch, roll
+
+
 def test_example_usage_of_reference_model():
     imu = python.compile(
         symbolic_model=strapdown_imu.symbolic_model,
@@ -85,7 +243,15 @@ def test_example_usage_of_reference_model():
     rate = 50  # Hz
     dt = 1.0 / rate
 
-    state = imu.State()
+    # yaw, pitch, roll = ui.symbols([r"\psi", r"\theta", r"\phi"])
+    yaw, pitch, roll = starting_yaw_pitch_roll()
+    state = imu.State.from_dict(
+        {
+            r"\phi": roll,  # roll
+            r"\psi": yaw,  # yaw
+            r"\theta": pitch,  # pitch
+        }
+    )
     last_time = None
 
     # Stationary Data from a rocket launch pre-ignition
@@ -110,9 +276,9 @@ def test_example_usage_of_reference_model():
                 r"\dot{x}_{A}_{1}": 0.0,
                 r"\dot{x}_{A}_{2}": 0.0,
                 r"\dot{x}_{A}_{3}": 0.0,
-                r"\phi": 0.0,
-                r"\psi": 0.0,
-                r"\theta": 0.0,
+                r"\phi": roll,  # roll
+                r"\psi": yaw,  # yaw
+                r"\theta": pitch,  # pitch
                 r"x_{A}_{1}": 0.0,
                 r"x_{A}_{2}": 0.0,
                 r"x_{A}_{3}": 0.0,
