@@ -9,7 +9,7 @@ https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vic
 """
 import csv
 import os
-from math import cos, hypot, radians, sin
+from math import hypot
 
 import numpy as np
 from formak.reference_models import strapdown_imu
@@ -18,6 +18,9 @@ from formak import python
 
 
 def _line_to_control(line):
+    imu_gyro = strapdown_imu.imu_gyro
+    imu_accel = strapdown_imu.imu_accel
+
     rate = 50.0  # Hz
     dt = 1.0 / rate
 
@@ -44,14 +47,16 @@ def _line_to_control(line):
 
     print("accel sum", hypot(accel_1_ms2, accel_2_ms2, accel_3_ms2))
 
-    return time_ns, (
-        accel_1_ms2,
-        accel_2_ms2,
-        accel_3_ms2,
-        body_rate_1,
-        body_rate_2,
-        body_rate_3,
-    )
+    imu_gyro = strapdown_imu.imu_gyro
+    imu_accel = strapdown_imu.imu_accel
+    return time_ns, {
+        imu_accel[0]: accel_1_ms2,
+        imu_accel[1]: accel_2_ms2,
+        imu_accel[2]: accel_3_ms2,
+        imu_gyro[0]: body_rate_1,
+        imu_gyro[1]: body_rate_2,
+        imu_gyro[2]: body_rate_3,
+    }
 
 
 def stream_control():
@@ -67,7 +72,6 @@ def stream_control():
 
             time_ns, parsed_row = _line_to_control(row)
 
-            print("per row gen", time_ns, "ns", ",".join(str(v) for v in parsed_row))
             yield time_ns, parsed_row
 
 
@@ -77,8 +81,6 @@ def test_example_usage_of_reference_model():
         calibration_map={strapdown_imu.g: 9.81},
     )
     assert imu is not None
-    imu_gyro = strapdown_imu.imu_gyro
-    imu_accel = strapdown_imu.imu_accel
 
     rate = 50  # Hz
     dt = 1.0 / rate
@@ -93,12 +95,9 @@ def test_example_usage_of_reference_model():
             print("timekeeper", idx, dt, dt * 1e-9)
         last_time = time_ns
 
+        control = imu.Control.from_dict(control)
         state = imu.model(dt, state, control)
         assert state is not None
-
-        velocity = 0.0
-        expected_yaw = 0.0
-        yaw_rate = 0.0
 
         expected_state = imu.State.from_dict(
             {
@@ -107,18 +106,21 @@ def test_example_usage_of_reference_model():
                 r"\ddot{x}_{A}_{3}": 0.0,
                 r"\dot{\phi}": 0.0,
                 r"\dot{\psi}": 0.0,
-                r"\dot{\theta}": yaw_rate,
-                r"\dot{x}_{A}_{1}": velocity * -sin(expected_yaw),
-                r"\dot{x}_{A}_{2}": velocity * cos(expected_yaw),
+                r"\dot{\theta}": 0.0,
+                r"\dot{x}_{A}_{1}": 0.0,
+                r"\dot{x}_{A}_{2}": 0.0,
                 r"\dot{x}_{A}_{3}": 0.0,
                 r"\phi": 0.0,
                 r"\psi": 0.0,
-                r"\theta": expected_yaw,
-                r"x_{A}_{1}": cos(expected_yaw - radians(90)),
-                r"x_{A}_{2}": sin(expected_yaw - radians(90)),
+                r"\theta": 0.0,
+                r"x_{A}_{1}": 0.0,
+                r"x_{A}_{2}": 0.0,
                 r"x_{A}_{3}": 0.0,
             }
         )
 
+        if not np.allclose(state.data, expected_state.data):
+            state.render_diff(expected_state)
+            1 / 0
         assert np.allclose(state.data, expected_state.data)
         1 / 0

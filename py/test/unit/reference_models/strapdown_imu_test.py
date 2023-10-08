@@ -7,29 +7,6 @@ from matplotlib import pyplot as plt
 from formak import python, ui
 
 
-def render_diff(state, expected_state):
-    def diff_source():
-        for key, model, expected in zip(
-            state._arglist, state.data, expected_state.data
-        ):
-            float(model)
-            float(expected)
-            if np.allclose([model], [expected]):
-                continue
-            yield key, model, expected, model - expected
-
-    print("Key".ljust(30), "Model".ljust(15), "Expected".ljust(15), "Diff".ljust(15))
-    for key, model, expected, diff in sorted(
-        list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
-    ):
-        print(
-            str(key).ljust(30),
-            str(model).rjust(15),
-            str(expected).rjust(15),
-            str(diff).rjust(15),
-        )
-
-
 def test_stationary():
     print("state", sorted(list(strapdown_imu.state), key=lambda s: str(s)))
     print("control", sorted(list(strapdown_imu.control), key=lambda s: str(s)))
@@ -95,7 +72,7 @@ def test_stationary():
     )
 
     print("Diff")
-    render_diff(state=state, expected_state=expected_state)
+    state.render_diff(expected_state)
 
     assert np.allclose(state.data, expected_state.data)
 
@@ -249,7 +226,7 @@ def test_circular_motion_xy_plane():
 
         if not np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL):
             print("Diff at index", idx, break_idx)
-            render_diff(state=state, expected_state=expected_state)
+            state.render_diff(expected_state)
         else:
             break_idx = idx + 3
 
@@ -257,7 +234,7 @@ def test_circular_motion_xy_plane():
             break
     else:
         print("Diff at exit", idx, break_idx)
-        render_diff(state=state, expected_state=expected_state)
+        state.render_diff(expected_state)
 
     states = np.array(states)
     expected_states = np.array(expected_states)

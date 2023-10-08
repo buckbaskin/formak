@@ -156,6 +156,33 @@ def named_vector(name, arglist):
                 and cls.shape == Other.shape
             )
 
+        def render_diff(self, expected_state):
+            def diff_source():
+                for key, model, expected in zip(
+                    self._arglist, self.data, expected_state.data
+                ):
+                    float(model)
+                    float(expected)
+                    if np.allclose([model], [expected]):
+                        continue
+                    yield key, model, expected, model - expected
+
+            print(
+                "Key".ljust(30)
+                + "|"
+                + "Model".ljust(15)
+                + "|"
+                + "Expected".ljust(15)
+                + "|"
+                + "Diff".ljust(15)
+            )
+            for key, model, expected, diff in sorted(
+                list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
+            ):
+                key = str(key)[:30].ljust(30)
+                model = f"{model[0]: >15.9g}".rjust(15)
+                print(f"{key}|{model}|{expected[0]: >15.9g}|{diff[0]: >15.9g}")
+
     return types.new_class(name, bases=(_NamedVector,))
 
 
