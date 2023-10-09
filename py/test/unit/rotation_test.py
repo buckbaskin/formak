@@ -1,6 +1,7 @@
 from math import pi
 
 import numpy as np
+import pytest
 from formak.rotation import Rotation
 
 

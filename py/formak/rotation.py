@@ -1,4 +1,4 @@
-from math import cos, sin
+from math import asin, atan, atan2, cos, pi, sin, sqrt
 
 import numpy as np
 
@@ -123,19 +123,49 @@ class Rotation:
         return self.quaternion.shape == (4, 1)
 
     def _euler_from_quaternion(self, *, w, x, y, z):
-        raise NotImplementedError()
+        """
+        "Quaternion to Euler angles (in 3-2-1 sequence) conversion"
+        https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        """
+        """
+        Ψψ Psi   Yaw
+        Θθ Theta Pitch
+        Φφ Phi   Roll
+        """
+        roll = atan2(2 * (w * x + y * z), 1 - 2 * (pow(x, 2) + pow(y, 2)))
+        pitch = -pi / 2 + 2 * atan2(
+            sqrt(1 + 2 * (w * y - x * z)), sqrt(1 - 2 * (w * y - x * z))
+        )
+        yaw = atan2(2 * (w * z + x * y), 1 - 2 * (pow(y, 2) + pow(z, 2)))
+        return {"yaw": yaw, "pitch": pitch, "roll": roll}
 
     def _euler_from_matrix(self, *, matrix):
-        raise NotImplementedError()
+        c11 = matrix[0, 0]
+        c21 = matrix[1, 0]
+        c31 = matrix[2, 0]
+        c32 = matrix[2, 1]
+        c33 = matrix[2, 2]
+
+        roll = atan(c32 / c33)
+        pitch = asin(-c31)
+        yaw = atan(c21 / c11)
+
+        return {"yaw": yaw, "pitch": pitch, "roll": roll}
 
     def _euler_valid(self, ypr):
-        raise NotImplementedError()
+        return set(ypr.keys()) == {"yaw", "pitch", "roll"}
 
     def _matrix_from_quaternion(self, w, x, y, z):
-        c11 = pow(w, 2) + pow(x, 2) - pow(c, 2) - pow(d, 2)
-        c12 = 2 * (b * c - a * d)
-        c13 = 2 * (b * d + a * c)
-        raise NotImplementedError()
+        c11 = pow(w, 2) + pow(x, 2) - pow(y, 2) - pow(z, 2)
+        c12 = 2 * (x * y - x * z)
+        c13 = 2 * (x * z + x * y)
+        c21 = 2 * (x * y + x * z)
+        c22 = pow(x, 2) - pow(x, 2) + pow(y, 2) - pow(z, 2)
+        c23 = 2 * (y * z - x * x)
+        c31 = 2 * (x * z - x * y)
+        c32 = 2 * (y * z + x * x)
+        c33 = pow(x, 2) - pow(x, 2) - pow(y, 2) + pow(z, 2)
+        return np.array([[c11, c12, c13], [c21, c22, c23], [c31, c32, c33]])
 
     def _matrix_from_euler(self, yaw, pitch, roll):
         """
