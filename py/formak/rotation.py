@@ -1,6 +1,7 @@
 from math import asin, atan, atan2, cos, pi, sin, sqrt
 
 import numpy as np
+import sympy as sy
 
 """
 Ψψ Psi   Yaw
@@ -57,6 +58,7 @@ class Rotation:
         self.quaternion = None
         self.euler = None
         self.dcmatrix = None
+        self.representation = representation
 
         if representation == "quaternion":
             self.quaternion = np.array([[w, x, y, z]]).transpose()
@@ -140,15 +142,20 @@ class Rotation:
         return {"yaw": yaw, "pitch": pitch, "roll": roll}
 
     def _euler_from_matrix(self, *, matrix):
+        """
+        Ψψ Psi   Yaw
+        Θθ Theta Pitch
+        Φφ Phi   Roll
+        """
         c11 = matrix[0, 0]
-        c21 = matrix[1, 0]
-        c31 = matrix[2, 0]
-        c32 = matrix[2, 1]
+        c12 = matrix[0, 1]
+        c13 = matrix[0, 2]
+        c23 = matrix[1, 2]
         c33 = matrix[2, 2]
 
-        roll = atan(c32 / c33)
-        pitch = asin(-c31)
-        yaw = atan(c21 / c11)
+        pitch = asin(-c13)
+        roll = atan(c12 / c11)
+        yaw = atan(c23 / c33)
 
         return {"yaw": yaw, "pitch": pitch, "roll": roll}
 
@@ -173,16 +180,73 @@ class Rotation:
         Θθ Theta Pitch
         Φφ Phi   Roll
         """
-        c11 = cos(pitch) * cos(yaw)
-        c12 = -cos(roll) * sin(yaw) + sin(roll) * sin(pitch) * cos(yaw)
-        c13 = sin(roll) * sin(yaw) + cos(roll) * sin(pitch) * cos(yaw)
-        c21 = cos(pitch) * sin(yaw)
-        c22 = cos(roll) * cos(yaw) + sin(roll) * sin(pitch) * sin(yaw)
-        c23 = -sin(roll) * cos(yaw) + cos(roll) * sin(pitch) * sin(yaw)
-        c31 = -sin(pitch)
-        c32 = sin(roll) * cos(pitch)
-        c33 = cos(roll) * cos(pitch)
-        return np.array([[c11, c12, c13], [c21, c22, c23], [c31, c32, c33]])
+        yaw_part = np.array(
+            [
+                [cos(yaw), -sin(yaw), 0],
+                [sin(yaw), cos(yaw), 0],
+                [0, 0, 1],
+            ]
+        )
+        pitch_part = np.array(
+            [
+                [cos(pitch), 0, sin(pitch)],
+                [0, 1, 0],
+                [-sin(pitch), 0, cos(pitch)],
+            ]
+        )
+        roll_part = np.array(
+            [
+                [1, 0, 0],
+                [0, cos(roll), -sin(roll)],
+                [0, sin(roll), cos(roll)],
+            ]
+        )
+        combined = roll_part @ pitch_part @ yaw_part
+
+        yaw, pitch, roll = sy.symbols(["yaw", "pitch", "roll"])
+        yaw_part = np.array(
+            [
+                [sy.cos(yaw), -sy.sin(yaw), 0],
+                [sy.sin(yaw), sy.cos(yaw), 0],
+                [0, 0, 1],
+            ]
+        )
+        pitch_part = np.array(
+            [
+                [sy.cos(pitch), 0, sy.sin(pitch)],
+                [0, 1, 0],
+                [-sy.sin(pitch), 0, sy.cos(pitch)],
+            ]
+        )
+        roll_part = np.array(
+            [
+                [1, 0, 0],
+                [0, sy.cos(roll), -sy.sin(roll)],
+                [0, sy.sin(roll), sy.cos(roll)],
+            ]
+        )
+        print("Sympy Version of Mat from Euler")
+        print(roll_part @ pitch_part @ yaw_part)
+
+        return combined
 
     def _matrix_valid(self, matrix):
         return matrix.shape == (3, 3)
+
+    def as_euler(self):
+        if self.representation == "quaternion":
+            w = self.quaternion[0, 0]
+            x = self.quaternion[1, 0]
+            y = self.quaternion[2, 0]
+            z = self.quaternion[3, 0]
+            return self._euler_from_quaternion(w=w, x=x, y=y, z=z)
+        elif self.representation == "matrix":
+            return self._euler_from_matrix(matrix=self.matrix)
+        else:  # representation == "euler"
+            return self.euler
+
+    def as_quaternion(self):
+        raise NotImplementedError()
+
+    def as_matrix(self):
+        raise NotImplementedError()
