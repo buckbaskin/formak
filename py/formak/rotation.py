@@ -246,7 +246,29 @@ class Rotation:
             return self.euler
 
     def as_quaternion(self):
-        raise NotImplementedError()
+        if self.representation == "quaternion":
+            return self.quaternion
+        elif self.representation == "matrix":
+            return self._quaternion_from_matrix(matrix=self.matrix)
+        else:  # representation == "euler"
+            return self._quaternion_from_euler(
+                yaw=self.euler["yaw"],
+                pitch=self.euler["pitch"],
+                roll=self.euler["roll"],
+            )
 
     def as_matrix(self):
-        raise NotImplementedError()
+        if self.representation == "quaternion":
+            w = self.quaternion[0, 0]
+            x = self.quaternion[1, 0]
+            y = self.quaternion[2, 0]
+            z = self.quaternion[3, 0]
+            return self._matrix_from_quaternion(w=w, x=x, y=y, z=z)
+        elif self.representation == "matrix":
+            return self.matrix
+        else:  # representation == "euler"
+            return self._matrix_from_euler(
+                yaw=self.euler["yaw"],
+                pitch=self.euler["pitch"],
+                roll=self.euler["roll"],
+            )

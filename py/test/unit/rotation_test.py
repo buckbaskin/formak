@@ -95,7 +95,12 @@ def test_construct_to_output_consistency_euler():
             )
         except AssertionError:
             print(
-                "Representation", representation, "Reference", reference, "Result", ypr
+                "\nRepresentation\n",
+                representation,
+                "\nReference\n",
+                reference,
+                "\nResult\n",
+                ypr,
             )
             raise
         print("tried", representation)
@@ -116,7 +121,12 @@ def test_construct_to_output_consistency_quaternion():
             assert np.allclose(reference, quat)
         except AssertionError:
             print(
-                "Representation", representation, "Reference", reference, "Result", quat
+                "\nRepresentation\n",
+                representation,
+                "\nReference\n",
+                reference,
+                "\nResult\n",
+                quat,
             )
             raise
         print("tried", representation)
@@ -133,11 +143,11 @@ def test_construct_to_output_consistency_matrix():
             assert np.allclose(reference, result)
         except AssertionError:
             print(
-                "Representation",
+                "\nRepresentation\n",
                 representation,
-                "Reference",
+                "\nReference\n",
                 reference,
-                "Result",
+                "\nResult\n",
                 result,
             )
             raise
