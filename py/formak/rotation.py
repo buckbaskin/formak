@@ -34,6 +34,8 @@ class Rotation:
         euler_angles = {yaw, pitch, roll}
         quaternion = {w, x, y, z}
         direct_cosine_matrix = {True if matrix is not None else None}
+        print("Constructor")
+        print({"yaw": yaw, "pitch": pitch, "roll": roll})
 
         options = {
             "euler_angles": euler_angles,
@@ -92,15 +94,23 @@ class Rotation:
             self._euler_valid(self.euler)
 
     def _quaternion_from_euler(self, *, yaw, pitch, roll):
-        w = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(
+        """
+        + i*sin(pitch/2)*sin(yaw/2)*cos(roll/2) + i*sin(roll/2)*cos(pitch/2)*cos(yaw/2)
+        + j*sin(pitch/2)*cos(roll/2)*cos(yaw/2) - j*sin(roll/2)*sin(yaw/2)*cos(pitch/2)
+        + k*sin(pitch/2)*sin(roll/2)*cos(yaw/2) + k*sin(yaw/2)*cos(pitch/2)*cos(roll/2)
+        - sin(pitch/2)*sin(roll/2)*sin(yaw/2) + cos(pitch/2)*cos(roll/2)*cos(yaw/2)
+        """
+        print("_quaternion_from_euler")
+        print({"yaw": yaw, "pitch": pitch, "roll": roll})
+        w = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - sin(roll / 2) * sin(
             pitch / 2
         ) * sin(yaw / 2)
 
-        x = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(
+        x = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + cos(roll / 2) * sin(
             pitch / 2
         ) * sin(yaw / 2)
 
-        y = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(
+        y = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) - sin(roll / 2) * cos(
             pitch / 2
         ) * sin(yaw / 2)
 

@@ -208,3 +208,10 @@ py_binary(
         requirement("graphviz"),
     ],
 )
+
+py_binary(
+    name = "quaternions",
+    srcs = ["src/quaternions.py"],
+    main = "src/quaternions.py",
+    deps = [requirement("sympy")],
+)

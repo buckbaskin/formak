@@ -4,6 +4,7 @@ from math import cos, pi, sin
 import numpy as np
 import pytest
 from formak.rotation import Rotation
+from scipy.spatial.transform import Rotation as scipy_Rot
 
 REPRESENTATIONS = ["quaternion", "matrix", "euler"]
 
@@ -22,19 +23,13 @@ def test_principal_axis():
         yield [0.0, 0.0, 1.0]
 
     def expected(*, yaw, pitch, roll):
-        if yaw != 0.0:
-            return np.array([[cos(yaw / 2), 0.0, 0.0, sin(yaw / 2)]]).transpose()
-
-        if pitch != 0.0:
-            return np.array([[cos(pitch / 2), 0.0, sin(pitch / 2), 0.0]]).transpose()
-
-        if roll != 0.0:
-            return np.array([[cos(roll / 2), sin(roll / 2), 0.0, 0.0]]).transpose()
+        x, y, z, w = scipy_Rot.from_euler("xyz", [roll, pitch, yaw]).as_quat()
+        return np.array([[w, x, y, z]]).transpose()
 
     for yaw, pitch, roll in principles():
         print("Principle", yaw, pitch, roll)
         rotation = Rotation(
-            yaw=yaw, pitch=pitch, roll=pitch, representation="quaternion"
+            yaw=yaw, pitch=pitch, roll=roll, representation="quaternion"
         )
 
         quaternion = rotation.as_quaternion()
@@ -59,8 +54,8 @@ def test_principal_axis():
         euler = rotation.as_euler()
 
         assert np.allclose(euler["yaw"], yaw)
-        assert np.allclose(euler["pitch"], 0.0)
-        assert np.allclose(euler["roll"], 0.0)
+        assert np.allclose(euler["pitch"], pitch)
+        assert np.allclose(euler["roll"], roll)
 
 
 @pytest.mark.skip("focusing on other tests")
