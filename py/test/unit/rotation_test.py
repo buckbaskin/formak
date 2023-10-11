@@ -18,7 +18,7 @@ def test_constructor():
 
 @pytest.mark.parametrize("representation", REPRESENTATIONS)
 def test_principal_axis(representation):
-    def principles():
+    def principals():
         yield [1.0, 0.0, 0.0]
         yield [0.0, 1.0, 0.0]
         yield [0.0, 0.0, 1.0]
@@ -27,7 +27,7 @@ def test_principal_axis(representation):
         x, y, z, w = scipy_Rot.from_euler("xyz", [roll, pitch, yaw]).as_quat()
         return np.array([[w, x, y, z]]).transpose()
 
-    for yaw, pitch, roll in principles():
+    for yaw, pitch, roll in principals():
         print(representation, "Principle", yaw, pitch, roll)
         rotation = Rotation(
             yaw=yaw, pitch=pitch, roll=roll, representation=representation
