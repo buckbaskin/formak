@@ -63,11 +63,18 @@ class Rotation:
         if representation == "quaternion":
             self.quaternion = np.array([[w, x, y, z]]).transpose()
             if euler_angles != {None}:
+                print("Constructor Quaternion From Euler")
                 self.quaternion = self._quaternion_from_euler(
                     yaw=yaw, pitch=pitch, roll=roll
                 )
             elif matrix is not None:
                 self.quaternion = self._quaternion_from_matrix(matrix=matrix)
+            print(
+                "Constructor Quaternion",
+                self.quaternion,
+                "Valid?",
+                self._quaternion_valid(self.quaternion),
+            )
             assert self._quaternion_valid(self.quaternion)
         elif representation == "matrix":
             self.matrix = matrix
@@ -122,7 +129,7 @@ class Rotation:
         return np.array([[w, x, y, z]]).transpose()
 
     def _quaternion_valid(self, quaternion):
-        return self.quaternion.shape == (4, 1)
+        return quaternion.shape == (4, 1) and np.allclose(np.sum(quaternion**2), 1.0)
 
     def _euler_from_quaternion(self, *, w, x, y, z):
         """
