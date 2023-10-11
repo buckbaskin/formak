@@ -58,7 +58,6 @@ def test_principal_axis():
         assert np.allclose(euler["roll"], roll)
 
 
-@pytest.mark.skip("focusing on other tests")
 def test_euler_order():
     """
     Ψψ Psi   Yaw
@@ -125,7 +124,6 @@ def test_euler_order():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip("focusing on other tests")
 def test_construct_to_output_consistency_euler():
     reference = {"yaw": 0.2, "pitch": -0.3, "roll": 0.4}
     arglist = sorted(list(reference.keys()))
@@ -151,7 +149,6 @@ def test_construct_to_output_consistency_euler():
         print("tried", representation)
 
 
-@pytest.mark.skip("focusing on other tests")
 def test_construct_to_output_consistency_quaternion():
     reference = np.array([[1, 0, 0, 0]]).transpose()
     w_ref = reference[0, 0]
@@ -178,7 +175,6 @@ def test_construct_to_output_consistency_quaternion():
         print("tried", representation)
 
 
-@pytest.mark.skip("focusing on other tests")
 def test_construct_to_output_consistency_matrix():
     reference = np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]])
 
