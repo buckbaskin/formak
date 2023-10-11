@@ -16,7 +16,8 @@ def test_constructor():
         Rotation(matrix=np.eye(3), representation=r)
 
 
-def test_principal_axis():
+@pytest.mark.parametrize("representation", REPRESENTATIONS)
+def test_principal_axis(representation):
     def principles():
         yield [1.0, 0.0, 0.0]
         yield [0.0, 1.0, 0.0]
@@ -27,9 +28,9 @@ def test_principal_axis():
         return np.array([[w, x, y, z]]).transpose()
 
     for yaw, pitch, roll in principles():
-        print("Principle", yaw, pitch, roll)
+        print(representation, "Principle", yaw, pitch, roll)
         rotation = Rotation(
-            yaw=yaw, pitch=pitch, roll=roll, representation="quaternion"
+            yaw=yaw, pitch=pitch, roll=roll, representation=representation
         )
 
         quaternion = rotation.as_quaternion()
@@ -124,74 +125,73 @@ def test_euler_order():
     assert np.allclose(result, expected)
 
 
-def test_construct_to_output_consistency_euler():
+@pytest.mark.parametrize("representation", REPRESENTATIONS)
+def test_construct_to_output_consistency_euler(representation):
     reference = {"yaw": 0.2, "pitch": -0.3, "roll": 0.4}
     arglist = sorted(list(reference.keys()))
 
-    for representation in REPRESENTATIONS:
-        r = Rotation(**reference, representation=representation)
-        ypr = r.as_euler()
+    r = Rotation(**reference, representation=representation)
+    ypr = r.as_euler()
 
-        try:
-            assert np.allclose(
-                [ypr[key] for key in arglist], [reference[key] for key in arglist]
-            )
-        except AssertionError:
-            print(
-                "\nRepresentation\n",
-                representation,
-                "\nReference\n",
-                reference,
-                "\nResult\n",
-                ypr,
-            )
-            raise
-        print("tried", representation)
+    try:
+        assert np.allclose(
+            [ypr[key] for key in arglist], [reference[key] for key in arglist]
+        )
+    except AssertionError:
+        print(
+            "\nRepresentation\n",
+            representation,
+            "\nReference\n",
+            reference,
+            "\nResult\n",
+            ypr,
+        )
+        raise
 
 
-def test_construct_to_output_consistency_quaternion():
+@pytest.mark.parametrize("representation", REPRESENTATIONS)
+def test_construct_to_output_consistency_quaternion(representation):
     reference = np.array([[1, 0, 0, 0]]).transpose()
     w_ref = reference[0, 0]
     x_ref = reference[1, 0]
     y_ref = reference[2, 0]
     z_ref = reference[3, 0]
 
-    for representation in REPRESENTATIONS:
-        r = Rotation(w=w_ref, x=x_ref, y=y_ref, z=z_ref, representation=representation)
-        quat = r.as_quaternion()
+    r = Rotation(w=w_ref, x=x_ref, y=y_ref, z=z_ref, representation=representation)
+    quat = r.as_quaternion()
 
-        try:
-            assert np.allclose(reference, quat)
-        except AssertionError:
-            print(
-                "\nRepresentation\n",
-                representation,
-                "\nReference\n",
-                reference,
-                "\nResult\n",
-                quat,
-            )
-            raise
-        print("tried", representation)
+    try:
+        assert np.allclose(reference, quat)
+    except AssertionError:
+        print(
+            "\nRepresentation\n",
+            representation,
+            "\nReference\n",
+            reference,
+            "\nResult\n",
+            quat,
+        )
+        raise
+    print("tried", representation)
 
 
-def test_construct_to_output_consistency_matrix():
+@pytest.mark.parametrize("representation", REPRESENTATIONS)
+def test_construct_to_output_consistency_matrix(representation):
     reference = np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]])
 
-    for representation in REPRESENTATIONS:
-        r = Rotation(matrix=reference, representation=representation)
-        result = r.as_matrix()
+    r = Rotation(matrix=reference, representation=representation)
+    result = r.as_matrix()
 
-        try:
-            assert np.allclose(reference, result)
-        except AssertionError:
-            print(
-                "\nRepresentation\n",
-                representation,
-                "\nReference\n",
-                reference,
-                "\nResult\n",
-                result,
-            )
-            raise
-        print("tried", representation)
+    try:
+        assert np.allclose(reference, result)
+    except AssertionError:
+        print(
+            "\nRepresentation\n",
+            representation,
+            "\nReference\n",
+            reference,
+            "\nResult\n",
+            result,
+        )
+        raise
+    print("tried", representation)
