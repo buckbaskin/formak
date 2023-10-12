@@ -137,6 +137,19 @@ def test_construct_to_output_consistency_euler(representation):
     reference = {"yaw": 0.2, "pitch": -0.3, "roll": 0.4}
     arglist = sorted(list(reference.keys()))
 
+    def expected(*, yaw, pitch, roll):
+        print("scipy_Rot from ", yaw, pitch, roll)
+        r = scipy_Rot.from_euler("xyz", [roll, pitch, yaw])
+        if representation == "quaternion":
+            x, y, z, w = r.as_quat()
+            print("Q\n", np.array([[w, x, y, z]]).transpose())
+
+    expected(
+        yaw=reference["yaw"],
+        pitch=reference["pitch"],
+        roll=reference["roll"],
+    )
+
     r = Rotation(**reference, representation=representation)
     ypr = r.as_euler()
 

@@ -94,27 +94,19 @@ class Rotation:
             self._euler_valid(self.euler)
 
     def _quaternion_from_euler(self, *, yaw, pitch, roll):
-        """
-        + i*sin(pitch/2)*sin(yaw/2)*cos(roll/2) + i*sin(roll/2)*cos(pitch/2)*cos(yaw/2)
-        + j*sin(pitch/2)*cos(roll/2)*cos(yaw/2) - j*sin(roll/2)*sin(yaw/2)*cos(pitch/2)
-        + k*sin(pitch/2)*sin(roll/2)*cos(yaw/2) + k*sin(yaw/2)*cos(pitch/2)*cos(roll/2)
-        - sin(pitch/2)*sin(roll/2)*sin(yaw/2) + cos(pitch/2)*cos(roll/2)*cos(yaw/2)
-        """
-        print("_quaternion_from_euler")
-        print({"yaw": yaw, "pitch": pitch, "roll": roll})
-        w = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - sin(roll / 2) * sin(
+        w = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(
             pitch / 2
         ) * sin(yaw / 2)
 
-        x = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + cos(roll / 2) * sin(
+        x = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(
             pitch / 2
         ) * sin(yaw / 2)
 
-        y = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) - sin(roll / 2) * cos(
+        y = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(
             pitch / 2
         ) * sin(yaw / 2)
 
-        z = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) + sin(roll / 2) * sin(
+        z = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(
             pitch / 2
         ) * cos(yaw / 2)
 
@@ -187,14 +179,14 @@ class Rotation:
 
     def _matrix_from_quaternion(self, w, x, y, z):
         c11 = pow(w, 2) + pow(x, 2) - pow(y, 2) - pow(z, 2)
-        c12 = 2 * (x * y - x * z)
-        c13 = 2 * (x * z + x * y)
-        c21 = 2 * (x * y + x * z)
-        c22 = pow(x, 2) - pow(x, 2) + pow(y, 2) - pow(z, 2)
-        c23 = 2 * (y * z - x * x)
-        c31 = 2 * (x * z - x * y)
-        c32 = 2 * (y * z + x * x)
-        c33 = pow(x, 2) - pow(x, 2) - pow(y, 2) + pow(z, 2)
+        c12 = 2 * (x * y - w * z)
+        c13 = 2 * (x * z + w * y)
+        c21 = 2 * (x * y + w * z)
+        c22 = pow(w, 2) - pow(x, 2) + pow(y, 2) - pow(z, 2)
+        c23 = 2 * (y * z - w * x)
+        c31 = 2 * (x * z - w * y)
+        c32 = 2 * (y * z + w * x)
+        c33 = pow(w, 2) - pow(x, 2) - pow(y, 2) + pow(z, 2)
         return np.array([[c11, c12, c13], [c21, c22, c23], [c31, c32, c33]])
 
     def _matrix_from_euler(self, yaw, pitch, roll):
