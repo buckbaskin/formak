@@ -1,4 +1,4 @@
-from itertools import permutations
+from itertools import permutations, product
 from math import cos, pi, sin
 
 import numpy as np
@@ -16,47 +16,54 @@ def test_constructor():
         Rotation(matrix=np.eye(3), representation=r)
 
 
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_principal_axis(representation):
-    def principals():
-        yield [1.0, 0.0, 0.0]
-        yield [0.0, 1.0, 0.0]
-        yield [0.0, 0.0, 1.0]
+def YAW_PRINCIPALS():
+    yield [1.0, 0.0, 0.0]
+    yield [0.0, 1.0, 0.0]
+    yield [0.0, 0.0, 1.0]
 
+
+@pytest.mark.parametrize(
+    "representation,principals",
+    product(REPRESENTATIONS, YAW_PRINCIPALS()),
+    ids=(
+        f"{rep}, y{y} p{p} r{r}"
+        for rep, (y, p, r) in product(REPRESENTATIONS, YAW_PRINCIPALS())
+    ),
+)
+def test_principal_axis(representation, principals):
     def expected(*, yaw, pitch, roll):
         x, y, z, w = scipy_Rot.from_euler("xyz", [roll, pitch, yaw]).as_quat()
         return np.array([[w, x, y, z]]).transpose()
 
-    for yaw, pitch, roll in principals():
-        print(representation, "Principle", yaw, pitch, roll)
-        rotation = Rotation(
-            yaw=yaw, pitch=pitch, roll=roll, representation=representation
-        )
+    yaw, pitch, roll = principals
 
-        quaternion = rotation.as_quaternion()
-        print(
-            "Test Result Quaternion",
-            rotation._quaternion_valid(quaternion),
-            "\n",
-            quaternion,
-        )
-        expected_quaternion = expected(yaw=yaw, pitch=pitch, roll=roll)
-        print(
-            "Test Expected Quaternion",
-            rotation._quaternion_valid(expected_quaternion),
-            "\n",
-            expected_quaternion,
-        )
+    print(representation, "Principle", yaw, pitch, roll)
+    rotation = Rotation(yaw=yaw, pitch=pitch, roll=roll, representation=representation)
 
-        assert rotation._quaternion_valid(quaternion)
-        assert rotation._quaternion_valid(expected_quaternion)
-        assert np.allclose(quaternion, expected_quaternion)
+    quaternion = rotation.as_quaternion()
+    print(
+        "Test Result Quaternion",
+        rotation._quaternion_valid(quaternion),
+        "\n",
+        quaternion,
+    )
+    expected_quaternion = expected(yaw=yaw, pitch=pitch, roll=roll)
+    print(
+        "Test Expected Quaternion",
+        rotation._quaternion_valid(expected_quaternion),
+        "\n",
+        expected_quaternion,
+    )
 
-        euler = rotation.as_euler()
+    assert rotation._quaternion_valid(quaternion)
+    assert rotation._quaternion_valid(expected_quaternion)
+    assert np.allclose(quaternion, expected_quaternion)
 
-        assert np.allclose(euler["yaw"], yaw)
-        assert np.allclose(euler["pitch"], pitch)
-        assert np.allclose(euler["roll"], roll)
+    euler = rotation.as_euler()
+
+    assert np.allclose(euler["yaw"], yaw)
+    assert np.allclose(euler["pitch"], pitch)
+    assert np.allclose(euler["roll"], roll)
 
 
 def test_euler_order():

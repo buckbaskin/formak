@@ -215,3 +215,13 @@ py_binary(
     main = "src/quaternions.py",
     deps = [requirement("sympy")],
 )
+
+py_binary(
+    name = "dcmatrix",
+    srcs = ["src/dcmatrix.py"],
+    main = "src/dcmatrix.py",
+    deps = [
+        requirement("sympy"),
+        requirement("numpy"),
+    ],
+)

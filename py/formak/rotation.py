@@ -29,7 +29,7 @@ class Rotation:
         y=None,
         z=None,
         matrix=None,
-        representation="quaternion"
+        representation="quaternion",
     ):
         euler_angles = {yaw, pitch, roll}
         quaternion = {w, x, y, z}
@@ -170,9 +170,15 @@ class Rotation:
         c23 = matrix[1, 2]
         c33 = matrix[2, 2]
 
-        pitch = asin(-c13)
-        roll = atan(c12 / c11)
-        yaw = atan(c23 / c33)
+        # All Combinations...
+        # c13 ... sin(pitch) {pitch}
+        # c11 / c12 ... -1/tan(yaw) {yaw}
+        #   c12 / c11 = -tan(yaw)
+        # c23 / c33 ... -tan(roll) {roll}
+
+        pitch = asin(c13)
+        yaw = -atan(c12 / c11)
+        roll = -atan(c23 / c33)
 
         return {"yaw": yaw, "pitch": pitch, "roll": roll}
 
@@ -219,31 +225,6 @@ class Rotation:
             ]
         )
         combined = roll_part @ pitch_part @ yaw_part
-
-        yaw, pitch, roll = sy.symbols(["yaw", "pitch", "roll"])
-        yaw_part = np.array(
-            [
-                [sy.cos(yaw), -sy.sin(yaw), 0],
-                [sy.sin(yaw), sy.cos(yaw), 0],
-                [0, 0, 1],
-            ]
-        )
-        pitch_part = np.array(
-            [
-                [sy.cos(pitch), 0, sy.sin(pitch)],
-                [0, 1, 0],
-                [-sy.sin(pitch), 0, sy.cos(pitch)],
-            ]
-        )
-        roll_part = np.array(
-            [
-                [1, 0, 0],
-                [0, sy.cos(roll), -sy.sin(roll)],
-                [0, sy.sin(roll), sy.cos(roll)],
-            ]
-        )
-        print("Sympy Version of Mat from Euler")
-        print(roll_part @ pitch_part @ yaw_part)
 
         return combined
 
