@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from formak.rotation import Rotation
 from scipy.spatial.transform import Rotation as scipy_Rot
+from sympy import Symbol, simplify
 
 REPRESENTATIONS = ["quaternion", "matrix", "euler"]
 
@@ -222,3 +223,20 @@ def test_construct_to_output_consistency_matrix(representation):
         )
         raise
     print("tried", representation)
+
+
+@pytest.mark.parametrize("representation", REPRESENTATIONS)
+def test_symbolic_computation(representation):
+    reference = {k: Symbol(k) for k in ["yaw", "pitch", "roll"]}
+
+    r = Rotation(**reference, representation=representation)
+
+    print("Q")
+    print(simplify(r.as_quaternion()))
+
+    print("M")
+    print(simplify(r.as_matrix()))
+
+    print("E")
+    print(simplify(r.as_euler()))
+    1 / 0
