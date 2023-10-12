@@ -72,7 +72,7 @@ class Rotation:
             elif matrix is not None:
                 self.quaternion = self._quaternion_from_matrix(matrix=matrix)
             print(
-                "Constructor Quaternion",
+                "Constructor Quaternion\n",
                 self.quaternion,
                 "Valid?",
                 self._quaternion_valid(self.quaternion),

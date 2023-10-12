@@ -197,7 +197,20 @@ def test_construct_to_output_consistency_quaternion(representation):
 
 @pytest.mark.parametrize("representation", REPRESENTATIONS)
 def test_construct_to_output_consistency_matrix(representation):
-    reference = np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]])
+    reference = np.array(
+        [
+            [1, 0, 0],
+            [0, 0, -1],
+            [0, 1, 0],
+        ]
+    )
+    assert np.allclose(1.0, np.linalg.det(reference))
+
+    def expected():
+        x, y, z, w = scipy_Rot.from_matrix(reference).as_quat()
+        print("Expected Q\n", np.array([[w, x, y, z]]).transpose())
+
+    expected()
 
     r = Rotation(matrix=reference, representation=representation)
     result = r.as_matrix()
