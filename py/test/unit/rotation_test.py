@@ -61,9 +61,9 @@ def test_principal_axis(representation, principals):
 
     euler = rotation.as_euler()
 
-    assert np.allclose(euler["yaw"], yaw)
-    assert np.allclose(euler["pitch"], pitch)
-    assert np.allclose(euler["roll"], roll)
+    assert np.allclose(euler.yaw, yaw)
+    assert np.allclose(euler.pitch, pitch)
+    assert np.allclose(euler.roll, roll)
 
 
 def test_euler_order():
@@ -78,11 +78,7 @@ def test_euler_order():
     r = Rotation(**reference, representation="matrix")
 
     ypr = r.as_euler()
-    for key in ["yaw", "pitch", "roll"]:
-        if not np.allclose(ypr[key], reference[key]):
-            print("as euler mismatch keys")
-            print(key, "as_euler", ypr[key], "reference", reference[key])
-        # assert np.allclose(ypr[key], reference[key])
+    assert np.allclose(list(ypr), [reference[key] for key in ["yaw", "pitch", "roll"]])
 
     yaw_part = np.array(
         [
@@ -135,7 +131,7 @@ def test_euler_order():
 @pytest.mark.parametrize("representation", REPRESENTATIONS)
 def test_construct_to_output_consistency_euler(representation):
     reference = {"yaw": 0.2, "pitch": -0.3, "roll": 0.4}
-    arglist = sorted(list(reference.keys()))
+    arglist = ["yaw", "pitch", "roll"]
 
     def expected(*, yaw, pitch, roll):
         print("scipy_Rot from ", yaw, pitch, roll)
@@ -154,9 +150,7 @@ def test_construct_to_output_consistency_euler(representation):
     ypr = r.as_euler()
 
     try:
-        assert np.allclose(
-            [ypr[key] for key in arglist], [reference[key] for key in arglist]
-        )
+        assert np.allclose(list(ypr), [reference[key] for key in arglist])
     except AssertionError:
         print(
             "\nRepresentation\n",

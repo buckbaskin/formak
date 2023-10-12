@@ -1,4 +1,5 @@
-from math import asin, atan, atan2, cos, pi, sin, sqrt
+from collections import namedtuple
+from math import asin, atan, atan2, cos, isfinite, pi, sin, sqrt
 
 import numpy as np
 import sympy as sy
@@ -8,6 +9,8 @@ import sympy as sy
 Θθ Theta Pitch
 Φφ Phi   Roll
 """
+
+YawPitchRollT = namedtuple("YawPitchRollT", ["yaw", "pitch", "roll"])
 
 
 class Rotation:
@@ -34,8 +37,6 @@ class Rotation:
         euler_angles = {yaw, pitch, roll}
         quaternion = {w, x, y, z}
         direct_cosine_matrix = {True if matrix is not None else None}
-        print("Constructor")
-        print({"yaw": yaw, "pitch": pitch, "roll": roll})
 
         options = {
             "euler_angles": euler_angles,
@@ -86,7 +87,7 @@ class Rotation:
                 self.matrix = self._matrix_from_euler(yaw=yaw, pitch=pitch, roll=roll)
             assert self._matrix_valid(self.matrix)
         else:  # representation == "euler"
-            self.euler = {"yaw": yaw, "pitch": pitch, "roll": roll}
+            self.euler = YawPitchRollT(yaw=yaw, pitch=pitch, roll=roll)
             if quaternion != {None}:
                 self.euler = self._euler_from_quaternion(w=w, x=x, y=y, z=z)
             elif matrix is not None:
@@ -148,7 +149,7 @@ class Rotation:
             sqrt(1 + 2 * (w * y - x * z)), sqrt(1 - 2 * (w * y - x * z))
         )
         yaw = atan2(2 * (w * z + x * y), 1 - 2 * (pow(y, 2) + pow(z, 2)))
-        return {"yaw": yaw, "pitch": pitch, "roll": roll}
+        return YawPitchRollT(yaw=yaw, pitch=pitch, roll=roll)
 
     def _euler_from_matrix(self, *, matrix):
         """
@@ -172,10 +173,15 @@ class Rotation:
         yaw = -atan(c12 / c11)
         roll = -atan(c23 / c33)
 
-        return {"yaw": yaw, "pitch": pitch, "roll": roll}
+        return YawPitchRollT(yaw=yaw, pitch=pitch, roll=roll)
 
     def _euler_valid(self, ypr):
-        return set(ypr.keys()) == {"yaw", "pitch", "roll"}
+        return (
+            isinstance(ypr, YawPitchRollT)
+            and isfinite(ypr.yaw)
+            and isfinite(ypr.pitch)
+            and isfinite(ypr.roll)
+        )
 
     def _matrix_from_quaternion(self, w, x, y, z):
         c11 = pow(w, 2) + pow(x, 2) - pow(y, 2) - pow(z, 2)
@@ -221,7 +227,7 @@ class Rotation:
         return combined
 
     def _matrix_valid(self, matrix):
-        return matrix.shape == (3, 3)
+        return matrix.shape == (3, 3) and np.allclose(np.linalg.det(matrix), 1.0)
 
     def as_euler(self):
         if self.representation == "quaternion":
@@ -242,9 +248,9 @@ class Rotation:
             return self._quaternion_from_matrix(matrix=self.matrix)
         else:  # representation == "euler"
             return self._quaternion_from_euler(
-                yaw=self.euler["yaw"],
-                pitch=self.euler["pitch"],
-                roll=self.euler["roll"],
+                yaw=self.euler.yaw,
+                pitch=self.euler.pitch,
+                roll=self.euler.roll,
             )
 
     def as_matrix(self):
@@ -258,7 +264,7 @@ class Rotation:
             return self.matrix
         else:  # representation == "euler"
             return self._matrix_from_euler(
-                yaw=self.euler["yaw"],
-                pitch=self.euler["pitch"],
-                roll=self.euler["roll"],
+                yaw=self.euler.yaw,
+                pitch=self.euler.pitch,
+                roll=self.euler.roll,
             )
