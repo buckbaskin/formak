@@ -1,6 +1,6 @@
 import math
 from collections import namedtuple
-from math import asin, atan, atan2, cos, isfinite, pi, sin, sqrt
+from math import asin, atan, atan2, cos, hypot, isfinite, pi, sin, sqrt
 
 import numpy as np
 import sympy as sy
@@ -139,9 +139,25 @@ class Rotation:
         y = 1 / (4 * w) * (c13 - c31)
         z = 1 / (4 * w) * (c21 - c12)
 
+        # Numerical Correction
+        norm = hypot(w, x, y, z)
+        w /= norm
+        x /= norm
+        y /= norm
+        z /= norm
+
         return np.array([[w, x, y, z]]).transpose()
 
     def _quaternion_valid(self, quaternion):
+        print(
+            quaternion.shape == (4, 1),
+            "and",
+            quaternion.dtype == np.dtype("object"),
+            "or",
+            "np.allclose(",
+            np.sum(quaternion**2),
+            ", 1.0)",
+        )
         return quaternion.shape == (4, 1) and (
             quaternion.dtype == np.dtype("object")
             or np.allclose(np.sum(quaternion**2), 1.0)
@@ -305,3 +321,6 @@ class Rotation:
                 pitch=self.euler.pitch,
                 roll=self.euler.roll,
             )
+
+    def inverse(self):
+        raise NotImplementedError()
