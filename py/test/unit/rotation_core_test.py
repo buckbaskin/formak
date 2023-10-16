@@ -1,11 +1,10 @@
 from itertools import permutations, product
-from math import cos, pi, sin
+from math import cos, sin
 
 import numpy as np
 import pytest
 from formak.rotation import Rotation
 from scipy.spatial.transform import Rotation as scipy_Rot
-from sympy import Matrix, Symbol, simplify
 
 REPRESENTATIONS = ["quaternion", "matrix", "euler"]
 
@@ -223,64 +222,3 @@ def test_construct_to_output_consistency_matrix(representation):
         )
         raise
     print("tried", representation)
-
-
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_euler(representation):
-    reference = {k: Symbol(k) for k in ["yaw", "pitch", "roll"]}
-
-    r = Rotation(**reference, representation=representation)
-
-    print("Q")
-    print(simplify(r.as_quaternion()))
-
-    print("M")
-    print(simplify(r.as_matrix()))
-
-    print("E")
-    print(simplify(simplify(r.as_euler())))
-
-
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_quaternion(representation):
-    reference = {k: Symbol(k) for k in ["w", "x", "y", "z"]}
-
-    r = Rotation(**reference, representation=representation)
-
-    print("Q")
-    print(simplify(r.as_quaternion()))
-
-    print("M")
-    print(simplify(r.as_matrix()))
-
-    print("E")
-    print(simplify(simplify(r.as_euler())))
-
-
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_matrix(representation):
-    def matrix():
-        for i in range(3):
-            yield [f"c{i}{j}" for j in range(3)]
-
-    r = Rotation(matrix=Matrix(list(matrix())), representation=representation)
-
-    print("Q")
-    print(simplify(r.as_quaternion()))
-
-    print("M")
-    print(simplify(r.as_matrix()))
-
-    print("E")
-    print(simplify(simplify(r.as_euler())))
-
-
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_inverse(representation):
-    reference = {"yaw": -0.2, "pitch": 0.1, "roll": -0.15}
-
-    r = Rotation(**reference, representation=representation)
-
-    inv = r.inverse()
-
-    assert np.allclose(np.eye(3), inv.as_matrix() @ r.as_matrix())

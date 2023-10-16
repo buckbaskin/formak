@@ -1,6 +1,6 @@
 import math
 from collections import namedtuple
-from math import asin, atan, atan2, cos, hypot, isfinite, pi, sin, sqrt
+from math import isfinite, pi
 
 import numpy as np
 import sympy as sy
@@ -134,13 +134,21 @@ class Rotation:
         c31 = matrix[2, 0]
         c32 = matrix[2, 1]
         c33 = matrix[2, 2]
-        w = 1 / 2 * pow(1 + c11 + c22 + c33, 1 / 2)
+        if any(
+            isinstance(c, sy.Expr)
+            for c in [c11, c12, c13, c21, c22, c23, c31, c32, c33]
+        ):
+            Pow, sqrt = sy.Pow, sy.sqrt
+        else:
+            Pow, sqrt = pow, math.sqrt
+
+        w = 1 / 2 * Pow(1 + c11 + c22 + c33, 1 / 2)
         x = 1 / (4 * w) * (c32 - c23)
         y = 1 / (4 * w) * (c13 - c31)
         z = 1 / (4 * w) * (c21 - c12)
 
         # Numerical Correction
-        norm = hypot(w, x, y, z)
+        norm = sqrt(w**2 + x**2 + y**2 + z**2)
         w /= norm
         x /= norm
         y /= norm
@@ -323,4 +331,34 @@ class Rotation:
             )
 
     def inverse(self):
-        raise NotImplementedError()
+        if self.representation == "quaternion":
+            w = self.quaternion[0, 0]
+            x = self.quaternion[1, 0]
+            y = self.quaternion[2, 0]
+            z = self.quaternion[3, 0]
+            return Rotation(w=w, x=-x, y=-y, z=-z, representation=self.representation)
+        elif self.representation == "matrix":
+            return Rotation(
+                matrix=self.matrix.transpose(), representation=self.representation
+            )
+        else:  # representation == "euler"
+            raise NotImplementedError()
+
+    def __add__(self, other):
+        if self.representation == "quaternion":
+            ow, ox, oy, oz = other.as_quaternion()
+            w = self.quaternion[0, 0]
+            x = self.quaternion[1, 0]
+            y = self.quaternion[2, 0]
+            z = self.quaternion[3, 0]
+            raise NotImplementedError()
+        elif self.representation == "matrix":
+            return Rotation(
+                matrix=self.matrix @ other.as_matrix(),
+                representation=self.representation,
+            )
+        else:  # representation == "euler"
+            raise NotImplementedError()
+
+    def __sub__(self, other):
+        return self + other.inverse()
