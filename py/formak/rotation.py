@@ -95,6 +95,17 @@ class Rotation:
                 self.euler = self._euler_from_matrix(matrix=matrix)
             self._euler_valid(self.euler)
 
+        left_args = ["wl", "xl", "yl", "zl"]
+        right_args = ["wr", "xr", "yr", "zr"]
+        left = sy.Quaternion(*sy.symbols(left_args))
+        right = sy.Quaternion(*sy.symbols(right_args))
+        combined = left.mul(right)
+        self.__quat_mul = sy.lambdify(
+            left_args + right_args,
+            (combined.a, combined.b, combined.c, combined.d),
+            cse=True,
+        )
+
     def _quaternion_from_euler(self, *, yaw, pitch, roll):
         if (
             isinstance(yaw, sy.Expr)
@@ -342,7 +353,32 @@ class Rotation:
                 matrix=self.matrix.transpose(), representation=self.representation
             )
         else:  # representation == "euler"
-            raise NotImplementedError()
+            # Derived by computing the inverse via euler -> Rotation(quaternion).inverse() -> euler
+            yaw, pitch, roll = self.euler
+            if (
+                isinstance(yaw, sy.Expr)
+                or isinstance(pitch, sy.Expr)
+                or isinstance(roll, sy.Expr)
+            ):
+                sin, cos, atan2, sqrt = sy.sin, sy.cos, sy.atan2, sy.sqrt
+            else:
+                sin, cos, atan2, sqrt = math.sin, math.cos, math.atan2, math.sqrt
+            return Rotation(
+                yaw=atan2(
+                    sin(pitch) * sin(roll) * cos(yaw) - sin(yaw) * cos(roll),
+                    cos(pitch - yaw) / 2 + cos(pitch + yaw) / 2,
+                ),
+                pitch=2
+                * atan2(
+                    sqrt(-sin(pitch) * cos(roll) * cos(yaw) - sin(roll) * sin(yaw) + 1),
+                    sqrt(sin(pitch) * cos(roll) * cos(yaw) + sin(roll) * sin(yaw) + 1),
+                )
+                - 1.5707963267949,
+                roll=atan2(
+                    sin(pitch) * sin(yaw) * cos(roll) - sin(roll) * cos(yaw),
+                    cos(pitch - roll) / 2 + cos(pitch + roll) / 2,
+                ),
+            )
 
     def __add__(self, other):
         if self.representation == "quaternion":
@@ -351,7 +387,12 @@ class Rotation:
             x = self.quaternion[1, 0]
             y = self.quaternion[2, 0]
             z = self.quaternion[3, 0]
-            raise NotImplementedError()
+
+            rw, rx, ry, rz = self.__quat_mul(w, x, y, z, ow, ox, oy, oz)
+            print("abc")
+            print(rw, rx, ry, rz)
+
+            return Rotation(w=rw[0], x=rx[0], y=ry[0], z=rz[0])
         elif self.representation == "matrix":
             return Rotation(
                 matrix=self.matrix @ other.as_matrix(),

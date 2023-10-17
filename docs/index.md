@@ -16,6 +16,7 @@ FormaK is open source and uses the MIT license.
 <strong>Sign up for email updates at https://tinyletter.com/formak</strong>
 
 If you'd like to jump in to using FormaK: [Getting Started](getting-started.html)
+
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
 ### The Persona
