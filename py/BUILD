@@ -73,15 +73,6 @@ py_library(
 )
 
 py_library(
-    name = "rotation",
-    srcs = ["formak/rotation.py"],
-    imports = ["."],
-    deps = [
-        requirement("sympy"),
-    ],
-)
-
-py_library(
     name = "common",
     srcs = ["formak/common.py"],
     imports = ["."],
@@ -152,7 +143,6 @@ py_library(
         ":cpp",
         ":python",
         ":reference-models",
-        ":rotation",
         ":runtime",
         ":ui",
     ],

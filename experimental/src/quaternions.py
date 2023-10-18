@@ -1,4 +1,14 @@
-from sympy import symbols, evaluate, expand, Symbol, factor, simplify, sin, cos
+from sympy import (
+    symbols,
+    evaluate,
+    expand,
+    Symbol,
+    factor,
+    simplify,
+    sin,
+    cos,
+    Quaternion,
+)
 
 i, j, k = symbols(["i", "j", "k"])
 li, lj, lk = symbols(["li", "lj", "lk"])
@@ -77,3 +87,11 @@ pitch_times_yaw = multiply_quaternions(
     (cos(yaw / 2) + 0 + 0 + sin(yaw / 2) * k),
 )
 print(pitch_times_yaw)
+
+print("\n\n=== Sympy Version ===\n")
+w, x, y, z = symbols(["w", "x", "y", "z"])
+rotation = Quaternion(w, x, y, z)
+print(rotation)
+print(list(filter(lambda s: s.startswith("from"), dir(rotation))))
+print(list(filter(lambda s: s.startswith("to"), dir(rotation))))
+print(list(dir(rotation)))

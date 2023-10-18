@@ -1,55 +1,50 @@
 import pytest
-from formak.rotation import Rotation
-from sympy import Matrix, Symbol, simplify
-
-REPRESENTATIONS = ["quaternion", "matrix", "euler"]
+from sympy import Matrix, Quaternion, Symbol, simplify
 
 
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_euler(representation):
+def test_symbolic_computation_euler():
     reference = {k: Symbol(k) for k in ["yaw", "pitch", "roll"]}
 
-    r = Rotation(**reference, representation=representation)
+    r = Quaternion(**reference)
+    print(r.from_axis_angle.__doc__)
 
     print("Q")
-    print(r.as_quaternion())
+    print(r)
 
     print("M")
-    print(r.as_matrix())
+    print(r.to_rotation_matrix())
 
     print("E")
-    print(r.as_euler())
+    print(r.to_euler())
 
 
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_quaternion(representation):
+def test_symbolic_computation_quaternion():
     reference = {k: Symbol(k) for k in ["w", "x", "y", "z"]}
 
-    r = Rotation(**reference, representation=representation)
+    r = Quaternion(*sorted(list(reference.keys())))
 
     print("Q")
-    print(r.as_quaternion())
+    print(r)
 
     print("M")
-    print(r.as_matrix())
+    print(r.to_rotation_matrix())
 
     print("E")
-    print(r.as_euler())
+    print(r.to_euler())
 
 
-@pytest.mark.parametrize("representation", REPRESENTATIONS)
-def test_symbolic_computation_matrix(representation):
+def test_symbolic_computation_matrix():
     def matrix():
         for i in range(3):
             yield [f"c{i}{j}" for j in range(3)]
 
-    r = Rotation(matrix=Matrix(list(matrix())), representation=representation)
+    r = Quaternion.from_rotation_matrix(Matrix(list(matrix())))
 
     print("Q")
-    print(r.as_quaternion())
+    print(r)
 
     print("M")
-    print(r.as_matrix())
+    print(r.to_rotation_matrix())
 
     print("E")
-    print(r.as_euler())
+    print(r.to_euler())
