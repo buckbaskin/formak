@@ -1,5 +1,5 @@
 """
-Reference Model IMU
+Reference Model IMU.
 
 This demonstrates an example of "playing" data from a NASA launch through the
 IMU model to generate a motion trajectory in the global frame.
@@ -9,11 +9,11 @@ https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vic
 """
 import csv
 import os
-from math import asin, atan, cos, hypot, sin
+from math import hypot
 
 import numpy as np
 from formak.reference_models import strapdown_imu
-from formak.rotation import Rotation
+from sympy import Matrix, Quaternion
 
 from formak import python
 
@@ -76,129 +76,6 @@ def stream_control():
             yield time_ns, parsed_row
 
 
-def ypr_from_matrix(mat):
-    c11 = mat[0, 0]
-    c21 = mat[1, 0]
-    c31 = mat[2, 0]
-    c32 = mat[2, 1]
-    c33 = mat[2, 2]
-
-    roll = atan(c32 / c33)
-    pitch = -asin(c31)
-    yaw = atan(c21 / c11)
-    return yaw, pitch, roll
-
-
-def matrix_from_ypr(yaw, pitch, roll):
-    yaw_mat = np.array(
-        [
-            [cos(1), -sin(1), 0],
-            [sin(1), cos(1), 0],
-            [0, 0, 1],
-        ]
-    )
-    pitch_mat = np.array(
-        [
-            [cos(1), 0, sin(1)],
-            [0, 1, 0],
-            [-sin(1), 0, cos(1)],
-        ]
-    )
-    roll_mat = np.array(
-        [
-            [1, 0, 0],
-            [0, cos(1), -sin(1)],
-            [0, sin(1), cos(1)],
-        ]
-    )
-    mat = yaw_mat @ pitch_mat @ roll_mat
-    mat = yaw_mat @ roll_mat @ pitch_mat
-    # [y, p, r] -0.53962658
-    # [y, r, p] 0.05619665
-    # [p, y, r] -0.53962658
-    # [p, r, y] -1.13544982
-    # [r, p, y] -0.53962658
-    # [r, y, p] -0.53962658
-    return mat
-
-
-# yaw
-assert np.allclose(
-    [1, 0, 0],
-    ypr_from_matrix(
-        np.array(
-            [
-                [cos(1), -sin(1), 0],
-                [sin(1), cos(1), 0],
-                [0, 0, 1],
-            ]
-        )
-    ),
-)
-assert np.allclose(
-    [-1, 0, 0],
-    ypr_from_matrix(
-        np.array(
-            [
-                [cos(-1), -sin(-1), 0],
-                [sin(-1), cos(-1), 0],
-                [0, 0, 1],
-            ]
-        )
-    ),
-)
-# pitch
-assert np.allclose(
-    [0, 1, 0],
-    ypr_from_matrix(
-        np.array(
-            [
-                [cos(1), 0, sin(1)],
-                [0, 1, 0],
-                [-sin(1), 0, cos(1)],
-            ]
-        )
-    ),
-)
-assert np.allclose(
-    [0, -1, 0],
-    ypr_from_matrix(
-        np.array(
-            [
-                [cos(-1), 0, sin(-1)],
-                [0, 1, 0],
-                [-sin(-1), 0, cos(-1)],
-            ]
-        )
-    ),
-)
-# roll
-assert np.allclose(
-    [0, 0, 1],
-    ypr_from_matrix(
-        np.array(
-            [
-                [1, 0, 0],
-                [0, cos(1), -sin(1)],
-                [0, sin(1), cos(1)],
-            ]
-        )
-    ),
-)
-assert np.allclose(
-    [0, 0, -1],
-    ypr_from_matrix(
-        np.array(
-            [
-                [1, 0, 0],
-                [0, cos(-1), -sin(-1)],
-                [0, sin(-1), cos(-1)],
-            ]
-        )
-    ),
-)
-
-
 def starting_rotation():
 
     att_dcm_CON_IMU = np.array(
@@ -208,8 +85,8 @@ def starting_rotation():
             [-0.9677, -0.0059, -0.2522],
         ]
     )
-    rotation = Rotation(matrix=att_dcm_CON_IMU)
-    recreation = rotation.as_matrix()
+    rotation = Quaternion.from_rotation_matrix(Matrix(att_dcm_CON_IMU))
+    recreation = rotation.to_rotation_matrix(homogeneous=True)
 
     print("att")
     print(att_dcm_CON_IMU)
@@ -217,7 +94,9 @@ def starting_rotation():
     print(recreation)
     print("diff")
     print(att_dcm_CON_IMU - recreation)
-    assert np.allclose(att_dcm_CON_IMU, recreation, atol=1e-4)
+    assert np.allclose(
+        att_dcm_CON_IMU, np.array(recreation, dtype=np.float64), atol=1e-4
+    )
 
     return rotation
 
@@ -233,7 +112,7 @@ def test_example_usage_of_reference_model():
     dt = 1.0 / rate
 
     # yaw, pitch, roll = ui.symbols([r"\psi", r"\theta", r"\phi"])
-    yaw, pitch, roll = starting_rotation().as_euler()
+    roll, pitch, yaw = starting_rotation().to_euler("xyz")
     state = imu.State.from_dict(
         {
             r"\phi": roll,  # roll

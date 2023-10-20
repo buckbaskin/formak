@@ -199,7 +199,6 @@ def test_circular_motion_xy_plane():
         times.append(dt * idx)
 
         expected_yaw = radians(90) + yaw_rate * dt * idx
-        expected_radius_angle = expected_yaw - radians(90)
         expected_state = imu.State.from_dict(
             {
                 r"\ddot{x}_{A}_{1}": -specific_force

@@ -1,11 +1,10 @@
-import pytest
-from sympy import Matrix, Quaternion, Symbol, simplify
+from sympy import Matrix, Quaternion, Symbol
 
 
 def test_symbolic_computation_euler():
-    reference = {k: Symbol(k) for k in ["yaw", "pitch", "roll"]}
+    reference = [Symbol(k) for k in ["yaw", "pitch", "roll"]]
 
-    r = Quaternion(**reference)
+    r = Quaternion.from_euler(reference, "zyx")
     print(r.from_axis_angle.__doc__)
 
     print("Q")
@@ -15,7 +14,7 @@ def test_symbolic_computation_euler():
     print(r.to_rotation_matrix())
 
     print("E")
-    print(r.to_euler())
+    print(r.to_euler("zyx"))
 
 
 def test_symbolic_computation_quaternion():
@@ -30,7 +29,7 @@ def test_symbolic_computation_quaternion():
     print(r.to_rotation_matrix())
 
     print("E")
-    print(r.to_euler())
+    print(r.to_euler("zyx"))
 
 
 def test_symbolic_computation_matrix():
@@ -47,4 +46,4 @@ def test_symbolic_computation_matrix():
     print(r.to_rotation_matrix())
 
     print("E")
-    print(r.to_euler())
+    print(r.to_euler("zyx"))

@@ -176,12 +176,12 @@ def named_vector(name, arglist):
                 + "|"
                 + "Diff".ljust(15)
             )
-            for key, model, expected, diff in sorted(
+            for key, model, expected, delta in sorted(
                 list(diff_source()), key=lambda row: abs(row[-1]), reverse=True
             ):
                 key = str(key)[:30].ljust(30)
                 model = f"{model[0]: >15.9g}".rjust(15)
-                print(f"{key}|{model}|{expected[0]: >15.9g}|{diff[0]: >15.9g}")
+                print(f"{key}|{model}|{expected[0]: >15.9g}|{delta[0]: >15.9g}")
 
     return types.new_class(name, bases=(_NamedVector,))
 
