@@ -1,4 +1,4 @@
-from sympy import cos, integrate, sec, sin, tan
+from sympy import Quaternion, integrate
 
 from formak import ui
 
@@ -18,20 +18,24 @@ def axis_set(name):
 
 imu_gyro = axis_set(r"\omega")
 
-yaw, pitch, roll = ui.symbols([r"\psi", r"\theta", r"\phi"])
+oriw, orix, oriy, oriz = ui.symbols(["oriw", "orix", "oriy", "oriz"])
+orientation = Quaternion(oriw, orix, oriy, oriz)
+
 yaw_rate, pitch_rate, roll_rate = ui.symbols(
     [r"\dot{\psi}", r"\dot{\theta}", r"\dot{\phi}"]
 )
 
-_gyro_rotations = ui.Matrix(
-    [
-        [0, sin(roll) * sec(pitch), cos(roll) * sec(pitch)],
-        [0, cos(roll), -sin(roll)],
-        [1, sin(roll) * tan(pitch), cos(roll) * tan(pitch)],
-    ]
-)
+# TODO(buck): Gyro body rates w/o yaw, pitch, roll
+# _gyro_rotations = ui.Matrix(
+#     [
+#         [0, sin(roll) * sec(pitch), cos(roll) * sec(pitch)],
+#         [0, cos(roll), -sin(roll)],
+#         [1, sin(roll) * tan(pitch), cos(roll) * tan(pitch)],
+#     ]
+# )
+# _gyro_body_rates = _gyro_rotations * ui.Matrix(imu_gyro)
 
-_gyro_body_rates = _gyro_rotations * ui.Matrix(imu_gyro)
+_gyro_body_rates = ui.Matrix(imu_gyro)
 
 assert _gyro_body_rates.shape == (3, 1)
 
@@ -45,36 +49,14 @@ g = ui.Symbol("g")  # gravity
 _accel_gravity = ui.Matrix([0, 0, -g])
 assert _accel_gravity.shape == (3, 1)
 
-_yaw_rotation = ui.Matrix(
-    [
-        [cos(yaw), -sin(yaw), 0],
-        [sin(yaw), cos(yaw), 0],
-        [0, 0, 1],
-    ]
-)
-_pitch_rotation = ui.Matrix(
-    [
-        [cos(pitch), 0, sin(pitch)],
-        [0, 1, 0],
-        [-sin(pitch), 0, cos(pitch)],
-    ]
-)
-_roll_rotation = ui.Matrix(
-    [
-        [1, 0, 0],
-        [0, cos(roll), -sin(roll)],
-        [0, sin(roll), cos(roll)],
-    ]
-)
-
+# TODO(buck): rotate w/ quaternion, w/o conversion to rotation matrix
 _accel_body_rates = (
-    _yaw_rotation * _pitch_rotation * _roll_rotation * ui.Matrix(imu_accel)
-    + _accel_gravity
+    orientation.to_rotation_matrix() * ui.Matrix(imu_accel) + _accel_gravity
 )
 assert _accel_body_rates.shape == (3, 1)
 
 state = set(
-    [yaw, pitch, roll, yaw_rate, pitch_rate, roll_rate]
+    [oriw, orix, oriy, oriz, yaw_rate, pitch_rate, roll_rate]
     + global_pose
     + global_velocity
     + global_accel
@@ -87,9 +69,11 @@ state_model = {
     pitch_rate: _gyro_body_rates[1, 0],
     roll_rate: _gyro_body_rates[2, 0],
     # Rotation Integration
-    yaw: yaw + integrate(yaw_rate, dt),
-    pitch: pitch + integrate(pitch_rate, dt),
-    roll: roll + integrate(roll_rate, dt),
+    # TODO(buck): body rates, initial quaternion to quaternion update
+    oriw: oriw,
+    orix: orix,
+    oriy: oriy,
+    oriz: oriz,
     # Translation
     global_accel[0]: _accel_body_rates[0, 0],
     global_accel[1]: _accel_body_rates[1, 0],

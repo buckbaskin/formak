@@ -3,6 +3,7 @@ from math import cos, pi, radians, sin
 import numpy as np
 from formak.reference_models import strapdown_imu
 from matplotlib import pyplot as plt
+from sympy import Quaternion
 
 from formak import python, ui
 
@@ -34,12 +35,17 @@ def test_stationary():
     velocity = 0.0
     specific_force = 0.0
 
+    orientation = Quaternion.from_euler([radians(90), 0.0, 0.0], "zyx")
+
     state = imu.State.from_dict(
         {
             r"x_{A}_{1}": radius,
             r"x_{A}_{2}": 0.0,
             r"\dot{x}_{A}_{2}": 0.0,
-            r"\psi": radians(90),
+            "oriw": orientation.a,
+            "orix": orientation.b,
+            "oriy": orientation.c,
+            "oriz": orientation.d,
         }
     )
 
@@ -50,6 +56,8 @@ def test_stationary():
     print("control", control, control._arglist, "\n", control.data)
     state = imu.model(dt, state, control)
     assert state is not None
+
+    orientation = Quaternion.from_euler([radians(90), 0.0, 0.0], "zyx")
 
     expected_state = imu.State.from_dict(
         {
@@ -62,9 +70,10 @@ def test_stationary():
             r"\dot{x}_{A}_{1}": 0.0,
             r"\dot{x}_{A}_{2}": 0.0,
             r"\dot{x}_{A}_{3}": 0.0,
-            r"\phi": 0.0,
-            r"\psi": radians(90),
-            r"\theta": 0.0,
+            "oriw": orientation.a,
+            "orix": orientation.b,
+            "oriy": orientation.c,
+            "oriz": orientation.d,
             r"x_{A}_{1}": radius,
             r"x_{A}_{2}": 0.0,
             r"x_{A}_{3}": 0.0,
@@ -167,12 +176,16 @@ def test_circular_motion_xy_plane():
     velocity = radius * yaw_rate
     specific_force = radius * yaw_rate * yaw_rate
 
+    orientation = Quaternion.from_euler([radians(90), 0.0, 0.0], "zyx")
     state = imu.State.from_dict(
         {
             r"\ddot{x}_{A}_{1}": -specific_force,
             r"\dot{\psi}": yaw_rate,
             r"\dot{x}_{A}_{2}": velocity,
-            r"\psi": radians(90),
+            "oriw": orientation.a,
+            "orix": orientation.b,
+            "oriy": orientation.c,
+            "oriz": orientation.d,
             r"x_{A}_{1}": radius,
             r"x_{A}_{2}": 0.0,
         }
@@ -211,9 +224,10 @@ def test_circular_motion_xy_plane():
                 r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
                 r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
                 r"\dot{x}_{A}_{3}": 0.0,
-                r"\phi": 0.0,
-                r"\psi": expected_yaw,
-                r"\theta": 0.0,
+                "oriw": 0.0,
+                "orix": 1.0,
+                "oriy": 0.0,
+                "oriz": 0.0,
                 r"x_{A}_{1}": radius * sin(expected_yaw - yaw_rate * dt),
                 r"x_{A}_{2}": radius * -cos(expected_yaw - yaw_rate * dt)
                 + velocity * dt,
@@ -268,7 +282,7 @@ def test_circular_motion_xy_plane():
         states=states,
         expected_states=expected_states,
         arglist=state._arglist,
-        x_name=r"\psi",
+        x_name="orix",
         file_id="yaw_t",
     )
     print("Write image")
