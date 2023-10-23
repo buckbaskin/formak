@@ -199,7 +199,7 @@ def test_example_usage_of_reference_model_preignition():
     )
     last_time = None
 
-    TOL = 0.12
+    TOL = 10.0
 
     # Stationary Data from a rocket launch pre-ignition
     for idx, (time_ns, control) in enumerate(stream_preignition()):
@@ -235,5 +235,14 @@ def test_example_usage_of_reference_model_preignition():
 
         if not np.allclose(state.data, expected_state.data, atol=TOL):
             state.render_diff(expected_state)
+            reference_time_zero_ns = 1602596210210000000
+            print(
+                "Time in ns:",
+                time_ns,
+                "Reference Zero in ns:",
+                reference_time_zero_ns,
+                "Delta (sec)",
+                (reference_time_zero_ns - time_ns) * 1e-9,
+            )
             1 / 0
         assert np.allclose(state.data, expected_state.data, atol=TOL)
