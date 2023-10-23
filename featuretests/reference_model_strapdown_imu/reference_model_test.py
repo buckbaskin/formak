@@ -60,8 +60,24 @@ def _line_to_control(line):
     }
 
 
-def stream_control():
+def stream_sample():
     filename = "NASA_sample.csv"
+    filepath = os.path.join(os.path.dirname(__file__), filename)
+    with open(filepath) as csvfile:
+        reader = csv.reader(csvfile)
+        column_names = None
+        for row in reader:
+            if column_names is None:
+                column_names = row
+                continue
+
+            time_ns, parsed_row = _line_to_control(row)
+
+            yield time_ns, parsed_row
+
+
+def stream_preignition():
+    filename = "NASA_preignition.csv"
     filepath = os.path.join(os.path.dirname(__file__), filename)
     with open(filepath) as csvfile:
         reader = csv.reader(csvfile)
@@ -111,13 +127,13 @@ def test_example_usage_of_reference_model():
     rate = 50  # Hz
     dt = 1.0 / rate
 
-    # yaw, pitch, roll = ui.symbols([r"\psi", r"\theta", r"\phi"])
-    roll, pitch, yaw = starting_rotation().to_euler("xyz")
+    orientation = starting_rotation()
     state = imu.State.from_dict(
         {
-            r"\phi": roll,  # roll
-            r"\psi": yaw,  # yaw
-            r"\theta": pitch,  # pitch
+            "oriw": orientation.a,
+            "orix": orientation.b,
+            "oriy": orientation.c,
+            "oriz": orientation.d,
         }
     )
     last_time = None
@@ -125,7 +141,7 @@ def test_example_usage_of_reference_model():
     TOL = 0.12
 
     # Stationary Data from a rocket launch pre-ignition
-    for idx, (time_ns, control) in enumerate(stream_control()):
+    for idx, (time_ns, control) in enumerate(stream_sample()):
         if last_time is not None:
             dt = (time_ns - last_time) * 1e-9
             print("timekeeper", idx, dt)
@@ -146,9 +162,71 @@ def test_example_usage_of_reference_model():
                 r"\dot{x}_{A}_{1}": 0.0,
                 r"\dot{x}_{A}_{2}": 0.0,
                 r"\dot{x}_{A}_{3}": 0.0,
-                r"\phi": roll,  # roll
-                r"\psi": yaw,  # yaw
-                r"\theta": pitch,  # pitch
+                "oriw": orientation.a,
+                "orix": orientation.b,
+                "oriy": orientation.c,
+                "oriz": orientation.d,
+                r"x_{A}_{1}": 0.0,
+                r"x_{A}_{2}": 0.0,
+                r"x_{A}_{3}": 0.0,
+            }
+        )
+
+        if not np.allclose(state.data, expected_state.data, atol=TOL):
+            state.render_diff(expected_state)
+            1 / 0
+        assert np.allclose(state.data, expected_state.data, atol=TOL)
+
+
+def test_example_usage_of_reference_model_preignition():
+    imu = python.compile(
+        symbolic_model=strapdown_imu.symbolic_model,
+        calibration_map={strapdown_imu.g: 9.81},
+    )
+    assert imu is not None
+
+    rate = 50  # Hz
+    dt = 1.0 / rate
+
+    orientation = starting_rotation()
+    state = imu.State.from_dict(
+        {
+            "oriw": orientation.a,
+            "orix": orientation.b,
+            "oriy": orientation.c,
+            "oriz": orientation.d,
+        }
+    )
+    last_time = None
+
+    TOL = 0.12
+
+    # Stationary Data from a rocket launch pre-ignition
+    for idx, (time_ns, control) in enumerate(stream_preignition()):
+        if last_time is not None:
+            dt = (time_ns - last_time) * 1e-9
+            print("timekeeper", idx, dt)
+        last_time = time_ns
+
+        control = imu.Control.from_dict(control)
+        state = imu.model(dt, state, control)
+        assert state is not None
+
+        expected_state = imu.State.from_dict(
+            {
+                r"\ddot{x}_{A}_{1}": 0.0,
+                r"\ddot{x}_{A}_{2}": 0.0,
+                r"\ddot{x}_{A}_{3}": 0.0,
+                r"\dot{\phi}": 0.0,
+                r"\dot{\psi}": 0.0,
+                r"\dot{\theta}": 0.0,
+                r"\dot{x}_{A}_{1}": 0.0,
+                r"\dot{x}_{A}_{2}": 0.0,
+                r"\dot{x}_{A}_{3}": 0.0,
+                "oriw": orientation.a,
+                "orix": orientation.b,
+                "oriy": orientation.c,
+                "oriz": orientation.d,
                 r"x_{A}_{1}": 0.0,
                 r"x_{A}_{2}": 0.0,
                 r"x_{A}_{3}": 0.0,
