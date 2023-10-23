@@ -16,6 +16,7 @@ from formak.reference_models import strapdown_imu
 from sympy import Matrix, Quaternion
 
 from formak import python
+from formak.common import plot_pair, plot_quaternion_timeseries
 
 
 def _line_to_control(line):
@@ -23,7 +24,7 @@ def _line_to_control(line):
     imu_accel = strapdown_imu.imu_accel
 
     rate = 50.0  # Hz
-    dt = 1.0 / rate
+    # dt = 1.0 / rate
 
     # TIME_NANOSECONDS_TAI,DATA_DELTA_VEL[1],DATA_DELTA_VEL[2],DATA_DELTA_VEL[3],DATA_DELTA_ANGLE[1],DATA_DELTA_ANGLE[2],DATA_DELTA_ANGLE[3]
     (
@@ -199,7 +200,11 @@ def test_example_usage_of_reference_model_preignition():
     )
     last_time = None
 
-    TOL = 10.0
+    times = [0.0]
+    states = [state.data]
+    expected_states = [state.data]
+
+    TOL = 2.0
 
     # Stationary Data from a rocket launch pre-ignition
     for idx, (time_ns, control) in enumerate(stream_preignition()):
@@ -211,6 +216,7 @@ def test_example_usage_of_reference_model_preignition():
         control = imu.Control.from_dict(control)
         state = imu.model(dt, state, control)
         assert state is not None
+        times.append(times[-1] + dt)
 
         expected_state = imu.State.from_dict(
             {
@@ -232,6 +238,8 @@ def test_example_usage_of_reference_model_preignition():
                 r"x_{A}_{3}": 0.0,
             }
         )
+        states.append(state.data)
+        expected_states.append(expected_state.data)
 
         if not np.allclose(state.data, expected_state.data, atol=TOL):
             state.render_diff(expected_state)
@@ -244,5 +252,44 @@ def test_example_usage_of_reference_model_preignition():
                 "Delta (sec)",
                 (reference_time_zero_ns - time_ns) * 1e-9,
             )
-            1 / 0
+            break
         assert np.allclose(state.data, expected_state.data, atol=TOL)
+
+    states = np.array(states)
+    expected_states = np.array(expected_states)
+
+    print(state._arglist)
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name="x_{A}_{1}",
+        y_name="x_{A}_{2}",
+        file_id="feature_pose_xy",
+    )
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name=r"\dot{x}_{A}_{1}",
+        y_name=r"\dot{x}_{A}_{2}",
+        file_id="feature_vel_xy",
+    )
+    plot_pair(
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name=r"\ddot{x}_{A}_{1}",
+        y_name=r"\ddot{x}_{A}_{2}",
+        file_id="feature_accel_xy",
+    )
+    plot_quaternion_timeseries(
+        times=times,
+        states=states,
+        expected_states=expected_states,
+        arglist=state._arglist,
+        x_name="ori",
+        file_id="feature_quat_t",
+    )
+    print("Write image")
+    1 / 0

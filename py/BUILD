@@ -79,6 +79,7 @@ py_library(
     deps = [
         ":exceptions",
         requirement("sympy"),
+        requirement("matplotlib"),
     ],
 )
 
