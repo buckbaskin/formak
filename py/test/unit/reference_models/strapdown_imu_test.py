@@ -86,6 +86,43 @@ def test_stationary():
     assert np.allclose(state.data, expected_state.data)
 
 
+def plot_quaternion_timeseries(
+    *, times, states, expected_states, arglist, x_name, file_id
+):
+    print(x_name + "w")
+    w = ui.Symbol(x_name + "w")
+    x = ui.Symbol(x_name + "x")
+    y = ui.Symbol(x_name + "y")
+    z = ui.Symbol(x_name + "z")
+
+    for symbol in [w, x, y, z]:
+        plt.plot(
+            times,
+            states[:, arglist.index(symbol)],
+            label=f"model {symbol}",
+        )
+        plt.plot(
+            times,
+            expected_states[:, arglist.index(symbol)],
+            label=f"reference {symbol}",
+            alpha=0.5,
+        )
+    # plt.scatter(
+    #     times,
+    #     states[:, arglist.index(x)],
+    #     label="model",
+    # )
+    # plt.scatter(
+    #     times,
+    #     expected_states[:, arglist.index(x)],
+    #     label="reference",
+    #     alpha=0.5,
+    # )
+    plt.legend()
+    plt.savefig(f"{file_id}.png")
+    print(f"Write Timeseries {file_id}.png")
+
+
 def plot_timeseries(*, times, states, expected_states, arglist, x_name, file_id):
     x = ui.Symbol(x_name)
 
@@ -204,6 +241,35 @@ def test_circular_motion_xy_plane():
 
     ALLOWED_TOL = 0.5
 
+    # Check Initial State
+    state = imu.model(0.0, state, control)
+    expected_yaw = radians(90)
+    expected_orientation = Quaternion.from_axis_angle([0.0, 0.0, 1.0], expected_yaw)
+    expected_state = imu.State.from_dict(
+        {
+            r"\ddot{x}_{A}_{1}": -specific_force * sin(expected_yaw),
+            r"\ddot{x}_{A}_{2}": specific_force * cos(expected_yaw),
+            r"\ddot{x}_{A}_{3}": 0.0,
+            r"\dot{\phi}": 0.0,
+            r"\dot{\psi}": yaw_rate,
+            r"\dot{\theta}": 0.0,
+            r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
+            r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
+            r"\dot{x}_{A}_{3}": 0.0,
+            "oriw": expected_orientation.a,
+            "orix": expected_orientation.b,
+            "oriy": expected_orientation.c,
+            "oriz": expected_orientation.d,
+            r"x_{A}_{1}": radius * sin(expected_yaw - yaw_rate * dt),
+            r"x_{A}_{2}": radius * -cos(expected_yaw - yaw_rate * dt) + velocity * dt,
+            r"x_{A}_{3}": 0.0,
+        }
+    )
+    if not np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL):
+        print("Diff at index", 0)
+        state.render_diff(expected_state)
+        assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
+
     break_idx = 3
     for idx in range(1, int(1.5 * rate)):
         # print("idx", idx)
@@ -212,6 +278,7 @@ def test_circular_motion_xy_plane():
         times.append(dt * idx)
 
         expected_yaw = radians(90) + yaw_rate * dt * idx
+        expected_orientation = Quaternion.from_axis_angle([0.0, 0.0, 1.0], expected_yaw)
         expected_state = imu.State.from_dict(
             {
                 r"\ddot{x}_{A}_{1}": -specific_force
@@ -224,10 +291,10 @@ def test_circular_motion_xy_plane():
                 r"\dot{x}_{A}_{1}": velocity * cos(expected_yaw),
                 r"\dot{x}_{A}_{2}": velocity * sin(expected_yaw),
                 r"\dot{x}_{A}_{3}": 0.0,
-                "oriw": 0.0,
-                "orix": 1.0,
-                "oriy": 0.0,
-                "oriz": 0.0,
+                "oriw": expected_orientation.a,
+                "orix": expected_orientation.b,
+                "oriy": expected_orientation.c,
+                "oriz": expected_orientation.d,
                 r"x_{A}_{1}": radius * sin(expected_yaw - yaw_rate * dt),
                 r"x_{A}_{2}": radius * -cos(expected_yaw - yaw_rate * dt)
                 + velocity * dt,
@@ -277,12 +344,12 @@ def test_circular_motion_xy_plane():
         y_name=r"\ddot{x}_{A}_{2}",
         file_id="accel_xy",
     )
-    plot_timeseries(
+    plot_quaternion_timeseries(
         times=times,
         states=states,
         expected_states=expected_states,
         arglist=state._arglist,
-        x_name="orix",
+        x_name="ori",
         file_id="yaw_t",
     )
     print("Write image")

@@ -20,24 +20,16 @@ imu_gyro = axis_set(r"\omega")
 
 oriw, orix, oriy, oriz = ui.symbols(["oriw", "orix", "oriy", "oriz"])
 orientation = Quaternion(oriw, orix, oriy, oriz)
+orientation_conjugate = Quaternion(oriw, -orix, -oriy, -oriz)
 
 yaw_rate, pitch_rate, roll_rate = ui.symbols(
     [r"\dot{\psi}", r"\dot{\theta}", r"\dot{\phi}"]
 )
 
-# TODO(buck): Gyro body rates w/o yaw, pitch, roll
-# _gyro_rotations = ui.Matrix(
-#     [
-#         [0, sin(roll) * sec(pitch), cos(roll) * sec(pitch)],
-#         [0, cos(roll), -sin(roll)],
-#         [1, sin(roll) * tan(pitch), cos(roll) * tan(pitch)],
-#     ]
-# )
-# _gyro_body_rates = _gyro_rotations * ui.Matrix(imu_gyro)
-
-_gyro_body_rates = ui.Matrix(imu_gyro)
-
-assert _gyro_body_rates.shape == (3, 1)
+# q * r * q_conj
+_global_gyro_body_rates = orientation.mul(Quaternion(0, *imu_gyro)).mul(
+    orientation_conjugate
+)
 
 imu_accel = axis_set("f")
 
@@ -49,11 +41,15 @@ g = ui.Symbol("g")  # gravity
 _accel_gravity = ui.Matrix([0, 0, -g])
 assert _accel_gravity.shape == (3, 1)
 
-# TODO(buck): rotate w/ quaternion, w/o conversion to rotation matrix
-_accel_body_rates = (
-    orientation.to_rotation_matrix() * ui.Matrix(imu_accel) + _accel_gravity
+_global_accel_body_rates = (
+    orientation.mul(Quaternion(0, *imu_accel))
+    .mul(orientation_conjugate)
+    .add(Quaternion(0, *_accel_gravity))
 )
-assert _accel_body_rates.shape == (3, 1)
+
+_next_orientation = (0.5 * orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
+    orientation
+)
 
 state = set(
     [oriw, orix, oriy, oriz, yaw_rate, pitch_rate, roll_rate]
@@ -65,29 +61,28 @@ control = set(imu_gyro + imu_accel)
 calibration = {g}
 state_model = {
     # Rotation
-    yaw_rate: _gyro_body_rates[0, 0],
-    pitch_rate: _gyro_body_rates[1, 0],
-    roll_rate: _gyro_body_rates[2, 0],
+    yaw_rate: _global_gyro_body_rates.d,
+    pitch_rate: _global_gyro_body_rates.c,
+    roll_rate: _global_gyro_body_rates.b,
     # Rotation Integration
-    # TODO(buck): body rates, initial quaternion to quaternion update
-    oriw: oriw,
-    orix: orix,
-    oriy: oriy,
-    oriz: oriz,
+    oriw: _next_orientation.a,
+    orix: _next_orientation.b,
+    oriy: _next_orientation.c,
+    oriz: _next_orientation.d,
     # Translation
-    global_accel[0]: _accel_body_rates[0, 0],
-    global_accel[1]: _accel_body_rates[1, 0],
-    global_accel[2]: _accel_body_rates[2, 0],
+    global_accel[0]: _global_accel_body_rates.b,
+    global_accel[1]: _global_accel_body_rates.c,
+    global_accel[2]: _global_accel_body_rates.d,
     # Translation Integration
-    global_velocity[0]: global_velocity[0] + integrate(_accel_body_rates[0, 0], dt),
-    global_velocity[1]: global_velocity[1] + integrate(_accel_body_rates[1, 0], dt),
-    global_velocity[2]: global_velocity[2] + integrate(_accel_body_rates[2, 0], dt),
+    global_velocity[0]: global_velocity[0] + integrate(_global_accel_body_rates.b, dt),
+    global_velocity[1]: global_velocity[1] + integrate(_global_accel_body_rates.c, dt),
+    global_velocity[2]: global_velocity[2] + integrate(_global_accel_body_rates.d, dt),
     global_pose[0]: global_pose[0]
-    + integrate(global_velocity[0] + integrate(_accel_body_rates[0, 0], dt), dt),
+    + integrate(global_velocity[0] + integrate(_global_accel_body_rates.b, dt), dt),
     global_pose[1]: global_pose[1]
-    + integrate(global_velocity[1] + integrate(_accel_body_rates[1, 0], dt), dt),
+    + integrate(global_velocity[1] + integrate(_global_accel_body_rates.c, dt), dt),
     global_pose[2]: global_pose[2]
-    + integrate(global_velocity[2] + integrate(_accel_body_rates[2, 0], dt), dt),
+    + integrate(global_velocity[2] + integrate(_global_accel_body_rates.d, dt), dt),
 }
 
 _process_noise = {
