@@ -46,6 +46,9 @@ _global_accel_body_rates = (
     .mul(orientation_conjugate)
     .add(Quaternion(0, *_accel_gravity))
 )
+_global_accel_body_rates = (
+    orientation.to_rotation_matrix() * ui.Matrix(imu_accel) + _accel_gravity
+)
 
 _next_orientation = (0.5 * orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
     orientation
@@ -70,19 +73,22 @@ state_model = {
     oriy: _next_orientation.c,
     oriz: _next_orientation.d,
     # Translation
-    global_accel[0]: _global_accel_body_rates.b,
-    global_accel[1]: _global_accel_body_rates.c,
-    global_accel[2]: _global_accel_body_rates.d,
+    global_accel[0]: _global_accel_body_rates[0, 0],
+    global_accel[1]: _global_accel_body_rates[1, 0],
+    global_accel[2]: _global_accel_body_rates[2, 0],
     # Translation Integration
-    global_velocity[0]: global_velocity[0] + integrate(_global_accel_body_rates.b, dt),
-    global_velocity[1]: global_velocity[1] + integrate(_global_accel_body_rates.c, dt),
-    global_velocity[2]: global_velocity[2] + integrate(_global_accel_body_rates.d, dt),
+    global_velocity[0]: global_velocity[0]
+    + integrate(_global_accel_body_rates[0, 0], dt),
+    global_velocity[1]: global_velocity[1]
+    + integrate(_global_accel_body_rates[1, 0], dt),
+    global_velocity[2]: global_velocity[2]
+    + integrate(_global_accel_body_rates[2, 0], dt),
     global_pose[0]: global_pose[0]
-    + integrate(global_velocity[0] + integrate(_global_accel_body_rates.b, dt), dt),
+    + integrate(global_velocity[0] + integrate(_global_accel_body_rates[0, 0], dt), dt),
     global_pose[1]: global_pose[1]
-    + integrate(global_velocity[1] + integrate(_global_accel_body_rates.c, dt), dt),
+    + integrate(global_velocity[1] + integrate(_global_accel_body_rates[1, 0], dt), dt),
     global_pose[2]: global_pose[2]
-    + integrate(global_velocity[2] + integrate(_global_accel_body_rates.d, dt), dt),
+    + integrate(global_velocity[2] + integrate(_global_accel_body_rates[2, 0], dt), dt),
 }
 
 _process_noise = {
