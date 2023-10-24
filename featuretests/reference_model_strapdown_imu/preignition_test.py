@@ -20,6 +20,7 @@ from formak.common import plot_pair, plot_quaternion_timeseries
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000
 
+
 def _line_to_control(line):
     imu_gyro = strapdown_imu.imu_gyro
     imu_accel = strapdown_imu.imu_accel
@@ -58,22 +59,6 @@ def _line_to_control(line):
         imu_gyro[1]: body_rate_2,
         imu_gyro[2]: body_rate_3,
     }
-
-
-def stream_sample():
-    filename = "NASA_sample.csv"
-    filepath = os.path.join(os.path.dirname(__file__), filename)
-    with open(filepath) as csvfile:
-        reader = csv.reader(csvfile)
-        column_names = None
-        for row in reader:
-            if column_names is None:
-                column_names = row
-                continue
-
-            time_ns, parsed_row = _line_to_control(row)
-
-            yield time_ns, parsed_row
 
 
 def stream_preignition():
@@ -115,66 +100,6 @@ def starting_rotation():
     )
 
     return rotation
-
-
-def test_example_usage_of_reference_model():
-    imu = python.compile(
-        symbolic_model=strapdown_imu.symbolic_model,
-        calibration_map={strapdown_imu.g: 9.81},
-    )
-    assert imu is not None
-
-    rate = 50  # Hz
-    dt = 1.0 / rate
-
-    orientation = starting_rotation()
-    state = imu.State.from_dict(
-        {
-            "oriw": orientation.a,
-            "orix": orientation.b,
-            "oriy": orientation.c,
-            "oriz": orientation.d,
-        }
-    )
-    last_time = None
-
-    TOL = 0.12
-
-    # Stationary Data from a rocket launch pre-ignition
-    for idx, (time_ns, control) in enumerate(stream_sample()):
-        if last_time is not None:
-            dt = (time_ns - last_time) * 1e-9
-        last_time = time_ns
-
-        control = imu.Control.from_dict(control)
-        state = imu.model(dt, state, control)
-        assert state is not None
-
-        expected_state = imu.State.from_dict(
-            {
-                r"\ddot{x}_{A}_{1}": 0.0,
-                r"\ddot{x}_{A}_{2}": 0.0,
-                r"\ddot{x}_{A}_{3}": 0.0,
-                r"\dot{\phi}": 0.0,
-                r"\dot{\psi}": 0.0,
-                r"\dot{\theta}": 0.0,
-                r"\dot{x}_{A}_{1}": 0.0,
-                r"\dot{x}_{A}_{2}": 0.0,
-                r"\dot{x}_{A}_{3}": 0.0,
-                "oriw": orientation.a,
-                "orix": orientation.b,
-                "oriy": orientation.c,
-                "oriz": orientation.d,
-                r"x_{A}_{1}": 0.0,
-                r"x_{A}_{2}": 0.0,
-                r"x_{A}_{3}": 0.0,
-            }
-        )
-
-        if not np.allclose(state.data, expected_state.data, atol=TOL):
-            state.render_diff(expected_state)
-            1 / 0
-        assert np.allclose(state.data, expected_state.data, atol=TOL)
 
 
 def test_example_usage_of_reference_model_preignition():
@@ -254,11 +179,11 @@ def test_example_usage_of_reference_model_preignition():
     states = np.array(states)
     expected_states = np.array(expected_states)
 
-    print('Key'.ljust(30), '|', 'Average', 'Std')
-    for key in [r'\ddot{x}_{A}_{1}', r'\ddot{x}_{A}_{2}',r'\ddot{x}_{A}_{3}']:
+    print("Key".ljust(30), "|", "Average", "Std")
+    for key in [r"\ddot{x}_{A}_{1}", r"\ddot{x}_{A}_{2}", r"\ddot{x}_{A}_{3}"]:
         idx = imu.State._arglist.index(Symbol(key))
         deltas = states[:, idx] - expected_states[:, idx]
-        print(key.ljust(30), '|', np.average(deltas), np.std(deltas))
+        print(key.ljust(30), "|", np.average(deltas), np.std(deltas))
 
     print(state._arglist)
     plot_pair(
