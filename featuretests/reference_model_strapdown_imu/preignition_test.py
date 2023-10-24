@@ -143,7 +143,7 @@ def test_example_usage_of_reference_model_preignition():
     states = [state.data]
     expected_states = [state.data]
 
-    TOL = 100.0
+    TOL = 2.0
 
     # Stationary Data from a rocket launch pre-ignition
     for idx, (time_ns, control) in enumerate(stream_preignition()):
