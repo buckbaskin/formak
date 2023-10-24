@@ -13,11 +13,12 @@ from math import hypot
 
 import numpy as np
 from formak.reference_models import strapdown_imu
-from sympy import Matrix, Quaternion
+from sympy import Matrix, Quaternion, Symbol
 
 from formak import python
 from formak.common import plot_pair, plot_quaternion_timeseries
 
+REFERENCE_TIME_ZERO_NS = 1602596210210000000
 
 def _line_to_control(line):
     imu_gyro = strapdown_imu.imu_gyro
@@ -46,8 +47,6 @@ def _line_to_control(line):
     body_rate_1 = float(delta_angle_1) * rate
     body_rate_2 = float(delta_angle_2) * rate
     body_rate_3 = float(delta_angle_3) * rate
-
-    print("accel sum", hypot(accel_1_ms2, accel_2_ms2, accel_3_ms2))
 
     imu_gyro = strapdown_imu.imu_gyro
     imu_accel = strapdown_imu.imu_accel
@@ -145,7 +144,6 @@ def test_example_usage_of_reference_model():
     for idx, (time_ns, control) in enumerate(stream_sample()):
         if last_time is not None:
             dt = (time_ns - last_time) * 1e-9
-            print("timekeeper", idx, dt)
         last_time = time_ns
 
         control = imu.Control.from_dict(control)
@@ -210,7 +208,6 @@ def test_example_usage_of_reference_model_preignition():
     for idx, (time_ns, control) in enumerate(stream_preignition()):
         if last_time is not None:
             dt = (time_ns - last_time) * 1e-9
-            print("timekeeper", idx, dt)
         last_time = time_ns
 
         control = imu.Control.from_dict(control)
@@ -243,20 +240,25 @@ def test_example_usage_of_reference_model_preignition():
 
         if not np.allclose(state.data, expected_state.data, atol=TOL):
             state.render_diff(expected_state)
-            reference_time_zero_ns = 1602596210210000000
             print(
                 "Time in ns:",
                 time_ns,
                 "Reference Zero in ns:",
-                reference_time_zero_ns,
+                REFERENCE_TIME_ZERO_NS,
                 "Delta (sec)",
-                (reference_time_zero_ns - time_ns) * 1e-9,
+                (REFERENCE_TIME_ZERO_NS - time_ns) * 1e-9,
             )
             break
         assert np.allclose(state.data, expected_state.data, atol=TOL)
 
     states = np.array(states)
     expected_states = np.array(expected_states)
+
+    print('Key'.ljust(30), '|', 'Average', 'Std')
+    for key in [r'\ddot{x}_{A}_{1}', r'\ddot{x}_{A}_{2}',r'\ddot{x}_{A}_{3}']:
+        idx = imu.State._arglist.index(Symbol(key))
+        deltas = states[:, idx] - expected_states[:, idx]
+        print(key.ljust(30), '|', np.average(deltas), np.std(deltas))
 
     print(state._arglist)
     plot_pair(
