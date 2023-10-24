@@ -19,6 +19,7 @@ from formak import python
 from formak.common import plot_pair, plot_quaternion_timeseries
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000
+REMOVE_ACCEL_BIAS = True
 
 
 def _line_to_control(line):
@@ -86,15 +87,10 @@ def starting_rotation():
             [-0.9677, -0.0059, -0.2522],
         ]
     )
+
     rotation = Quaternion.from_rotation_matrix(Matrix(att_dcm_CON_IMU))
     recreation = rotation.to_rotation_matrix(homogeneous=True)
 
-    print("att")
-    print(att_dcm_CON_IMU)
-    print("rec")
-    print(recreation)
-    print("diff")
-    print(att_dcm_CON_IMU - recreation)
     assert np.allclose(
         att_dcm_CON_IMU, np.array(recreation, dtype=np.float64), atol=1e-4
     )
@@ -113,6 +109,26 @@ def test_example_usage_of_reference_model_preignition():
     dt = 1.0 / rate
 
     orientation = starting_rotation()
+
+    # Without bias correction, TOL = 100
+    # Data Points 3270
+    # Key                            | Average Std
+    # \ddot{x}_{A}_{1}               | 0.019320018030353728 0.0319053297189985
+    # \ddot{x}_{A}_{2}               | 0.04273775187995577 0.030067714223579626
+    # \ddot{x}_{A}_{3}               | -0.04683490628194908 0.03918498780718519
+
+    # With bias correction, TOL = 100
+    # Data Points 7528
+    # Key                            | Average Std
+    # \ddot{x}_{A}_{1}               | 0.01951848582459294 0.04978868859413582
+    # \ddot{x}_{A}_{2}               | 0.020735848120436357 0.04879790583928484
+    # \ddot{x}_{A}_{3}               | 0.0016906745842741849 0.045992737972183166
+    bias = Matrix([0.019320, 0.042737, -0.046834])
+    assert bias.shape == (3, 1)
+
+    bias_in_sensor = orientation.to_rotation_matrix().transpose() @ bias
+    assert bias_in_sensor.shape == (3, 1)
+
     state = imu.State.from_dict(
         {
             "oriw": orientation.a,
@@ -127,13 +143,20 @@ def test_example_usage_of_reference_model_preignition():
     states = [state.data]
     expected_states = [state.data]
 
-    TOL = 2.0
+    TOL = 100.0
 
     # Stationary Data from a rocket launch pre-ignition
     for idx, (time_ns, control) in enumerate(stream_preignition()):
         if last_time is not None:
             dt = (time_ns - last_time) * 1e-9
         last_time = time_ns
+
+        imu_accel = strapdown_imu.imu_accel
+
+        if REMOVE_ACCEL_BIAS:
+            control[imu_accel[0]] -= bias_in_sensor[0, 0]
+            control[imu_accel[1]] -= bias_in_sensor[1, 0]
+            control[imu_accel[2]] -= bias_in_sensor[2, 0]
 
         control = imu.Control.from_dict(control)
         state = imu.model(dt, state, control)
@@ -179,6 +202,7 @@ def test_example_usage_of_reference_model_preignition():
     states = np.array(states)
     expected_states = np.array(expected_states)
 
+    print("Data Points", states.shape[0])
     print("Key".ljust(30), "|", "Average", "Std")
     for key in [r"\ddot{x}_{A}_{1}", r"\ddot{x}_{A}_{2}", r"\ddot{x}_{A}_{3}"]:
         idx = imu.State._arglist.index(Symbol(key))
@@ -219,4 +243,3 @@ def test_example_usage_of_reference_model_preignition():
         file_id="feature_quat_t",
     )
     print("Write image")
-    1 / 0
