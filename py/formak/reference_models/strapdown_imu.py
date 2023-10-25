@@ -18,9 +18,16 @@ def axis_set(name):
 
 imu_gyro = axis_set(r"\omega")
 
+coriw, corix, coriy, coriz = ui.symbols(["coriw", "corix", "coriy", "coriz"])
+calibration_orientation = Quaternion(coriw, corix, coriy, coriz)
+
 oriw, orix, oriy, oriz = ui.symbols(["oriw", "orix", "oriy", "oriz"])
-orientation = Quaternion(oriw, orix, oriy, oriz)
-orientation_conjugate = Quaternion(oriw, -orix, -oriy, -oriz)
+active_orientation = Quaternion(oriw, orix, oriy, oriz)
+
+orientation = active_orientation.mul(calibration_orientation)
+orientation_conjugate = Quaternion(
+    orientation.a, -orientation.b, -orientation.c, -orientation.d
+)
 
 yaw_rate, pitch_rate, roll_rate = ui.symbols(
     [r"\dot{\psi}", r"\dot{\theta}", r"\dot{\phi}"]
@@ -50,8 +57,8 @@ _global_accel_body_rates = (
     orientation.to_rotation_matrix() * ui.Matrix(imu_accel) + _accel_gravity
 )
 
-_next_orientation = (0.5 * orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
-    orientation
+_next_orientation = (0.5 * active_orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
+    active_orientation
 )
 
 state = set(
@@ -61,7 +68,7 @@ state = set(
     + global_accel
 )
 control = set(imu_gyro + imu_accel)
-calibration = {g}
+calibration = {g, coriw, corix, coriy, coriz}
 state_model = {
     # Rotation
     yaw_rate: _global_gyro_body_rates.d,

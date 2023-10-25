@@ -53,7 +53,7 @@ def model_validation(
             sorted([symbol.name for symbol in extra_mappings])[:3]
         )
         raise ModelConstructionError(
-            f"Mismatch in Model calibration: Missing from map? {missing_calibrations} | Missing from setup? {extra_mappings}"
+            f"\nMismatch in Model calibration:\n  Missing from map? {missing_calibrations}\n  Missing from setup? {extra_mappings}"
         )
 
     # Check if sensor models depend on values outside the state, calibration [and map]

@@ -103,22 +103,28 @@ def starting_rotation():
 
 
 def test_example_usage_of_reference_model():
+    orientation = starting_rotation()
     imu = python.compile(
         symbolic_model=strapdown_imu.symbolic_model,
-        calibration_map={strapdown_imu.g: 9.81},
+        calibration_map={
+            strapdown_imu.g: 9.81,
+            strapdown_imu.coriw: orientation.a,
+            strapdown_imu.corix: orientation.b,
+            strapdown_imu.coriy: orientation.c,
+            strapdown_imu.coriz: orientation.d,
+        },
     )
     assert imu is not None
 
     rate = 50  # Hz
     dt = 1.0 / rate
 
-    orientation = starting_rotation()
     state = imu.State.from_dict(
         {
-            "oriw": orientation.a,
-            "orix": orientation.b,
-            "oriy": orientation.c,
-            "oriz": orientation.d,
+            "oriw": 1.0,
+            "orix": 0.0,
+            "oriy": 0.0,
+            "oriz": 0.0,
         }
     )
     last_time = None
@@ -146,10 +152,10 @@ def test_example_usage_of_reference_model():
                 r"\dot{x}_{A}_{1}": 0.0,
                 r"\dot{x}_{A}_{2}": 0.0,
                 r"\dot{x}_{A}_{3}": 0.0,
-                "oriw": orientation.a,
-                "orix": orientation.b,
-                "oriy": orientation.c,
-                "oriz": orientation.d,
+                "oriw": 1.0,
+                "orix": 0.0,
+                "oriy": 0.0,
+                "oriz": 0.0,
                 r"x_{A}_{1}": 0.0,
                 r"x_{A}_{2}": 0.0,
                 r"x_{A}_{3}": 0.0,
@@ -157,6 +163,7 @@ def test_example_usage_of_reference_model():
         )
 
         if not np.allclose(state.data, expected_state.data, atol=TOL):
+            print("At Index:", idx, " time: ", time_ns * 1e-9)
             state.render_diff(expected_state)
             1 / 0
         assert np.allclose(state.data, expected_state.data, atol=TOL)
