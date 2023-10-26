@@ -107,6 +107,9 @@ def test_example_usage_of_reference_model_preignition():
             strapdown_imu.corix: orientation.b,
             strapdown_imu.coriy: orientation.c,
             strapdown_imu.coriz: orientation.d,
+            strapdown_imu.accel_sensor_bias[0]: 0.0,
+            strapdown_imu.accel_sensor_bias[1]: 0.0,
+            strapdown_imu.accel_sensor_bias[2]: 0.0,
         },
     )
     assert imu is not None

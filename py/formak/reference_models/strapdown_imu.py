@@ -39,6 +39,8 @@ _global_gyro_body_rates = orientation.mul(Quaternion(0, *imu_gyro)).mul(
 )
 
 imu_accel = axis_set("f")
+accel_sensor_bias = axis_set("f_bias")
+active_imu_accel = [imu_accel[i] - accel_sensor_bias[i] for i in range(3)]
 
 global_pose = axis_set("x_{A}")
 global_velocity = axis_set(r"\dot{x}_{A}")
@@ -49,12 +51,7 @@ _accel_gravity = ui.Matrix([0, 0, -g])
 assert _accel_gravity.shape == (3, 1)
 
 _global_accel_body_rates = (
-    orientation.mul(Quaternion(0, *imu_accel))
-    .mul(orientation_conjugate)
-    .add(Quaternion(0, *_accel_gravity))
-)
-_global_accel_body_rates = (
-    orientation.to_rotation_matrix() * ui.Matrix(imu_accel) + _accel_gravity
+    orientation.to_rotation_matrix() * ui.Matrix(active_imu_accel) + _accel_gravity
 )
 
 _next_orientation = (0.5 * active_orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
@@ -68,7 +65,7 @@ state = set(
     + global_accel
 )
 control = set(imu_gyro + imu_accel)
-calibration = {g, coriw, corix, coriy, coriz}
+calibration = {g, coriw, corix, coriy, coriz, *accel_sensor_bias}
 state_model = {
     # Rotation
     yaw_rate: _global_gyro_body_rates.d,

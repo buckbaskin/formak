@@ -25,6 +25,9 @@ def test_stationary():
             strapdown_imu.corix: 0.0,
             strapdown_imu.coriy: 0.0,
             strapdown_imu.coriz: 0.0,
+            strapdown_imu.accel_sensor_bias[0]: 0.0,
+            strapdown_imu.accel_sensor_bias[1]: 0.0,
+            strapdown_imu.accel_sensor_bias[2]: 0.0,
         },
     )
     assert imu is not None
@@ -139,6 +142,9 @@ def test_circular_motion_xy_plane():
             strapdown_imu.corix: 0.0,
             strapdown_imu.coriy: 0.0,
             strapdown_imu.coriz: 0.0,
+            strapdown_imu.accel_sensor_bias[0]: 0.0,
+            strapdown_imu.accel_sensor_bias[1]: 0.0,
+            strapdown_imu.accel_sensor_bias[2]: 0.0,
         },
     )
     assert imu is not None
