@@ -18,7 +18,6 @@ from formak import python
 from formak.common import plot_pair, plot_quaternion_timeseries
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000
-REMOVE_ACCEL_BIAS = True
 
 
 def _line_to_control(line):
@@ -99,23 +98,6 @@ def starting_rotation():
 
 def test_example_usage_of_reference_model_preignition():
     orientation = starting_rotation()
-    imu = python.compile(
-        symbolic_model=strapdown_imu.symbolic_model,
-        calibration_map={
-            strapdown_imu.g: 9.81,
-            strapdown_imu.coriw: orientation.a,
-            strapdown_imu.corix: orientation.b,
-            strapdown_imu.coriy: orientation.c,
-            strapdown_imu.coriz: orientation.d,
-            strapdown_imu.accel_sensor_bias[0]: 0.0,
-            strapdown_imu.accel_sensor_bias[1]: 0.0,
-            strapdown_imu.accel_sensor_bias[2]: 0.0,
-        },
-    )
-    assert imu is not None
-
-    rate = 50  # Hz
-    dt = 1.0 / rate
 
     # Without bias correction, TOL = 100
     # Data Points 3270
@@ -135,6 +117,24 @@ def test_example_usage_of_reference_model_preignition():
 
     bias_in_sensor = orientation.to_rotation_matrix().transpose() @ bias
     assert bias_in_sensor.shape == (3, 1)
+
+    imu = python.compile(
+        symbolic_model=strapdown_imu.symbolic_model,
+        calibration_map={
+            strapdown_imu.g: 9.81,
+            strapdown_imu.coriw: orientation.a,
+            strapdown_imu.corix: orientation.b,
+            strapdown_imu.coriy: orientation.c,
+            strapdown_imu.coriz: orientation.d,
+            strapdown_imu.accel_sensor_bias[0]: bias_in_sensor[0, 0],
+            strapdown_imu.accel_sensor_bias[1]: bias_in_sensor[1, 0],
+            strapdown_imu.accel_sensor_bias[2]: bias_in_sensor[2, 0],
+        },
+    )
+    assert imu is not None
+
+    rate = 50  # Hz
+    dt = 1.0 / rate
 
     state = imu.State.from_dict(
         {
@@ -157,13 +157,6 @@ def test_example_usage_of_reference_model_preignition():
         if last_time is not None:
             dt = (time_ns - last_time) * 1e-9
         last_time = time_ns
-
-        imu_accel = strapdown_imu.imu_accel
-
-        if REMOVE_ACCEL_BIAS:
-            control[imu_accel[0]] -= bias_in_sensor[0, 0]
-            control[imu_accel[1]] -= bias_in_sensor[1, 0]
-            control[imu_accel[2]] -= bias_in_sensor[2, 0]
 
         control = imu.Control.from_dict(control)
         state = imu.model(dt, state, control)
