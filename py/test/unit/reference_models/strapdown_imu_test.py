@@ -275,6 +275,7 @@ def test_circular_motion_xy_plane():
 
     assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
 
+
 def test_circular_motion_xz_plane():
     print("state", sorted(list(strapdown_imu.state), key=lambda s: str(s)))
     print("control", sorted(list(strapdown_imu.control), key=lambda s: str(s)))
@@ -326,7 +327,11 @@ def test_circular_motion_xz_plane():
         }
     )
 
-    control_args = {imu_gyro[1]: -pi, imu_accel[0]: -9.81, imu_accel[2]: -specific_force}
+    control_args = {
+        imu_gyro[1]: -pi,
+        imu_accel[0]: -9.81,
+        imu_accel[2]: -specific_force,
+    }
     control = imu.Control.from_dict(control_args)
 
     print("dt", dt)
