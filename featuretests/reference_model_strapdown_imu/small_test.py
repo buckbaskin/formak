@@ -9,14 +9,12 @@ https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vic
 """
 import csv
 import os
-from math import hypot
 
 import numpy as np
 from formak.reference_models import strapdown_imu
-from sympy import Matrix, Quaternion, Symbol
+from sympy import Matrix, Quaternion
 
 from formak import python
-from formak.common import plot_pair, plot_quaternion_timeseries
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000
 

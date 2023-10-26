@@ -19,7 +19,13 @@ def test_stationary():
         print("key", k, "value", v)
     imu = python.compile(
         symbolic_model=strapdown_imu.symbolic_model,
-        calibration_map={strapdown_imu.g: -9.81},
+        calibration_map={
+            strapdown_imu.g: -9.81,
+            strapdown_imu.coriw: 1.0,
+            strapdown_imu.corix: 0.0,
+            strapdown_imu.coriy: 0.0,
+            strapdown_imu.coriz: 0.0,
+        },
     )
     assert imu is not None
     imu_gyro = strapdown_imu.imu_gyro
@@ -127,7 +133,13 @@ def test_circular_motion_xy_plane():
         print("key", k, "value", v)
     imu = python.compile(
         symbolic_model=strapdown_imu.symbolic_model,
-        calibration_map={strapdown_imu.g: -9.81},
+        calibration_map={
+            strapdown_imu.g: -9.81,
+            strapdown_imu.coriw: 1.0,
+            strapdown_imu.corix: 0.0,
+            strapdown_imu.coriy: 0.0,
+            strapdown_imu.coriz: 0.0,
+        },
     )
     assert imu is not None
     imu_gyro = strapdown_imu.imu_gyro
