@@ -1,4 +1,25 @@
-from formak import python, ui
+import pytest
+
+from formak import exceptions, python, ui
+
+
+def test_Model_creation_calibration_mismatch():
+    dt = ui.Symbol("dt")
+
+    ui_model = ui.Model(
+        dt=dt,
+        state=set(ui.symbols(["x"])),
+        control=set(),
+        calibration=set(),
+        state_model={ui.Symbol("x"): "x + a + b"},
+    )
+
+    with pytest.raises(exceptions.ModelConstructionError):
+        python.compile(
+            ui_model,
+            calibration_map={ui.Symbol("a"): 0.0, ui.Symbol("b"): 0.0},
+            config={},
+        )
 
 
 def test_Model_creation_calibration():

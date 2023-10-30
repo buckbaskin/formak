@@ -2,6 +2,13 @@
 
 Release Notes
 
+## 2023-10-29 Reference Model: Strapdown IMU
+
+FormaK now provides a reference implementation of a Strapdown IMU. This can be
+used as a reference model to include within another model or used as a
+reference for understanding the current best practices when developing new
+models.
+
 ## 2023-09-18 Innovation Filtering
 
 Innovation filtering provides error rejection for the Kalman Filter. If

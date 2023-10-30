@@ -208,3 +208,20 @@ py_binary(
         requirement("graphviz"),
     ],
 )
+
+py_binary(
+    name = "quaternions",
+    srcs = ["src/quaternions.py"],
+    main = "src/quaternions.py",
+    deps = [requirement("sympy")],
+)
+
+py_binary(
+    name = "dcmatrix",
+    srcs = ["src/dcmatrix.py"],
+    main = "src/dcmatrix.py",
+    deps = [
+        requirement("sympy"),
+        requirement("numpy"),
+    ],
+)
