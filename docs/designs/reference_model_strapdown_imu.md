@@ -2,7 +2,7 @@
 
 Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
 Created: 2023-09-19
-Updated: 2023-09-19
+Updated: 2023-10-29
 Parent Design: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
 
 
@@ -64,7 +64,7 @@ With the accelerations defined, we can then integrate the acceleration once into
 
 $$v_{t + 1} = v_{t} + dt * a_{t}$$
 
-$$x_{t + 1} = x_{t} + dt * x_{t} + \dfrac{1}{2} dt^{2} * a_{t}$$
+$$x_{t + 1} = x_{t}_{} + dt * x_{t} + \dfrac{1}{2} dt^{2} * a_{t}$$
 
 ## Feature Tests
 
@@ -89,3 +89,63 @@ and revisions to the reference model suggested in the resource.
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2023-10-29
+
+This design has grown in time further than I would have liked. Originally, I'd
+aimed for 2 weeks to 4 weeks, and it's now closer to 6.
+
+A few things have stayed the same. The design remains intended to provide a
+reference for inclusion in other designs and I was able to learn from some of
+FormaK's rough edges. Unfortunately, one aspect (simplify execution time)
+cropped up again and I did not reach a suitable resolution.
+
+The few things that have stayed the same are notable because pretty much every
+aspect of this design has been adapted from the original.
+
+#### Sympy, Quaternions
+
+The math outlined above was largely replaced by using the Sympy Quaternion
+model. This was absolutely the correct decision and I should have done some
+more research before starting to see if Sympy had this type of rotation
+representation already. At latest, this should have been found in the
+experimental phase of the project. In the end, ~3 weeks could have been cut out
+of the timeline if I'd recognized this at the experimental phase.
+
+#### Feature Testing
+
+The feature test was also replaced wholesale. This was partly for convenience
+(I already have NASA data) but also because the NASA data comes with clearly
+defined motion information. The start of the data is pre-ignition and then
+there are also known times for ignition and liftoff. This pre-ignition data
+serves as a more test-able feature test because I can know the orientation of
+the IMU (provided by the NASA documentation) and perform a pseudo-static test
+to assert that the motion of the sensor data doesn't move. This pseudo-static
+test made it easy to understand when the model wasn't oriented correctly or
+incorrectly accommodating gravity. For example, something is off when there's a
+2g (19.62 m/s2) effect in what should be a static test.
+
+The change in feature test also provided the motion for two extensions to the
+model beyond the basics: calibration for IMU orientation and calibration for
+IMU acceleration biases.
+
+First, the IMU was rotated in all axis away from the nominal navigation frame,
+motivating the use of calibration to "remove" this in favor of reporting in
+neat and tidy vehicle aligned axis.
+
+Second, the IMU exhibited acceleration bias that quickly caused non-zero motion
+even over relatively short time scales (~1 second). Some of the bias could be
+corrected, but some was also a random walk that would need to be modeled within
+the noise in a full filter implementation and corrected for via fusion with the
+onboard LIDAR system.
+
+![Biased velocity data](assets/reference_model_strapdown_imu/biased_imu_vel_data.png)
+
+![Biased acceleration data with approximate visual center not at 0, 0](assets/reference_model_strapdown_imu/biased_imu_accel_data.png)
+
+#### Unit Testing
+
+The design also missed some straightforward opportunities for unit testing.
+Specifically, the final implementation has unit tests for static motion and
+circular motion that have straightforward closed-form references to compare to
+the IMU model.
