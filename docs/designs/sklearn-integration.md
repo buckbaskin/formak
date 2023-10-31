@@ -457,6 +457,7 @@ If you want to cite scikit-learn for its API or design, you may also want to con
 API design for machine learning software: experiences from the scikit-learn project, Buitinck et al., 2013.
 Bibtex entry:
 ```
+{% raw %}
 @inproceedings{sklearn_api,
   author    = {Lars Buitinck and Gilles Louppe and Mathieu Blondel and
                Fabian Pedregosa and Andreas Mueller and Olivier Grisel and
@@ -469,5 +470,5 @@ Bibtex entry:
   year      = {2013},
   pages = {108--122},
 }
-
+{% endraw %}
 ```
