@@ -232,5 +232,6 @@ py_binary(
     main = "src/simplify.py",
     deps = [
         requirement("sympy"),
+        requirement("numpy"),
     ],
 )
