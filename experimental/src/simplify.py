@@ -1,4 +1,7 @@
 import numpy as np
+import pstats
+from pstats import SortKey
+import cProfile
 from collections import defaultdict
 from datetime import datetime
 from sympy import (
@@ -9,6 +12,7 @@ from sympy import (
     Matrix,
     symbols,
     Expr,
+    parse_expr
 )
 
 
@@ -48,7 +52,8 @@ def structured_simplify(expr, *, level=0):
 
 
 
-def main():
+def make_a_slow_expr(*, debug=False):
+    print('make_a_slow_expr')
     reference = Matrix(
         [symbols(["a", "b", "c"]), symbols(["d", "e", "f"]), symbols(["g", "h", "i"])]
     )
@@ -76,29 +81,36 @@ def main():
         assert simplify_time >= 0.0
         time_history['simplify'][expr].append(simplify_time)
 
-        start = datetime.now()
+        structured_simplify_time = -1.0
 
-        structured_simplify(expr)
-
-        end = datetime.now()
-
-        structured_simplify_time = (end - start).total_seconds()
-        assert structured_simplify_time >= 0.0
-        time_history['structured_simplify'][expr].append(structured_simplify_time)
-
-        print("Index", idx, "\n", simplify_time, structured_simplify_time)
+        if debug:
+            print("Index", idx, "\n", simplify_time, structured_simplify_time)
 
         if simplify_time > 1.0 or structured_simplify_time > 1.0:
-            print("Big Expression\n", expr)
+            if debug:
+                print("Big Expression\n", expr)
 
         if simplify_time > 10.0 or structured_simplify_time > 10.0:
-            print("Dump Timing Summary")
-            for key, times in sorted(list(time_history['simplify'].items()), key=lambda t: (np.max(t[1]), str(t[0]))):
-                print(key, ">>>>>")
-                print("    |", len(times), np.average(times), np.max(times))
-                times = time_history['structured_simplify'][key]
-                print("    |", len(times), np.average(times), np.max(times))
-            raise ValueError("Long Simplify")
+            if debug:
+                print("Dump Timing Summary")
+                for key, times in sorted(list(time_history['simplify'].items()), key=lambda t: (np.max(t[1]), str(t[0]))):
+                    print(key, ">>>>>")
+                    print("    |", len(times), np.average(times), np.max(times))
+                    times = time_history['structured_simplify'][key]
+                    print("    |", len(times), np.average(times), np.max(times))
+            return expr
+
+def main():
+    # expr = make_a_slow_expr()
+    expr = parse_expr("(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)")
+    print('Slow Expression')
+    print(expr)
+
+    cProfile.runctx('simplify(expr)', globals=globals(), locals={'expr': expr}, filename='simplify_pstats')
+
+    profile = pstats.Stats('simplify_pstats')
+    profile.strip_dirs().sort_stats(SortKey.TIME).print_stats(50)
+    1/0
 
 
 if __name__ == "__main__":
