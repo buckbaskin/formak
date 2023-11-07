@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pstats
 from pstats import SortKey
@@ -101,16 +102,22 @@ def make_a_slow_expr(*, debug=False):
             return expr
 
 def main():
+    print('Python Version %s' % (sys.version_info,))
+    1/0
     # expr = make_a_slow_expr()
     expr = parse_expr("(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)")
     print('Slow Expression')
     print(expr)
 
+    start = datetime.now()
+    print('Begin Profiling')
     cProfile.runctx('simplify(expr)', globals=globals(), locals={'expr': expr}, filename='simplify_pstats')
+    print('End Profiling')
+    end = datetime.now()
+    print('Profiling took about', (end - start).total_seconds(), 'seconds')
 
     profile = pstats.Stats('simplify_pstats')
-    profile.strip_dirs().sort_stats(SortKey.TIME).print_stats(50)
-    1/0
+    profile.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(10)
 
 
 if __name__ == "__main__":
