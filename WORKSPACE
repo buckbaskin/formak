@@ -81,14 +81,18 @@ http_archive(
 
 ### Python Dependencies
 
-PYTHON_VERSION = "3.10"
+PYTHON_VERSION = "3.12"
 
 http_archive(
     name = "rules_python",
-    sha256 = "c03246c11efd49266e8e41e12931090b613e12a59e6f55ba2efd29a7cb8b4258",
-    strip_prefix = "rules_python-0.11.0",
-    url = "https://github.com/bazelbuild/rules_python/archive/refs/tags/0.11.0.tar.gz",
+    sha256 = "9d04041ac92a0985e344235f5d946f71ac543f1b1565f2cdbc9a2aaee8adf55b",
+    strip_prefix = "rules_python-0.26.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.26.0/rules_python-0.26.0.tar.gz",
 )
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
 
 load("@rules_python//python:repositories.bzl", "python_register_toolchains")
 
