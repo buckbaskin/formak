@@ -109,14 +109,16 @@ def main():
     print('Slow Expression')
     print(expr)
 
+    filename = 'simplify_pstats_%s_%s' % (sys.version_info.major, sys.version_info.minor)
+
     start = datetime.now()
     print('Begin Profiling')
-    cProfile.runctx('simplify(expr)', globals=globals(), locals={'expr': expr}, filename='simplify_pstats')
+    cProfile.runctx('simplify(expr)', globals=globals(), locals={'expr': expr}, filename=filename)
     print('End Profiling')
     end = datetime.now()
     print('Profiling took about', (end - start).total_seconds(), 'seconds')
 
-    profile = pstats.Stats('simplify_pstats')
+    profile = pstats.Stats(filename)
     profile.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(10)
 
 
