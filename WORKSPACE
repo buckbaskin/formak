@@ -81,7 +81,7 @@ http_archive(
 
 ### Python Dependencies
 
-PYTHON_VERSION = "3.12"
+PYTHON_VERSION = "3.11"
 
 http_archive(
     name = "rules_python",
