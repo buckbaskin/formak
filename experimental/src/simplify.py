@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import functools
 import pstats
 from pstats import SortKey
 import cProfile
@@ -16,10 +17,11 @@ from sympy import (
     parse_expr,
 )
 from sympy.polys import polytools
+from sympy.core import exprtools
 
 
 def monkey_patch_polytools_cancel():
-    original_cancel = polytools.cancel
+    original_cancel = functools.cache(polytools.cancel)
 
     depth = 0
 
@@ -55,9 +57,18 @@ def monkey_patch_polytools_cancel():
         return result
 
     polytools.cancel = new_cancel
+    polytools.cancel = original_cancel
 
 
-monkey_patch_polytools_cancel()
+# monkey_patch_polytools_cancel()
+
+def monkey_patch_gcd():
+    original_gcd = functools.cache(exprtools.gcd_terms)
+    print('Running the gcd patch')
+
+    exprtools.gcd_terms = original_gcd
+
+# monkey_patch_gcd()
 
 
 def decomposing_print(expr) -> None:
@@ -149,7 +160,7 @@ def make_a_slow_expr(*, debug=False):
 
 
 def main():
-    print("Python Version %s" % (sys.version_info,))
+    print("Python Version {}".format(sys.version_info))
 
     # expr = make_a_slow_expr()
     expr = parse_expr(
@@ -158,12 +169,11 @@ def main():
     print("Slow Expression")
     print(expr)
 
-    print("Pre-do Pre Redo")
-    simplify(expr)
-    print("Done")
-    1 / 0
+    # print("Pre-do Pre Redo")
+    # simplify(expr)
+    # print("Done")
 
-    filename = "simplify_pstats_%s_%s" % (
+    filename = "simplify_pstats_{}_{}".format(
         sys.version_info.major,
         sys.version_info.minor,
     )
@@ -171,14 +181,14 @@ def main():
     start = datetime.now()
     print("Begin Profiling")
     cProfile.runctx(
-        "simplify(expr)", globals=globals(), locals={"expr": expr}, filename=filename
+        "simplify(expr, inverse=False)", globals=globals(), locals={"expr": expr}, filename=filename
     )
     print("End Profiling")
     end = datetime.now()
     print("Profiling took about", (end - start).total_seconds(), "seconds")
 
     profile = pstats.Stats(filename)
-    profile.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(10)
+    profile.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(20)
 
 
 if __name__ == "__main__":
