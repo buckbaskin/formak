@@ -1,4 +1,4 @@
-# Innovation Filtering
+# Reference Model: Strapdown IMU
 
 Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
 Created: 2023-09-19
