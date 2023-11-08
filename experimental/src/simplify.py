@@ -13,8 +13,51 @@ from sympy import (
     Matrix,
     symbols,
     Expr,
-    parse_expr
+    parse_expr,
 )
+from sympy.polys import polytools
+
+
+def monkey_patch_polytools_cancel():
+    original_cancel = polytools.cancel
+
+    depth = 0
+
+    def new_cancel(f, *gens, _signsimp=True, **args):
+        nonlocal depth
+        depth += 1
+
+        start = datetime.now()
+
+        result = original_cancel(f, *gens, _signsimp=_signsimp, **args)
+
+        end = datetime.now()
+
+        # 203    0.008    0.000   40.141    0.198 polytools.py:6801(cancel)
+        # Example run: 203 calls, 0.198 sec per call
+
+        runtime_sec = (end - start).total_seconds()
+        print(depth, ",", runtime_sec)
+        if runtime_sec > (10.0):
+            # 10x above average
+            args = {"f": f, "gens": gens, "_signsimp": _signsimp, "kwargs": args}
+            print("Exiting Monkey Patch With Slower Call", runtime_sec, "seconds")
+            for key, value in args.items():
+                print(key)
+                print(" -- ", type(value))
+                print(" -- ", value)
+            raise NotImplementedError("Monkey Patch cancel")
+        else:
+            pass
+            # print('------- Monkey Patch With Faster Call', runtime_sec, 'seconds')
+
+        depth -= 1
+        return result
+
+    polytools.cancel = new_cancel
+
+
+monkey_patch_polytools_cancel()
 
 
 def decomposing_print(expr) -> None:
@@ -30,10 +73,11 @@ def bottoms_up_traversal(expr, level=0) -> None:
     yield expr
     # print('Ascending', level, expr.func)
 
+
 def structured_simplify(expr, *, level=0):
-    '''
+    """
     Simplify bottoms up in an attempt to speed up the result
-    '''
+    """
     if isinstance(expr, Rational):
         return expr
     if isinstance(expr, Symbol):
@@ -52,9 +96,8 @@ def structured_simplify(expr, *, level=0):
     return simplify(expr)
 
 
-
 def make_a_slow_expr(*, debug=False):
-    print('make_a_slow_expr')
+    print("make_a_slow_expr")
     reference = Matrix(
         [symbols(["a", "b", "c"]), symbols(["d", "e", "f"]), symbols(["g", "h", "i"])]
     )
@@ -68,8 +111,8 @@ def make_a_slow_expr(*, debug=False):
     #         print(i, j, "\n", r_mat[i, j])
 
     time_history = {}
-    time_history['simplify'] = defaultdict(list)
-    time_history['structured_simplify'] = defaultdict(list)
+    time_history["simplify"] = defaultdict(list)
+    time_history["structured_simplify"] = defaultdict(list)
 
     for idx, expr in enumerate(bottoms_up_traversal(r_mat[0, 0])):
         start = datetime.now()
@@ -80,7 +123,7 @@ def make_a_slow_expr(*, debug=False):
 
         simplify_time = (end - start).total_seconds()
         assert simplify_time >= 0.0
-        time_history['simplify'][expr].append(simplify_time)
+        time_history["simplify"][expr].append(simplify_time)
 
         structured_simplify_time = -1.0
 
@@ -94,29 +137,45 @@ def make_a_slow_expr(*, debug=False):
         if simplify_time > 10.0 or structured_simplify_time > 10.0:
             if debug:
                 print("Dump Timing Summary")
-                for key, times in sorted(list(time_history['simplify'].items()), key=lambda t: (np.max(t[1]), str(t[0]))):
+                for key, times in sorted(
+                    list(time_history["simplify"].items()),
+                    key=lambda t: (np.max(t[1]), str(t[0])),
+                ):
                     print(key, ">>>>>")
                     print("    |", len(times), np.average(times), np.max(times))
-                    times = time_history['structured_simplify'][key]
+                    times = time_history["structured_simplify"][key]
                     print("    |", len(times), np.average(times), np.max(times))
             return expr
 
+
 def main():
-    print('Python Version %s' % (sys.version_info,))
+    print("Python Version %s" % (sys.version_info,))
 
     # expr = make_a_slow_expr()
-    expr = parse_expr("(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)")
-    print('Slow Expression')
+    expr = parse_expr(
+        "(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)"
+    )
+    print("Slow Expression")
     print(expr)
 
-    filename = 'simplify_pstats_%s_%s' % (sys.version_info.major, sys.version_info.minor)
+    print("Pre-do Pre Redo")
+    simplify(expr)
+    print("Done")
+    1 / 0
+
+    filename = "simplify_pstats_%s_%s" % (
+        sys.version_info.major,
+        sys.version_info.minor,
+    )
 
     start = datetime.now()
-    print('Begin Profiling')
-    cProfile.runctx('simplify(expr)', globals=globals(), locals={'expr': expr}, filename=filename)
-    print('End Profiling')
+    print("Begin Profiling")
+    cProfile.runctx(
+        "simplify(expr)", globals=globals(), locals={"expr": expr}, filename=filename
+    )
+    print("End Profiling")
     end = datetime.now()
-    print('Profiling took about', (end - start).total_seconds(), 'seconds')
+    print("Profiling took about", (end - start).total_seconds(), "seconds")
 
     profile = pstats.Stats(filename)
     profile.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(10)
