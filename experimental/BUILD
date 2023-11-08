@@ -225,3 +225,13 @@ py_binary(
         requirement("numpy"),
     ],
 )
+
+py_binary(
+    name = "simplify",
+    srcs = ["src/simplify.py"],
+    main = "src/simplify.py",
+    deps = [
+        requirement("sympy"),
+        requirement("numpy"),
+    ],
+)

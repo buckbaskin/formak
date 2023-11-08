@@ -1,0 +1,61 @@
+Slow Expression
+(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)
+
+Thu Nov  2 21:26:54 2023    simplify_pstats
+
+         84459958 function calls (72216996 primitive calls) in 48.012 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1554 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    514/1    0.050    0.000   48.022   48.022 {built-in method builtins.exec}
+    147/1    0.007    0.000   48.022   48.022 simplify.py:420(simplify)
+        1    0.000    0.000   44.891   44.891 piecewise.py:1333(piecewise_simplify)
+        1    0.000    0.000   44.557   44.557 piecewise.py:1145(piecewise_simplify_arguments)
+      203    0.006    0.000   36.108    0.178 polytools.py:6801(cancel)
+       68    0.001    0.000   33.842    0.498 expr.py:3788(cancel)
+      389    0.001    0.000   29.264    0.075 exprtools.py:1156(factor_terms)
+148423/389    0.710    0.000   29.263    0.075 exprtools.py:1217(do)
+ 9088/405    0.022    0.000   27.750    0.069 exprtools.py:1242(<listcomp>)
+21008/538    0.041    0.000   27.527    0.051 exprtools.py:1263(<listcomp>)
+24552/858    0.034    0.000   27.392    0.032 exprtools.py:1230(<listcomp>)
+     9880    0.097    0.000   26.236    0.003 exprtools.py:980(gcd_terms)
+     9880    0.207    0.000   25.824    0.003 exprtools.py:915(_gcd_terms)
+   313872    1.489    0.000   21.088    0.000 exprtools.py:289(__init__)
+473958/473856    0.514    0.000   17.966    0.000 numbers.py:2243(__eq__)
+1072399/596907    2.000    0.000   17.549    0.000 sympify.py:101(sympify)
+   334108    0.327    0.000   17.360    0.000 numbers.py:1872(__eq__)
+   394162    0.282    0.000   17.184    0.000 sympify.py:502(_sympify)
+   313872    0.396    0.000   15.481    0.000 containers.py:332(<lambda>)
+   314102    1.716    0.000   15.081    0.000 containers.py:255(__new__)
+    38076    0.036    0.000   13.754    0.000 exprtools.py:867(quo)
+    38076    0.152    0.000   13.272    0.000 exprtools.py:855(mul)
+1985723/1797624    1.828    0.000    9.838    0.000 cache.py:69(wrapper)
+1061695/562180    2.598    0.000    9.279    0.000 sorting.py:202(ordered)
+   151512    0.386    0.000    7.713    0.000 exprtools.py:810(__init__)
+    79062    0.236    0.000    7.143    0.000 exprtools.py:453(mul)
+  814/300    0.007    0.000    6.942    0.023 simplify.py:349(signsimp)
+    38076    0.197    0.000    6.245    0.000 exprtools.py:486(normal)
+4617/3942    0.020    0.000    3.846    0.001 basic.py:1411(replace)
+473436/3942    0.431    0.000    3.703    0.001 basic.py:1635(walk)
+174150/3919    0.190    0.000    3.571    0.001 basic.py:1641(<listcomp>)
+      175    0.001    0.000    3.538    0.020 simplify.py:410(<listcomp>)
+1163557/1072900    2.035    0.000    3.325    0.000 basic.py:386(__eq__)
+      652    0.007    0.000    3.201    0.005 cse_opts.py:10(sub_pre)
+   883440    0.244    0.000    3.079    0.000 traversal.py:162(__next__)
+       85    0.002    0.000    2.906    0.034 expr.py:3629(expand)
+345931/424    0.815    0.000    2.903    0.007 expr.py:3599(_expand_hint)
+16195/11016    0.109    0.000    2.871    0.000 add.py:1182(as_content_primitive)
+   883472    0.224    0.000    2.835    0.000 {built-in method builtins.next}
+187629/172960    0.851    0.000    2.819    0.000 sorting.py:10(default_sort_key)
+473436/468858    0.205    0.000    2.759    0.000 basic.py:1656(rec_replace)
+205884/190926    0.962    0.000    2.708    0.000 sorting.py:179(_nodes)
+6284/5556    0.085    0.000    2.693    0.000 operations.py:52(__new__)
+7415164/885576    2.305    0.000    2.611    0.000 traversal.py:119(_preorder_traversal)
+   313872    0.233    0.000    2.574    0.000 containers.py:259(<listcomp>)
+86678/42722    0.560    0.000    2.559    0.000 mul.py:2046(as_content_primitive)
+      136    0.000    0.000    2.499    0.018 rationaltools.py:10(together)
+11892/136    0.017    0.000    2.498    0.018 rationaltools.py:63(_together)
+     2119    0.006    0.000    2.381    0.001 basic.py:485(atoms)
+     2119    0.237    0.000    2.371    0.001 basic.py:559(<setcomp>)
