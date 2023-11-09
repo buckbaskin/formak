@@ -47,7 +47,9 @@ The high level process is composed of the following elements:
 FormaK is already equipped to define symbolic models and then generate Python
 estimators that follow the scikit-learn interface. While I don't expect this
 aspect to change significantly, if a major interface change will make the
-Python estimators easier to use then I am open to reworking the interface.
+Python estimators easier to use then I am open to reworking the interface
+because I suspect making this design easier to implement is correlated with
+making the classes easier to use and easier to use correctly.
 
 #### Estimator Interface
 
@@ -119,8 +121,11 @@ $$ \xi_{K_{r}} = NIS
 \overline{\xi_K} = \sum_{r=1}^{r=N} \xi_{K_{r}}
 F_{K}^{\chi^{2}} = Prob{\chi^{2}_n < \overline{\xi_K}
 d_{i(k)} = F_{K}^{\chi^{2}} - \dfrac{i(k)}{N_{K}}
-Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert$$
+Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert $$
 
+[1] This approach to innovation filtering, referred to as editing in the text,
+is adapted from "Advanced Kalman Filtering, Least Squares and Modeling" by
+Bruce P. Gibbs (referred to as [1] or AKFLSM)
 This consistency calculation is based on [2]
 [Optimal Tuning Of A Kalman Filter Using Genetic Algorithms by Yaakov Oshman and Ilan Shaviv](https://arc.aiaa.org/doi/10.2514/6.2000-4558), but implemented with the NIS metric from [1].
 
@@ -146,7 +151,7 @@ The initial states for the state machine are:
 - `Fit Model`
 - `Final Model`
 
-An example state transition would be Start -> Symbolic Model. In code this
+An example state transition would be `Start` -> `Symbolic Model`. In code this
 would look like:
 
 ```python
@@ -181,7 +186,7 @@ history of state transitions covered so far.
 Second, a `transition_options()` function that will provide a list of function
 names that can be called from the current state.
 
-Third: a `search(desired_state)` function which will return a list of
+Third, a `search(desired_state)` function which will return a list of
 transitions to take to reach the desired state. This search will be
 accomplished dynamically by [inspecting the return
 types](https://docs.python.org/3/library/inspect.html#introspecting-callables-with-the-signature-object)
@@ -201,15 +206,14 @@ Each state shall inherit from a common base class.
 This feature may require implementing a new class or classes to interface with
 scikit-learn tooling:
 1. Metric function or class to pass to scikit-learn (see the [`make_scorer`](https://scikit-learn.org/stable/modules/model_evaluation.html#defining-your-scoring-strategy-from-metric-functions) interface)
-2. Dataset class. Most scikit-learn tooling deals in vectors and that may not be fully suitable for the
+2. Dataset class. Most scikit-learn tooling deals in vectors and that may not be fully suitable for sensor data
 
 ## Experiments
 
+- State Discovery via [inspection](https://docs.python.org/3/library/inspect.html#introspecting-callables-with-the-signature-object)
 - Compare grid search and randomized search for parameter evaluation. Optionally, compare with [other search algorithms](https://scikit-learn.org/stable/modules/classes.html#hyper-parameter-optimizers).
 
 ## Feature Tests
-
-### Model Selection
 
 Compare a correct model with a dataset with arbitrary, incorrect +- 5 std dev
 noise inserted around other noise that is normally distributed. Selecting
@@ -235,50 +239,3 @@ real-world phenomena).
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
-
-### 2023-08-13
-
-Revise to a consistent mathematical notation. Also document a revision in how
-the math for innovation filtering is stated.
-
-### 2023-09-18
-
-[Someone Dead Ruined My Life... Again.](https://www.youtube.com/watch?v=qEV9qoup2mQ)
-
-A refactor ruined my ~life~ implementation of this feature.
-
-In the previous implementation
-[PR #17](https://github.com/buckbaskin/formak/pull/17/), I'd run into an issue
-where the state elements and reading elements were not in the order I expected
-or specified. For a state `{"mass", "z", "v", "a"}` the state would be
-generated as `["a", "mass", "v", "z"]`, so `np.array([[0.0, 1.0, 0.0,0.0]])`
-sets the `mass` to `1.0`, but if I renamed `z` to `b` it'd be silently setting
-`b` to 1.0 instead.
-
-This potential for reordering will ultimately be a feature (where the code
-generation can reorder values to better pack into memory) but for now it was
-only a surprise and it led to a failing test (better to fail the test than to
-silently fail though).
-
-When I went to implement innovation filtering, I again ran into this issue.
-Logically, the only solution would be to refactor how all data types are stored
-and passed around in the Python implementation of FormaK.
-
-And so, I walked deep into the forest of refactoring. To cut a long story
-short, this took way longer than I wanted. The first notes I have for the start
-of the refactor is 2023-08-13 and the end of the refactor dates roughly to
-2023-09-07, so I spent nearly 3.5 weeks on this refactor to "avoid confusion"
-and instead introduced lots of internal confusion as I was refactoring and
-instead introduced much consternation.
-
-Today marks the end of the design, partly because I have some tests passing but
-mostly because I want to call it done enough, move to the next thing and
-revisit it (and test it more) if I find that it isn't working as intended.
-
-Beware the forest of refactoring.
-
-## 2023-09-19
-
-The second aspect of this design around model selection was dropped in favor of
-completing the innovation filtering portion of the design. Model selection
-integration will be revisited in a future design.
