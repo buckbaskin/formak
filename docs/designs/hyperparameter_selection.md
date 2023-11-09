@@ -117,11 +117,11 @@ To remedy that, the metric to minimize is consistency instead of the true
 minimum NIS. Taking advantage of the fact that we know that the errors should
 follow a $\chi^{2}$ distribution, we can calculate consistency as follows:
 
-$$ \xi_{K_{r}} = NIS
+$$\xi_{K_{r}} = NIS
 \overline{\xi_K} = \sum_{r=1}^{r=N} \xi_{K_{r}}
 F_{K}^{\chi^{2}} = Prob{\chi^{2}_n < \overline{\xi_K}
 d_{i(k)} = F_{K}^{\chi^{2}} - \dfrac{i(k)}{N_{K}}
-Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert $$
+Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert$$
 
 [1] This approach to innovation filtering, referred to as editing in the text,
 is adapted from "Advanced Kalman Filtering, Least Squares and Modeling" by
