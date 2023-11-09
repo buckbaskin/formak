@@ -62,11 +62,13 @@ def monkey_patch_polytools_cancel():
 
 # monkey_patch_polytools_cancel()
 
+
 def monkey_patch_gcd():
     original_gcd = functools.cache(exprtools.gcd_terms)
-    print('Running the gcd patch')
+    print("Running the gcd patch")
 
     exprtools.gcd_terms = original_gcd
+
 
 # monkey_patch_gcd()
 
@@ -86,9 +88,7 @@ def bottoms_up_traversal(expr, level=0) -> None:
 
 
 def structured_simplify(expr, *, level=0):
-    """
-    Simplify bottoms up in an attempt to speed up the result
-    """
+    """Simplify bottoms up in an attempt to speed up the result."""
     if isinstance(expr, Rational):
         return expr
     if isinstance(expr, Symbol):
@@ -181,7 +181,10 @@ def main():
     start = datetime.now()
     print("Begin Profiling")
     cProfile.runctx(
-        "simplify(expr, inverse=False)", globals=globals(), locals={"expr": expr}, filename=filename
+        "simplify(expr, inverse=False)",
+        globals=globals(),
+        locals={"expr": expr},
+        filename=filename,
     )
     print("End Profiling")
     end = datetime.now()

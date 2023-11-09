@@ -11,6 +11,8 @@ taking the model through different stages of development.
 4. Model calibration
 5. Model runtime
 
+Each of these stages of development is a state in FormaK's `DesignManager`.
+
 For an Model, there are 4 inter-related concepts at play:
 - Model Definition: How does the state evolve over time?
 - State: estimated at runtime based on incoming sensor information
