@@ -133,36 +133,28 @@ def test_Model_impl_control():
         config,
     )
 
-    control_vector = model.Control(a=0.2)
+    control = model.Control(a=0.2)
 
     state_vector = model.State()
     assert_almost_equal(
-        model.model(
-            dt=dt, state=state_vector, control_vector=control_vector
-        ).data.transpose(),
+        model.model(dt=dt, state=state_vector, control=control).data.transpose(),
         [[0.0, 0.02]],
     )
 
     state_vector = model.State(y=1.0)
     assert_almost_equal(
-        model.model(
-            dt=dt, state=state_vector, control_vector=control_vector
-        ).data.transpose(),
+        model.model(dt=dt, state=state_vector, control=control).data.transpose(),
         [[0.0, 1.02]],
     )
 
     state_vector = model.State(x=1.0)
     assert_almost_equal(
-        model.model(
-            dt=dt, state=state_vector, control_vector=control_vector
-        ).data.transpose(),
+        model.model(dt=dt, state=state_vector, control=control).data.transpose(),
         [[0.0, 0.02]],
     )
 
     state_vector = model.State(x=1.0, y=1.0)
     assert_almost_equal(
-        model.model(
-            dt=dt, state=state_vector, control_vector=control_vector
-        ).data.transpose(),
+        model.model(dt=dt, state=state_vector, control=control).data.transpose(),
         [[1.0, 1.02]],
     )

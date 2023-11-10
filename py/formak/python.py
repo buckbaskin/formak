@@ -12,7 +12,7 @@ from sympy.utilities.lambdify import lambdify
 
 from formak import common
 
-DEFAULT_MODULES = ("scipy", "numpy", "math")
+DEFAULT_MODULES = ("scipy", "numpy", "math", {"sec": lambda v: 1.0 / np.cos(v)})
 
 
 @dataclass
@@ -173,21 +173,21 @@ class Model:
             config=config,
         )
 
-    def model(self, dt, state, control_vector=None):
-        if control_vector is None:
+    def model(self, dt, state, control=None):
+        if control is None:
             if self.control_size > 0:
                 raise TypeError(
-                    "model() missing 1 required positional argument: 'control_vector'"
+                    "model() missing 1 required positional argument: 'control'"
                 )
-            control_vector = self.Control()
+            control = self.Control()
 
         try:
             assert isinstance(dt, float)
             assert isinstance(state, self.State)
-            assert isinstance(control_vector, self.Control)
+            assert isinstance(control, self.Control)
         except AssertionError:
             print(
-                f"model({type(dt)} {dt}, {type(state)} {state}, {type(control_vector)} {control_vector}"
+                f"model({type(dt)} {dt}, {type(state)} {state}, {type(control)} {control}"
             )
             raise
 
@@ -196,9 +196,7 @@ class Model:
                 str(state_id): result
                 for state_id, result in zip(
                     self.arglist_state,
-                    self._impl.execute(
-                        dt, *state, *self.calibration_vector, *control_vector
-                    ),
+                    self._impl.execute(dt, *state, *self.calibration_vector, *control),
                 )
             }
         )
@@ -815,6 +813,14 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
     if calibration_map is None:
         calibration_map = {}
+
+    common.model_validation(
+        symbolic_model,
+        {},
+        {},
+        calibration_map=calibration_map,
+        extra_validation=config.extra_validation,
+    )
 
     return Model(
         symbolic_model=symbolic_model, calibration_map=calibration_map, config=config

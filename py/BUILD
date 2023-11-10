@@ -12,9 +12,11 @@ load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 FORMAK_VERSION = "0.0.1-alpha00"
 
 PY_TEST_DEPS = [
+    requirement("hypothesis"),
+    requirement("matplotlib"),
+    requirement("PyQt5"),
     requirement("pytest"),
     requirement("pytest-mock"),
-    requirement("hypothesis"),
 ]
 
 CC_TEST_DEPS = [
@@ -77,6 +79,7 @@ py_library(
     deps = [
         ":exceptions",
         requirement("sympy"),
+        requirement("matplotlib"),
     ],
 )
 
@@ -120,12 +123,27 @@ py_library(
 )
 
 py_library(
+    name = "reference-models",
+    srcs = glob(
+        ["formak/reference_models/*.py"],
+        allow_empty = False,
+    ),
+    imports = ["."],
+    deps = [
+        ":python",
+        ":ui",
+        requirement("sympy"),
+    ],
+)
+
+py_library(
     name = "formak",
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
         ":python",
+        ":reference-models",
         ":runtime",
         ":ui",
     ],
@@ -253,6 +271,21 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":formak",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "reference-models-test",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/reference_models/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":init-tree",
+        ":reference-models",
     ] + PY_TEST_DEPS,
 )
 

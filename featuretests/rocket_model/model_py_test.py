@@ -33,10 +33,10 @@ def test_python_Model():
     )
 
     state_vector = python_implementation.State()
-    control_vector = python_implementation.Control()
+    control = python_implementation.Control()
 
     _state_vector_next = python_implementation.model(
         dt=0.01,
         state=state_vector,
-        control_vector=control_vector,
+        control=control,
     )

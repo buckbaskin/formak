@@ -1,0 +1,60 @@
+Slow Expression
+(a/4 + e/4 + i/4 - (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 - (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)/(a/4 + e/4 + i/4 + (-a - e + i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-b + d)**2/4 + (-a + e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(c - g)**2/4 + (a - e - i + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3))*sign(-f + h)**2/4 + (a*e*i - a*f*h - b*d*i + b*f*g + c*d*h - c*e*g)**(1/3)/4)
+Thu Nov  2 21:30:13 2023    simplify_pstats
+
+         84483985 function calls (72240845 primitive calls) in 50.479 seconds
+
+   Ordered by: internal time
+   List reduced from 1555 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+1061695/562180    2.755    0.000    9.612    0.000 sorting.py:202(ordered)
+7415112/885978    2.438    0.000    2.784    0.000 traversal.py:119(_preorder_traversal)
+1163652/1072992    2.104    0.000    3.437    0.000 basic.py:386(__eq__)
+1072659/597190    2.069    0.000   18.121    0.000 sympify.py:101(sympify)
+1986287/1797649    1.975    0.000   10.514    0.000 cache.py:69(wrapper)
+   314102    1.777    0.000   15.589    0.000 containers.py:255(__new__)
+12035535/11896487    1.716    0.000    1.831    0.000 {built-in method builtins.isinstance}
+   313872    1.567    0.000   21.780    0.000 exprtools.py:289(__init__)
+     1042    0.977    0.001    1.233    0.001 identification.py:17(pslq)
+205884/190926    0.969    0.000    2.796    0.000 sorting.py:179(_nodes)
+  3148212    0.881    0.000    1.188    0.000 numbers.py:2289(__hash__)
+345931/424    0.873    0.000    3.134    0.007 expr.py:3599(_expand_hint)
+187629/172960    0.862    0.000    2.904    0.000 sorting.py:10(default_sort_key)
+2905847/2659422    0.822    0.000    0.964    0.000 basic.py:189(__hash__)
+1102695/195918    0.799    0.000    1.357    0.000 sorting.py:168(_node_count)
+148423/389    0.783    0.000   30.387    0.078 exprtools.py:1217(do)
+  4580131    0.759    0.000    0.759    0.000 basic.py:786(args)
+   781404    0.689    0.000    0.881    0.000 basic.py:162(__new__)
+2950255/2950204    0.684    0.000    0.887    0.000 {built-in method builtins.getattr}
+3650495/3176273    0.658    0.000    1.002    0.000 {built-in method builtins.hash}
+   481176    0.628    0.000    0.798    0.000 basic.py:367(_do_eq_sympify)
+429633/428635    0.601    0.000    1.523    0.000 numbers.py:2205(__mul__)
+8304/1263    0.594    0.000    2.015    0.002 assumptions.py:509(_ask)
+86678/42722    0.585    0.000    2.664    0.000 mul.py:2046(as_content_primitive)
+   818050    0.535    0.000    0.739    0.000 <frozen importlib._bootstrap>:404(parent)
+473988/473886    0.526    0.000   18.526    0.000 numbers.py:2243(__eq__)
+   238321    0.523    0.000    2.441    0.000 containers.py:52(__new__)
+   482186    0.470    0.000    0.738    0.000 iterables.py:3018(iterable)
+473436/3942    0.463    0.000    3.923    0.001 basic.py:1635(walk)
+   228851    0.437    0.000    0.914    0.000 operations.py:108(_from_args)
+   151512    0.434    0.000    7.964    0.000 exprtools.py:810(__init__)
+  3287471    0.428    0.000    0.430    0.000 {method 'get' of 'dict' objects}
+  2803601    0.410    0.000    0.410    0.000 {built-in method builtins.hasattr}
+   313872    0.398    0.000   15.993    0.000 containers.py:332(<lambda>)
+   715827    0.377    0.000    1.617    0.000 containers.py:54(<genexpr>)
+1116607/194872    0.370    0.000    1.522    0.000 {built-in method builtins.sum}
+   334110    0.346    0.000   17.912    0.000 numbers.py:1872(__eq__)
+474135/473706    0.345    0.000    0.597    0.000 {built-in method builtins.sorted}
+   394161    0.298    0.000   17.751    0.000 sympify.py:502(_sympify)
+  2306037    0.284    0.000    0.284    0.000 {built-in method builtins.len}
+676964/416462    0.283    0.000    2.240    0.000 assumptions.py:497(getit)
+   184913    0.277    0.000    0.495    0.000 random.py:380(shuffle)
+    40818    0.277    0.000    0.845    0.000 radsimp.py:1043(fraction)
+   140993    0.276    0.000    1.471    0.000 mul.py:182(__neg__)
+   313872    0.268    0.000    1.433    0.000 exprtools.py:370(<listcomp>)
+   883440    0.261    0.000    3.283    0.000 traversal.py:162(__next__)
+     2119    0.257    0.000    2.537    0.001 basic.py:559(<setcomp>)
+  489/405    0.248    0.001    0.991    0.002 function.py:3077(count_ops)
+    79062    0.248    0.000    7.438    0.000 exprtools.py:453(mul)
+   313872    0.244    0.000    2.666    0.000 containers.py:259(<listcomp>)
