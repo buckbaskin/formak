@@ -21,5 +21,9 @@ py_library(
 py_test_suite(
     name = "synthetic-data-test",
     srcs = ["synthetic_data_test.py"],
-    deps = ["//py:formak", ":model", ":data"] + PY_FEATURE_TEST_DEPS,
+    deps = [
+        "//py:formak",
+        ":model",
+        ":data",
+    ] + PY_FEATURE_TEST_DEPS,
 )
