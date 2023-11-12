@@ -37,9 +37,20 @@ filegroup(
 )
 
 py_library(
-    name = "state-machine",
-    srcs = ["formak/state_machine.py"],
+    name = "ui-model",
+    srcs = ["formak/ui_model.py"],
     imports = ["."],
+    visibility = ["//visibility:private"],
+    deps = [
+        requirement("sympy"),
+    ],
+)
+
+py_library(
+    name = "ui-state-machine",
+    srcs = ["formak/ui_state_machine.py"],
+    imports = ["."],
+    visibility = ["//visibility:private"],
     deps = [
     ],
 )
@@ -49,8 +60,8 @@ py_library(
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
-        ":state-machine",
-        requirement("sympy"),
+        ":ui-model",
+        ":ui-state-machine",
     ],
 )
 
