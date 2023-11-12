@@ -2,11 +2,11 @@ import numpy as np
 
 
 def generate_data(innovation, *, samples=100):
-    rng = np.random.rng()
+    rng = np.random.default_rng(seed=5)
 
     mean = 0
     stddev = 1
-    data = rng.normal(mean, stddev, (samples, 1))
+    data = rng.normal(loc=mean, scale=stddev, size=(samples, 1))
 
     even = True
 

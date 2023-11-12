@@ -38,9 +38,9 @@ def test_state_machine_interface():
     initial_state = DesignManager(name="mercury")
 
     # TODO: make the state names enums
-    assert symbolic_model_state.history() == ["Start"]
-    assert symbolic_model_state.available_transitions() == ["symbolic_model"]
-    assert symbolic_model_state.search("Fit Model") == ["symbolic_model", "fit_model"]
+    assert initial_state.history() == ["Start"]
+    assert initial_state.available_transitions() == ["symbolic_model"]
+    assert initial_state.search("Fit Model") == ["symbolic_model", "fit_model"]
 
     # Q: No-discard but for python?
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)

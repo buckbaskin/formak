@@ -1,3 +1,4 @@
+import inspect
 from collections import namedtuple
 from typing import List
 
@@ -45,7 +46,9 @@ class StateMachineState:
             for transition_name in current_state.available_transitions():
                 transition_callable = getattr(current_state, transition_name)
                 # TODO fix this inspect module/class usage
-                end_state_type = inspect.Inspect(transition_callable).return_type
+                end_state_type = inspect.signature(
+                    transition_callable
+                ).return_annotation
 
                 frontier.append(
                     SearchState(end_state_type, transitions + [transition_name])
