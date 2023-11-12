@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from formak.exceptions import ModelDefinitionError
+from formak.state_machine import DesignManager
 from sympy import Matrix, Symbol, simplify, symbols
 from sympy.parsing.sympy_parser import parse_expr
 

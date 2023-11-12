@@ -37,10 +37,19 @@ filegroup(
 )
 
 py_library(
+    name = "state-machine",
+    srcs = ["formak/state_machine.py"],
+    imports = ["."],
+    deps = [
+    ],
+)
+
+py_library(
     name = "ui",
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
+        ":state-machine",
         requirement("sympy"),
     ],
 )

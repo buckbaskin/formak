@@ -6,66 +6,11 @@ Demonstrate tuning a model for two different innovation filtering hyper-paramete
 
 from collections import namedtuple
 
-from formak.ui import DManager
+from formak.ui import DesignManager
 from model import symbolic_model
 
 from data import generate_data
 from formak import ui
-
-SearchState = namedtuple("SearchState", ["state", "transition_path"])
-
-
-class StateMachineState(object):
-    def __init__(self, name: str, history: List[str]):
-        self.name = name
-        self._history = history
-
-    def state_id(self) -> str:
-        # TODO re-evaluate the name of this function from the user perspective
-        raise NotImplementedError()
-
-    def history(self) -> List[str]:
-        return _history
-
-    def available_transitions(self) -> List[str]:
-        raise NotImplementedError()
-
-    def search(
-        self, end_state: str, *, max_iter: int = 100, debug: bool = True
-    ) -> List[str]:
-        """
-        Breadth First Search of state transitions
-        """
-        # TODO this could be a queue / deque
-        frontier = [SearchState(self, [])]
-
-        if debug:
-            print("Initial State\n", frontier)
-
-        for i in range(max_iter):
-            current_state, transitions = frontier[0]
-            frontier = frontier[1:]
-
-            if current_state.state_id() == end_state:
-                return transitions
-
-            for transition_name in current_state.available_transitions():
-                transition_callable = getattr(current_state, transition_name)
-                # TODO fix this inspect module/class usage
-                end_state_type = inspect.Inspect(transition_callable).return_type
-
-                frontier.append(
-                    SearchState(end_state_type, transitions + [transition_name])
-                )
-
-                if debug:
-                    print(i, "Adding", frontier[-1])
-
-            if debug:
-                print("State After", i, "\n", frontier)
-        raise ValueError(
-            "Could not find a path from state {self.state_id()} to {end_state} in {max_iter} iterations"
-        )
 
 
 class FitModelState(StateMachineState):
@@ -159,25 +104,10 @@ class SymbolicModelState(StateMachineState):
         1 / 0
 
 
-# TODO fix this class name
-class DManager(StateMachineState):
-    def __init__(self, name):
-        super().__init__(name=name, history=[self.state_id()])
-
-    def state_id(self) -> str:
-        return "Start"
-
-    def available_transitions(self) -> List[str]:
-        return ["symbolic_model"]
-
-    def symbolic_model(self, model: ui.Model) -> SymbolicModelState:
-        return SymbolicModelState(name=self.name, history=self.history(), model=model)
-
-
 def test_with_synthetic_data():
     true_innovation = 5
 
-    initial_state = DManager(name="mercury")
+    initial_state = DesignManager(name="mercury")
 
     # Q: No-discard but for python?
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
@@ -197,7 +127,7 @@ def test_with_synthetic_data():
 
 
 def test_state_machine_interface():
-    initial_state = DManager(name="mercury")
+    initial_state = DesignManager(name="mercury")
 
     # TODO: make the state names enums
     assert symbolic_model_state.history() == ["Start"]
