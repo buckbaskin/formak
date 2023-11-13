@@ -47,7 +47,6 @@ class StateMachineState:
 
             for transition_name in current_state.available_transitions():
                 transition_callable = getattr(current_state, transition_name)
-                # TODO fix this inspect module/class usage
                 end_state_type = inspect.signature(
                     transition_callable
                 ).return_annotation
@@ -73,6 +72,7 @@ class FitModelState(StateMachineState):
         history: List[str],
         model: ui_model.Model,
         parameter_space,
+        parameter_sampling_strategy,
         data,
         cross_validation_strategy,
     ):
@@ -87,10 +87,11 @@ class FitModelState(StateMachineState):
         self.parameter_space = parameter_space
         self.data = data
 
-        # 3. Cross Validation
-        self.cross_validation_strategy = cross_validation_strategy
+        # 3. Parameter Space Search/Sampling
+        self.parameter_sampling_strategy = parameter_sampling_strategy
 
-        # 4. ? TODO figure this out
+        # 4. Cross Validation
+        self.cross_validation_strategy = cross_validation_strategy
 
         # 5. Scoring Function
         self.score = None
@@ -126,6 +127,7 @@ class SymbolicModelState(StateMachineState):
     def __init__(self, name: str, history: List[str], model: ui_model.Model):
         # TODO check this call syntax
         super().__init__(name=name, history=history + [self.state_id()])
+        self.model = model
 
     @classmethod
     def state_id(cls) -> str:
@@ -136,7 +138,12 @@ class SymbolicModelState(StateMachineState):
         return ["fit_model"]
 
     def fit_model(
-        self, parameter_space, data, *, cross_validation_strategy=None
+        self,
+        parameter_space,
+        data,
+        *,
+        parameter_sampling_strategy=None,
+        cross_validation_strategy=None
     ) -> FitModelState:
         """
         Symbolic Model -> Fit Model.
@@ -158,7 +165,15 @@ class SymbolicModelState(StateMachineState):
         # TODO have an optional "release" config flag that will be set to true
         # and when set will apply simplify, etc aggressively.  When "release"
         # is False, optimize for fast iteration vs fastest model
-        1 / 0
+        return FitModelState(
+            name=self.name,
+            history=self.history(),
+            model=self.model,
+            parameter_space=parameter_space,
+            parameter_sampling_strategy=parameter_sampling_strategy,
+            data=data,
+            cross_validation_strategy=cross_validation_strategy,
+        )
 
 
 class DesignManager(StateMachineState):

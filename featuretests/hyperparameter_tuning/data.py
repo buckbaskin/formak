@@ -11,7 +11,7 @@ def generate_data(innovation, *, samples=100):
     even = True
 
     for i in range(samples):
-        if i % 10:
+        if i % 10 == 3:
             data[i, 0] = innovation + 1
 
     return data
