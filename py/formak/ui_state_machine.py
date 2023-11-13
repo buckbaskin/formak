@@ -127,8 +127,6 @@ class FitModelState(StateMachineState):
             # TODO implement the scoring
             self.scoring = NisScore
 
-        param_grid = {"innovation_filtering": [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-
         # auto_examples/model_selection/plot_grid_search_digits.html
         # auto_examples/compose/plot_compare_reduction.html
 
@@ -152,15 +150,19 @@ class FitModelState(StateMachineState):
         # TODO alternately, make the config and params equal?
 
         # TODO fill in a process noise
+
+        # TODO this mixed configuration of some stuff getting passed direction
+        # and some stuff getting passed as a Config struct is weird to me...
+        # This feels like one vote in favor of separating out Config (for human
+        # readable config, optional parameters with sane defaults for direct
+        # usage) and scikit-learn interface
         model = python.compile_ekf(
             state_model=self.symbolic_model,
-            #             process_noise = {},
-            # process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
-            # sensor_models,
-            # sensor_noises,
-            # calibration_map=None,
-            # *,
-            # config=None,
+            process_noise=self.parameter_space["process_noise"][0],
+            sensor_models=self.parameter_space["sensor_models"][0],
+            sensor_noises=self.parameter_space["sensor_noises"][0],
+            calibration_map=self.parameter_space["calibration_map"][0],
+            config=python.Config(**self.parameter_space),
         )
 
         pipeline = Pipeline([("kalman", model)])

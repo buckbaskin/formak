@@ -17,3 +17,9 @@ state_model = {
 }
 
 symbolic_model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+
+process_noise = {thrust: 0.01}
+sensor_models = {"velocity": {tp["v"]: tp["v"]}}
+sensor_noises = {"velocity": {tp["v"]: 1.0}}
+# TODO add a calibration term here (mass?)
+calibration_map = {}

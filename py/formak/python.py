@@ -285,8 +285,6 @@ class ExtendedKalmanFilter:
         config,
         calibration_map=None,
     ):
-        self.config = config
-
         if calibration_map is None:
             calibration_map = {}
 
@@ -314,6 +312,17 @@ class ExtendedKalmanFilter:
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
         }
+        # TODO generate this dynamically from the Config class
+        dataclass_keys = [
+            "common_subexpression_elimination",
+            "python_modules",
+            "extra_validation",
+            "max_dt_sec",
+            "innovation_filtering",
+        ]
+        for key in dataclass_keys:
+            self.params[key] = getattr(config, key)
+        self.allowed_keys = list(self.params.keys())
 
         self._construct_process(
             state_model=state_model,
@@ -328,6 +337,19 @@ class ExtendedKalmanFilter:
             calibration_map=calibration_map,
             config=config,
         )
+
+    def config(self):
+        # TODO generate this dynamically from the Config class
+        dataclass_keys = [
+            "common_subexpression_elimination",
+            "python_modules",
+            "extra_validation",
+            "max_dt_sec",
+            "innovation_filtering",
+        ]
+        config = Config()
+        for key in dataclass_keys:
+            setattr(config, key, self.params[key])
 
     def _construct_process(self, state_model, process_noise, calibration_map, config):
         self._state_model = Model(
@@ -534,7 +556,7 @@ class ExtendedKalmanFilter:
         )
 
     def remove_innovation(self, innovation, S_inv):
-        editing_threshold = self.config.innovation_filtering
+        editing_threshold = self.params["innovation_filtering"]
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
@@ -576,7 +598,7 @@ class ExtendedKalmanFilter:
             sensor_reading.data - expected_reading.data
         )
 
-        if self.config.innovation_filtering is not None:
+        if self.params["innovation_filtering"] is not None:
             if self.remove_innovation(innovation, S_inv):
                 return StateAndCovariance(state, covariance)
 
@@ -799,8 +821,10 @@ class ExtendedKalmanFilter:
     # Set the parameters of this estimator.
     def set_params(self, **params):
         for p in params:
-            if p in self.params:
+            if p in self.allowed_keys:
                 self.params[p] = params[p]
+            else:
+                raise ModelConstructionError(f"set_params called with invalid key {p}")
 
         return self
 

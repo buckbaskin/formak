@@ -6,7 +6,13 @@ Demonstrate tuning a model for two different innovation filtering hyper-paramete
 
 
 from formak.ui import DesignManager
-from model import symbolic_model
+from model import (
+    calibration_map,
+    process_noise,
+    sensor_models,
+    sensor_noises,
+    symbolic_model,
+)
 
 from data import generate_data
 from formak import ui
@@ -20,8 +26,16 @@ def test_with_synthetic_data():
     # Q: No-discard but for python?
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
+    # TODO make sure that behind the scenes unset parameters get reasonable defaults
     fit_model_state = symbolic_model_state.fit_model(
-        parameter_space={}, data=generate_data(true_innovation)
+        parameter_space={
+            "process_noise": [process_noise],
+            "sensor_models": [sensor_models],
+            "sensor_noises": [sensor_noises],
+            "calibration_map": [calibration_map],
+            "innovation_filtering": [None, 1, 2, 3, 4, 5, 6, 7],
+        },
+        data=generate_data(true_innovation),
     )
 
     # Note: not a state transition
