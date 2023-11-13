@@ -16,14 +16,16 @@ class StateMachineState:
         self.name = name
         self._history = history
 
-    def state_id(self) -> str:
+    @classmethod
+    def state_id(cls) -> str:
         # TODO re-evaluate the name of this function from the user perspective
         raise NotImplementedError()
 
     def history(self) -> List[str]:
         return self._history
 
-    def available_transitions(self) -> List[str]:
+    @classmethod
+    def available_transitions(cls) -> List[str]:
         raise NotImplementedError()
 
     def search(
@@ -96,10 +98,12 @@ class FitModelState(StateMachineState):
         # Last call in constructor
         self._fit_model_impl()
 
-    def state_id(self) -> str:
+    @classmethod
+    def state_id(cls) -> str:
         return "Fit Model"
 
-    def available_transitions(self) -> List[str]:
+    @classmethod
+    def available_transitions(cls) -> List[str]:
         return []
 
     def _fit_model_impl(self):
@@ -123,10 +127,12 @@ class SymbolicModelState(StateMachineState):
         # TODO check this call syntax
         super().__init__(name=name, history=history + [self.state_id()])
 
-    def state_id(self) -> str:
+    @classmethod
+    def state_id(cls) -> str:
         return "Symbolic Model"
 
-    def available_transitions(self) -> List[str]:
+    @classmethod
+    def available_transitions(cls) -> List[str]:
         return ["fit_model"]
 
     def fit_model(
@@ -159,10 +165,12 @@ class DesignManager(StateMachineState):
     def __init__(self, name):
         super().__init__(name=name, history=[self.state_id()])
 
-    def state_id(self) -> str:
+    @classmethod
+    def state_id(cls) -> str:
         return "Start"
 
-    def available_transitions(self) -> List[str]:
+    @classmethod
+    def available_transitions(cls) -> List[str]:
         return ["symbolic_model"]
 
     def symbolic_model(self, model: ui_model.Model) -> SymbolicModelState:
