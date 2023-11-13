@@ -2,7 +2,10 @@ import inspect
 from collections import namedtuple
 from typing import List
 
-from formak import ui_model
+from sklearn.model_selection import TimeSeriesSplit, cross_validate, train_test_split
+from sklearn.pipeline import Pipeline
+
+from formak import python, ui_model
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
@@ -65,6 +68,10 @@ class StateMachineState:
         )
 
 
+class NisScore(object):
+    pass
+
+
 class FitModelState(StateMachineState):
     def __init__(
         self,
@@ -94,7 +101,7 @@ class FitModelState(StateMachineState):
         self.cross_validation_strategy = cross_validation_strategy
 
         # 5. Scoring Function
-        self.score = None
+        self.scoring = None
 
         # Last call in constructor
         self._fit_model_impl()
@@ -114,13 +121,49 @@ class FitModelState(StateMachineState):
 
         if self.cross_validation_strategy is None:
             # TODO look up the correct scikit-learn cross validation
-            self.cross_validation_strategy = Timeseries
+            self.cross_validation_strategy = TimeSeriesSplit
 
         if self.scoring is None:
             # TODO implement the scoring
-            self.scoring = NIS
+            self.scoring = NisScore
 
-        1 / 0
+        param_grid = {"innovation_filtering": [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+
+        # auto_examples/model_selection/plot_grid_search_digits.html
+        # auto_examples/compose/plot_compare_reduction.html
+
+        # NOTE: no labels here, clustering/unsupervised classification
+        X = self.data
+
+        X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
+
+        model = python.compile(self.symbolic_model)
+
+        pipeline = Pipeline([("kalman", model)])
+
+        ts_cv = TimeSeriesSplit(n_splits=5, gap=0)
+
+        # Maybe useful: all_splits = ts_cv.split(X)
+
+        cv_scores = cross_validate(
+            estimator=model,
+            X=X,
+            y=None,
+            cv=ts_cv,
+            scoring=self.scoring,
+            error_score="raise",
+            return_estimator=True,
+        )
+
+        test_score, estimator, train_score = min(
+            zip(
+                cv_scores["test_score"],
+                cv_scores["estimator"],
+                cv_scores["train_score"],
+            )
+        )
+
+        self.fit_estimator = estimator
 
 
 class SymbolicModelState(StateMachineState):

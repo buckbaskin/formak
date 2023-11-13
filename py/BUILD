@@ -52,6 +52,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:private"],
     deps = [
+        requirement("scikit-learn"),
     ],
 )
 
