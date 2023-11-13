@@ -137,7 +137,31 @@ class FitModelState(StateMachineState):
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
 
-        model = python.compile(self.symbolic_model)
+        # TODO this is where I want something that maybe wraps the Python EKF
+        # would work better? Let me propose a process: 1. Make a meta estimator
+        # with one param (innovation filtering) and then the rest are hard
+        # coded internally. 2. Run it through these CVs, etc. 3. Add all the
+        # rest of the params I could want to vary in the meta estimator. 4. Run
+        # it again, holding the others. The meta estimator is conceptually the
+        # Python model, but under the hood does the compile_ekf call based on
+        # the params for each use case. 5. Evaulate if I should remove the
+        # sckit interface from the formak.python class in favor of the meta
+        # estimator, or use the params interface from the meta estimator for
+        # the formak.python implementation.
+
+        # TODO alternately, make the config and params equal?
+
+        # TODO fill in a process noise
+        model = python.compile_ekf(
+            state_model=self.symbolic_model,
+            #             process_noise = {},
+            # process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+            # sensor_models,
+            # sensor_noises,
+            # calibration_map=None,
+            # *,
+            # config=None,
+        )
 
         pipeline = Pipeline([("kalman", model)])
 
