@@ -35,7 +35,7 @@ def test_UI_like_sklearn():
         "sensor_noises": {"simple": {ui.Symbol("v"): 1.0}},
     }
 
-    model = python.compile_ekf(
+    model = python.SklearnAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

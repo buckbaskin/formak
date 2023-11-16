@@ -654,7 +654,7 @@ def compile_ekf(
         config=config,
     )
 
-class SklearnEKFAdaptor(object):
+class SklearnEKFAdapter(object):
     def __init__(self, symbolic_model):
         self.model = None
         self.params = {}

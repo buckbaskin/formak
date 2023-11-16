@@ -31,7 +31,7 @@ def test_like_sklearn_regression():
         "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
         "sensor_noises": {"simple": {ui.Symbol("v"): 1.0}},
     }
-    model = python.compile_ekf(
+    model = python.SklearnAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

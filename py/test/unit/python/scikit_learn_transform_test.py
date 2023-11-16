@@ -21,7 +21,7 @@ def test_transform():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.compile_ekf(
+    model = python.SklearnAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -54,7 +54,7 @@ def test_transform_kalman_filter_args():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.compile_ekf(
+    model = python.SklearnAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
