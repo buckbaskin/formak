@@ -21,7 +21,7 @@ def test_score():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -61,7 +61,7 @@ def test_score_two_sensor():
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -103,7 +103,7 @@ def test_score_two_sensor_explained():
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

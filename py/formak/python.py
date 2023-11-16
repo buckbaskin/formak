@@ -654,10 +654,15 @@ def compile_ekf(
         config=config,
     )
 
+
 class SklearnEKFAdapter(object):
-    def __init__(self, symbolic_model):
+    def __init__(self, symbolic_model, process_noise, sensor_models, sensor_noises):
         self.model = None
-        self.params = {}
+        self.params = {
+            "process_noise": process_noise,
+            "sensor_models": sensor_models,
+            "sensor_noises": sensor_noises,
+        }
 
     ### scikit-learn / sklearn interface ###
 
@@ -684,7 +689,6 @@ class SklearnEKFAdapter(object):
             np.fill_diagonal(params["sensor_noises"][key].data, sensor)
 
         return params
-
 
     # Fit the model to data
     def fit(self, X, y=None, sample_weight=None):
@@ -725,6 +729,7 @@ class SklearnEKFAdapter(object):
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
         return innovations.flatten()
+
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None, explain_score=False):
         mahalanobis_distance_squared = self.mahalanobis(X)

@@ -26,7 +26,7 @@ def test_get_params():
         "sensor_noises": {"simple": {ui.Symbol("v"): 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -63,7 +63,7 @@ def test_set_params():
         "sensor_noises": {"simple": {ui.Symbol("v"): 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

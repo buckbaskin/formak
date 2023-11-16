@@ -21,7 +21,7 @@ def test_fit_transform():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnAdapter(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
