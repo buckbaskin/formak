@@ -306,20 +306,14 @@ class ExtendedKalmanFilter:
         self.Control = common.named_vector("Control", self.arglist_control)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
+        # TODO replace this with normal members
         self.params = {
             "process_noise": None,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
         }
-        # TODO generate this dynamically from the Config class
-        dataclass_keys = [
-            "common_subexpression_elimination",
-            "python_modules",
-            "extra_validation",
-            "max_dt_sec",
-            "innovation_filtering",
-        ]
+        # TODO clean out this mixing of config and params in this class
         for key in dataclass_keys:
             self.params[key] = getattr(config, key)
         self.allowed_keys = list(self.params.keys())
@@ -337,19 +331,6 @@ class ExtendedKalmanFilter:
             calibration_map=calibration_map,
             config=config,
         )
-
-    def config(self):
-        # TODO generate this dynamically from the Config class
-        dataclass_keys = [
-            "common_subexpression_elimination",
-            "python_modules",
-            "extra_validation",
-            "max_dt_sec",
-            "innovation_filtering",
-        ]
-        config = Config()
-        for key in dataclass_keys:
-            setattr(config, key, self.params[key])
 
     def _construct_process(self, state_model, process_noise, calibration_map, config):
         self._state_model = Model(
@@ -616,6 +597,68 @@ class ExtendedKalmanFilter:
             self.State.from_data(next_state), self.Covariance.from_data(next_covariance)
         )
 
+
+def compile(symbolic_model, calibration_map=None, *, config=None):
+    if config is None:
+        config = Config()
+    elif isinstance(config, dict):
+        config = Config(**config)
+
+    if calibration_map is None:
+        calibration_map = {}
+
+    common.model_validation(
+        symbolic_model,
+        {},
+        {},
+        calibration_map=calibration_map,
+        extra_validation=config.extra_validation,
+    )
+
+    return Model(
+        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
+    )
+
+
+def compile_ekf(
+    state_model: common.UiModelBase,
+    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+    sensor_models,
+    sensor_noises,
+    calibration_map=None,
+    *,
+    config=None,
+):
+    if config is None:
+        config = Config()
+    elif isinstance(config, dict):
+        config = Config(**config)
+
+    if calibration_map is None:
+        calibration_map = {}
+
+    common.model_validation(
+        state_model,
+        process_noise,
+        sensor_models,
+        calibration_map=calibration_map,
+        extra_validation=config.extra_validation,
+    )
+
+    return ExtendedKalmanFilter(
+        state_model=state_model,
+        process_noise=process_noise,
+        sensor_models=sensor_models,
+        sensor_noises=sensor_noises,
+        calibration_map=calibration_map,
+        config=config,
+    )
+
+class SklearnEKFAdaptor(object):
+    def __init__(self, symbolic_model):
+        self.model = None
+        self.params = {}
+
     ### scikit-learn / sklearn interface ###
 
     def _flatten_scoring_params(self, params):
@@ -641,6 +684,7 @@ class ExtendedKalmanFilter:
             np.fill_diagonal(params["sensor_noises"][key].data, sensor)
 
         return params
+
 
     # Fit the model to data
     def fit(self, X, y=None, sample_weight=None):
@@ -681,7 +725,6 @@ class ExtendedKalmanFilter:
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
         return innovations.flatten()
-
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(self, X, y=None, sample_weight=None, explain_score=False):
         mahalanobis_distance_squared = self.mahalanobis(X)
@@ -826,61 +869,6 @@ class ExtendedKalmanFilter:
             else:
                 raise ModelConstructionError(f"set_params called with invalid key {p}")
 
+        self._reset_model()
+
         return self
-
-
-def compile(symbolic_model, calibration_map=None, *, config=None):
-    if config is None:
-        config = Config()
-    elif isinstance(config, dict):
-        config = Config(**config)
-
-    if calibration_map is None:
-        calibration_map = {}
-
-    common.model_validation(
-        symbolic_model,
-        {},
-        {},
-        calibration_map=calibration_map,
-        extra_validation=config.extra_validation,
-    )
-
-    return Model(
-        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
-    )
-
-
-def compile_ekf(
-    state_model: common.UiModelBase,
-    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
-    sensor_models,
-    sensor_noises,
-    calibration_map=None,
-    *,
-    config=None,
-):
-    if config is None:
-        config = Config()
-    elif isinstance(config, dict):
-        config = Config(**config)
-
-    if calibration_map is None:
-        calibration_map = {}
-
-    common.model_validation(
-        state_model,
-        process_noise,
-        sensor_models,
-        calibration_map=calibration_map,
-        extra_validation=config.extra_validation,
-    )
-
-    return ExtendedKalmanFilter(
-        state_model=state_model,
-        process_noise=process_noise,
-        sensor_models=sensor_models,
-        sensor_noises=sensor_noises,
-        calibration_map=calibration_map,
-        config=config,
-    )
