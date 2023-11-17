@@ -413,6 +413,7 @@ class ExtendedKalmanFilter:
             assert (
                 len(sensor_noises[key]) == self.params["sensor_models"][key].sensor_size
             )
+
             matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
                 sensor_noises[key]
             )
@@ -656,7 +657,34 @@ def compile_ekf(
 
 
 class SklearnEKFAdapter(object):
-    def __init__(self, symbolic_model, process_noise, sensor_models, sensor_noises):
+    def __init__(
+        self,
+        symbolic_model,
+        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        sensor_models,
+        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+    ):
+        self.symbolic_model = symbolic_model
+
+        self.state_size = len(symbolic_model.state)
+        self.calibration_size = len(symbolic_model.calibration)
+        self.control_size = len(symbolic_model.control)
+
+        self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
+        self.arglist_calibration = sorted(
+            list(symbolic_model.calibration), key=lambda x: x.name
+        )
+        # TODO unified arglist sorting instead of re-implementing each place
+        self.arglist_control = sorted(
+            list(symbolic_model.control), key=lambda x: x.name
+        )
+        self.arglist = (
+            [symbolic_model.dt]
+            + self.arglist_state
+            + self.arglist_calibration
+            + self.arglist_control
+        )
+
         self.model = None
         self.params = {
             "process_noise": process_noise,
@@ -666,10 +694,59 @@ class SklearnEKFAdapter(object):
 
     ### scikit-learn / sklearn interface ###
 
+    def _flatten_process_noise(self, process_noise):
+        for iIdx, iSymbol in enumerate(self.arglist_control):
+            for jIdx, jSymbol in enumerate(self.arglist_control):
+                if (iSymbol, jSymbol) in process_noise:
+                    value = process_noise[(iSymbol, jSymbol)]
+                elif (jSymbol, iSymbol) in process_noise:
+                    value = process_noise[(jSymbol, iSymbol)]
+                elif iSymbol == jSymbol and iSymbol in process_noise:
+                    value = process_noise[iSymbol]
+                else:
+                    value = 0.0
+                yield (iSymbol, jSymbol, value)
+
+    def _sensor_noise_to_array(self, sensor_noises):
+        matrix_sensor_noises = {}
+        for key, model in self.params["sensor_models"].items():
+            assert isinstance(sensor_noises[key], dict)
+            assert len(sensor_noises[key]) == len(
+                self.params["sensor_models"][key].keys()
+            )
+            readings = sorted(list(model.keys()))
+            ReadingCovariance = common.named_vector("ReadingCovariance", readings)
+
+            matrix_sensor_noises[key] = ReadingCovariance.from_dict(sensor_noises[key])
+
+        return matrix_sensor_noises
+
+    def _compile_sensor_models(self, sensor_models):
+        return {
+            k: SensorModel(
+                state_model=state_model,
+                sensor_model=model,
+                calibration_map=calibration_map,
+                config=config,
+            )
+            for k, model in sensor_models.items()
+        }
+
     def _flatten_scoring_params(self, params):
-        flattened = list(np.diagonal(params["process_noise"]))
-        for key in sorted(list(params["sensor_models"])):
-            flattened.extend(np.diagonal(params["sensor_noises"][key].data))
+        # Note: Known limitation, this only flattens the diagonals to simplify the `fit` optimizaiton problem
+        flattened = [
+            value
+            for iS, jS, value in sorted(
+                list(self._flatten_process_noise(params["process_noise"])),
+                key=lambda t: (t[0].name, t[1].name),
+            )
+            if iS == jS
+        ]
+
+        matrix_sensor_noises = self._sensor_noise_to_array(params["sensor_noises"])
+
+        for key in sorted(list(params["sensor_models"].keys())):
+            flattened.extend(np.diagonal(matrix_sensor_noises[key].data))
 
         return flattened
 
@@ -683,7 +760,7 @@ class SklearnEKFAdapter(object):
 
         np.fill_diagonal(params["process_noise"], controls)
 
-        for key in sorted(list(self.params["sensor_models"])):
+        for key in sorted(list(self.params["sensor_models"].keys())):
             sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
             np.fill_diagonal(params["sensor_noises"][key].data, sensor)
