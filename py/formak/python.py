@@ -692,7 +692,9 @@ class SklearnEKFAdapter(object):
         self.Control = common.named_vector("Control", self.arglist_control)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
-        self.model = None
+        self.model = compile_ekf(
+            symbolic_model, process_noise, sensor_noises, sensor_noises, calibration_map
+        )
         self.params = {
             "process_noise": process_noise,
             "sensor_models": sensor_models,
@@ -783,7 +785,7 @@ class SklearnEKFAdapter(object):
         )
 
         for key, mapping in sorted(list(self.params["sensor_models"].items())):
-            sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
+            sensor_size = len(params["sensor_noises"][key])
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
 
             arglist = sorted(list(mapping.keys()))
@@ -815,6 +817,7 @@ class SklearnEKFAdapter(object):
 
         minimize_this(x0)
 
+        # TODO(buck): Something in this call isn't working, check types
         result = minimize(minimize_this, x0, tol=1.0e-1)
 
         if not result.success:
@@ -859,9 +862,20 @@ class SklearnEKFAdapter(object):
 
         # prefer smaller matrix terms
         matrix_weight = 1e-2
-        matrix_score = np.sum(np.square(self.params["process_noise"]))
-        for sensor_noise in self.params["sensor_noises"].values():
-            matrix_score += np.sum(np.square(sensor_noise.data))
+        matrix_score = np.sum(
+            np.square(
+                list(
+                    self._flatten_dict_diagonal(
+                        self.params["process_noise"], self.arglist_control
+                    )
+                )
+            )
+        )
+        for noise_mapping in self.params["sensor_noises"].values():
+            arglist = sorted(list(noise_mapping.keys()))
+            matrix_score += np.sum(
+                np.square(list(self._flatten_dict_diagonal(noise_mapping, arglist)))
+            )
 
         if explain_score:
             return (
@@ -908,7 +922,7 @@ class SklearnEKFAdapter(object):
                 controls_input.reshape((self.control_size, 1))
             )
 
-            state, covariance = self.process_model(
+            state, covariance = self.model.process_model(
                 dt, state, covariance, controls_input
             )
 
@@ -921,11 +935,11 @@ class SklearnEKFAdapter(object):
                     the_rest[:sensor_size],
                     the_rest[sensor_size:],
                 )
-                sensor_input = self.make_reading(
+                sensor_input = self.model.make_reading(
                     key, data=sensor_input.reshape((sensor_size, 1))
                 )
 
-                state, covariance = self.sensor_model(
+                state, covariance = self.model.sensor_model(
                     state=state,
                     covariance=covariance,
                     sensor_key=key,
@@ -941,10 +955,12 @@ class SklearnEKFAdapter(object):
                     float(
                         np.matmul(
                             np.matmul(
-                                self.innovations[key].T,
-                                np.linalg.inv(self.sensor_prediction_uncertainty[key]),
+                                self.model.innovations[key].T,
+                                np.linalg.inv(
+                                    self.model.sensor_prediction_uncertainty[key]
+                                ),
                             ),
-                            self.innovations[key],
+                            self.model.innovations[key],
                         )
                     )
                 )
@@ -977,7 +993,5 @@ class SklearnEKFAdapter(object):
                 self.params[p] = params[p]
             else:
                 raise ModelConstructionError(f"set_params called with invalid key {p}")
-
-        self._reset_model()
 
         return self
