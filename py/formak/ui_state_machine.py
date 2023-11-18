@@ -68,7 +68,7 @@ class StateMachineState:
         )
 
 
-class NisScore(object):
+class NisScore:
     pass
 
 

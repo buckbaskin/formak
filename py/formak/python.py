@@ -654,7 +654,7 @@ def compile_ekf(
     )
 
 
-class SklearnEKFAdapter(object):
+class SklearnEKFAdapter:
     def __init__(
         self,
         symbolic_model,
@@ -764,12 +764,10 @@ class SklearnEKFAdapter(object):
             self._flatten_dict_diagonal(params["process_noise"], self.arglist_control)
         )
 
-        for key, mapping in sorted(list(params["sensor_models"].items())):
+        for key, mapping in sorted(list(params["sensor_noises"].items())):
             arglist = sorted(list(mapping.keys()))
 
-            flattened.extend(
-                self._flatten_dict_diagonal(params["sensor_models"][key], arglist)
-            )
+            flattened.extend(self._flatten_dict_diagonal(mapping, arglist))
 
         return flattened
 
@@ -784,8 +782,8 @@ class SklearnEKFAdapter(object):
             self._inverse_flatten_dict_diagonal(controls, self.arglist_control)
         )
 
-        for key, mapping in sorted(list(self.params["sensor_models"].items())):
-            sensor_size = len(params["sensor_noises"][key])
+        for key, mapping in sorted(list(self.params["sensor_noises"].items())):
+            sensor_size = len(mapping)
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
 
             arglist = sorted(list(mapping.keys()))
@@ -817,16 +815,16 @@ class SklearnEKFAdapter(object):
 
         minimize_this(x0)
 
-        # TODO(buck): Something in this call isn't working, check types
         result = minimize(minimize_this, x0, tol=1.0e-1)
 
         if not result.success:
             raise MinimizationFailure(result)
 
         soln_as_params = self._inverse_flatten_scoring_params(result.x)
+        # TODO(buck): this isn't going to update the model to the right parameters...
         self.set_params(**soln_as_params)
 
-        return self
+        return self.model
 
     # Compute the squared Mahalanobis distances of given observations.
     def mahalanobis(self, X):
@@ -994,4 +992,5 @@ class SklearnEKFAdapter(object):
             else:
                 raise ModelConstructionError(f"set_params called with invalid key {p}")
 
-        return self
+        # TODO(buck): this isn't actually going to write out to the model
+        return self.model
