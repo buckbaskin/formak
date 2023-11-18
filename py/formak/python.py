@@ -292,6 +292,8 @@ class ExtendedKalmanFilter:
         assert isinstance(process_noise, dict)
         assert isinstance(calibration_map, dict)
 
+        self.config = config
+
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
         self.calibration_size = len(state_model.calibration)
@@ -313,10 +315,6 @@ class ExtendedKalmanFilter:
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
         }
-        # TODO clean out this mixing of config and params in this class
-        for key in dataclass_keys:
-            self.params[key] = getattr(config, key)
-        self.allowed_keys = list(self.params.keys())
 
         self._construct_process(
             state_model=state_model,
@@ -538,7 +536,7 @@ class ExtendedKalmanFilter:
         )
 
     def remove_innovation(self, innovation, S_inv):
-        editing_threshold = self.params["innovation_filtering"]
+        editing_threshold = self.config.innovation_filtering
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
@@ -580,7 +578,7 @@ class ExtendedKalmanFilter:
             sensor_reading.data - expected_reading.data
         )
 
-        if self.params["innovation_filtering"] is not None:
+        if self.config.innovation_filtering is not None:
             if self.remove_innovation(innovation, S_inv):
                 return StateAndCovariance(state, covariance)
 
@@ -663,7 +661,11 @@ class SklearnEKFAdapter(object):
         process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
         sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        calibration_map=None,
     ):
+        if calibration_map is None:
+            calibration_map = {}
+
         self.symbolic_model = symbolic_model
 
         self.state_size = len(symbolic_model.state)
@@ -685,12 +687,20 @@ class SklearnEKFAdapter(object):
             + self.arglist_control
         )
 
+        self.State = common.named_vector("State", self.arglist_state)
+        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+        self.Control = common.named_vector("Control", self.arglist_control)
+        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+
         self.model = None
         self.params = {
             "process_noise": process_noise,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
+            "calibration_map": calibration_map,
         }
+
+        self.allowed_keys = set(self.params.keys())
 
     ### scikit-learn / sklearn interface ###
 
@@ -724,46 +734,63 @@ class SklearnEKFAdapter(object):
     def _compile_sensor_models(self, sensor_models):
         return {
             k: SensorModel(
-                state_model=state_model,
+                state_model=self.state_model,
                 sensor_model=model,
-                calibration_map=calibration_map,
-                config=config,
+                calibration_map=self.calibration_map,
+                config=self.config,
             )
             for k, model in sensor_models.items()
         }
 
+    def _flatten_dict_diagonal(self, mapping, arglist: List[Symbol]):
+        for iIdx, iSymbol in enumerate(arglist):
+            if (iSymbol, iSymbol) in mapping:
+                value = mapping[(iSymbol, iSymbol)]
+            elif iSymbol in mapping:
+                value = mapping[iSymbol]
+            else:
+                value = 0.0
+            yield value
+
+    def _inverse_flatten_dict_diagonal(self, vector, arglist):
+        for iIdx, iSymbol in enumerate(arglist):
+            yield (iSymbol, vector[iIdx])
+
     def _flatten_scoring_params(self, params):
         # Note: Known limitation, this only flattens the diagonals to simplify the `fit` optimizaiton problem
-        flattened = [
-            value
-            for iS, jS, value in sorted(
-                list(self._flatten_process_noise(params["process_noise"])),
-                key=lambda t: (t[0].name, t[1].name),
+        flattened = list(
+            self._flatten_dict_diagonal(params["process_noise"], self.arglist_control)
+        )
+
+        for key, mapping in sorted(list(params["sensor_models"].items())):
+            arglist = sorted(list(mapping.keys()))
+
+            flattened.extend(
+                self._flatten_dict_diagonal(params["sensor_models"][key], arglist)
             )
-            if iS == jS
-        ]
-
-        matrix_sensor_noises = self._sensor_noise_to_array(params["sensor_noises"])
-
-        for key in sorted(list(params["sensor_models"].keys())):
-            flattened.extend(np.diagonal(matrix_sensor_noises[key].data))
 
         return flattened
 
     def _inverse_flatten_scoring_params(self, flattened):
         params = {k: v for k, v in self.params.items()}
-
         controls, flattened = (
             flattened[: self.control_size],
             flattened[self.control_size :],
         )
 
-        np.fill_diagonal(params["process_noise"], controls)
+        params["process_noise"] = dict(
+            self._inverse_flatten_dict_diagonal(controls, self.arglist_control)
+        )
 
-        for key in sorted(list(self.params["sensor_models"].keys())):
+        for key, mapping in sorted(list(self.params["sensor_models"].items())):
             sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
-            np.fill_diagonal(params["sensor_noises"][key].data, sensor)
+
+            arglist = sorted(list(mapping.keys()))
+
+            params["sensor_noises"][key] = dict(
+                self._inverse_flatten_dict_diagonal(sensor, arglist)
+            )
 
         return params
 
