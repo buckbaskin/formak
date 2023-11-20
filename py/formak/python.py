@@ -483,6 +483,7 @@ class ExtendedKalmanFilter:
         return result
 
     def sensor_jacobian(self, sensor_key, state):
+        # TODO(buck): Something is incorrect w/ sensor jacobian
         sensor_size = self.params["sensor_models"][sensor_key].sensor_size
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
@@ -565,9 +566,11 @@ class ExtendedKalmanFilter:
 
         expected_reading = model_impl.model(state)
         assert isinstance(expected_reading, model_impl.Reading)
+        print('expected_reading', expected_reading.data)
 
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
+        print('sensor_jacobian', H_t)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
@@ -908,6 +911,8 @@ class SklearnEKFAdapter:
     # Transform readings to innovations
     def transform(self, X, include_states=False):
         n_samples, n_features = X.shape
+        print('X')
+        print(X)
 
         dt = 0.1
 
@@ -927,9 +932,11 @@ class SklearnEKFAdapter:
                 controls_input.reshape((self.control_size, 1))
             )
 
+            print('transform process_model', idx, 'input ', state.data, 'control', controls_input.data)
             state, covariance = self.model.process_model(
                 dt, state, covariance, controls_input
             )
+            print('transform process_model', idx, 'output', state.data)
 
             innovation = []
 
@@ -944,12 +951,15 @@ class SklearnEKFAdapter:
                     key, data=sensor_input.reshape((sensor_size, 1))
                 )
 
+                print('transform sensor_model ', idx, 'input ', state.data, 'reading', sensor_input.data)
                 state, covariance = self.model.sensor_model(
                     state=state,
                     covariance=covariance,
                     sensor_key=key,
                     sensor_reading=sensor_input,
                 )
+                print('transform sensor_model ', idx, 'output', state.data)
+                1/0
                 # Normalized by the uncertainty at the time of the measurement
                 # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
                 # for:

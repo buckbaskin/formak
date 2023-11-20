@@ -70,6 +70,9 @@ def test_transform_kalman_filter_args():
     assert isinstance(covariances[0], model.Covariance)
 
     assert not np.allclose(innovations, np.zeros_like(innovations))
+    print('states', len(states))
+    for s in states:
+        print('data:', s.data)
     assert not np.allclose(
         [s.data for s in states], np.zeros((n_samples + 1, len(state), 1))
     )
