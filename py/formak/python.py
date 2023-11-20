@@ -662,11 +662,14 @@ class SklearnEKFAdapter:
         sensor_models,
         sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         calibration_map=None,
+        *,
+        config=None,
     ):
         if calibration_map is None:
             calibration_map = {}
 
         self.symbolic_model = symbolic_model
+        self.config = config
 
         self.state_size = len(symbolic_model.state)
         self.calibration_size = len(symbolic_model.calibration)
@@ -703,6 +706,11 @@ class SklearnEKFAdapter:
         }
 
         self.allowed_keys = set(self.params.keys())
+
+    def _reset_model(self):
+        self.model = compile_ekf(
+            state_model=self.symbolic_model, config=self.config, **self.params
+        )
 
     ### scikit-learn / sklearn interface ###
 
@@ -821,7 +829,6 @@ class SklearnEKFAdapter:
             raise MinimizationFailure(result)
 
         soln_as_params = self._inverse_flatten_scoring_params(result.x)
-        # TODO(buck): this isn't going to update the model to the right parameters...
         self.set_params(**soln_as_params)
 
         return self.model
@@ -992,5 +999,6 @@ class SklearnEKFAdapter:
             else:
                 raise ModelConstructionError(f"set_params called with invalid key {p}")
 
-        # TODO(buck): this isn't actually going to write out to the model
+        self._reset_model()
+
         return self.model
