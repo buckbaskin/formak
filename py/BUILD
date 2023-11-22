@@ -53,6 +53,7 @@ py_library(
     visibility = ["//visibility:private"],
     deps = [
         requirement("scikit-learn"),
+        ":python",
     ],
 )
 
@@ -261,7 +262,8 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":cpp",
+        ":ui",
     ] + PY_TEST_DEPS,
 )
 
@@ -276,7 +278,8 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":python",
+        ":ui",
     ] + PY_TEST_DEPS,
 )
 
@@ -291,7 +294,9 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":runtime",
+        ":ui",
+        ":python",
     ] + PY_TEST_DEPS,
 )
 
