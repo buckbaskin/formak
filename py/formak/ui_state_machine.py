@@ -1,6 +1,6 @@
 import inspect
 from collections import namedtuple
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from sklearn.model_selection import TimeSeriesSplit, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
@@ -12,6 +12,36 @@ SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
 # TODO add testing for each of these classes, methods
 # TODO add typing for each of these classes, methods
+
+
+class ConfigView(python.Config):
+    # common_subexpression_elimination: bool = True
+    # python_modules = DEFAULT_MODULES
+    # extra_validation: bool = False
+    # max_dt_sec: float = 0.1
+    # innovation_filtering: float = 5.0
+    def __init__(self, params: Dict[str, Any]):
+        self._params = params
+
+    @property
+    def common_subexpression_elimination(self) -> bool:
+        return self._params["common_subexpression_elimination"]
+
+    @property
+    def python_modules(self):
+        return self._params["python_modules"]
+
+    @property
+    def extra_validation(self) -> bool:
+        return self._params["extra_validation"]
+
+    @property
+    def max_dt_sec(self) -> float:
+        return self._params["max_dt_sec"]
+
+    @property
+    def innovation_filtering(self) -> Optional[float]:
+        return self._params["innovation_filtering"]
 
 
 class StateMachineState:
@@ -147,22 +177,15 @@ class FitModelState(StateMachineState):
         # estimator, or use the params interface from the meta estimator for
         # the formak.python implementation.
 
-        # TODO alternately, make the config and params equal?
-
         # TODO fill in a process noise
 
-        # TODO this mixed configuration of some stuff getting passed direction
-        # and some stuff getting passed as a Config struct is weird to me...
-        # This feels like one vote in favor of separating out Config (for human
-        # readable config, optional parameters with sane defaults for direct
-        # usage) and scikit-learn interface
         model = python.compile_ekf(
             state_model=self.symbolic_model,
             process_noise=self.parameter_space["process_noise"][0],
             sensor_models=self.parameter_space["sensor_models"][0],
             sensor_noises=self.parameter_space["sensor_noises"][0],
             calibration_map=self.parameter_space["calibration_map"][0],
-            config=python.Config(**self.parameter_space),
+            config=ConfigView(self.parameter_space),
         )
 
         pipeline = Pipeline([("kalman", model)])
