@@ -180,7 +180,7 @@ class FitModelState(StateMachineState):
 
         # TODO fill in a process noise
 
-        model = python.compile_ekf(
+        adapter = python.SklearnEKFAdapter(
             symbolic_model=self.symbolic_model,
             process_noise=self.parameter_space["process_noise"][0],
             sensor_models=self.parameter_space["sensor_models"][0],
@@ -189,14 +189,14 @@ class FitModelState(StateMachineState):
             config=ConfigView(self.parameter_space),
         )
 
-        pipeline = Pipeline([("kalman", model)])
+        pipeline = Pipeline([("kalman", adapter)])
 
         ts_cv = TimeSeriesSplit(n_splits=5, gap=0)
 
         # Maybe useful: all_splits = ts_cv.split(X)
 
         cv_scores = cross_validate(
-            estimator=model,
+            estimator=pipeline,
             X=X,
             y=None,
             cv=ts_cv,
