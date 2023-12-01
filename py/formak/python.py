@@ -410,9 +410,7 @@ class ExtendedKalmanFilter:
         matrix_sensor_noises = {}
         for key, model in self.sensor_models.items():
             assert isinstance(sensor_noises[key], dict)
-            assert (
-                len(sensor_noises[key]) == self.sensor_models[key].sensor_size
-            )
+            assert len(sensor_noises[key]) == self.sensor_models[key].sensor_size
 
             matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
                 sensor_noises[key]
@@ -623,7 +621,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 
 def compile_ekf(
-    state_model: common.UiModelBase,
+    symbolic_model: common.UiModelBase,
     process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
     sensor_models,
     sensor_noises,
@@ -640,7 +638,7 @@ def compile_ekf(
         calibration_map = {}
 
     common.model_validation(
-        state_model,
+        symbolic_model,
         process_noise,
         sensor_models,
         calibration_map=calibration_map,
@@ -648,7 +646,7 @@ def compile_ekf(
     )
 
     return ExtendedKalmanFilter(
-        state_model=state_model,
+        state_model=symbolic_model,
         process_noise=process_noise,
         sensor_models=sensor_models,
         sensor_noises=sensor_noises,
@@ -810,9 +808,18 @@ class SklearnEKFAdapter(BaseEstimator):
             yield (iSymbol, vector[iIdx])
 
     def _flatten_scoring_params(self):
-        # Note: Known limitation, this only flattens the diagonals to simplify the `fit` optimizaiton problem
+        """
+        Note: Known limitation, this only flattens the diagonals to simplify
+        the `fit` optimizaiton problem
+        """
+
+        # Note: duplicated code from EKF
+        arglist_control = sorted(
+            list(self.symbolic_model.control), key=lambda x: x.name
+        )
+
         flattened = list(
-            self._flatten_dict_diagonal(self.process_noise, self.model_.arglist_control)
+            self._flatten_dict_diagonal(self.process_noise, arglist_control)
         )
 
         for key, mapping in sorted(list(self.sensor_noises.items())):
@@ -823,14 +830,21 @@ class SklearnEKFAdapter(BaseEstimator):
         return flattened
 
     def _inverse_flatten_scoring_params(self, flattened):
+        # Note: duplicated code from EKF
+        arglist_control = sorted(
+            list(self.symbolic_model.control), key=lambda x: x.name
+        )
+        # Note: duplicated code from EKF
+        control_size = len(self.symbolic_model.control)
+
         params = {k: getattr(self, k) for k in self.allowed_keys}
         controls, flattened = (
-            flattened[: self.model_.control_size],
-            flattened[self.model_.control_size :],
+            flattened[:control_size],
+            flattened[control_size:],
         )
 
         params["process_noise"] = dict(
-            self._inverse_flatten_dict_diagonal(controls, self.model_.arglist_control)
+            self._inverse_flatten_dict_diagonal(controls, arglist_control)
         )
 
         for key, mapping in sorted(list(self.sensor_noises.items())):
@@ -1017,7 +1031,9 @@ class SklearnEKFAdapter(BaseEstimator):
                         np.matmul(
                             np.matmul(
                                 self.model_.innovations[key].T,
-                                np.linalg.inv(self.model_.sensor_prediction_uncertainty[key]),
+                                np.linalg.inv(
+                                    self.model_.sensor_prediction_uncertainty[key]
+                                ),
                             ),
                             self.model_.innovations[key],
                         )

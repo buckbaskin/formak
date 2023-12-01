@@ -69,7 +69,7 @@ def test_EKF_creation_calibration():
     )
 
     ekf = python.compile_ekf(
-        state_model=ui_model,
+        symbolic_model=ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
         sensor_noises={y: {y: 1}},

@@ -17,7 +17,7 @@ def test_EKF_model_collapse():
 
     with pytest.raises(ModelConstructionError):
         python.compile_ekf(
-            state_model=ui.Model(
+            symbolic_model=ui.Model(
                 ui.Symbol("dt"),
                 set(ui.symbols(["x", "y"])),
                 set(ui.symbols(["a"])),

@@ -181,7 +181,7 @@ class FitModelState(StateMachineState):
         # TODO fill in a process noise
 
         model = python.compile_ekf(
-            state_model=self.symbolic_model,
+            symbolic_model=self.symbolic_model,
             process_noise=self.parameter_space["process_noise"][0],
             sensor_models=self.parameter_space["sensor_models"][0],
             sensor_noises=self.parameter_space["sensor_noises"][0],

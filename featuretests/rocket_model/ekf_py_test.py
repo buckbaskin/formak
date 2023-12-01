@@ -48,7 +48,7 @@ def test_python_EKF():
     CON_position_in_global_frame = named_translation("CON_pos")
 
     python_implementation = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise=process_noise,
         sensor_models={
             "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}

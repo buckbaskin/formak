@@ -30,7 +30,7 @@ def test_ekf_simple():
     v = ui.Symbol("v")
 
     python_ekf = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {v: v}},
         sensor_noises={"simple": {v: 1.0}},

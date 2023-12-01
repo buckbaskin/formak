@@ -54,14 +54,16 @@ def test_transform_kalman_filter_args():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    adapter = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [v, x]
     readings = X = np.array([[0, 2], [0, -2], [0, 1], [0, -1], [0, 0.5], [0, -0.5]])
     n_samples, n_features = readings.shape
-    innovations, states, covariances = model.transform(X, include_states=True)
+    innovations, states, covariances = adapter.transform(X, include_states=True)
+
+    model = python.compile_ekf(**adapter.get_params())
 
     assert innovations.shape == (n_samples, n_features - len(control))
     assert states.shape == (n_samples + 1,)

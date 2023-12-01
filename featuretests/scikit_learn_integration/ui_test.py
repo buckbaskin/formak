@@ -62,7 +62,7 @@ def test_UI_like_sklearn():
     assert n_features == n_control + n_readings
 
     # Fit the model to data
-    assert isinstance(model.fit(readings), python.ExtendedKalmanFilter)
+    assert isinstance(model.fit(readings), python.SklearnEKFAdapter)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit

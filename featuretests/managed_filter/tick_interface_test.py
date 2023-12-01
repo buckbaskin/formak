@@ -34,7 +34,7 @@ def make_ekf():
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
     ekf = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {v: v}},
         sensor_noises={"simple": {v: 1.0}},
