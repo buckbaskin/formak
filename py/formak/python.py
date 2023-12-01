@@ -2,10 +2,11 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
+from numpy.typing import NDArray
 from scipy.optimize import minimize
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
@@ -15,7 +16,7 @@ from formak import common
 DEFAULT_MODULES = ("scipy", "numpy", "math", {"sec": lambda v: 1.0 / np.cos(v)})
 
 
-@dataclass
+@dataclass(frozen=True)
 class Config:
     """
     Options for generating C++.
@@ -29,10 +30,10 @@ class Config:
     """
 
     common_subexpression_elimination: bool = True
-    python_modules = DEFAULT_MODULES
+    python_modules: Tuple[Any, Any, Any, Any] = DEFAULT_MODULES
     extra_validation: bool = False
     max_dt_sec: float = 0.1
-    innovation_filtering: float = 5.0
+    innovation_filtering: Optional[float] = 5.0
 
 
 class BasicBlock:
@@ -630,7 +631,7 @@ def compile_ekf(
     calibration_map=None,
     *,
     config=None,
-):
+) -> ExtendedKalmanFilter:
     if config is None:
         config = Config()
     elif isinstance(config, dict):
@@ -806,7 +807,7 @@ class SklearnEKFAdapter:
         return params
 
     # Fit the model to data
-    def fit(self, X, y=None, sample_weight=None):
+    def fit(self, X, y=None, sample_weight=None) -> SklearnEKFAdapter:
         assert self.params["process_noise"] is not None
         assert self.params["sensor_models"] is not None
         assert self.params["sensor_noises"] is not None
@@ -837,7 +838,7 @@ class SklearnEKFAdapter:
         return self.model
 
     # Compute the squared Mahalanobis distances of given observations.
-    def mahalanobis(self, X):
+    def mahalanobis(self, X) -> NDArray:
         innovations, states, covariances = self.transform(X, include_states=True)
         n_samples, n_sensors = innovations.shape
 
@@ -846,7 +847,9 @@ class SklearnEKFAdapter:
         return innovations.flatten()
 
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
-    def score(self, X, y=None, sample_weight=None, explain_score=False):
+    def score(
+        self, X, y=None, sample_weight=None, explain_score=False
+    ) -> Union[float, Tuple[float, Tuple[float, float, float, float, float, float]]]:
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
@@ -909,7 +912,9 @@ class SklearnEKFAdapter:
         )
 
     # Transform readings to innovations
-    def transform(self, X, include_states=False):
+    def transform(
+        self, X, include_states=False
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         n_samples, n_features = X.shape
 
         dt = 0.1
@@ -985,17 +990,19 @@ class SklearnEKFAdapter:
         return np.array(innovations)
 
     # Fit the model to data and transform readings to innovations
-    def fit_transform(self, X, y=None):
+    def fit_transform(
+        self, X, y=None
+    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
         # TODO(buck): Implement the combined version (return innovations calculated while fitting)
         self.fit(X, y)
         return self.transform(X)
 
     # Get parameters for this estimator.
-    def get_params(self, deep=True) -> dict:
+    def get_params(self, deep=True) -> Dict[str, Any]:
         return self.params
 
     # Set the parameters of this estimator.
-    def set_params(self, **params):
+    def set_params(self, **params) -> SklearnEKFAdapter:
         for p in params:
             if p in self.allowed_keys:
                 self.params[p] = params[p]
@@ -1004,4 +1011,5 @@ class SklearnEKFAdapter:
 
         self._reset_model()
 
+        # TODO(buck): return self
         return self.model

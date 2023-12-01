@@ -1,3 +1,4 @@
+import dataclasses
 import inspect
 from collections import namedtuple
 from typing import Any, Dict, List, Optional
@@ -15,13 +16,13 @@ SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
 
 class ConfigView(python.Config):
-    # common_subexpression_elimination: bool = True
-    # python_modules = DEFAULT_MODULES
-    # extra_validation: bool = False
-    # max_dt_sec: float = 0.1
-    # innovation_filtering: float = 5.0
     def __init__(self, params: Dict[str, Any]):
         self._params = params
+
+        default_config = python.Config()
+        for key, value in dataclasses.asdict(default_config).items():
+            if key not in self._params:
+                self._params[key] = value
 
     @property
     def common_subexpression_elimination(self) -> bool:
