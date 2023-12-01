@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
@@ -835,7 +837,7 @@ class SklearnEKFAdapter:
         soln_as_params = self._inverse_flatten_scoring_params(result.x)
         self.set_params(**soln_as_params)
 
-        return self.model
+        return self
 
     # Compute the squared Mahalanobis distances of given observations.
     def mahalanobis(self, X) -> NDArray:
@@ -1011,5 +1013,4 @@ class SklearnEKFAdapter:
 
         self._reset_model()
 
-        # TODO(buck): return self
-        return self.model
+        return self
