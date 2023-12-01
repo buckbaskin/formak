@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -33,10 +33,10 @@ class Config:
     """
 
     common_subexpression_elimination: bool = True
-    python_modules: Tuple[Any, Any, Any, Any] = DEFAULT_MODULES
+    python_modules: tuple[Any, Any, Any, Any] = DEFAULT_MODULES
     extra_validation: bool = False
     max_dt_sec: float = 0.1
-    innovation_filtering: Optional[float] = 5.0
+    innovation_filtering: float | None = 5.0
 
 
 class BasicBlock:
@@ -46,7 +46,7 @@ class BasicBlock:
     All statements can be reordered or changed to improve performance.
     """
 
-    def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
+    def __init__(self, *, arglist: list[str], statements: list[Any], config: Config):
         self._arglist = arglist
         self._exprs = statements
         self._config = config
@@ -283,9 +283,9 @@ class ExtendedKalmanFilter:
     def __init__(
         self,
         state_model,
-        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
         sensor_models,
-        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float],
         config,
         calibration_map=None,
     ):
@@ -622,7 +622,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 def compile_ekf(
     symbolic_model: common.UiModelBase,
-    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+    process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
     sensor_models,
     sensor_noises,
     calibration_map=None,
@@ -660,15 +660,16 @@ class SklearnEKFAdapter(BaseEstimator):
     def Create(
         cls,
         symbolic_model,
-        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
         sensor_models,
-        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
+        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float],
         calibration_map=None,
         *,
         config=None,
     ):
         """
-        Provide an interface with required arguments to be more structured and
+        Provide an interface with required arguments to be more structured and.
+
         opinionated about how to Create this class. scikit-learn guides towards
         doing no construction or validation of the inputs in the __init__
         method, some is also done in this method with the goal of guiding the
@@ -747,7 +748,7 @@ class SklearnEKFAdapter(BaseEstimator):
             for k, model in sensor_models.items()
         }
 
-    def _flatten_dict_diagonal(self, mapping, arglist: List[Symbol]):
+    def _flatten_dict_diagonal(self, mapping, arglist: list[Symbol]):
         for iIdx, iSymbol in enumerate(arglist):
             if (iSymbol, iSymbol) in mapping:
                 value = mapping[(iSymbol, iSymbol)]
@@ -763,7 +764,8 @@ class SklearnEKFAdapter(BaseEstimator):
 
     def _flatten_scoring_params(self):
         """
-        Note: Known limitation, this only flattens the diagonals to simplify
+        Note: Known limitation, this only flattens the diagonals to simplify.
+
         the `fit` optimizaiton problem
         """
 
@@ -856,7 +858,7 @@ class SklearnEKFAdapter(BaseEstimator):
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(
         self, X, y=None, sample_weight=None, explain_score=False
-    ) -> Union[float, Tuple[float, Tuple[float, float, float, float, float, float]]]:
+    ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
@@ -921,7 +923,7 @@ class SklearnEKFAdapter(BaseEstimator):
     # Transform readings to innovations
     def transform(
         self, X, include_states=False
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+    ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
         self.model_ = compile_ekf(
             self.symbolic_model,
             self.process_noise,
@@ -942,10 +944,10 @@ class SklearnEKFAdapter(BaseEstimator):
         states = [state]
         covariances = [covariance]
 
-        print('control_size', self.model_.control_size)
+        print("control_size", self.model_.control_size)
         for key in sorted(list(self.model_.sensor_models)):
             sensor_size = len(self.model_.sensor_models[key])
-            print('sensor_size', sensor_size)
+            print("sensor_size", sensor_size)
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
@@ -1011,15 +1013,13 @@ class SklearnEKFAdapter(BaseEstimator):
         return np.array(innovations)
 
     # Fit the model to data and transform readings to innovations
-    def fit_transform(
-        self, X, y=None
-    ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+    def fit_transform(self, X, y=None) -> NDArray | tuple[NDArray, NDArray, NDArray]:
         # TODO(buck): Implement the combined version (return innovations calculated while fitting)
         self.fit(X, y)
         return self.transform(X)
 
     # Get parameters for this estimator.
-    def get_params(self, deep=True) -> Dict[str, Any]:
+    def get_params(self, deep=True) -> dict[str, Any]:
         return {
             "symbolic_model": self.symbolic_model,
             "process_noise": self.process_noise,
@@ -1035,6 +1035,8 @@ class SklearnEKFAdapter(BaseEstimator):
             if key in self.allowed_keys:
                 setattr(self, key, params[key])
             else:
-                raise ModelConstructionError(f"set_params called with invalid key {p}")
+                raise ModelConstructionError(
+                    f"set_params called with invalid key {key}"
+                )
 
         return self

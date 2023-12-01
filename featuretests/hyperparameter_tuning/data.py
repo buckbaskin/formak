@@ -8,7 +8,7 @@ def generate_data(innovation, *, samples=100):
     stddev = 1
     data = rng.normal(loc=mean, scale=stddev, size=(samples, 2))
 
-    data[:,0] = 0.0 # control (thrust)
+    data[:, 0] = 0.0  # control (thrust)
 
     even = True
 
