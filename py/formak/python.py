@@ -656,47 +656,6 @@ def compile_ekf(
 
 
 class SklearnEKFAdapter(BaseEstimator):
-    class DerivedValues:
-        def __init__(self, params):
-            pass
-
-        def __hold(self):
-            self.state_size = len(symbolic_model.state)
-            self.calibration_size = len(symbolic_model.calibration)
-            self.control_size = len(symbolic_model.control)
-
-            self.arglist_state = sorted(
-                list(symbolic_model.state), key=lambda x: x.name
-            )
-            self.arglist_calibration = sorted(
-                list(symbolic_model.calibration), key=lambda x: x.name
-            )
-            # TODO unified arglist sorting instead of re-implementing each place
-            self.arglist_control = sorted(
-                list(symbolic_model.control), key=lambda x: x.name
-            )
-            self.arglist = (
-                [symbolic_model.dt]
-                + self.arglist_state
-                + self.arglist_calibration
-                + self.arglist_control
-            )
-
-            self.State = common.named_vector("State", self.arglist_state)
-            self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-            self.Control = common.named_vector("Control", self.arglist_control)
-            self.Calibration = common.named_vector(
-                "Calibration", self.arglist_calibration
-            )
-
-            self.model = compile_ekf(
-                symbolic_model,
-                process_noise,
-                sensor_models,
-                sensor_noises,
-                calibration_map,
-            )
-
     @classmethod
     def Create(
         cls,
@@ -723,9 +682,6 @@ class SklearnEKFAdapter(BaseEstimator):
             "calibration_map": calibration_map,
             "config": config,
         }
-
-        # Basic Error checking
-        cls.DerivedValues(parameters)
 
         estimator = cls(**parameters)
 
@@ -754,8 +710,6 @@ class SklearnEKFAdapter(BaseEstimator):
             "calibration_map",
             "config",
         ]
-
-    ### scikit-learn / sklearn interface ###
 
     def _flatten_process_noise(self, process_noise):
         for iIdx, iSymbol in enumerate(self.arglist_control):
@@ -987,6 +941,11 @@ class SklearnEKFAdapter(BaseEstimator):
         innovations = []
         states = [state]
         covariances = [covariance]
+
+        print('control_size', self.model_.control_size)
+        for key in sorted(list(self.model_.sensor_models)):
+            sensor_size = len(self.model_.sensor_models[key])
+            print('sensor_size', sensor_size)
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
