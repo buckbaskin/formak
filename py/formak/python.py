@@ -10,6 +10,7 @@ import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numpy.typing import NDArray
 from scipy.optimize import minimize
+from sklearn.base import BaseEstimator
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
 
@@ -312,12 +313,10 @@ class ExtendedKalmanFilter:
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
         # TODO replace this with normal members
-        self.params = {
-            "process_noise": None,
-            "sensor_models": sensor_models,
-            "sensor_noises": sensor_noises,
-            "calibration_map": calibration_map,
-        }
+        self.process_noise = None
+        self.sensor_models = sensor_models
+        self.sensor_noises = sensor_noises
+        self.calibration_map = calibration_map
 
         self._construct_process(
             state_model=state_model,
@@ -356,7 +355,7 @@ class ExtendedKalmanFilter:
                 process_noise_matrix[iIdx, jIdx] = value
                 process_noise_matrix[jIdx, iIdx] = value
 
-        self.params["process_noise"] = process_noise_matrix
+        self.process_noise = process_noise_matrix
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
@@ -398,7 +397,7 @@ class ExtendedKalmanFilter:
         assert isinstance(sensor_noises, dict)
         assert len(sensor_noises) == len(sensor_models)
 
-        self.params["sensor_models"] = {
+        self.sensor_models = {
             k: SensorModel(
                 state_model=state_model,
                 sensor_model=model,
@@ -409,23 +408,23 @@ class ExtendedKalmanFilter:
         }
 
         matrix_sensor_noises = {}
-        for key, model in self.params["sensor_models"].items():
+        for key, model in self.sensor_models.items():
             assert isinstance(sensor_noises[key], dict)
             assert (
-                len(sensor_noises[key]) == self.params["sensor_models"][key].sensor_size
+                len(sensor_noises[key]) == self.sensor_models[key].sensor_size
             )
 
             matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
                 sensor_noises[key]
             )
 
-        self.params["sensor_noises"] = matrix_sensor_noises
+        self.sensor_noises = matrix_sensor_noises
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
         self._impl_sensor_jacobians = {}
 
-        for k, sensor_model in self.params["sensor_models"].items():
+        for k, sensor_model in self.sensor_models.items():
             sensor_size = len(sensor_model.readings)
 
             sensor_matrix = Matrix(
@@ -455,9 +454,9 @@ class ExtendedKalmanFilter:
 
     def make_reading(self, key, *, data=None, **kwargs):
         if len(kwargs) == 0 and data is not None:
-            return self.params["sensor_models"][key].Reading.from_data(data)
+            return self.sensor_models[key].Reading.from_data(data)
 
-        return self.params["sensor_models"][key].Reading(**kwargs)
+        return self.sensor_models[key].Reading(**kwargs)
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
@@ -487,7 +486,7 @@ class ExtendedKalmanFilter:
 
     def sensor_jacobian(self, sensor_key, state):
         # TODO(buck): Something is incorrect w/ sensor jacobian
-        sensor_size = self.params["sensor_models"][sensor_key].sensor_size
+        sensor_size = self.sensor_models[sensor_key].sensor_size
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
 
@@ -525,7 +524,7 @@ class ExtendedKalmanFilter:
         assert next_state_covariance.shape == covariance.shape
 
         next_control_covariance = np.matmul(
-            V_t, np.matmul(self.params["process_noise"], V_t.transpose())
+            V_t, np.matmul(self.process_noise, V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
 
@@ -547,9 +546,9 @@ class ExtendedKalmanFilter:
         return normalized_innovation > expected_innovation
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
-        model_impl = self.params["sensor_models"][sensor_key]
+        model_impl = self.sensor_models[sensor_key]
         sensor_size = len(model_impl.readings)
-        Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
+        Q_t = _model_noise = self.sensor_noises[sensor_key]
 
         try:
             assert isinstance(state, self.State)
@@ -569,11 +568,9 @@ class ExtendedKalmanFilter:
 
         expected_reading = model_impl.model(state)
         assert isinstance(expected_reading, model_impl.Reading)
-        print("expected_reading", expected_reading.data)
 
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
-        print("sensor_jacobian", H_t)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
@@ -660,9 +657,51 @@ def compile_ekf(
     )
 
 
-class SklearnEKFAdapter:
-    def __init__(
-        self,
+class SklearnEKFAdapter(BaseEstimator):
+    class DerivedValues:
+        def __init__(self, params):
+            pass
+
+        def __hold(self):
+            self.state_size = len(symbolic_model.state)
+            self.calibration_size = len(symbolic_model.calibration)
+            self.control_size = len(symbolic_model.control)
+
+            self.arglist_state = sorted(
+                list(symbolic_model.state), key=lambda x: x.name
+            )
+            self.arglist_calibration = sorted(
+                list(symbolic_model.calibration), key=lambda x: x.name
+            )
+            # TODO unified arglist sorting instead of re-implementing each place
+            self.arglist_control = sorted(
+                list(symbolic_model.control), key=lambda x: x.name
+            )
+            self.arglist = (
+                [symbolic_model.dt]
+                + self.arglist_state
+                + self.arglist_calibration
+                + self.arglist_control
+            )
+
+            self.State = common.named_vector("State", self.arglist_state)
+            self.Covariance = common.named_covariance("Covariance", self.arglist_state)
+            self.Control = common.named_vector("Control", self.arglist_control)
+            self.Calibration = common.named_vector(
+                "Calibration", self.arglist_calibration
+            )
+
+            self.model = compile_ekf(
+                symbolic_model,
+                process_noise,
+                sensor_models,
+                sensor_noises,
+                calibration_map,
+            )
+
+    @classmethod
+    def Create(
+        cls,
         symbolic_model,
         process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
         sensor_models,
@@ -671,52 +710,52 @@ class SklearnEKFAdapter:
         *,
         config=None,
     ):
-        if calibration_map is None:
-            calibration_map = {}
-
-        self.symbolic_model = symbolic_model
-        self.config = config
-
-        self.state_size = len(symbolic_model.state)
-        self.calibration_size = len(symbolic_model.calibration)
-        self.control_size = len(symbolic_model.control)
-
-        self.arglist_state = sorted(list(symbolic_model.state), key=lambda x: x.name)
-        self.arglist_calibration = sorted(
-            list(symbolic_model.calibration), key=lambda x: x.name
-        )
-        # TODO unified arglist sorting instead of re-implementing each place
-        self.arglist_control = sorted(
-            list(symbolic_model.control), key=lambda x: x.name
-        )
-        self.arglist = (
-            [symbolic_model.dt]
-            + self.arglist_state
-            + self.arglist_calibration
-            + self.arglist_control
-        )
-
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
-
-        self.model = compile_ekf(
-            symbolic_model, process_noise, sensor_models, sensor_noises, calibration_map
-        )
-        self.params = {
+        """
+        Provide an interface with required arguments to be more structured and
+        opinionated about how to Create this class. scikit-learn guides towards
+        doing no construction or validation of the inputs in the __init__
+        method, some is also done in this method with the goal of guiding the
+        user earlier in the process.
+        """
+        parameters = {
+            "symbolic_model": symbolic_model,
             "process_noise": process_noise,
             "sensor_models": sensor_models,
             "sensor_noises": sensor_noises,
             "calibration_map": calibration_map,
+            "config": config,
         }
 
-        self.allowed_keys = set(self.params.keys())
+        # Basic Error checking
+        cls.DerivedValues(parameters)
 
-    def _reset_model(self):
-        self.model = compile_ekf(
-            state_model=self.symbolic_model, config=self.config, **self.params
-        )
+        estimator = cls(**parameters)
+
+    def __init__(
+        self,
+        symbolic_model=None,
+        process_noise=None,
+        sensor_models=None,
+        sensor_noises=None,
+        calibration_map=None,
+        *,
+        config=None,
+    ):
+        self.symbolic_model = symbolic_model
+        self.process_noise = process_noise
+        self.sensor_models = sensor_models
+        self.sensor_noises = sensor_noises
+        self.calibration_map = calibration_map
+        self.config = config
+
+        self.allowed_keys = [
+            "symbolic_model",
+            "process_noise",
+            "sensor_models",
+            "sensor_noises",
+            "calibration_map",
+            "config",
+        ]
 
     ### scikit-learn / sklearn interface ###
 
@@ -735,11 +774,9 @@ class SklearnEKFAdapter:
 
     def _sensor_noise_to_array(self, sensor_noises):
         matrix_sensor_noises = {}
-        for key, model in self.params["sensor_models"].items():
+        for key, model in self.sensor_models.items():
             assert isinstance(sensor_noises[key], dict)
-            assert len(sensor_noises[key]) == len(
-                self.params["sensor_models"][key].keys()
-            )
+            assert len(sensor_noises[key]) == len(self.sensor_models[key].keys())
             readings = sorted(list(model.keys()))
             ReadingCovariance = common.named_vector("ReadingCovariance", readings)
 
@@ -772,13 +809,13 @@ class SklearnEKFAdapter:
         for iIdx, iSymbol in enumerate(arglist):
             yield (iSymbol, vector[iIdx])
 
-    def _flatten_scoring_params(self, params):
+    def _flatten_scoring_params(self):
         # Note: Known limitation, this only flattens the diagonals to simplify the `fit` optimizaiton problem
         flattened = list(
-            self._flatten_dict_diagonal(params["process_noise"], self.arglist_control)
+            self._flatten_dict_diagonal(self.process_noise, self.model_.arglist_control)
         )
 
-        for key, mapping in sorted(list(params["sensor_noises"].items())):
+        for key, mapping in sorted(list(self.sensor_noises.items())):
             arglist = sorted(list(mapping.keys()))
 
             flattened.extend(self._flatten_dict_diagonal(mapping, arglist))
@@ -786,17 +823,17 @@ class SklearnEKFAdapter:
         return flattened
 
     def _inverse_flatten_scoring_params(self, flattened):
-        params = {k: v for k, v in self.params.items()}
+        params = {k: getattr(self, k) for k in self.allowed_keys}
         controls, flattened = (
-            flattened[: self.control_size],
-            flattened[self.control_size :],
+            flattened[: self.model_.control_size],
+            flattened[self.model_.control_size :],
         )
 
         params["process_noise"] = dict(
-            self._inverse_flatten_dict_diagonal(controls, self.arglist_control)
+            self._inverse_flatten_dict_diagonal(controls, self.model_.arglist_control)
         )
 
-        for key, mapping in sorted(list(self.params["sensor_noises"].items())):
+        for key, mapping in sorted(list(self.sensor_noises.items())):
             sensor_size = len(mapping)
             sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
 
@@ -810,11 +847,11 @@ class SklearnEKFAdapter:
 
     # Fit the model to data
     def fit(self, X, y=None, sample_weight=None) -> SklearnEKFAdapter:
-        assert self.params["process_noise"] is not None
-        assert self.params["sensor_models"] is not None
-        assert self.params["sensor_noises"] is not None
+        assert self.process_noise is not None
+        assert self.sensor_models is not None
+        assert self.sensor_noises is not None
 
-        x0 = self._flatten_scoring_params(self.params)
+        x0 = self._flatten_scoring_params()
 
         def minimize_this(x):
             holdout_params = dict(self.get_params())
@@ -879,12 +916,12 @@ class SklearnEKFAdapter:
             np.square(
                 list(
                     self._flatten_dict_diagonal(
-                        self.params["process_noise"], self.arglist_control
+                        self.process_noise, self.model_.arglist_control
                     )
                 )
             )
         )
-        for noise_mapping in self.params["sensor_noises"].values():
+        for noise_mapping in self.sensor_noises.values():
             arglist = sorted(list(noise_mapping.keys()))
             matrix_score += np.sum(
                 np.square(list(self._flatten_dict_diagonal(noise_mapping, arglist)))
@@ -917,12 +954,21 @@ class SklearnEKFAdapter:
     def transform(
         self, X, include_states=False
     ) -> Union[NDArray, Tuple[NDArray, NDArray, NDArray]]:
+        self.model_ = compile_ekf(
+            self.symbolic_model,
+            self.process_noise,
+            self.sensor_models,
+            self.sensor_noises,
+            self.calibration_map,
+            config=self.config,
+        )
+
         n_samples, n_features = X.shape
 
         dt = 0.1
 
-        state = self.State()
-        covariance = self.Covariance()
+        state = self.model_.State()
+        covariance = self.model_.Covariance()
 
         innovations = []
         states = [state]
@@ -930,31 +976,31 @@ class SklearnEKFAdapter:
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
-                X[idx, : self.control_size],
-                X[idx, self.control_size :],
+                X[idx, : self.model_.control_size],
+                X[idx, self.model_.control_size :],
             )
-            controls_input = self.Control.from_data(
-                controls_input.reshape((self.control_size, 1))
+            controls_input = self.model_.Control.from_data(
+                controls_input.reshape((self.model_.control_size, 1))
             )
 
-            state, covariance = self.model.process_model(
+            state, covariance = self.model_.process_model(
                 dt, state, covariance, controls_input
             )
 
             innovation = []
 
-            for key in sorted(list(self.params["sensor_models"])):
-                sensor_size = len(self.params["sensor_models"][key])
+            for key in sorted(list(self.model_.sensor_models)):
+                sensor_size = len(self.model_.sensor_models[key])
 
                 sensor_input, the_rest = (
                     the_rest[:sensor_size],
                     the_rest[sensor_size:],
                 )
-                sensor_input = self.model.make_reading(
+                sensor_input = self.model_.make_reading(
                     key, data=sensor_input.reshape((sensor_size, 1))
                 )
 
-                state, covariance = self.model.sensor_model(
+                state, covariance = self.model_.sensor_model(
                     state=state,
                     covariance=covariance,
                     sensor_key=key,
@@ -970,12 +1016,10 @@ class SklearnEKFAdapter:
                     float(
                         np.matmul(
                             np.matmul(
-                                self.model.innovations[key].T,
-                                np.linalg.inv(
-                                    self.model.sensor_prediction_uncertainty[key]
-                                ),
+                                self.model_.innovations[key].T,
+                                np.linalg.inv(self.model_.sensor_prediction_uncertainty[key]),
                             ),
-                            self.model.innovations[key],
+                            self.model_.innovations[key],
                         )
                     )
                 )
@@ -1001,16 +1045,21 @@ class SklearnEKFAdapter:
 
     # Get parameters for this estimator.
     def get_params(self, deep=True) -> Dict[str, Any]:
-        return self.params
+        return {
+            "symbolic_model": self.symbolic_model,
+            "process_noise": self.process_noise,
+            "sensor_models": self.sensor_models,
+            "sensor_noises": self.sensor_noises,
+            "calibration_map": self.calibration_map,
+            "config": self.config,
+        }
 
     # Set the parameters of this estimator.
     def set_params(self, **params) -> SklearnEKFAdapter:
-        for p in params:
-            if p in self.allowed_keys:
-                self.params[p] = params[p]
+        for key in params:
+            if key in self.allowed_keys:
+                setattr(self, key, params[key])
             else:
                 raise ModelConstructionError(f"set_params called with invalid key {p}")
-
-        self._reset_model()
 
         return self

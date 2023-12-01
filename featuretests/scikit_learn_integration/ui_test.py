@@ -83,4 +83,4 @@ def test_UI_like_sklearn():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.ExtendedKalmanFilter)
+    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)

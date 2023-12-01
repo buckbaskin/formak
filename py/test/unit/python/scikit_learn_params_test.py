@@ -37,7 +37,7 @@ def test_get_params():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.ExtendedKalmanFilter)
+    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
 
 
 def test_set_params():
@@ -72,4 +72,4 @@ def test_set_params():
     n_samples, n_features = readings.shape
 
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.ExtendedKalmanFilter)
+    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
