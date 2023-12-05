@@ -543,7 +543,6 @@ class ExtendedKalmanFilter:
         editing_threshold = self.config.innovation_filtering # type: float
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
-        print(type(editing_threshold), type(sensor_size))
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
         return normalized_innovation > expected_innovation
 
@@ -947,10 +946,8 @@ class SklearnEKFAdapter(BaseEstimator):
         states = [state]
         covariances = [covariance]
 
-        print("control_size", self.model_.control_size)
         for key in sorted(list(self.model_.sensor_models)):
             sensor_size = len(self.model_.sensor_models[key])
-            print("sensor_size", sensor_size)
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (

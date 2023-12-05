@@ -189,7 +189,7 @@ class FitModelState(StateMachineState):
             sensor_models=self.parameter_space["sensor_models"][0],
             sensor_noises=self.parameter_space["sensor_noises"][0],
             calibration_map=self.parameter_space["calibration_map"][0],
-            config=ConfigView(self.parameter_space),
+            config=ConfigView({k: v[0] for k, v in self.parameter_space.items()}),
         )
 
         pipeline = Pipeline([("kalman", adapter)])
