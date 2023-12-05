@@ -221,8 +221,8 @@ class FitModelState(StateMachineState):
                 cv_scores["test_score"],
                 cv_scores["estimator"],
                 cv_scores["train_score"],
-            )
-            , key=lambda k: (k[0], k[2])
+            ),
+            key=lambda k: (k[0], k[2]),
         )
 
         self.fit_estimator = estimator

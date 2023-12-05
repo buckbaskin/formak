@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.random import default_rng
-from sklearn.utils.estimator_checks import check_estimator
 from sklearn.base import clone
+from sklearn.utils.estimator_checks import check_estimator
 
 from formak import python, ui
 
@@ -69,6 +69,7 @@ def test_clone():
     )
 
     clone(model)
+
 
 def test_estimator_against_sklearn_checks():
     dt = ui.Symbol("dt")

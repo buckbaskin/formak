@@ -659,13 +659,13 @@ def compile_ekf(
 
 class SklearnEKFAdapter(BaseEstimator):
     allowed_keys = [
-            "symbolic_model",
-            "process_noise",
-            "sensor_models",
-            "sensor_noises",
-            "calibration_map",
-            "config",
-        ]
+        "symbolic_model",
+        "process_noise",
+        "sensor_models",
+        "sensor_noises",
+        "calibration_map",
+        "config",
+    ]
 
     @classmethod
     def Create(
@@ -859,10 +859,14 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(
-        self, X, y=None, sample_weight=None, explain_score=False
+            self, X: Any, y=None, sample_weight=None, explain_score=False
     ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
+
+        if not isinstance(X, np.ndarray):
+            X = X.__array__()
+            assert isinstance(X, np.ndarray)
 
         if sample_weight is None:
             avg = np.sum(np.square(np.average(normalized_innovations)))
@@ -924,7 +928,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Transform readings to innovations
     def transform(
-        self, X, include_states=False
+        self, X: Any, include_states=False
     ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
         self.model_ = compile_ekf(
             self.symbolic_model,
@@ -934,6 +938,10 @@ class SklearnEKFAdapter(BaseEstimator):
             self.calibration_map,
             config=self.config,
         )
+
+        if not isinstance(X, np.ndarray):
+            X = X.__array__()
+            assert isinstance(X, np.ndarray)
 
         n_samples, n_features = X.shape
 
