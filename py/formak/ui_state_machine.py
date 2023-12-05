@@ -100,7 +100,12 @@ class StateMachineState:
 
 
 class NisScore:
-    pass
+    def __init__(self):
+        pass
+
+    def __call__(self, estimator: python.ExtendedKalmanFilter, X) -> float:
+        # TODO(buck): implement scoring
+        return 0.0
 
 
 class FitModelState(StateMachineState):
@@ -159,7 +164,7 @@ class FitModelState(StateMachineState):
 
         if self.scoring is None:
             # TODO implement the scoring
-            self.scoring = NisScore
+            self.scoring = NisScore()
 
         # auto_examples/model_selection/plot_grid_search_digits.html
         # auto_examples/compose/plot_compare_reduction.html
