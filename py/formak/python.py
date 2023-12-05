@@ -859,7 +859,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(
-            self, X: Any, y=None, sample_weight=None, explain_score=False
+        self, X: Any, y=None, sample_weight=None, explain_score=False
     ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
