@@ -416,7 +416,7 @@ class ExtendedKalmanFilter:
                 sensor_noises[key]
             )
 
-        self.sensor_noises = matrix_sensor_noises # type: Dict[str, NDArray]
+        self.sensor_noises = matrix_sensor_noises  # type: Dict[str, NDArray]
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
@@ -540,7 +540,7 @@ class ExtendedKalmanFilter:
         if self.config.innovation_filtering is None:
             return False
 
-        editing_threshold = self.config.innovation_filtering # type: float
+        editing_threshold = self.config.innovation_filtering  # type: float
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size

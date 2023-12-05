@@ -3,6 +3,7 @@ import inspect
 from collections import namedtuple
 from typing import Any, Dict, List, Optional
 
+from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -103,7 +104,7 @@ class NisScore:
     def __init__(self):
         pass
 
-    def __call__(self, estimator: python.ExtendedKalmanFilter, X) -> float:
+    def __call__(self, estimator: python.ExtendedKalmanFilter, X, y=None) -> float:
         # TODO(buck): implement scoring
         return 0.0
 
@@ -164,6 +165,7 @@ class FitModelState(StateMachineState):
 
         if self.scoring is None:
             # TODO implement the scoring
+            # self.scoring = make_scorer(NisScore(), greater_is_better=False)
             self.scoring = NisScore()
 
         # auto_examples/model_selection/plot_grid_search_digits.html
@@ -211,6 +213,7 @@ class FitModelState(StateMachineState):
             scoring=self.scoring,
             error_score="raise",
             return_estimator=True,
+            return_train_score=True,
         )
 
         test_score, estimator, train_score = min(
@@ -219,6 +222,7 @@ class FitModelState(StateMachineState):
                 cv_scores["estimator"],
                 cv_scores["train_score"],
             )
+            , key=lambda k: (k[0], k[2])
         )
 
         self.fit_estimator = estimator
