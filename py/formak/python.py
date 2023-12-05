@@ -658,6 +658,15 @@ def compile_ekf(
 
 
 class SklearnEKFAdapter(BaseEstimator):
+    allowed_keys = [
+            "symbolic_model",
+            "process_noise",
+            "sensor_models",
+            "sensor_noises",
+            "calibration_map",
+            "config",
+        ]
+
     @classmethod
     def Create(
         cls,
@@ -704,15 +713,6 @@ class SklearnEKFAdapter(BaseEstimator):
         self.sensor_noises = sensor_noises
         self.calibration_map = calibration_map
         self.config = config
-
-        self.allowed_keys = [
-            "symbolic_model",
-            "process_noise",
-            "sensor_models",
-            "sensor_noises",
-            "calibration_map",
-            "config",
-        ]
 
     def _flatten_process_noise(self, process_noise):
         for iIdx, iSymbol in enumerate(self.arglist_control):
