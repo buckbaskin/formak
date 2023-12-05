@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -416,7 +416,7 @@ class ExtendedKalmanFilter:
                 sensor_noises[key]
             )
 
-        self.sensor_noises = matrix_sensor_noises
+        self.sensor_noises = matrix_sensor_noises # type: Dict[str, NDArray]
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
@@ -536,10 +536,14 @@ class ExtendedKalmanFilter:
             next_state, self.Covariance.from_data(next_covariance)
         )
 
-    def remove_innovation(self, innovation, S_inv):
-        editing_threshold = self.config.innovation_filtering
+    def remove_innovation(self, innovation: NDArray, S_inv: NDArray) -> bool:
+        if self.config.innovation_filtering is None:
+            return False
+
+        editing_threshold = self.config.innovation_filtering # type: float
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
+        print(type(editing_threshold), type(sensor_size))
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
         return normalized_innovation > expected_innovation
 
@@ -579,9 +583,8 @@ class ExtendedKalmanFilter:
             sensor_reading.data - expected_reading.data
         )
 
-        if self.config.innovation_filtering is not None:
-            if self.remove_innovation(innovation, S_inv):
-                return StateAndCovariance(state, covariance)
+        if self.remove_innovation(innovation, S_inv):
+            return StateAndCovariance(state, covariance)
 
         K_t = _kalman_gain = np.matmul(
             covariance.data, np.matmul(H_t.transpose(), S_inv)

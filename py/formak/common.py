@@ -1,9 +1,10 @@
 import abc
 import types
 from itertools import product
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 
 import numpy as np
+from numpy.typing import NDArray
 from formak.exceptions import ModelConstructionError
 from matplotlib import pyplot as plt
 from sympy import Symbol, diff
@@ -103,6 +104,7 @@ class _NamedArrayBase(abc.ABC):
     def __init__(self, name, kwargs):
         self.name = name
         self._kwargs = kwargs
+        self.data = None # type: Optional[NDArray]
 
     def __repr__(self):
         kwargs = ", ".join(

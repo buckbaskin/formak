@@ -1,3 +1,4 @@
+from typing import Dict
 from formak import ui
 
 dt = ui.Symbol("dt")
@@ -22,4 +23,4 @@ process_noise = {thrust: 0.01}
 sensor_models = {"velocity": {tp["v"]: tp["v"]}}
 sensor_noises = {"velocity": {tp["v"]: 1.0}}
 # TODO add a calibration term here (mass?)
-calibration_map = {}
+calibration_map = {} # type: Dict[str, float]

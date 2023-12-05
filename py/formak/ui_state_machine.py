@@ -145,6 +145,9 @@ class FitModelState(StateMachineState):
     def available_transitions(cls) -> List[str]:
         return []
 
+    def export_python(self) -> python.ExtendedKalmanFilter:
+        raise NotImplementedError()
+
     def _fit_model_impl(self):
         # This impl function contains all of the scikit-learn wrangling to
         # organize it away from the logical flow of the state machine. This may
