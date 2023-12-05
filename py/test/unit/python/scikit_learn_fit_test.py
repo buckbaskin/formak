@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.base import clone
 
 from formak import python, ui
@@ -68,3 +69,27 @@ def test_clone():
     )
 
     clone(model)
+
+def test_estimator_against_sklearn_checks():
+    dt = ui.Symbol("dt")
+
+    x, v = ui.symbols(["x", "v"])
+
+    state = {x}
+    control = {v}
+
+    state_model = {
+        x: x + dt * v,
+    }
+
+    params = {
+        "process_noise": {v: 1.0},
+        "sensor_models": {"simple": {x: x}},
+        "sensor_noises": {"simple": {x: 1}},
+    }
+
+    model = python.SklearnEKFAdapter(
+        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+    )
+
+    check_estimator(model)
