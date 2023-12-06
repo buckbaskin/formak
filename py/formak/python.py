@@ -657,6 +657,20 @@ def compile_ekf(
     )
 
 
+def force_to_ndarray(mat: Any) -> Optional[NDArray]:
+    if mat is None:
+        return mat
+
+    if isinstance(mat, list):
+        return np.array(mat)
+    if not isinstance(mat, np.ndarray):
+        mat = mat.__array__()
+
+    assert isinstance(mat, np.ndarray)
+
+    return mat
+
+
 class SklearnEKFAdapter(BaseEstimator):
     allowed_keys = [
         "symbolic_model",
@@ -861,20 +875,18 @@ class SklearnEKFAdapter(BaseEstimator):
     def score(
         self, X: Any, y=None, sample_weight=None, explain_score=False
     ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
+        X = force_to_ndarray(X)
+        y = force_to_ndarray(y)
+        sample_weight = force_to_ndarray(sample_weight)
+
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
-        if not isinstance(X, np.ndarray):
-            X = X.__array__()
-            assert isinstance(X, np.ndarray)
-
         if sample_weight is None:
-            avg = np.sum(np.square(np.average(normalized_innovations)))
+            avg = np.sum(np.square(np.mean(normalized_innovations)))
             var = np.sum(mahalanobis_distance_squared)
         else:
-            avg = np.sum(
-                np.square(np.average(normalized_innovations, weights=sample_weight))
-            )
+            avg = np.sum(np.square(np.mean(normalized_innovations * sample_weight)))
             var = np.sum(mahalanobis_distance_squared * sample_weight)
 
         # bias->0
@@ -938,10 +950,7 @@ class SklearnEKFAdapter(BaseEstimator):
             self.calibration_map,
             config=self.config,
         )
-
-        if not isinstance(X, np.ndarray):
-            X = X.__array__()
-            assert isinstance(X, np.ndarray)
+        X = force_to_ndarray(X)
 
         n_samples, n_features = X.shape
 
