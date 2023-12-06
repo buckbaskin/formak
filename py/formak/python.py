@@ -1057,3 +1057,13 @@ class SklearnEKFAdapter(BaseEstimator):
                 )
 
         return self
+
+    def export_python(self):
+        return compile_ekf(
+            self.symbolic_model,
+            self.process_noise,
+            self.sensor_models,
+            self.sensor_noises,
+            self.calibration_map,
+            config=self.config,
+        )

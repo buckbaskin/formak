@@ -152,7 +152,7 @@ class FitModelState(StateMachineState):
         return []
 
     def export_python(self) -> python.ExtendedKalmanFilter:
-        raise NotImplementedError()
+        return self.fit_estimator.export_python()
 
     def _fit_model_impl(self):
         # This impl function contains all of the scikit-learn wrangling to
