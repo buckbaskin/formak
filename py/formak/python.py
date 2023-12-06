@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -657,7 +657,7 @@ def compile_ekf(
     )
 
 
-def force_to_ndarray(mat: Any) -> Optional[NDArray]:
+def force_to_ndarray(mat: Any) -> NDArray | None:
     if mat is None:
         return mat
 

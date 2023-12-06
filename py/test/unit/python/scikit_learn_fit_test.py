@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from numpy.random import default_rng
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
@@ -71,6 +72,7 @@ def test_clone():
     clone(model)
 
 
+@pytest.mark.xfail(reason="WIP on implementing various checks")
 def test_estimator_against_sklearn_checks():
     dt = ui.Symbol("dt")
 

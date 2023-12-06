@@ -1,7 +1,7 @@
 import abc
 import types
 from itertools import product
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
 from formak.exceptions import ModelConstructionError

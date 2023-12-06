@@ -1,5 +1,3 @@
-from typing import Dict
-
 from formak import ui
 
 dt = ui.Symbol("dt")
