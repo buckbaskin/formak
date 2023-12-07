@@ -108,6 +108,7 @@ class NisScore:
         # TODO(buck): implement scoring
         return 0.0
 
+PIPELINE_STAGE_NAME = 'kalman'
 
 class FitModelState(StateMachineState):
     def __init__(
@@ -152,7 +153,7 @@ class FitModelState(StateMachineState):
         return []
 
     def export_python(self) -> python.ExtendedKalmanFilter:
-        return self.fit_estimator.export_python()
+        return self.fit_estimator.named_steps[PIPELINE_STAGE_NAME].export_python()
 
     def _fit_model_impl(self):
         # This impl function contains all of the scikit-learn wrangling to
@@ -199,7 +200,7 @@ class FitModelState(StateMachineState):
             config=ConfigView({k: v[0] for k, v in self.parameter_space.items()}),
         )
 
-        pipeline = Pipeline([("kalman", adapter)])
+        pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
 
         ts_cv = TimeSeriesSplit(n_splits=5, gap=0)
 

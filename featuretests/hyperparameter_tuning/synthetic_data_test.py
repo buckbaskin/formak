@@ -41,6 +41,7 @@ def test_with_synthetic_data():
     # Note: not a state transition
     python_model = fit_model_state.export_python()
 
+    assert python_model.config.innovation_filtering is not None
     assert (
         true_innovation - 0.5
         < python_model.config.innovation_filtering
