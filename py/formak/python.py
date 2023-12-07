@@ -312,7 +312,6 @@ class ExtendedKalmanFilter:
         self.Control = common.named_vector("Control", self.arglist_control)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
-        # TODO replace this with normal members
         self.process_noise = None
         self.sensor_models = sensor_models
         self.sensor_noises = sensor_noises
@@ -483,7 +482,6 @@ class ExtendedKalmanFilter:
         return result
 
     def sensor_jacobian(self, sensor_key, state):
-        # TODO(buck): Something is incorrect w/ sensor jacobian
         sensor_size = self.sensor_models[sensor_key].sensor_size
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]

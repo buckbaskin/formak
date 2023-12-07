@@ -14,6 +14,7 @@ def test_model_simplification():
 def test_ui_state_machine_ids_are_enums():
     initial_state = DesignManager(name="mercury")
     assert isinstance(initial_state.state_id(), Enum)
+    assert initial_state.state_id() == "Design Manager"  # will be replaced by enum
 
     assert all((isinstance(k, Enum) for k in initial_state.available_transitions()))
     assert all((isinstance(k, Enum) for k in initial_state.search("Fit Model")))
@@ -63,3 +64,18 @@ def test_fit_model_missing_parameter_defaults():
     assert result["calibration_map"] is not None
 
     assert result["innovation_filtering"] == 5.0
+
+
+def test_non_zero_nis_score():
+    scoring_function = NisScore()
+
+    assert scoring_function(X=np.ones((1, 1))) != 0.0
+
+
+class NisScore:
+    def __init__(self):
+        pass
+
+    def __call__(self, estimator: python.ExtendedKalmanFilter, X, y=None) -> float:
+        # TODO(buck): implement scoring
+        return 0.0

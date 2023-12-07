@@ -49,7 +49,6 @@ class StateMachineState:
 
     @classmethod
     def state_id(cls) -> str:
-        # TODO re-evaluate the name of this function from the user perspective
         raise NotImplementedError()
 
     def history(self) -> List[str]:
@@ -63,7 +62,6 @@ class StateMachineState:
         self, end_state: str, *, max_iter: int = 100, debug: bool = True
     ) -> List[str]:
         """Breadth First Search of state transitions."""
-        # TODO this could be a queue / deque
         frontier = [SearchState(self, [])]
 
         if debug:
@@ -101,8 +99,7 @@ class NisScore:
         pass
 
     def __call__(self, estimator: python.ExtendedKalmanFilter, X, y=None) -> float:
-        # TODO(buck): implement scoring
-        return 0.0
+        raise NotImplementedError("Implement scoring!")
 
 
 PIPELINE_STAGE_NAME = "kalman"
@@ -119,7 +116,6 @@ class FitModelState(StateMachineState):
         data,
         cross_validation_strategy,
     ):
-        # TODO check this call syntax
         super().__init__(name=name, history=history + [self.state_id()])
 
         ## 5 Parts of Hyper-Parameter Search problem
@@ -159,7 +155,6 @@ class FitModelState(StateMachineState):
         # move to its own separate helper file.
 
         if self.cross_validation_strategy is None:
-            # TODO look up the correct scikit-learn cross validation
             self.cross_validation_strategy = TimeSeriesSplit
 
         if self.scoring is None:
@@ -172,20 +167,6 @@ class FitModelState(StateMachineState):
         X = self.data
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
-
-        # TODO this is where I want something that maybe wraps the Python EKF
-        # would work better? Let me propose a process: 1. Make a meta estimator
-        # with one param (innovation filtering) and then the rest are hard
-        # coded internally. 2. Run it through these CVs, etc. 3. Add all the
-        # rest of the params I could want to vary in the meta estimator. 4. Run
-        # it again, holding the others. The meta estimator is conceptually the
-        # Python model, but under the hood does the compile_ekf call based on
-        # the params for each use case. 5. Evaulate if I should remove the
-        # sckit interface from the formak.python class in favor of the meta
-        # estimator, or use the params interface from the meta estimator for
-        # the formak.python implementation.
-
-        # TODO fill in a process noise
 
         adapter = python.SklearnEKFAdapter(
             symbolic_model=self.symbolic_model,
@@ -227,7 +208,6 @@ class FitModelState(StateMachineState):
 
 class SymbolicModelState(StateMachineState):
     def __init__(self, name: str, history: List[str], model: ui_model.Model):
-        # TODO check this call syntax
         super().__init__(name=name, history=history + [self.state_id()])
         self.model = model
 
@@ -256,17 +236,11 @@ class SymbolicModelState(StateMachineState):
         # TODO parameter space should at least be heavily inspired by
         # scikit-learn parameter space
 
-        # TODO parameter space may need to have fixed/default params and then
-        # vary the rest?
-
         # TODO parameter space needs a type
 
         # TODO data needs a type (sklearn database? dataset? you know the one
         # I'm talking about)
 
-        # TODO have an optional "release" config flag that will be set to true
-        # and when set will apply simplify, etc aggressively.  When "release"
-        # is False, optimize for fast iteration vs fastest model
         return FitModelState(
             name=self.name,
             history=self.history(),
