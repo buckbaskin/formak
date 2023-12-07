@@ -12,10 +12,6 @@ from formak import python, ui_model
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
 
-# TODO add testing for each of these classes, methods
-# TODO add typing for each of these classes, methods
-
-
 class ConfigView(python.Config):
     def __init__(self, params: Dict[str, Any]):
         self._params = params
@@ -108,7 +104,9 @@ class NisScore:
         # TODO(buck): implement scoring
         return 0.0
 
-PIPELINE_STAGE_NAME = 'kalman'
+
+PIPELINE_STAGE_NAME = "kalman"
+
 
 class FitModelState(StateMachineState):
     def __init__(
@@ -165,8 +163,6 @@ class FitModelState(StateMachineState):
             self.cross_validation_strategy = TimeSeriesSplit
 
         if self.scoring is None:
-            # TODO implement the scoring
-            # self.scoring = make_scorer(NisScore(), greater_is_better=False)
             self.scoring = NisScore()
 
         # auto_examples/model_selection/plot_grid_search_digits.html

@@ -23,7 +23,6 @@ def test_with_synthetic_data():
 
     initial_state = DesignManager(name="mercury")
 
-    # Q: No-discard but for python?
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
     # TODO make sure that behind the scenes unset parameters get reasonable defaults
@@ -52,12 +51,10 @@ def test_with_synthetic_data():
 def test_state_machine_interface():
     initial_state = DesignManager(name="mercury")
 
-    # TODO: make the state names enums
     assert initial_state.history() == ["Start"]
     assert initial_state.available_transitions() == ["symbolic_model"]
     assert initial_state.search("Fit Model") == ["symbolic_model", "fit_model"]
 
-    # Q: No-discard but for python?
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
     assert symbolic_model_state.history() == ["Start", "Symbolic Model"]
