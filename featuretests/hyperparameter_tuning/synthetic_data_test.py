@@ -25,7 +25,6 @@ def test_with_synthetic_data():
 
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
-    # TODO make sure that behind the scenes unset parameters get reasonable defaults
     fit_model_state = symbolic_model_state.fit_model(
         parameter_space={
             "process_noise": [process_noise],
