@@ -1,10 +1,15 @@
 import dataclasses
 import inspect
 from collections import namedtuple
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from sklearn.metrics import make_scorer
-from sklearn.model_selection import TimeSeriesSplit, cross_validate, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV,
+    TimeSeriesSplit,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.pipeline import Pipeline
 
 from formak import python, ui_model
@@ -98,8 +103,14 @@ class NisScore:
     def __init__(self):
         pass
 
-    def __call__(self, estimator: python.ExtendedKalmanFilter, X, y=None) -> float:
-        raise NotImplementedError("Implement scoring!")
+    def __call__(
+        self, estimator: Union[python.SklearnEKFAdapter, Pipeline], X, y=None
+    ) -> float:
+        score = estimator.score(X=X, y=y)
+
+        assert isinstance(score, float)
+
+        return score
 
 
 PIPELINE_STAGE_NAME = "kalman"
@@ -177,33 +188,68 @@ class FitModelState(StateMachineState):
             config=ConfigView({k: v[0] for k, v in self.parameter_space.items()}),
         )
 
-        pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
+        # pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
 
         ts_cv = TimeSeriesSplit(n_splits=5, gap=0)
 
         # Maybe useful: all_splits = ts_cv.split(X)
 
-        cv_scores = cross_validate(
-            estimator=pipeline,
-            X=X,
-            y=None,
-            cv=ts_cv,
+        # cv_scores = cross_validate(
+        #     estimator=pipeline,
+        #     X=X,
+        #     y=None,
+        #     cv=ts_cv,
+        #     scoring=self.scoring,
+        #     error_score="raise",
+        #     return_estimator=True,
+        #     return_train_score=True,
+        # )
+
+        grid_search = GridSearchCV(
+            # estimator=pipeline,
+            estimator=adapter,
+            param_grid=self.parameter_space,
             scoring=self.scoring,
+            cv=ts_cv,
             error_score="raise",
-            return_estimator=True,
             return_train_score=True,
         )
 
-        test_score, estimator, train_score = min(
-            zip(
-                cv_scores["test_score"],
-                cv_scores["estimator"],
-                cv_scores["train_score"],
-            ),
-            key=lambda k: (k[0], k[2]),
+        grid_search.fit(X=X, y=None)
+
+        test_scores = grid_search.cv_results_["mean_test_score"]
+        estimator_params = grid_search.cv_results_["params"]
+        train_scores = grid_search.cv_results_["mean_train_score"]
+
+        for idx, (test_score, estimator, train_score) in enumerate(
+            sorted(
+                zip(
+                    test_scores,
+                    estimator_params,
+                    train_scores,
+                ),
+                key=lambda k: (k[0], k[2]),
+            )
+        ):
+            print("\n--> Result", idx)
+            print(test_score, train_score)
+            print(
+                "innovation_filtering",
+                estimator.named_steps[PIPELINE_STAGE_NAME].config.innovation_filtering,
+            )
+
+            if idx >= 5:
+                break
+
+        print(
+            "innovation_filtering",
+            [
+                estimator.named_steps[PIPELINE_STAGE_NAME].config.innovation_filtering
+                for estimator in cv_scores["estimator"]
+            ],
         )
 
-        self.fit_estimator = estimator
+        self.fit_estimator = grid_search.best_estimator_
 
 
 class SymbolicModelState(StateMachineState):

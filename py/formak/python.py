@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
@@ -1046,9 +1047,26 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Set the parameters of this estimator.
     def set_params(self, **params) -> SklearnEKFAdapter:
+        # print("SklearnEKFAdapter.set_params")
+        # if "config" in params:
+        #     print(
+        #         "  - innovation_filtering:",
+        #         type(params["config"]),
+        #         params["config"].innovation_filtering,
+        #     )
+        # if 'innovation_filtering' in params:
+        #     print(
+        #         "  - innovation_filtering:",
+        #         params['innovation_filtering'],
+        #     )
+
         for key in params:
             if key in self.allowed_keys:
                 setattr(self, key, params[key])
+            elif key in dataclasses.asdict(self.config):
+                mutable_version = dataclasses.asdict(self.config)
+                mutable_version[key] = params[key]
+                self.config = Config(**mutable_version)
             else:
                 raise ModelConstructionError(
                     f"set_params called with invalid key {key}"
