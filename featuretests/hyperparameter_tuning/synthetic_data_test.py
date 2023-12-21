@@ -14,9 +14,12 @@ from model import (
     symbolic_model,
 )
 
+import numpy as np
 from data import generate_data
 from formak import ui
 
+
+np.seterr('raise')
 
 def test_with_synthetic_data():
     true_innovation = 5

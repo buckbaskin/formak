@@ -868,6 +868,16 @@ class SklearnEKFAdapter(BaseEstimator):
 
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
+        if np.any(innovations < 0.0):
+            for idx, (x, innovation) in enumerate(zip(X.flatten(), innovations.flatten())):
+                if (innovation < 0.0):
+                    print(idx, x, innovation, states[idx])
+            print('X')
+            print(X.flatten())
+            print('Innovations')
+            print(innovations.flatten())
+            raise AssertionError('innovations squared includes negative values')
+
         return innovations.flatten()
 
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
