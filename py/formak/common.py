@@ -1,7 +1,7 @@
 import abc
 import types
 from itertools import product
-from typing import Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 from formak.exceptions import ModelConstructionError
@@ -101,7 +101,7 @@ def model_validation(
 
 
 class _NamedArrayBase(abc.ABC):
-    def __init__(self, name, kwargs):
+    def __init__(self, name: str, kwargs: Dict[Any, Any]):
         self.name = name
         self._kwargs = kwargs
         self.data = None  # type: Optional[NDArray]

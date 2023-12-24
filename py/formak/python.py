@@ -391,7 +391,7 @@ class ExtendedKalmanFilter:
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
 
     def _construct_sensors(
-        self, state_model, sensor_models, sensor_noises, calibration_map, config
+        self, state_model, sensor_models, sensor_noises, calibration_map, config: Config
     ):
         assert set(sensor_models.keys()) == set(sensor_noises.keys())
         assert isinstance(sensor_noises, dict)
@@ -447,8 +447,8 @@ class ExtendedKalmanFilter:
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
-        self.innovations = {}
-        self.sensor_prediction_uncertainty = {}
+        self.innovations = {}  # type: Dict[str, NDArray]
+        self.sensor_prediction_uncertainty = {}  # type: Dict[str, NDArray]
 
     def make_reading(self, key, *, data=None, **kwargs):
         if len(kwargs) == 0 and data is not None:
@@ -869,14 +869,16 @@ class SklearnEKFAdapter(BaseEstimator):
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
 
         if np.any(innovations < 0.0):
-            for idx, (x, innovation) in enumerate(zip(X.flatten(), innovations.flatten())):
-                if (innovation < 0.0):
+            for idx, (x, innovation) in enumerate(
+                zip(X.flatten(), innovations.flatten())
+            ):
+                if innovation < 0.0:
                     print(idx, x, innovation, states[idx])
-            print('X')
+            print("X")
             print(X.flatten())
-            print('Innovations')
+            print("Innovations")
             print(innovations.flatten())
-            raise AssertionError('innovations squared includes negative values')
+            raise AssertionError("innovations squared includes negative values")
 
         return innovations.flatten()
 

@@ -1,6 +1,9 @@
 from enum import Enum
 
+import numpy as np
 from formak.ui import DesignManager, Model, Symbol
+
+from formak import python
 
 
 def test_model_simplification():
@@ -16,11 +19,11 @@ def test_ui_state_machine_ids_are_enums():
     assert isinstance(initial_state.state_id(), Enum)
     assert initial_state.state_id() == "Design Manager"  # will be replaced by enum
 
-    assert all((isinstance(k, Enum) for k in initial_state.available_transitions()))
-    assert all((isinstance(k, Enum) for k in initial_state.search("Fit Model")))
+    assert all(isinstance(k, Enum) for k in initial_state.available_transitions())
+    assert all(isinstance(k, Enum) for k in initial_state.search("Fit Model"))
 
 
-def test_fit_model_missing_parameter_defaults():
+def test_fit_model_missing_parameter_defaults() -> None:
     dt = Symbol("dt")
 
     tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
@@ -54,7 +57,7 @@ def test_fit_model_missing_parameter_defaults():
         data=[],
     )
 
-    result = fit_model_state.named_steps["kalman"].get_params()
+    result = fit_model_state.fit_estimator.named_steps["kalman"].get_params()
 
     # Expect that the model fits to sane defaults for the part of the parameter
     # space (all of it) that don't have values specified

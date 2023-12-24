@@ -40,3 +40,6 @@ tidy:
 
 pipsetup:
 	bash actions/pip_setup.bash
+
+mypy:
+	mypy $(ag --py  -g ".")

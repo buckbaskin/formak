@@ -1,4 +1,5 @@
-from common import ui_model
+from common_subexpression_elimination.common import ui_model
+
 from formak import cpp
 
 

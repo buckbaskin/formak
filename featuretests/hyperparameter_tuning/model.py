@@ -21,7 +21,7 @@ symbolic_model = ui.Model(
     state=state,
     control=control,
     state_model=state_model,
-    calibration=set([mass]),
+    calibration={mass},
 )
 
 process_noise = {thrust: 0.01}

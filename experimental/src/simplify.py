@@ -1,4 +1,5 @@
 import sys
+from typing import Iterable
 import numpy as np
 import functools
 import pstats
@@ -77,7 +78,7 @@ def decomposing_print(expr) -> None:
     print({"func": expr.func, "args": expr.args})
 
 
-def bottoms_up_traversal(expr, level=0) -> None:
+def bottoms_up_traversal(expr, level=0) -> Iterable[Expr]:
     # print('Descending', level, expr.func)
 
     for arg in expr.args:

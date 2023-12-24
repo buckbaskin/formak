@@ -245,7 +245,7 @@ class FitModelState(StateMachineState):
             "innovation_filtering",
             [
                 estimator.named_steps[PIPELINE_STAGE_NAME].config.innovation_filtering
-                for estimator in cv_scores["estimator"]
+                for estimator in estimator_params
             ],
         )
 

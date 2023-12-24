@@ -5,6 +5,7 @@ Demonstrate tuning a model for two different innovation filtering hyper-paramete
 """
 
 
+import numpy as np
 from formak.ui import DesignManager
 from model import (
     calibration_map,
@@ -14,12 +15,11 @@ from model import (
     symbolic_model,
 )
 
-import numpy as np
 from data import generate_data
 from formak import ui
 
+np.seterr("raise")
 
-np.seterr('raise')
 
 def test_with_synthetic_data():
     true_innovation = 5
