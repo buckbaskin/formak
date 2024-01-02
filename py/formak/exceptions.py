@@ -30,3 +30,8 @@ class ModelDefinitionError(FormakBaseException):
 # Python / C++ Compiled Model
 class ModelConstructionError(FormakBaseException):
     pass
+
+
+# UI State Machine
+class ModelFitError(FormakBaseException):
+    pass

@@ -5,7 +5,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any
+from typing import Any, Dict
 
 import numpy as np
 from formak.exceptions import MinimizationFailure, ModelConstructionError

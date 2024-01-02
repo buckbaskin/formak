@@ -3,6 +3,7 @@ import inspect
 from collections import namedtuple
 from typing import Any, Dict, List, Optional, Union
 
+from formak.exceptions import ModelFitError
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import (
     GridSearchCV,
@@ -100,13 +101,11 @@ class StateMachineState:
 
 
 class NisScore:
-    def __init__(self):
-        pass
+    def __init__(self, estimator: Union[python.SklearnEKFAdapter, Pipeline]):
+        self.estimator = estimator
 
-    def __call__(
-        self, estimator: Union[python.SklearnEKFAdapter, Pipeline], X, y=None
-    ) -> float:
-        score = estimator.score(X=X, y=y)
+    def __call__(self, X, y=None) -> float:
+        score = self.estimator.score(X=X, y=y)
 
         assert isinstance(score, float)
 
@@ -168,14 +167,18 @@ class FitModelState(StateMachineState):
         if self.cross_validation_strategy is None:
             self.cross_validation_strategy = TimeSeriesSplit
 
-        if self.scoring is None:
-            self.scoring = NisScore()
-
         # auto_examples/model_selection/plot_grid_search_digits.html
         # auto_examples/compose/plot_compare_reduction.html
 
         # NOTE: no labels here, clustering/unsupervised classification
         X = self.data
+
+        n_samples = len(X)
+        if n_samples < 2:
+            raise ModelFitError(
+                "Model fitting requires at least two samples for the train-test split. %d samples provided"
+                % (n_samples,)
+            )
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
 
@@ -187,6 +190,9 @@ class FitModelState(StateMachineState):
             calibration_map=self.parameter_space["calibration_map"][0],
             config=ConfigView({k: v[0] for k, v in self.parameter_space.items()}),
         )
+
+        if self.scoring is None:
+            self.scoring = NisScore(estimator=adapter)
 
         # pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
 

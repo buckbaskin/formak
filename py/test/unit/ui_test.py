@@ -1,7 +1,8 @@
 from enum import Enum
+from typing import Dict
 
 import numpy as np
-from formak.ui import DesignManager, Model, Symbol
+from formak.ui import DesignManager, Model, NisScore, Symbol
 
 from formak import python
 
@@ -54,7 +55,7 @@ def test_fit_model_missing_parameter_defaults() -> None:
     # Called with default parameters, empty data
     fit_model_state = symbolic_model_state.fit_model(
         parameter_space={},
-        data=[],
+        data=[0, 0],
     )
 
     result = fit_model_state.fit_estimator.named_steps["kalman"].get_params()
@@ -70,15 +71,27 @@ def test_fit_model_missing_parameter_defaults() -> None:
 
 
 def test_non_zero_nis_score():
-    scoring_function = NisScore()
+    dt = Symbol("dt")
+
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
+
+    thrust = Symbol("thrust")
+
+    state = set(tp.values())
+    control = {thrust}
+
+    state_model = {
+        tp["mass"]: tp["mass"],
+        tp["z"]: tp["z"] + dt * tp["v"],
+        tp["v"]: tp["v"] + dt * tp["a"],
+        tp["a"]: -9.81 * tp["mass"] + thrust,
+    }
+
+    symbolic_model = Model(dt=dt, state=state, control=control, state_model=state_model)
+    adapter = python.SklearnEKFAdapter(
+        symbolic_model=symbolic_model,
+    )
+
+    scoring_function = NisScore(estimator=adapter)
 
     assert scoring_function(X=np.ones((1, 1))) != 0.0
-
-
-class NisScore:
-    def __init__(self):
-        pass
-
-    def __call__(self, estimator: python.ExtendedKalmanFilter, X, y=None) -> float:
-        # TODO(buck): implement scoring
-        return 0.0
