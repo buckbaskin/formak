@@ -1,6 +1,7 @@
 import dataclasses
 import inspect
 from collections import namedtuple
+from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Union
 
 from formak.exceptions import ModelFitError
@@ -16,6 +17,11 @@ from sklearn.pipeline import Pipeline
 from formak import python, ui_model
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
+
+
+class StateId(Enum):
+    Start = 0
+    Sensor0 = auto()
 
 
 class ConfigView(python.Config):
@@ -49,24 +55,24 @@ class ConfigView(python.Config):
 
 
 class StateMachineState:
-    def __init__(self, name: str, history: List[str]):
+    def __init__(self, name: str, history: List[StateId]):
         self.name = name
         self._history = history
 
     @classmethod
-    def state_id(cls) -> str:
+    def state_id(cls) -> StateId:
         raise NotImplementedError()
 
-    def history(self) -> List[str]:
+    def history(self) -> List[StateId]:
         return self._history
 
     @classmethod
-    def available_transitions(cls) -> List[str]:
+    def available_transitions(cls) -> List[StateId]:
         raise NotImplementedError()
 
     def search(
         self, end_state: str, *, max_iter: int = 100, debug: bool = True
-    ) -> List[str]:
+    ) -> List[StateId]:
         """Breadth First Search of state transitions."""
         frontier = [SearchState(self, [])]
 
@@ -119,7 +125,7 @@ class FitModelState(StateMachineState):
     def __init__(
         self,
         name: str,
-        history: List[str],
+        history: List[StateId],
         model: ui_model.Model,
         parameter_space,
         parameter_sampling_strategy,
@@ -149,11 +155,11 @@ class FitModelState(StateMachineState):
         self._fit_model_impl()
 
     @classmethod
-    def state_id(cls) -> str:
-        return "Fit Model"
+    def state_id(cls) -> StateId:
+        return StateId.Fit_Model
 
     @classmethod
-    def available_transitions(cls) -> List[str]:
+    def available_transitions(cls) -> List[StateId]:
         return []
 
     def export_python(self) -> python.ExtendedKalmanFilter:
@@ -259,16 +265,16 @@ class FitModelState(StateMachineState):
 
 
 class SymbolicModelState(StateMachineState):
-    def __init__(self, name: str, history: List[str], model: ui_model.Model):
+    def __init__(self, name: str, history: List[StateId], model: ui_model.Model):
         super().__init__(name=name, history=history + [self.state_id()])
         self.model = model
 
     @classmethod
-    def state_id(cls) -> str:
-        return "Symbolic Model"
+    def state_id(cls) -> StateId:
+        return StateId.Symbolic_Model
 
     @classmethod
-    def available_transitions(cls) -> List[str]:
+    def available_transitions(cls) -> List[StateId]:
         return ["fit_model"]
 
     def fit_model(
@@ -309,12 +315,12 @@ class DesignManager(StateMachineState):
         super().__init__(name=name, history=[self.state_id()])
 
     @classmethod
-    def state_id(cls) -> str:
-        return "Start"
+    def state_id(cls) -> StateId:
+        return StateId.Start
 
     @classmethod
-    def available_transitions(cls) -> List[str]:
-        return ["symbolic_model"]
+    def available_transitions(cls) -> List[StateId]:
+        return [StateId.Symbolic_Model]
 
     def symbolic_model(self, model: ui_model.Model) -> SymbolicModelState:
         return SymbolicModelState(name=self.name, history=self.history(), model=model)

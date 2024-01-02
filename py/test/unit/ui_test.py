@@ -3,6 +3,7 @@ from typing import Dict
 
 import numpy as np
 from formak.ui import DesignManager, Model, NisScore, Symbol
+from formak.ui_state_machine import StateId
 
 from formak import python
 
@@ -18,7 +19,7 @@ def test_model_simplification():
 def test_ui_state_machine_ids_are_enums():
     initial_state = DesignManager(name="mercury")
     assert isinstance(initial_state.state_id(), Enum)
-    assert initial_state.state_id() == "Design Manager"  # will be replaced by enum
+    assert initial_state.state_id() == StateId.Start
 
     assert all(isinstance(k, Enum) for k in initial_state.available_transitions())
     assert all(isinstance(k, Enum) for k in initial_state.search("Fit Model"))
