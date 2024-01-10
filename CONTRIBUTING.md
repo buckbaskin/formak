@@ -8,7 +8,14 @@ PRs can be submitted for new functionality. They will be reviewed as soon as tim
 
 ## Documentation
 
-Work in progress
+Install dev dependencies
+
+Build the documentation
+
+```
+cd docs/
+make html
+```
 
 ## Code Contributions
 
