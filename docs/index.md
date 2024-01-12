@@ -1,10 +1,12 @@
 # FormaK
 
-FormaK provides the tooling so that you can easily derive Python and C++
-implementations for models that best match your data given the constraints,
-models that are fast and models that can be generated with automation. FormaK
-aims to combine symbolic modeling for fast, efficient system modelling with
-code generation to create performant code that is easy to use.
+FormaK builds fast, reliable, easy to use state estimation.
+
+FormaK is tooling to easily derive Python and C++ implementations of models
+based on your data (or even before you have data). The models are fast and are
+generated with automation to help you generate and maintain them. FormaK uses
+symbolic mathematics for fast, efficient system modelling and applies compiler
+techniques to code generation to create performant code that is easy to use.
 
 The values of the FormaK project (in order) are:
 
@@ -12,8 +14,6 @@ The values of the FormaK project (in order) are:
 - Performant
 
 FormaK is open source and uses the MIT license.
-
-<strong>Sign up for email updates at https://tinyletter.com/formak</strong>
 
 If you'd like to jump in to using FormaK: [Getting Started](getting-started.html)
 
