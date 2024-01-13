@@ -13,7 +13,7 @@ author = "Buck Baskin"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser"]
+extensions = ["myst_parser", "autodoc2"]
 
 myst_enable_extensions = [
     "amsmath",
@@ -23,6 +23,8 @@ myst_enable_extensions = [
     "tasklist",
 ]
 myst_heading_anchors = 2 # h1, h2
+
+autodoc2_packages = ["../py/formak/"]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "v/*"]
