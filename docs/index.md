@@ -22,7 +22,7 @@ The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/
 ## Table of Contents
 
 ```{toctree}
-  :maxdepth: 2
+  :maxdepth: 1
 
 getting-started
 development-status

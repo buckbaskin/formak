@@ -1,6 +1,6 @@
 # AST Tools
 
-# For Users
+## For Users
 
 Start with either a `HeaderFile` or `SourceFile`, along with at least one
 `namespace`.
@@ -12,7 +12,7 @@ If you don't think something is supported, I'd recommend starting with
 `FromFileTemplate`. If you need to insert an arbitrary string, you can pass it
 wrapped via `Escape`.
 
-# For Contributors
+## For Contributors
 
 Every class should inherit from BaseAst
 

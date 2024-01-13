@@ -1,6 +1,6 @@
 # Design Documentation
 ```{toctree}
-  :maxdepth: 2
+  :maxdepth: 1
 
 calibration.md
 cpp_library_for_model_evaluation.md
