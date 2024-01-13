@@ -118,3 +118,11 @@ python_implementation = python.compile(orbital_model)
 - Clang-12 / C++17
 - Python3
 - pip
+
+## Contacts
+
+Have a question?
+
+- Reach out on Mastodon: [@formak](https://fosstodon.org/@formak)
+- Create a [Github Issue](https://github.com/buckbaskin/formak/issues/new)
+- Email the author: [formak.open.source@gmail.com](mailto:formak.open.source@gmail.com)
