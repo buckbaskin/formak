@@ -1,11 +1,11 @@
 # Common Subexpression Elimination
 
-Author: Buck Baskin @buck@fosstodon.org
-Created: 2023-06-15
-Updated: 2023-06-25
-Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
-See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
-Status: Merged
+:Author: Buck Baskin @buck@fosstodon.org
+:Created: 2023-06-15
+:Updated: 2023-06-25
+:Parent Design: [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
+:See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
+:Status: Merged
 
 ## Overview
 

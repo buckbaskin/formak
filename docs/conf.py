@@ -18,6 +18,7 @@ extensions = ["myst_parser", "autodoc2"]
 myst_enable_extensions = [
     "amsmath",
     "dollarmath",
+    "fieldlist",
     "linkify",
     "strikethrough",
     "tasklist",

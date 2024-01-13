@@ -1,11 +1,11 @@
 # Python Library for Model Evaluation
 
-Author: Buck Baskin @buck@fosstodon.org
-Created: 2022-08-26
-Updated: 2022-09-13
-Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
-See Also: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
-Status: Merged
+:Author: Buck Baskin @buck@fosstodon.org
+:Created: 2022-08-26
+:Updated: 2022-09-13
+:Parent Design: [designs/formak_v0.md](../designs/formak_v0.md)
+:See Also: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
+:Status: Merged
 
 ## Overview
 
