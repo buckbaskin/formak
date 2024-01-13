@@ -15,11 +15,27 @@ The values of the FormaK project (in order) are:
 
 FormaK is open source and uses the MIT license.
 
-If you'd like to jump in to using FormaK: [Getting Started](getting-started.html)
+If you'd like to jump in to using FormaK: [Getting Started](getting-started)
 
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
-### The Persona
+## Table of Contents
+
+```{toctree}
+  :maxdepth: 2
+
+getting-started
+development-status
+thinking-with-formak
+whats-new
+runtime
+mathematical-glossary
+
+formak/index
+designs/index
+```
+
+## The Persona
 
 Who is this for?
 
@@ -37,7 +53,7 @@ On the flip side, a user with more familiarity of the modelling process or the
 FormaK tool should be able to use more advanced features and select
 configuration that better matches their use case.
 
-### The Five Keys
+## The Five Keys
 
 In line with the values and the intended user, the intended user experience is
 as follows. The user provides:
