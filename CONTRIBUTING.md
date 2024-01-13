@@ -20,6 +20,9 @@ FormaK is open to all levels of developers; however, the project is undergoing
 active development and the contribution process is organized to enable that
 active evolution. If you're interested in contributing, please get in touch.
 
+Everyone participating in the FormaK project is expected to follow the [Code of
+Conduct](./CODE_OF_CONDUCT.md)
+
 ## Reporting Bugs
 
 Please report bugs in the [bug
@@ -68,8 +71,8 @@ Keys](https://github.com/buckbaskin/formak/blob/main/docs/designs/formak_v0.md#t
 
 
 
-# Credits
+## Attribution
 
 Language on this page is based on the ["Get
 Involved"](https://wiki.documentfoundation.org/Development/GetInvolved) page of
-LibreOffice.
+LibreOffice with modifications.
