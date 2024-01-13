@@ -25,6 +25,8 @@ The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/
   :maxdepth: 1
 
 getting-started
+faq
+
 development-status
 thinking-with-formak
 whats-new
