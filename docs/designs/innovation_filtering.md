@@ -1,10 +1,10 @@
 # Innovation Filtering
 
-Author: Buck Baskin @buck@fosstodon.org
-Created: 2023-08-04
-Updated: 2023-09-19
-Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
-See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
+:Author: Buck Baskin @buck@fosstodon.org
+:Created: 2023-08-04
+:Updated: 2023-09-19
+:Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
+:See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/cpp_library_for_model_evaluation.md](../designs/cpp_library_for_model_evaluation.md)
 
 
 ## Overview

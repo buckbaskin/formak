@@ -60,8 +60,8 @@ adding sensors at known positions.
 Other Improvements:
 - Performance for the `ui.Model` and code generation flows is much improved
 
-Calibration Design: [designs/calibration.md](../designs/calibration.md)
-Getting Started: [getting-started.md](getting-started.md)
+Calibration Design: [designs/calibration.md](../designs/calibration)
+Getting Started: [getting-started.md](getting-started)
 
 ## 2023-04-10 C++ Source for Models
 

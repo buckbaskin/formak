@@ -1,9 +1,9 @@
 # Reference Model: Strapdown IMU
 
-Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
-Created: 2023-09-19
-Updated: 2023-10-29
-Parent Design: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
+:Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
+:Created: 2023-09-19
+:Updated: 2023-10-29
+:Parent Design: [designs/python_ui_demo.md](../designs/python_ui_demo.md)
 
 
 ## Overview
