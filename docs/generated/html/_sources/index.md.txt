@@ -17,7 +17,8 @@ The values of the FormaK project (in order) are:
 
 FormaK is open source and uses the MIT license.
 
-If you'd like to jump in to using FormaK: [Getting Started](getting-started)
+If you'd like to jump in to using FormaK: [Getting Started](getting-started) or
+access the full [Documentation](index)
 
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
@@ -34,6 +35,13 @@ thinking-with-formak
 whats-new
 runtime
 mathematical-glossary
+```
+
+Developer documentation is contained in the `formak/` subdirectory.
+Documentation of design decisions are contained in the `designs/` directory.
+
+```{toctree}
+  :maxdepth: 1
 
 formak/index
 designs/index
