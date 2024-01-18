@@ -35,5 +35,7 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
       - name: Check for changes to docs. Relies on empty being falsey
-        run: git diff --name-only ${{ steps.extract_branch.outputs.branch }} $(git merge-base ${{ steps.extract_branch.outputs.branch }} origin/main) | grep "^docs" | grep -v "^docs/designs/"
+        run: git diff --name-only ${{ steps.extract_branch.outputs.branch }} $(git merge-base ${{ steps.extract_branch.outputs.branch }} origin/main) | grep "^docs" | grep -v "^docs/designs/" | grep -v "^docs/generated/"
       - run: echo "🍏 This job's status is ${{ job.status }}."
+      - run: cd docs/ ; make html
+      - run: git diff
