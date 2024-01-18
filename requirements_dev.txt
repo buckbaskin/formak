@@ -13,5 +13,5 @@ pre-commit
 pydocstringformatter
 pylint
 pyupgrade
-sphinx>=2.1
+sphinx==7.1.2
 sphinx-autodoc2
