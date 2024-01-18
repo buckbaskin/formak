@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Common Subexpression Elimination &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FormaK V0" href="formak_v0.html" />
+    <link rel="prev" title="C++ Library for Model Evaluation" href="cpp_library_for_model_evaluation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cpp_library_for_model_evaluation.html" title="C++ Library for Model Evaluation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Common Subexpression Elimination</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="common-subexpression-elimination">
+<h1>Common Subexpression Elimination<a class="headerlink" href="#common-subexpression-elimination" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-06-15</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-06-25</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cpp_library_for_model_evaluation.html"><span class="std std-doc">designs/cpp_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design provides an extension to the second of the Five Keys “Python
+implementation of the model…” and the fifth of the Five Keys “C++ interfaces
+to support a variety of model uses” to support the performance goals of the
+library: Common Subexpresion Elimination (CSE).</p>
+<p>CSE is a transformation on the compute graph of the underlying model (for
+either Python or C++) to remove duplicate compuation at multiple scales. For
+example, if a sensor model computes <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">+</span> <span class="pre">b</span></code> multiple times, CSE identifies this
+subexpression and computes it once. This could also apply to a more complicated
+expression like <code class="docutils literal notranslate"><span class="pre">9.81</span> <span class="pre">*</span> <span class="pre">sin(theta</span> <span class="pre">+</span> <span class="pre">bias)</span></code>.</p>
+<p>One of the nicest benefits of this transformation is that it will provide a
+performance benefit to the model without a compromise to the user interface.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The basic approach will be to apply <code class="docutils literal notranslate"><span class="pre">sympy</span></code>’s common subexpression elimination
+implementation to the sympy model before generating the output. This will be an
+overhaul of both the Python and C++ implementations, but for different reasons.
+The C++ implementation doesn’t do any CSE now. The Python implementation is
+more subtle. Currently the CSE algorithm is applied for each field of the
+sensor model, but the correct full process is to eliminate subexpressions
+across all fields. This should offer improved performance (and at least no
+regression in performance).</p>
+<p>The key classes in the implementation are:</p>
+<ul class="simple">
+<li><p>Basic Block: Basic Block wraps uninterrupted sequences of assignments, so CSE can be applied across all assignments in the CSE (as long as the output is ordered so all sub-expressions are computed before they are used). The Python implementation may also adopt the Basic Block pattern.</p></li>
+<li><p>Config: Adding/Updating a new feature flag for CSE</p></li>
+</ul>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>The feature tests for this design are based on generating models with many
+common subexpressions, then comparing the performance of the model with and
+without CSE.</p>
+<ul class="simple">
+<li><p>Generate a tree of <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">sin(l</span> <span class="pre">*</span> <span class="pre">r)</span> <span class="pre">*</span> <span class="pre">cos(l</span> <span class="pre">*</span> <span class="pre">r)</span></code></p></li>
+<li><p>At its leaves, <code class="docutils literal notranslate"><span class="pre">l</span></code> and <code class="docutils literal notranslate"><span class="pre">r</span></code> are input symbols</p></li>
+<li><p>At the inner nodes, <code class="docutils literal notranslate"><span class="pre">l</span></code> and <code class="docutils literal notranslate"><span class="pre">r</span></code> are left and right subexpressions in the above pattern</p></li>
+</ul>
+<p>In each feature test, the time to execute should grown in log(N) where N is the
+number of nodes for the CSE implementation; however, without CSE it should grow
+proportional to N. This should be a 10x performance improvement for between 30
+and 40 nodes. In practice it may take more nodes to demonstrate a difference if
+the compute time is small for all cases.</p>
+<p>In unit testing, the difference can be more precisely tested by generating a
+common subexpression then asserting it gets removed in the output.</p>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Common Subexpression Elimination</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a></li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="cpp_library_for_model_evaluation.html"
+                          title="previous chapter">C++ Library for Model Evaluation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="formak_v0.html"
+                          title="next chapter">FormaK V0</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/cse.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cpp_library_for_model_evaluation.html" title="C++ Library for Model Evaluation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Common Subexpression Elimination</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

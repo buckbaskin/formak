@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thinking With FormaK &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="What’s New" href="whats-new.html" />
+    <link rel="prev" title="Development Status" href="development-status.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="whats-new.html" title="What’s New"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="development-status.html" title="Development Status"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Thinking With FormaK</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="thinking-with-formak">
+<h1>Thinking With FormaK<a class="headerlink" href="#thinking-with-formak" title="Permalink to this heading">¶</a></h1>
+<p>Before getting started with FormaK, it can be helpful to know some of the
+concepts that will come up and how FormaK thinks about the problem space.</p>
+<p>FormaK helps take a model from concept stage to production. This is done by
+taking the model through different stages of development.</p>
+<ol class="arabic simple">
+<li><p>Model definition - detailed model of features that represents a space of possible models</p></li>
+<li><p>Model optimization - fit against data to select parameters</p></li>
+<li><p>Model compilation - compile to Python or C++</p></li>
+<li><p>Model calibration</p></li>
+<li><p>Model runtime</p></li>
+</ol>
+<p>For an Model, there are 4 inter-related concepts at play:</p>
+<ul class="simple">
+<li><p>Model Definition: How does the state evolve over time?</p></li>
+<li><p>State: estimated at runtime based on incoming sensor information</p></li>
+<li><p>Calibration: provided once at the start of runtime</p></li>
+<li><p>Control: provided as truth during runtime as the state evolves over time</p></li>
+</ul>
+<p>An EKF adds:</p>
+<ul class="simple">
+<li><p>Process Model definition (see Model Definition)</p>
+<ul>
+<li><p>Process Noise: How much variability do we expect around our control input?</p></li>
+</ul>
+</li>
+<li><p>Sensor Models: How does the state relate to incoming sensor data?</p>
+<ul>
+<li><p>Sensor Noise: How much variability do we expect for the incoming sensor data?</p></li>
+</ul>
+</li>
+</ul>
+<p>How do these relate to each other?</p>
+<ul class="simple">
+<li><p>A State can be calculated online or set to a pre-determined parameter as a Calibration</p></li>
+<li><p>A Control can be provided online or set to a pre-determined parameter as a Calibration</p></li>
+<li><p>A Control can not be used as part of a sensor model. If you want to use a Control as a sensor model, it should be added to the State and the process model sets the State equal to the Control</p></li>
+</ul>
+<p>Note: Usually these will be referred to as a state vector or a control vector;
+however, in FormaK the exact representation can be changed under the hood so
+the State, Control, etc are just sets of symbols in a common concept
+collection. Examples of internal representation changes include: re-ordering
+the states, representing the states in a non-vector format, augmenting the
+state vector or simplifying the state vector.</p>
+<ul class="simple">
+<li><p>If you want to access part or all of the State at runtime, define a sensor model to return that state member. This will allow you to access the state regardless of if the underlying state representation changes.</p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="development-status.html"
+                          title="previous chapter">Development Status</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="whats-new.html"
+                          title="next chapter">What’s New</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/thinking-with-formak.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="whats-new.html" title="What’s New"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="development-status.html" title="Development Status"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Thinking With FormaK</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>C++ Library for Model Evaluation &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Common Subexpression Elimination" href="cse.html" />
+    <link rel="prev" title="Calibration" href="calibration.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="calibration.html" title="Calibration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">C++ Library for Model Evaluation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="c-library-for-model-evaluation">
+<h1>C++ Library for Model Evaluation<a class="headerlink" href="#c-library-for-model-evaluation" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-01-08</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-04-05</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="formak_v0.html"><span class="std std-doc">designs/formak_v0.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The values (in order) are:</p>
+<ul class="simple">
+<li><p>Easy to use</p></li>
+<li><p>Performant</p></li>
+</ul>
+<p>The Five Key Elements the library provides to achieve this (see parent) are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design provides the initial implementation of fifth of the Five Keys
+“C++ interfaces to support a variety of model uses”.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The basic step will be to translate from Sympy to C++. Sympy provides this
+functionality as one of two systems: code printers and code generators. To
+enable additional customization, the initial implementation will use the code
+printers with templating instead of the code generators (which provide
+additional functionality at the expense of additional constraints).</p>
+<p>The follow on work to refactor will be important in
+order to make sure that the library remains easy to use. This will include
+cleaning up the Python and C++ templates as well as using a Bazel macro to make
+the C++ generation a unified rule instead of hand-rolling multiple rules.</p>
+<p>The key classes in the implementation are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>: User interface class encapsulating the information required to
+define the model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cpp.Model</span></code>: (new) Class encapsulating the model for generating a model
+in C++</p></li>
+</ul>
+<p>The key output classes will be:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Model</span></code>: C++ header and source file corresponding to the implementation of the model. Generated with a namespace and name customization</p></li>
+</ul>
+<section id="tooling">
+<h3>Tooling<a class="headerlink" href="#tooling" title="Permalink to this heading">¶</a></h3>
+<p>Along with the <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Model</span></code> implementation, also provide an Extended Kalman Filter
+implementation to quantify variance (based on best fit of a Kalman Filter to
+data) and outliers (innovation as a function of variance).</p>
+<p>The key classes involved are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cpp.Model</span></code>: (new) Class encapsulating the model for running a model efficiently in C++</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cpp.ExtendedKalmanFilter</span></code>: (new)</p>
+<ul>
+<li><p>Constructor should accept state type, state to state process model (<code class="docutils literal notranslate"><span class="pre">py.Model</span></code>? <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>?), process noise, sensor types, state to sensor models, sensor noise</p></li>
+<li><p>Process Model Function: take in current state, current variance, dt/update time. Return new state, new variance</p></li>
+<li><p>Sensor Model Function: take in current state, current variance, sensor id, sensor reading</p></li>
+</ul>
+</li>
+</ul>
+<p>These two classes will likely share a lot under the hood because they both want
+to run C++ efficiently; however, they’ll remain independent classes to start
+for a separation of concerns. These two classes will also share an interface
+with the Python implementation as much as is reasonable to provide easier
+interopoeration between the two languages (for Key Element #4)</p>
+</section>
+<section id="sympy">
+<h3>Sympy<a class="headerlink" href="#sympy" title="Permalink to this heading">¶</a></h3>
+<p>Key Features used from Sympy that should translate across both Python and C++ implementations:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/utilities/lambdify.html#sympy.utilities.lambdify.lambdify">lambdify</a></p></li>
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/simplify/simplify.html#sympy.simplify.cse_main.cse">common subexpression elimination</a></p></li>
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrices.MatrixCalculus.jacobian">jacobian</a></p></li>
+</ul>
+</section>
+<section id="math">
+<h3>Math<a class="headerlink" href="#math" title="Permalink to this heading">¶</a></h3>
+<p>Following the EKF math from Probabilistic Robotics</p>
+<ul class="simple">
+<li><p>S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.</p></li>
+</ul>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>This feature is specific to the C++ interface. There will be two feature tests:</p>
+<ol class="arabic simple">
+<li><p>UI -&gt; C++: Simple 2D model of a parabolic trajectory converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">cpp.Model</span></code></p></li>
+<li><p>Tooling: Simple 2D model of a parabolic trajectory converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">cpp.ExtendedKalmanFilter</span></code></p></li>
+</ol>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-04-05<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>This deisgn took way longer to implement than I’d hoped. I’m going to instead
+aim for designs that should take about a month and then review after the fact.
+In this case, I’m off by a factor of 3…</p>
+<section id="design-changes-code">
+<h4>Design Changes - Code<a class="headerlink" href="#design-changes-code" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Complete rewrite of C++ interface for EKF</p></li>
+<li><p>Implementation patterns for EKF</p></li>
+<li><p>Iterated on multiple code patterns for generating C++</p></li>
+<li><p>Long list of TODOs for internal improvements but shipping for now</p></li>
+<li><p>C++ stats header</p></li>
+<li><p>Not using common subexpression elimination yet for C++ generation</p></li>
+<li><p>Skipped EKF math for probability of each reading</p></li>
+<li><p>Added new checks for “model collapse” to zero covariance with sympy solve (nonlinsolve)</p></li>
+<li><p>Changed of process noise definition to match process definition with keys instead of indexing</p></li>
+<li><p>Refactored for common functions across py/cpp, model/EKF</p></li>
+<li><p>Spent lots of time making generated whitespace look nicer</p></li>
+<li><p>Never found a satisfying mix of Jinja template vs Python codegen</p></li>
+</ul>
+</section>
+<section id="design-changes-tooling">
+<h4>Design Changes - Tooling<a class="headerlink" href="#design-changes-tooling" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>docs diff for Github Actions</p></li>
+<li><p>precommit as a tool</p></li>
+<li><p>bazel rule to automate C++ generation</p></li>
+<li><p>py modernize tooling</p>
+<ul>
+<li><p>format strings</p></li>
+<li><p>yield from</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="some-things-i-learned-i-didn-t-know">
+<h4>Some Things I Learned I Didn’t Know<a class="headerlink" href="#some-things-i-learned-i-didn-t-know" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>C++ toolchains in bazel</p></li>
+<li><p>Managing Docker containers and cleanup doing edit-run-observe-kill loop</p></li>
+<li><p>clang-tidy in bazel</p></li>
+<li><p>Mental model of bazel</p></li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">C++ Library for Model Evaluation</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#tooling">Tooling</a></li>
+<li><a class="reference internal" href="#sympy">Sympy</a></li>
+<li><a class="reference internal" href="#math">Math</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-04-05</a><ul>
+<li><a class="reference internal" href="#design-changes-code">Design Changes - Code</a></li>
+<li><a class="reference internal" href="#design-changes-tooling">Design Changes - Tooling</a></li>
+<li><a class="reference internal" href="#some-things-i-learned-i-didn-t-know">Some Things I Learned I Didn’t Know</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="calibration.html"
+                          title="previous chapter">Calibration</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="cse.html"
+                          title="next chapter">Common Subexpression Elimination</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/cpp_library_for_model_evaluation.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="calibration.html" title="Calibration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">C++ Library for Model Evaluation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

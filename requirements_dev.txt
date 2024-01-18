@@ -11,7 +11,9 @@ myst-parser
 pip-tools
 pre-commit
 pydocstringformatter
+Pygments==2.17.2
 pylint
 pyupgrade
-sphinx>=2.1
-sphinx-autodoc2
+sphinx==7.1.2
+sphinx-autodoc2==0.5.0
+sphinxcontrib-htmlhelp==2.0.1

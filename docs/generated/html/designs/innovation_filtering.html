@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Innovation Filtering &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Python Library for Model Evaluation" href="python_library_for_model_evaluation.html" />
+    <link rel="prev" title="Generate C++ from AST" href="generate_cpp_from_ast.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_library_for_model_evaluation.html" title="Python Library for Model Evaluation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Innovation Filtering</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="innovation-filtering">
+<h1>Innovation Filtering<a class="headerlink" href="#innovation-filtering" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-08-04</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-09-19</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="sklearn-integration.html"><span class="std std-doc">designs/sklearn-integration.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a>, <a class="reference internal" href="cpp_library_for_model_evaluation.html"><span class="std std-doc">designs/cpp_library_for_model_evaluation.md</span></a></p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design focuses on “Integration to scikit-learn to leverage the model
+selection and parameter tuning functions”. The end result will be updates to
+Python and C++ models, but the primary effort will be improving the
+scikit-learn tooling. The current implementation provides some of the math for
+the EKF (process update, sensor update); however, that leaves the models open
+to spurious readings. In the current implementation, if a FormaK filter gets a
+reading that is almost infinite, say 1e300, the response of the filter will be
+proportional and the response will cause the EKF to diverge as one or more of
+the states jump to positive infinity. This creates a gap in the filter that
+violates one of the FormaK values: easy to use (perhaps in this case it’s
+helpful to think of this as easy to use <em>correctly</em>).</p>
+<p>This problem is known as jump detection. As the filter considers a sensor
+update the filter measures the divergence of the reading from what the model
+expects and then can reject readings with a divergence that is too large to be
+acceptable.</p>
+<p>How should the filter measure this divergence? The filter can use the
+measurement innovation $<span class="math notranslate nohighlight">\(\tilde{z} = z_{t} - \hat{z_{t}}\)</span><span class="math notranslate nohighlight">\( where \)</span>z_{t}<span class="math notranslate nohighlight">\( is the
+measurement, \)</span>\hat{z_{t}}<span class="math notranslate nohighlight">\( the predicted reading and \)</span>\tilde{z}<span class="math notranslate nohighlight">\( is the
+resulting innovation. Given the innovation, the definition of too large can be
+calculated from the expected covariance: \)</span><span class="math notranslate nohighlight">\(\tilde{z}^{T} S^{-1} \tilde{z} - m &gt;
+k \sqrt{2m}\)</span><span class="math notranslate nohighlight">\( where \)</span>S<span class="math notranslate nohighlight">\( is the expected covariance of the measurement, \)</span>m<span class="math notranslate nohighlight">\( is
+the dimension of the measurement vector and \)</span>k$ is the editing threshold. If
+this inequality is true, then the measurement is “too large” and should be
+filtered (edited). [1] [2]</p>
+<p>[1] This approach to innovation filtering, referred to as editing in the text,
+is adapted from “Advanced Kalman Filtering, Least Squares and Modeling” by
+Bruce P. Gibbs (referred to as [1] or AKFLSM)
+[2] The notion follows the conventioned defined in the
+<a class="reference internal" href="../mathematical-glossary.html"><span class="std std-doc">Mathematical Glossary</span></a> which itself is based on
+“Probabilistic Robotics” by Thrun et al.</p>
+<p>Innovations take advantage of the property that errors are white (normally
+distributed) when all models are correct and, when operating in steady state,
+most variation in the sensor reading is expected to come from the noise in the
+sensor instead of noise in the state. Intuitively, if the sensor is
+consistently providing low variance updates, the state should converge further
+based on that information until the noise in the state relative to the sensor
+is low.</p>
+<p>By implementing innovation filtering, the filter will become much more robust
+to errors in the sensor, the model and the overall system. By hooking into
+values that are already calculated as part of the sensor update there should be
+minimal additional performance cost.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The primary class of interest will be the Extended Kalman Filter (EKF)
+implementation and revising the sensor update specifically. This change won’t
+require a large change to the structure of the EKF generation in Python or C++,
+but it will be fairly math heavy to ensure the changes are working as intended.</p>
+<section id="id1">
+<h3>Innovation Filtering<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<section id="math">
+<h4>Math<a class="headerlink" href="#math" title="Permalink to this heading">¶</a></h4>
+<p>The math has been outlined above [1]:
+$<span class="math notranslate nohighlight">\(\tilde{z} = z - \hat{z}\)</span><span class="math notranslate nohighlight">\(
+\)</span><span class="math notranslate nohighlight">\(S = H \overline{\Sigma} H^{T} + Q\)</span><span class="math notranslate nohighlight">\(
+\)</span><span class="math notranslate nohighlight">\(\tilde{z}^{T} S^{-1} \tilde{z} - m &gt; k \sqrt{2m}\)</span>$</p>
+<p>To provide the maximum value from the innovation filtering, the calculation of
+whether or not to reject the sensor update should be made as early as possible
+(as soon as <span class="math notranslate nohighlight">\(\tilde{z}\)</span> is calculated). That way there is no unnecessary wasted
+computation.</p>
+<p>Revision:
+The above notation:
+$<span class="math notranslate nohighlight">\(\tilde{z}^{T} S^{-1} \tilde{z} - m &gt; k \sqrt{2m}\)</span>$</p>
+<p>can be reorganized as</p>
+<div class="math notranslate nohighlight">
+\[\tilde{z}^{T} S^{-1} \tilde{z} &gt; k \sqrt{2m} + m\]</div>
+<p>Which has the benefit that the left side is reading-dependent and the right
+side is a constant expression for each reading.</p>
+</section>
+<section id="filter-health">
+<h4>Filter Health<a class="headerlink" href="#filter-health" title="Permalink to this heading">¶</a></h4>
+<p>Innovation filtering makes the assumption that the model is correct and the
+sensor readings may be errant; however, repeated filtering may indicate that
+the filter has diverged. In this initial implementation, the count of
+innovations that are filtered will be tracked online per-measurement update.</p>
+</section>
+<section id="other-implementation-details">
+<h4>Other Implementation Details<a class="headerlink" href="#other-implementation-details" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Use if constexpr for the innovation filtering calculation if turned on (<span class="math notranslate nohighlight">\(k &gt; 0\)</span>)</p></li>
+<li><p>Use a continuous value for the editing threshold <span class="math notranslate nohighlight">\(k\)</span>. Provide <span class="math notranslate nohighlight">\(k = 5\)</span> as a default edit threshold based on the textbook recommendation [1]</p></li>
+</ul>
+</section>
+</section>
+<section id="model-selection">
+<h3>Model Selection<a class="headerlink" href="#model-selection" title="Permalink to this heading">¶</a></h3>
+<p>In AKFLSM there isn’t an immediate discussion of how to select the editing
+threshold <span class="math notranslate nohighlight">\(k\)</span> based on time series. The design will provide a sane default, but
+it will also be useful to provide a data-driven function to select the value
+based on prior data.</p>
+<p>The editing threshold will be selected via a hyperparameter selection process.
+The high level process is composed of the following elements (from the
+<a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html">scikit-learn user guide</a>):</p>
+<ul class="simple">
+<li><p>The estimator (with fit and predict operations)</p></li>
+<li><p>a parameter space</p></li>
+<li><p>a method for searching or sampling candidates</p></li>
+<li><p>a cross-validation scheme</p></li>
+<li><p>a score function</p></li>
+</ul>
+<p>The parameter space for this problem is positive floats. The problem could be
+thought of as positive integers (how many standard deviations are acceptable)
+but the positive floats should be easier to optimize as a continuous parameter.</p>
+<section id="parameter-search">
+<h4>Parameter Search<a class="headerlink" href="#parameter-search" title="Permalink to this heading">¶</a></h4>
+<p>The default method for parameter optimization is
+<a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search">exhaustive grid search</a>.
+For this problem of selecting a single or reduced set of parameters it should
+be okay to use the baseline; however, the design will include an experiment to
+compare between grid search and randomized search. The benefit of randomized
+search is that a specific budget can be set and the approach will, with high
+probability, find the best result in the same search space as the grid search
+but with fewer iterations.</p>
+</section>
+<section id="cross-validation">
+<h4>Cross Validation<a class="headerlink" href="#cross-validation" title="Permalink to this heading">¶</a></h4>
+<p>The
+<a class="reference external" href="https://scikit-learn.org/stable/modules/cross_validation.html">cross-validation approach</a>
+suggested by scikit-learn to choose the hyperparameter with the highest
+cross-validation score:</p>
+<ol class="arabic simple">
+<li><p>Hold aside a test time series that does not overlap with the rest of the data set</p></li>
+<li><p>Within the remaining data, the training time series, subdivide into different folds where one part of each fold is used to train the model and a subset is used for validation. By selecting many folds, we can reduce the chance that the parameters are overfit to noise in a particular test evaluation.</p></li>
+<li><p>Perform final scoring against the held out test data.</p></li>
+</ol>
+<p>One thing to note: I’ve used time series here instead of the usual set because
+time series have an explicit order in their samples so the usual selection of
+folds for cross validation won’t apply. Instead, the cross validation will use
+an approach like scikit-learn’s
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html#sklearn.model_selection.TimeSeriesSplit"><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code></a>.</p>
+</section>
+<section id="metric-score-function">
+<h4>Metric / Score Function<a class="headerlink" href="#metric-score-function" title="Permalink to this heading">¶</a></h4>
+<p>Metric to minimize: Normalized Innovation Squared (NIS). NIS is defined as</p>
+<div class="math notranslate nohighlight">
+\[\tilde{z} = z - \hat{z}
+S = H \overline{\Sigma} H^{T} + Q
+NIS = \tilde{z}^{T} S^{-1} \tilde{z}\]</div>
+<p>Roughly, it looks at the magnitude of the reading error <span class="math notranslate nohighlight">\(\tilde{z}\)</span> vs the
+expected variation <span class="math notranslate nohighlight">\(S\)</span>. FormaK uses the NIS metric because it doesn’t require
+ground truth data. An alternative, Normalized Estimation Error Squared (NEES)
+looks at the errors vs ground truth. [3]</p>
+<p>[3] NEES definition taken from “Kalman Filter Tuning with Bayesian
+Optimization” by Chen et al.</p>
+<p>One small problem with this measure:</p>
+<ol class="arabic simple">
+<li><p>The score will decrease consistently as the size of the error goes down (this is good, this means that the model is more accurate</p></li>
+<li><p>The score will decrease consistently as the size of the variance goes up (this is bad, the optimization could increase the estimated variance to achieve a better score)</p></li>
+</ol>
+<p>To remedy that, the metric to minimize is consistency instead of the true
+minimum score. Taking advantage of the fact that we know that the errors should
+follow a <span class="math notranslate nohighlight">\(\chi^{2}\)</span> distribution, we can calculate consistency as follows:</p>
+<div class="math notranslate nohighlight">
+\[ \xi_{K_{r}} = NIS
+\overline{\xi_K} = \sum_{r=1}^{r=N} \xi_{K_{r}}
+F_{K}^{\chi^{2}} = Prob{\chi^{2}_n &lt; \overline{\xi_K}
+d_{i(k)} = F_{K}^{\chi^{2}} - \dfrac{i(k)}{N_{K}}
+Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert\]</div>
+<p>This consistency calculation is based on [2]
+<a class="reference external" href="https://arc.aiaa.org/doi/10.2514/6.2000-4558">Optimal Tuning Of A Kalman Filter Using Genetic Algorithms by Yaakov Oshman and Ilan Shaviv</a>, but implemented with the NIS metric from [1].</p>
+</section>
+</section>
+<section id="visualization">
+<h3>Visualization<a class="headerlink" href="#visualization" title="Permalink to this heading">¶</a></h3>
+<p>Optional extension: Visualizations</p>
+<ol class="arabic simple">
+<li><p>The magnitude of normalized innovations for different parameter tunings over a sequence of reading. This should help the user understand if the parameter is selecting models that are converging and if there are portions of the dataset where many models aren’t well fit.</p></li>
+<li><p>The chi2 distribution for innovations for different parameter tunings. I imagine this would look a lot like ROC curves</p></li>
+</ol>
+</section>
+<section id="testing-for-better-metrics">
+<h3>Testing for Better Metrics<a class="headerlink" href="#testing-for-better-metrics" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Testing, innovation, consistency, go to the math. Everything else in this feature is built on the metrics being evaluated correctly</p></li>
+<li><p>Test with mocked EKF so you can return a fixed state, covariance to get known innovation from readings</p></li>
+</ul>
+</section>
+<section id="new-class-es">
+<h3>New Class(es)<a class="headerlink" href="#new-class-es" title="Permalink to this heading">¶</a></h3>
+<p>This feature may require implementing a new class or classes to interface with
+scikit-learn tooling:</p>
+<ol class="arabic simple">
+<li><p>Metric function or class to pass to scikit-learn (see the <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html#defining-your-scoring-strategy-from-metric-functions"><code class="docutils literal notranslate"><span class="pre">make_scorer</span></code></a> interface)</p></li>
+<li><p>Dataset class. Most scikit-learn tooling deals in vectors and that may not be fully suitable for the</p></li>
+</ol>
+</section>
+</section>
+<section id="experiments">
+<h2>Experiments<a class="headerlink" href="#experiments" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Compare grid search and randomized search for parameter evaluation. Optionally, compare with <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#hyper-parameter-optimizers">other search algorithms</a>.</p></li>
+</ul>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<section id="id2">
+<h3>Innovation Filtering<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>x, y, heading, velocity model</p></li>
+<li><p>Provide heading readings, expect rejecting 180 degree heading errors</p>
+<ul>
+<li><p>Nonlinear model provides clear divergence signal</p></li>
+</ul>
+</li>
+</ul>
+<p>Additional testing should be performed on measurements and filters of multiple sizes</p>
+</section>
+<section id="id3">
+<h3>Model Selection<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Compare a correct model with a dataset with arbitrary, incorrect +- 5 std dev noise inserted around other noise that is normally distributed. Selecting parameter should be less than 5</p></li>
+</ol>
+</section>
+</section>
+<section id="roadmap-and-process">
+<h2>Roadmap and Process<a class="headerlink" href="#roadmap-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)
+3A. Experiments
+3B. Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id4">
+<h3>2023-08-13<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<p>Revise to a consistent mathematical notation. Also document a revision in how
+the math for innovation filtering is stated.</p>
+</section>
+<section id="id5">
+<h3>2023-09-18<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
+<p><a class="reference external" href="https://www.youtube.com/watch?v=qEV9qoup2mQ">Someone Dead Ruined My Life… Again.</a></p>
+<p>A refactor ruined my ~life~ implementation of this feature.</p>
+<p>In the previous implementation
+<a class="reference external" href="https://github.com/buckbaskin/formak/pull/17/">PR #17</a>, I’d run into an issue
+where the state elements and reading elements were not in the order I expected
+or specified. For a state <code class="docutils literal notranslate"><span class="pre">{&quot;mass&quot;,</span> <span class="pre">&quot;z&quot;,</span> <span class="pre">&quot;v&quot;,</span> <span class="pre">&quot;a&quot;}</span></code> the state would be
+generated as <code class="docutils literal notranslate"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;mass&quot;,</span> <span class="pre">&quot;v&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>, so <code class="docutils literal notranslate"><span class="pre">np.array([[0.0,</span> <span class="pre">1.0,</span> <span class="pre">0.0,0.0]])</span></code>
+sets the <code class="docutils literal notranslate"><span class="pre">mass</span></code> to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, but if I renamed <code class="docutils literal notranslate"><span class="pre">z</span></code> to <code class="docutils literal notranslate"><span class="pre">b</span></code> it’d be silently setting
+<code class="docutils literal notranslate"><span class="pre">b</span></code> to 1.0 instead.</p>
+<p>This potential for reordering will ultimately be a feature (where the code
+generation can reorder values to better pack into memory) but for now it was
+only a surprise and it led to a failing test (better to fail the test than to
+silently fail though).</p>
+<p>When I went to implement innovation filtering, I again ran into this issue.
+Logically, the only solution would be to refactor how all data types are stored
+and passed around in the Python implementation of FormaK.</p>
+<p>And so, I walked deep into the forest of refactoring. To cut a long story
+short, this took way longer than I wanted. The first notes I have for the start
+of the refactor is 2023-08-13 and the end of the refactor dates roughly to
+2023-09-07, so I spent nearly 3.5 weeks on this refactor to “avoid confusion”
+and instead introduced lots of internal confusion as I was refactoring and
+instead introduced much consternation.</p>
+<p>Today marks the end of the design, partly because I have some tests passing but
+mostly because I want to call it done enough, move to the next thing and
+revisit it (and test it more) if I find that it isn’t working as intended.</p>
+<p>Beware the forest of refactoring.</p>
+</section>
+</section>
+<section id="id6">
+<h2>2023-09-19<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
+<p>The second aspect of this design around model selection was dropped in favor of
+completing the innovation filtering portion of the design. Model selection
+integration will be revisited in a future design.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Innovation Filtering</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#id1">Innovation Filtering</a><ul>
+<li><a class="reference internal" href="#math">Math</a></li>
+<li><a class="reference internal" href="#filter-health">Filter Health</a></li>
+<li><a class="reference internal" href="#other-implementation-details">Other Implementation Details</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#model-selection">Model Selection</a><ul>
+<li><a class="reference internal" href="#parameter-search">Parameter Search</a></li>
+<li><a class="reference internal" href="#cross-validation">Cross Validation</a></li>
+<li><a class="reference internal" href="#metric-score-function">Metric / Score Function</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#visualization">Visualization</a></li>
+<li><a class="reference internal" href="#testing-for-better-metrics">Testing for Better Metrics</a></li>
+<li><a class="reference internal" href="#new-class-es">New Class(es)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#experiments">Experiments</a></li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a><ul>
+<li><a class="reference internal" href="#id2">Innovation Filtering</a></li>
+<li><a class="reference internal" href="#id3">Model Selection</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roadmap-and-process">Roadmap and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id4">2023-08-13</a></li>
+<li><a class="reference internal" href="#id5">2023-09-18</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id6">2023-09-19</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="generate_cpp_from_ast.html"
+                          title="previous chapter">Generate C++ from AST</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="python_library_for_model_evaluation.html"
+                          title="next chapter">Python Library for Model Evaluation</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/innovation_filtering.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_library_for_model_evaluation.html" title="Python Library for Model Evaluation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Innovation Filtering</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

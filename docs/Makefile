@@ -3,10 +3,11 @@
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?=
+# -a is --write-all
+SPHINXOPTS    ?= -a
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      = generated
 
 # Put it first so that "make" without argument is like "make help".
 help:
