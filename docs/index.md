@@ -18,7 +18,7 @@ The values of the FormaK project (in order) are:
 FormaK is open source and uses the MIT license.
 
 If you'd like to jump in to using FormaK: [Getting Started](getting-started) or
-access the full [Documentation](index)
+access the full [Documentation](https://buckbaskin.com/formak/generated/html/index.html)
 
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
