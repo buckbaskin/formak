@@ -42,6 +42,10 @@ jobs:
       - run: echo "🍏 This job's status is ${{ job.status }}."
       - run: pip install -r requirements_dev.txt
       - run: cd docs/ ; make html
-      - run: git diff -- docs/html/**/*.html
-      - run: test ! git diff -- docs/html/**/*.html
+      - run: LS_RESULT=$(git ls-files --others --exclude-standard -- generated/**/*.html)
+      - run: echo $LS_RESULT
+      - run: test -z $LS_RESULT
+      - run: DIFF_RESULT=$(git diff --name-only -- generated/**/*.html)
+      - run: echo $DIFF_RESULT
+      - run: test -z $DIFF_RESULT
       - run: echo "This job's status is ${{ job.status }}."
