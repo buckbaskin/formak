@@ -43,5 +43,5 @@ jobs:
       - run: pip install -r requirements_dev.txt
       - run: cd docs/ ; make html
       - run: LS_RESULT=$(git ls-files --others --exclude-standard -- docs/generated/**/*.html) ; echo Missing Files $LS_RESULT ; test -z "$LS_RESULT"
-      - run: DIFF_RESULT=$(git diff --name-only -- docs/generated/**/*.html) ; echo Changed Files $DIFF_RESULT ; test -z "$DIFF_RESULT"
+      - run: DIFF_RESULT=$(git diff --name-only -- docs/generated/**/*.html) ; echo Changed Files $DIFF_RESULT ; echo Changes  $(git diff docs/generated/**/*.html) ; test -z "$DIFF_RESULT"
       - run: echo "This job's status is ${{ job.status }}."
