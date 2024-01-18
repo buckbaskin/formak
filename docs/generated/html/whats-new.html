@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>What’s New &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Runtime" href="runtime.html" />
+    <link rel="prev" title="Thinking With FormaK" href="thinking-with-formak.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="Runtime"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="thinking-with-formak.html" title="Thinking With FormaK"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">What’s New</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="what-s-new">
+<h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this heading">¶</a></h1>
+<p>Release Notes</p>
+<section id="reference-model-strapdown-imu">
+<h2>2023-10-29 Reference Model: Strapdown IMU<a class="headerlink" href="#reference-model-strapdown-imu" title="Permalink to this heading">¶</a></h2>
+<p>FormaK now provides a reference implementation of a Strapdown IMU. This can be
+used as a reference model to include within another model or used as a
+reference for understanding the current best practices when developing new
+models.</p>
+</section>
+<section id="innovation-filtering">
+<h2>2023-09-18 Innovation Filtering<a class="headerlink" href="#innovation-filtering" title="Permalink to this heading">¶</a></h2>
+<p>Innovation filtering provides error rejection for the Kalman Filter. If
+measurements come in that are sufficiently improbable based on the current
+variance of the system then the measurement will be ignored. This is useful for
+cases such as recieving a heading that is 180 degrees opposed to the current
+estimated heading of the vehicle. Maybe it’s helpful, but it’s likely an
+erroneous reading.</p>
+<p>API Change:</p>
+<ul class="simple">
+<li><p>Refactored error prone creation of sensor data in favor of a new key-based method</p></li>
+</ul>
+</section>
+<section id="introducing-formak-runtime">
+<h2>2023-08-04 Introducing FormaK Runtime<a class="headerlink" href="#introducing-formak-runtime" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/50eeadc69655d288a32b20f5b821b77977dba349"><code class="docutils literal notranslate"><span class="pre">50eeadc</span></code></a></p>
+<p>The first piece of the FormaK Runtime is the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code>. This will
+coordinate new sensor readings, process model updates and sensor model updates
+with an easy to use interface.</p>
+<p>The FormaK runtime will continue to be expanded over time to offer new features
+(e.g. around netcode and better managing sensor readings) as well as offering
+additional opt-in services (e.g. logging).</p>
+<p>Other Improvements:</p>
+<ul class="simple">
+<li><p>Reorganize how the AST is packaged with reusable fragments</p></li>
+<li><p>Fix misconfigured CI</p></li>
+<li><p>Fix misconfigured Linting</p></li>
+</ul>
+</section>
+<section id="common-subexpression-elimination">
+<h2>2023-06-29 Common Subexpression Elimination<a class="headerlink" href="#common-subexpression-elimination" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/80fdd9dca89b3f15b53baed0ebea56ead8a7f432"><code class="docutils literal notranslate"><span class="pre">80fdd9d</span></code></a></p>
+<p>Common Subexpression Elimination removes all unnecessary code from the compute
+graph for the process model and individual sensor models in the filter. This
+represents a straightforward performance win that should benefit all models
+without changing the compute outcome. The upside for enabling the feature grows
+with model size because Common Subexpression Elimination with reduce shared
+computation at all scales, both large segments of repeat computation and the
+smallest operations.</p>
+</section>
+<section id="calibration">
+<h2>2023-05-05 Calibration<a class="headerlink" href="#calibration" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/02005ce4fe932f5ad4d1131b117fa0b0a20232b9"><code class="docutils literal notranslate"><span class="pre">02005ce</span></code></a></p>
+<p>Add an optional Calibration parameter for setting up multiple sensor models or
+adding sensors at known positions.</p>
+<p>Other Improvements:</p>
+<ul class="simple">
+<li><p>Performance for the <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> and code generation flows is much improved</p></li>
+</ul>
+<p>Calibration Design: <a class="reference internal" href="designs/calibration.html"><span class="doc std std-doc">designs/calibration.md</span></a>
+Getting Started: <a class="reference internal" href="getting-started.html"><span class="doc std std-doc">getting-started.md</span></a></p>
+</section>
+<section id="c-source-for-models">
+<h2>2023-04-10 C++ Source for Models<a class="headerlink" href="#c-source-for-models" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/d2bec5c7ea27f8092ea6d28c61917e7926fb8e72"><code class="docutils literal notranslate"><span class="pre">d2bec5c</span></code></a></p>
+<p>Generate C++ source for models as an add on to the symbolic and Python sources for models</p>
+</section>
+<section id="scikit-learn-integration">
+<h2>2022-12-21 Scikit-Learn Integration<a class="headerlink" href="#scikit-learn-integration" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/ecbdb9ecf4812cdd12b0fc5194e23ebed6718978"><code class="docutils literal notranslate"><span class="pre">ecbdb9e</span></code></a></p>
+<p>FormaK Python models adapt the interface for Scikit-Learn (train, test, etc).
+This enables easier model fitting and additional integration with the Python
+science tools ecosystem.</p>
+</section>
+<section id="python-source-for-models">
+<h2>2022-09-13 Python Source for Models<a class="headerlink" href="#python-source-for-models" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/7e5ba82c2c7bc0307bd145cc7a7c5d55c3e917f2"><code class="docutils literal notranslate"><span class="pre">7e5ba82</span></code></a></p>
+<p>Python classes for models and Kalman filters</p>
+</section>
+<section id="python-user-interface">
+<h2>2022-08-26 Python User Interface<a class="headerlink" href="#python-user-interface" title="Permalink to this heading">¶</a></h2>
+<p>Commit <a class="reference external" href="https://github.com/buckbaskin/formak/commit/578ea7e721637ce3a2a16768b8bba49d4dd94130"><code class="docutils literal notranslate"><span class="pre">578ea7e</span></code></a></p>
+<p>Demonstrate the User Interface for FormaK</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">What’s New</a><ul>
+<li><a class="reference internal" href="#reference-model-strapdown-imu">2023-10-29 Reference Model: Strapdown IMU</a></li>
+<li><a class="reference internal" href="#innovation-filtering">2023-09-18 Innovation Filtering</a></li>
+<li><a class="reference internal" href="#introducing-formak-runtime">2023-08-04 Introducing FormaK Runtime</a></li>
+<li><a class="reference internal" href="#common-subexpression-elimination">2023-06-29 Common Subexpression Elimination</a></li>
+<li><a class="reference internal" href="#calibration">2023-05-05 Calibration</a></li>
+<li><a class="reference internal" href="#c-source-for-models">2023-04-10 C++ Source for Models</a></li>
+<li><a class="reference internal" href="#scikit-learn-integration">2022-12-21 Scikit-Learn Integration</a></li>
+<li><a class="reference internal" href="#python-source-for-models">2022-09-13 Python Source for Models</a></li>
+<li><a class="reference internal" href="#python-user-interface">2022-08-26 Python User Interface</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="thinking-with-formak.html"
+                          title="previous chapter">Thinking With FormaK</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="runtime.html"
+                          title="next chapter">Runtime</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/whats-new.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="Runtime"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="thinking-with-formak.html" title="Thinking With FormaK"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">What’s New</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

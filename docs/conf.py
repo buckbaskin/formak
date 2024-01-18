@@ -28,7 +28,7 @@ myst_heading_anchors = 2 # h1, h2
 autodoc2_packages = ["../py/formak/"]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "v/*"]
+exclude_patterns = ["generated/", "Thumbs.db", ".DS_Store", "v/*"]
 
 
 # -- Options for HTML output -------------------------------------------------

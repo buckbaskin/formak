@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>formak.ast_fragments &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="formak.microbenchmark" href="formak.microbenchmark.html" />
+    <link rel="prev" title="formak.common" href="formak.common.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak.microbenchmark.html" title="formak.microbenchmark"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="formak.common.html" title="formak.common"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="formak.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_fragments</span></code></a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-formak.ast_fragments">
+<span id="formak-ast-fragments"></span><h1><a class="reference internal" href="#module-formak.ast_fragments" title="formak.ast_fragments"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_fragments</span></code></a><a class="headerlink" href="#module-formak.ast_fragments" title="Permalink to this heading">¶</a></h1>
+<p>AST Fragments.</p>
+<p>Combinations of the basics from AST Tools representing fragments of the final AST structure</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">¶</a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-left">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.StateOptions" title="formak.ast_fragments.StateOptions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateOptions</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.State" title="formak.ast_fragments.State"><code class="xref py py-obj docutils literal notranslate"><span class="pre">State</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ControlOptions" title="formak.ast_fragments.ControlOptions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ControlOptions</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.Control" title="formak.ast_fragments.Control"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Control</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.CalibrationOptions" title="formak.ast_fragments.CalibrationOptions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationOptions</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.Calibration" title="formak.ast_fragments.Calibration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Calibration</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.standard_process_args" title="formak.ast_fragments.standard_process_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">standard_process_args</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.standard_reading_args" title="formak.ast_fragments.standard_reading_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">standard_reading_args</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.State_model" title="formak.ast_fragments.State_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">State_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.StateAndVariance_process_model" title="formak.ast_fragments.StateAndVariance_process_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateAndVariance_process_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.StateAndVariance_sensor_model" title="formak.ast_fragments.StateAndVariance_sensor_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateAndVariance_sensor_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.Covariance" title="formak.ast_fragments.Covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Covariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.StateAndVariance" title="formak.ast_fragments.StateAndVariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateAndVariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.SensorId" title="formak.ast_fragments.SensorId"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SensorId</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments._EKF_Tag_body" title="formak.ast_fragments._EKF_Tag_body"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_EKF_Tag_body</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.EKF_Tag" title="formak.ast_fragments.EKF_Tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKF_Tag</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilter" title="formak.ast_fragments.ExtendedKalmanFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilter</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_model" title="formak.ast_fragments.ExtendedKalmanFilterProcessModel_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_process_jacobian" title="formak.ast_fragments.ExtendedKalmanFilterProcessModel_process_jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_process_jacobian</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_control_jacobian" title="formak.ast_fragments.ExtendedKalmanFilterProcessModel_control_jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_control_jacobian</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_covariance" title="formak.ast_fragments.ExtendedKalmanFilterProcessModel_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_covariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel" title="formak.ast_fragments.ExtendedKalmanFilterProcessModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments._StampedReadingBase_args" title="formak.ast_fragments._StampedReadingBase_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_StampedReadingBase_args</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.StampedReadingBase" title="formak.ast_fragments.StampedReadingBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StampedReadingBase</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingOptions" title="formak.ast_fragments.ReadingOptions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingOptions</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_body" title="formak.ast_fragments._Reading_sensor_model_body"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_Reading_sensor_model_body</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_args" title="formak.ast_fragments._Reading_sensor_model_args"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_Reading_sensor_model_args</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_function_def" title="formak.ast_fragments._Reading_sensor_model_function_def"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_Reading_sensor_model_function_def</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.Reading" title="formak.ast_fragments.Reading"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reading</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel" title="formak.ast_fragments.ReadingSensorModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingSensorModel</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.Model" title="formak.ast_fragments.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.StateDefaultConstructor" title="formak.ast_fragments.StateDefaultConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateDefaultConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.StateOptionsConstructor" title="formak.ast_fragments.StateOptionsConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateOptionsConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.CalibrationDefaultConstructor" title="formak.ast_fragments.CalibrationDefaultConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationDefaultConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.CalibrationConstructor" title="formak.ast_fragments.CalibrationConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ControlDefaultConstructor" title="formak.ast_fragments.ControlDefaultConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ControlDefaultConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ControlConstructor" title="formak.ast_fragments.ControlConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ControlConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.EKF_process_model" title="formak.ast_fragments.EKF_process_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKF_process_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.EKFPM_model" title="formak.ast_fragments.EKFPM_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKFPM_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.EKFPM_process_jacobian" title="formak.ast_fragments.EKFPM_process_jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKFPM_process_jacobian</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.EKFPM_control_jacobian" title="formak.ast_fragments.EKFPM_control_jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKFPM_control_jacobian</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.EKFPM_covariance" title="formak.ast_fragments.EKFPM_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EKFPM_covariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingDefaultConstructor" title="formak.ast_fragments.ReadingDefaultConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingDefaultConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingConstructor" title="formak.ast_fragments.ReadingConstructor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingConstructor</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_model" title="formak.ast_fragments.ReadingSensorModel_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingSensorModel_model</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_covariance" title="formak.ast_fragments.ReadingSensorModel_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingSensorModel_covariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_jacobian" title="formak.ast_fragments.ReadingSensorModel_jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReadingSensorModel_jacobian</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ast_fragments.Model_model" title="formak.ast_fragments.Model_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model_model</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateOptions">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.State">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ControlOptions">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ControlOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ControlOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Control">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Control" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.CalibrationOptions">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">CalibrationOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.CalibrationOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Calibration">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Calibration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.standard_process_args">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">standard_process_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.Arg" title="formak.ast_tools.Arg"><span class="pre">formak.ast_tools.Arg</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments.standard_process_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.standard_reading_args">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">standard_reading_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.Arg" title="formak.ast_tools.Arg"><span class="pre">formak.ast_tools.Arg</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments.standard_reading_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.State_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">State_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.State_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateAndVariance_process_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateAndVariance_process_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateAndVariance_process_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateAndVariance_sensor_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateAndVariance_sensor_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateAndVariance_sensor_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Covariance">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Covariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateAndVariance">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateAndVariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateAndVariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.SensorId">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">SensorId</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.SensorId" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments._EKF_Tag_body">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">_EKF_Tag_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments._EKF_Tag_body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKF_Tag">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKF_Tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKF_Tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilter">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilterProcessModel_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilterProcessModel_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilterProcessModel_process_jacobian">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilterProcessModel_process_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_process_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilterProcessModel_control_jacobian">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilterProcessModel_control_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_control_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilterProcessModel_covariance">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilterProcessModel_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_covariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ExtendedKalmanFilterProcessModel">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilterProcessModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments._StampedReadingBase_args">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">_StampedReadingBase_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.Arg" title="formak.ast_tools.Arg"><span class="pre">formak.ast_tools.Arg</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments._StampedReadingBase_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StampedReadingBase">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StampedReadingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StampedReadingBase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingOptions">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments._Reading_sensor_model_body">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">_Reading_sensor_model_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments._Reading_sensor_model_body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments._Reading_sensor_model_args">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">_Reading_sensor_model_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.Arg" title="formak.ast_tools.Arg"><span class="pre">formak.ast_tools.Arg</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ast_fragments._Reading_sensor_model_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments._Reading_sensor_model_function_def">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">_Reading_sensor_model_function_def</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments._Reading_sensor_model_function_def" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Reading">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Reading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Reading" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingSensorModel">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingSensorModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingSensorModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateDefaultConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateDefaultConstructor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateDefaultConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.StateOptionsConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">StateOptionsConstructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.StateOptionsConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.CalibrationDefaultConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">CalibrationDefaultConstructor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.CalibrationDefaultConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.CalibrationConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">CalibrationConstructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.CalibrationConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ControlDefaultConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ControlDefaultConstructor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ControlDefaultConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ControlConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ControlConstructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ControlConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKF_process_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKF_process_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKF_process_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKFPM_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKFPM_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKFPM_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKFPM_process_jacobian">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKFPM_process_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKFPM_process_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKFPM_control_jacobian">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKFPM_control_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKFPM_control_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.EKFPM_covariance">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">EKFPM_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.EKFPM_covariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingDefaultConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingDefaultConstructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingDefaultConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingConstructor">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingConstructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingConstructor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingSensorModel_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingSensorModel_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingSensorModel_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingSensorModel_covariance">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingSensorModel_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingSensorModel_covariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.ReadingSensorModel_jacobian">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">ReadingSensorModel_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reading_type</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.ReadingSensorModel_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.ast_fragments.Model_model">
+<span class="sig-prename descclassname"><span class="pre">formak.ast_fragments.</span></span><span class="sig-name descname"><span class="pre">Model_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.ast_tools.html#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><span class="pre">formak.ast_tools.BaseAst</span></a></span></span><a class="headerlink" href="#formak.ast_fragments.Model_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_fragments</span></code></a><ul>
+<li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#formak.ast_fragments.StateOptions"><code class="docutils literal notranslate"><span class="pre">StateOptions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.State"><code class="docutils literal notranslate"><span class="pre">State()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ControlOptions"><code class="docutils literal notranslate"><span class="pre">ControlOptions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Control"><code class="docutils literal notranslate"><span class="pre">Control()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.CalibrationOptions"><code class="docutils literal notranslate"><span class="pre">CalibrationOptions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Calibration"><code class="docutils literal notranslate"><span class="pre">Calibration()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.standard_process_args"><code class="docutils literal notranslate"><span class="pre">standard_process_args()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.standard_reading_args"><code class="docutils literal notranslate"><span class="pre">standard_reading_args()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.State_model"><code class="docutils literal notranslate"><span class="pre">State_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StateAndVariance_process_model"><code class="docutils literal notranslate"><span class="pre">StateAndVariance_process_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StateAndVariance_sensor_model"><code class="docutils literal notranslate"><span class="pre">StateAndVariance_sensor_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Covariance"><code class="docutils literal notranslate"><span class="pre">Covariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StateAndVariance"><code class="docutils literal notranslate"><span class="pre">StateAndVariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.SensorId"><code class="docutils literal notranslate"><span class="pre">SensorId()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments._EKF_Tag_body"><code class="docutils literal notranslate"><span class="pre">_EKF_Tag_body()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKF_Tag"><code class="docutils literal notranslate"><span class="pre">EKF_Tag()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_model"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_process_jacobian"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_process_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_control_jacobian"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_control_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel_covariance"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel_covariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ExtendedKalmanFilterProcessModel"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilterProcessModel()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments._StampedReadingBase_args"><code class="docutils literal notranslate"><span class="pre">_StampedReadingBase_args()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StampedReadingBase"><code class="docutils literal notranslate"><span class="pre">StampedReadingBase()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingOptions"><code class="docutils literal notranslate"><span class="pre">ReadingOptions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_body"><code class="docutils literal notranslate"><span class="pre">_Reading_sensor_model_body()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_args"><code class="docutils literal notranslate"><span class="pre">_Reading_sensor_model_args()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments._Reading_sensor_model_function_def"><code class="docutils literal notranslate"><span class="pre">_Reading_sensor_model_function_def()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Reading"><code class="docutils literal notranslate"><span class="pre">Reading()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel"><code class="docutils literal notranslate"><span class="pre">ReadingSensorModel()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Model"><code class="docutils literal notranslate"><span class="pre">Model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StateDefaultConstructor"><code class="docutils literal notranslate"><span class="pre">StateDefaultConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.StateOptionsConstructor"><code class="docutils literal notranslate"><span class="pre">StateOptionsConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.CalibrationDefaultConstructor"><code class="docutils literal notranslate"><span class="pre">CalibrationDefaultConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.CalibrationConstructor"><code class="docutils literal notranslate"><span class="pre">CalibrationConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ControlDefaultConstructor"><code class="docutils literal notranslate"><span class="pre">ControlDefaultConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ControlConstructor"><code class="docutils literal notranslate"><span class="pre">ControlConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKF_process_model"><code class="docutils literal notranslate"><span class="pre">EKF_process_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKFPM_model"><code class="docutils literal notranslate"><span class="pre">EKFPM_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKFPM_process_jacobian"><code class="docutils literal notranslate"><span class="pre">EKFPM_process_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKFPM_control_jacobian"><code class="docutils literal notranslate"><span class="pre">EKFPM_control_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.EKFPM_covariance"><code class="docutils literal notranslate"><span class="pre">EKFPM_covariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingDefaultConstructor"><code class="docutils literal notranslate"><span class="pre">ReadingDefaultConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingConstructor"><code class="docutils literal notranslate"><span class="pre">ReadingConstructor()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_model"><code class="docutils literal notranslate"><span class="pre">ReadingSensorModel_model()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_covariance"><code class="docutils literal notranslate"><span class="pre">ReadingSensorModel_covariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.ReadingSensorModel_jacobian"><code class="docutils literal notranslate"><span class="pre">ReadingSensorModel_jacobian()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ast_fragments.Model_model"><code class="docutils literal notranslate"><span class="pre">Model_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="formak.common.html"
+                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.common</span></code></a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="formak.microbenchmark.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.microbenchmark</span></code></a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/apidocs/formak/formak.ast_fragments.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak.microbenchmark.html" title="formak.microbenchmark"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="formak.common.html" title="formak.common"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="formak.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_fragments</span></code></a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

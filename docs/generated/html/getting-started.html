@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Getting Started for Users &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="FormaK" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently Asked Questions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="FormaK"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started for Users</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="getting-started-for-users">
+<h1>Getting Started for Users<a class="headerlink" href="#getting-started-for-users" title="Permalink to this heading">¶</a></h1>
+<p>Check out <code class="docutils literal notranslate"><span class="pre">demo/src/orbital_model.py</span></code> for an example model and use.</p>
+<p>Some highlights:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># momentum = mv</span>
+    <span class="c1"># dmomentum / dt = F = d(mv)/dt</span>
+    <span class="c1"># F = m dv/dt + dm/dt v</span>
+    <span class="c1"># a = dv / dt = (F - dm/dt * v) / m</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="o">-</span><span class="n">gravitational_force</span><span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">],</span> <span class="n">Earth_Mass</span><span class="p">,</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">Earth_Equatorial_Radius</span><span class="p">)</span>
+
+    <span class="n">state_model</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">fuel_burn_rate</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span>
+        <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span>
+        <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span>
+        <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]:</span> <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="p">(</span><span class="n">fuel_burn_rate</span> <span class="o">*</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]))</span> <span class="o">/</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">control</span><span class="p">,</span> <span class="n">state_model</span><span class="p">,</span> <span class="n">debug_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>More coming soon!</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="getting-started-for-developers">
+<h1>Getting Started For Developers<a class="headerlink" href="#getting-started-for-developers" title="Permalink to this heading">¶</a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
+<p>This project uses Bazel as its build system. To get started, make sure you have
+Bazelisk, Python3 and Clang available.</p>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Bazel</p></li>
+<li><p>Clang-12 / C++17</p></li>
+<li><p>Python3</p></li>
+</ul>
+</section>
+<section id="set-up-bazelisk">
+<h3>Set up Bazelisk<a class="headerlink" href="#set-up-bazelisk" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="install-clang">
+<h3>Install Clang<a class="headerlink" href="#install-clang" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="install-python-developer-tooling">
+<h3>Install Python Developer Tooling<a class="headerlink" href="#install-python-developer-tooling" title="Permalink to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">-r</span> <span class="pre">requirements_dev.txt</span></code></p>
+<p>This will install the dependencies necessary for helper scripts like:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">format</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">lint</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="running-some-code">
+<h2>Running Some Code<a class="headerlink" href="#running-some-code" title="Permalink to this heading">¶</a></h2>
+<p>To get started running code for the project, try the command</p>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ci</span></code></p>
+<p>This will run all of the unit tests for the project and if it passes it indicates that the project is set up correctly</p>
+<section id="common-issues">
+<h3>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this heading">¶</a></h3>
+<p>…</p>
+</section>
+<section id="next-steps">
+<h3>Next Steps<a class="headerlink" href="#next-steps" title="Permalink to this heading">¶</a></h3>
+<p>Using bazel you can specify a more fine-grained set of code to run. For example, if you’re interested in the compilation feature available in Python generation, you can run the command</p>
+<p><code class="docutils literal notranslate"><span class="pre">bazel</span> <span class="pre">test</span> <span class="pre">//featuretests:python-library-for-model-evaluation</span></code></p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Getting Started for Users</a></li>
+<li><a class="reference internal" href="#getting-started-for-developers">Getting Started For Developers</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#set-up-bazelisk">Set up Bazelisk</a></li>
+<li><a class="reference internal" href="#install-clang">Install Clang</a></li>
+<li><a class="reference internal" href="#install-python-developer-tooling">Install Python Developer Tooling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-some-code">Running Some Code</a><ul>
+<li><a class="reference internal" href="#common-issues">Common Issues</a></li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">FormaK</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="faq.html"
+                          title="next chapter">Frequently Asked Questions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/getting-started.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="faq.html" title="Frequently Asked Questions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="FormaK"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Getting Started for Users</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

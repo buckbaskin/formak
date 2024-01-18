@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Scikit-Learn integration &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="FormaK Managed Runtime" href="runtime.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="FormaK Managed Runtime"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Scikit-Learn integration</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="scikit-learn-integration">
+<h1>Scikit-Learn integration<a class="headerlink" href="#scikit-learn-integration" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2022-09-26</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2022-12-21</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="formak_v0.html"><span class="std std-doc">designs/formak_v0.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The values (in order) are:</p>
+<ul class="simple">
+<li><p>Easy to use</p></li>
+<li><p>Performant</p></li>
+</ul>
+<p>The Five Key Elements the library provides to achieve this (see parent) are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design provides the initial implementation of third of the Five Keys
+“Integration to scikit-learn to leverage the model selection and parameter
+tuning functions”. Scikit-learn is a common library who’s interface is
+replicated many places (e.g. dask-ml for scaling up machine learning tasks)
+that’s a good place to start with for an easy to use library.</p>
+<p>Why is scikit-learn and machine learning relevant? Conceptually, a detailed,
+physical model derived from first principles describes both one complex model,
+as well as a space of models derived via simplifications, enhancements or even
+disconnected approximations from the original model. Using data from the system
+we hope to describe, we can select the appropriate model from the space. This
+process is analogous to a machine learning model, where we have one idea of how
+to approximate the system and want to select machine learning models (in a more
+algorithmic sense of the term models) and their parameters to best fit data.</p>
+<section id="the-dream">
+<h3>The Dream<a class="headerlink" href="#the-dream" title="Permalink to this heading">¶</a></h3>
+<p>In the end, my hope is that the user can provide an arbitrarily complex
+description of the system as a model and provide data and auto-magically get a
+best fit approximation to their system. Providing a more complicated model
+provides more of a space for discovering improvements to the final system in the
+same way providing more data can improve the final system. The “auto-magic”
+doesn’t come from anything magical; instead, it comes from accumulating
+knowledge and how to use it in one place where the final level (improved
+knowledge) can also improve the final system above and beyond that which could
+be achieved by the user alone.</p>
+<p>First, I’ll do an overview of scikit-learn and its key elements (as it relates
+to FormaK). Second, I’ll discuss the solution approach and the tooling to
+implement the approach. To conclude, I’ll describe the feature tests that will
+help track our progress and the roadmap for landing this design.</p>
+</section>
+</section>
+<section id="context">
+<h2>Context<a class="headerlink" href="#context" title="Permalink to this heading">¶</a></h2>
+<p>To start with, I’m going to take a moment to introduce key elements from
+scikit-learn. Integrating, reusing or replicating these elements will form the
+key motivation for this design. If you’re more interested in how that
+materializes into the design, skip ahead to the Solution Approach section.</p>
+<section id="scikit-learn">
+<h3>Scikit-Learn<a class="headerlink" href="#scikit-learn" title="Permalink to this heading">¶</a></h3>
+<p>Taking a look at the <a class="reference external" href="https://scikit-learn.org/stable/">scikit-learn home page</a>,
+a few key elements stand out to me as likely sources of inspiration and
+integration:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html#supervised-learning">Regression</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#decompositions">Dimensionality Reduction</a> (aka Decomposing Signals)</p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/model_selection.html#model-selection">Model Selection</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing">Preprocessing</a></p></li>
+</ul>
+<p>In addition to that, taking a look at some of the bigger areas of functionality
+in the user guide:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/unsupervised_learning.html">Unsupervised Learning</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/inspection.html">Inspection</a> (aka Interpretability)</p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/visualizations.html">Visualizations</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/data_transforms.html">Dataset Transformations</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/modules/compose.html#pipeline">Pipelines</a> and <a class="reference external" href="https://scikit-learn.org/stable/modules/compose.html#feature-union">Feature Unions</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/datasets.html">Dataset tools (loading, generating, etc)</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/computing.html">Performance</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/model_persistence.html">Model Persistence</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/common_pitfalls.html">Best Practices</a></p></li>
+</ul>
+<section id="regression">
+<h4>Regression<a class="headerlink" href="#regression" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn:
+“<a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html#supervised-learning">Regression</a>:
+Predicting a continuous-valued attribute associated with an object.”</p>
+<p>Regression and its use as a predictor of a continuous valued attribute are the
+essential function for the models we hope to evaluate by using historical data
+to predict new values from some prior inputs (model state, control inputs).</p>
+</section>
+<section id="dimensionality-reduction">
+<h4>Dimensionality Reduction<a class="headerlink" href="#dimensionality-reduction" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn: “<a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#decompositions">Dimensionality
+reduction</a>:
+Reducing the number of random variables to consider.”</p>
+<p>Dimensionality reduction is a common practice in machine learning for selecting
+a subset of elements. This is helpful for both improving machine learning model
+robustness (simpler models are easier to understand, easier to characterize and
+less prone to overfitting) and improving model compute performance (a simpler
+model should be faster to compute and uses less memory).</p>
+<p>Dimensionality reduction is useful for FormaK as a tool for improving model
+robustness (simpler models are easier to understand, easier to characterize and
+less prone to overfitting) as well as improving model compute performance (a
+simpler model should be faster to compute and uses less memory).</p>
+<p>Here, the analogy is quite literally, although the techniques may vary more than
+the analogy would suggest. Some physically useful approximations (e.g. the small
+angle approximation that sin(theta) ~= theta) don’t have generic algorithmic
+analogies (or maybe they do: functions can be approximated by their first or Nth
+order Taylor series, which is close family to the linearization used in the
+Extended Kalman Filter). See also, the Notes on Taylor Series in the Appendix.</p>
+</section>
+<section id="model-selection">
+<h4>Model Selection<a class="headerlink" href="#model-selection" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn: “<a class="reference external" href="https://scikit-learn.org/stable/model_selection.html#model-selection">Model
+selection</a>:
+Comparing, validating and choosing parameters and models.”</p>
+<p>As we lean into the single complex model, model selection as a general idea is a
+key feature; however, it also extends to relevant additional considerations
+beyond what you might guess from the name. Model selection also encompasses
+developing metrics, validation across sets of test data, selecting model
+parameters and visual tools for intuitive understanding of model performance.</p>
+</section>
+<section id="preprocessing">
+<h4>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn:
+“<a class="reference external" href="https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing">Preprocessing</a>:
+Feature extraction and normalization.”</p>
+<p>The standard form for scikit-learn preprocessing is to center the data (subtract
+the mean) and make it approximately unit variance (divide by the standard
+deviation). This is also a good form for a Kalman filter and a baseline for
+understanding if a model is likely a good fit (say noise is small and normally
+distributed so likely from random unpredictable processes) or biased in some way
+(an indication that the model is insufficient for describing the data well.</p>
+<ul class="simple">
+<li><p>There are also non-linear transformations we can leverage such as mapping to a uniform or Gaussian distribution.</p></li>
+<li><p>The preprocessing library has support for generating new <a class="reference external" href="https://scikit-learn.org/stable/modules/preprocessing.html#generating-polynomial-features">polynomial features</a> from existing features to augment the state. This seems exciting as a way to approximate expected but unknown physical phenomena. If we have a position/velocity model, can we generate expected accelerations or jerk behavior or something like that (e.g. velocity ~= jerk * t^2 + accel * t) and if we have generic polynomial terms we don’t need to know the coefficients ahead of time.</p></li>
+</ul>
+</section>
+<section id="unsupervised-learning">
+<h4>Unsupervised Learning<a class="headerlink" href="#unsupervised-learning" title="Permalink to this heading">¶</a></h4>
+<p><a class="reference external" href="https://scikit-learn.org/stable/unsupervised_learning.html">Unsupervised learning</a>
+covers a lot of topics and the task that we’re hoping to achieve is
+unsupervised. We don’t have known “right” models, we have detailed models of
+some systems and can compare them with simpler models to guide some aspects of
+the project, but models could always be more complicated or the complicated
+model might not be the optimal fit for the constraints. Therefore, the
+techniques to recover useful insight (learning) from data alone are directly
+useful for FormaK.</p>
+<p>Some of the most promising areas in supervised learning I’m interested to
+explore:</p>
+<section id="gaussian-mixture-models">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/mixture.html">Gaussian mixture models</a><a class="headerlink" href="#gaussian-mixture-models" title="Permalink to this heading">¶</a></h5>
+<p>Approximating a process as a mix of a finite set of Gaussian distributions.
+This seems most likely to be if there are multiple confusing sources of noise
+in a single area (e.g. multiple processes could have the same effect on a
+sensor reading) and teasing those apart or identifying when two distributions
+are indistinguishable and we could simplify the model by modeling just the one
+distribution.</p>
+</section>
+<section id="manifold-learning">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/manifold.html">Manifold learning</a><a class="headerlink" href="#manifold-learning" title="Permalink to this heading">¶</a></h5>
+<p>“Manifold Learning can be thought of as an attempt to generalize linear
+frameworks like Principle Components Analysis (PCA) to be sensitive to
+non-linear structure in data. Though supervised variants exist, the typical
+manifold learning problem is unsupervised: it learns the high-dimensional
+structure of the data from the data itself, without the use of predetermined
+classifications.” This seems of particular use for identifying simplification
+functions over the model, although I don’t know if it’d be compatible with
+analyzing a symbolic model or if it’d have to round-trip through some data
+generation first. Perhaps the data generation is a good abstraction, if the
+model only ever generates data that looks like a low dimensional space, we can
+jump to that low dimensional space.</p>
+</section>
+<section id="matrix-factorization-pca">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html">Matrix factorization/PCA</a><a class="headerlink" href="#matrix-factorization-pca" title="Permalink to this heading">¶</a></h5>
+<p>PCA aims to find a smaller subset of vectors that can explain the variability
+of the full set. This is at least directly relevant to model simplification
+(e.g. identifying if two states can be represented as one without losing
+information, or otherwise quantifying that we’d say be able to represent 90% of
+the data with the simplification). This approach is probably worth trying
+first, but it may be superceded by manifold learning because models are almost
+certainly non-linear
+- <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#incremental-pca">Incremental PCA</a>
+may be of special use for the timeseries data</p>
+</section>
+<section id="biclustering">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/biclustering.html">Biclustering</a><a class="headerlink" href="#biclustering" title="Permalink to this heading">¶</a></h5>
+<p>I think this is the algorithm that solves the state layout idea that I’d had in
+mind. Biclustering tries to find block diagonals that are connected and leave
+the rest as zeros/nearly zero/sparse. This would allow for densely packing
+subsets of the state-vector that depend on the densely packed bit (and would be
+more likely to be shared in cache) and partially ordering the rest that aren’t
+connected (by their own connections).</p>
+</section>
+<section id="covariance-estimation">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/covariance.html">Covariance estimation</a><a class="headerlink" href="#covariance-estimation" title="Permalink to this heading">¶</a></h5>
+<p>This may align with a Kalman filter-based approach I’m considering, or
+supersede it if the <a class="reference external" href="https://scikit-learn.org/stable/modules/covariance.html#robust-covariance-estimation">robust covariance
+estimation</a>
+is what I hope it is based on the name. There’s even an example of <a class="reference external" href="https://scikit-learn.org/stable/auto_examples/covariance/plot_mahalanobis_distances.html">“Separating
+inliers from outliers using a Mahalanobis
+distance”</a>.</p>
+</section>
+<section id="outlier-detection">
+<h5><a class="reference external" href="https://scikit-learn.org/stable/modules/outlier_detection.html">Outlier Detection</a><a class="headerlink" href="#outlier-detection" title="Permalink to this heading">¶</a></h5>
+<p>Online outlier detection is useful when using the model after the fact, but it
+may also be useful to do offline bulk outlier detection as a way to identify
+trends that the model is insufficient for describing.</p>
+</section>
+<section id="other-unsupervised-learning">
+<h5>Other Unsupervised Learning<a class="headerlink" href="#other-unsupervised-learning" title="Permalink to this heading">¶</a></h5>
+<p>Some of the other elements within unsupervised learning are certainly
+interesting, but it’s less clear to me how they’ll fit into the FormaK design:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/modules/clustering.html">Clustering</a>: I think this will take some more abstraction vs the typical scikit-learn examples to figure out how clustering will apply to the modeling problem. This <a class="reference external" href="https://towardsdatascience.com/time-series-clustering-deriving-trends-and-archetypes-from-sequential-data-bb87783312b4">article on time-series clustering</a> offers some insights into the types of techniques that could be applied to time series clustering and what they’re hoping to solve (and some may fall outside the scope of scikit-learn tooling). The focus is on identifying trends a human might see in data in an automated fashion and we could apply this trend-identification as way to quantify cases where the data’s expected trend from the model deviates.</p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/modules/density.html">Density Estimation</a>: “One other useful application of kernel density estimation is to learn a non-parametric generative model of a dataset in order to efficiently draw new samples from this generative model.” I think this opens more questions than it answers. One area that I’d be curious to explore is: Can you use the generative model based on the symbolic model and the generative model learned from data to compare the two and quantify the effectiveness of the symbolic model?</p></li>
+</ul>
+</section>
+</section>
+<section id="inspection-aka-interpretability">
+<h4>Inspection (aka Interpretability)<a class="headerlink" href="#inspection-aka-interpretability" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn: “The <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#module-sklearn.inspection">sklearn.inspection</a>
+module provides tools to help understand the predictions from a model and what
+affects them. This can be used to evaluate assumptions and biases of a model,
+design a better model, or to diagnose issues with model performance.”</p>
+</section>
+<section id="visualizations">
+<h4>Visualizations<a class="headerlink" href="#visualizations" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn: “[A] simple API for creating visualizations for machine
+learning”</p>
+</section>
+<section id="dataset-transformations">
+<h4>Dataset Transformations<a class="headerlink" href="#dataset-transformations" title="Permalink to this heading">¶</a></h4>
+<p>From scikit-learn: “scikit-learn provides a library of transformers, which may
+clean (see <a class="reference external" href="https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing">Preprocessing
+data</a>),
+reduce (see <a class="reference external" href="https://scikit-learn.org/stable/modules/unsupervised_reduction.html#data-reduction">Unsupervised dimensionality
+reduction</a>),
+expand (see <a class="reference external" href="https://scikit-learn.org/stable/modules/kernel_approximation.html#kernel-approximation">Kernel
+Approximation</a>)
+or generate (see <a class="reference external" href="https://scikit-learn.org/stable/modules/feature_extraction.html#feature-extraction">Feature
+extraction</a>)
+feature representations.”</p>
+</section>
+<section id="pipelines-and-feature-unions">
+<h4>Pipelines and Feature Unions<a class="headerlink" href="#pipelines-and-feature-unions" title="Permalink to this heading">¶</a></h4>
+<p><a class="reference external" href="https://scikit-learn.org/stable/modules/compose.html#pipeline">Pipelines</a> form
+an ordered sequence of tools. <a class="reference external" href="https://scikit-learn.org/stable/modules/compose.html#feature-union">Feature
+Unions</a>
+allow for combining multiples outputs into the input of a single element.
+Scikit-learn uses the term transformer to refer to the generic step in the
+pipeline.</p>
+</section>
+<section id="dataset-tools-loading-generating-etc">
+<h4>Dataset tools (loading, generating, etc)<a class="headerlink" href="#dataset-tools-loading-generating-etc" title="Permalink to this heading">¶</a></h4>
+<p>Three parts:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html">toy datasets</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/datasets/real_world.html">help downloading real world datasets</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/datasets/sample_generators.html">generating datasets</a></p></li>
+</ul>
+</section>
+<section id="computing-aka-performance">
+<h4>Computing (aka Performance)<a class="headerlink" href="#computing-aka-performance" title="Permalink to this heading">¶</a></h4>
+<p>Three parts:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/computing/scaling_strategies.html">Strategies to scale computationally [for] bigger data</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/computing/computational_performance.html">Computational Performance</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/stable/computing/parallelism.html">Parallelism, resource management, and configuration</a></p></li>
+</ul>
+</section>
+<section id="model-persistence">
+<h4><a class="reference external" href="https://scikit-learn.org/stable/model_persistence.html">Model Persistence</a><a class="headerlink" href="#model-persistence" title="Permalink to this heading">¶</a></h4>
+<p>“After training a scikit-learn model, it is desirable to have a way to persist
+the model for future use without having to retrain”</p>
+</section>
+<section id="best-practices">
+<h4><a class="reference external" href="https://scikit-learn.org/stable/common_pitfalls.html">Best Practices</a><a class="headerlink" href="#best-practices" title="Permalink to this heading">¶</a></h4>
+<p>“Illustrate some common pitfalls and anti-patterns that occur when using
+scikit-learn”</p>
+</section>
+</section>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The basic step will be to integrate the ui.Model into an interface like a
+scikit-learn model. This will allow for easy integration with scikit-learn
+pipelines, model selection and other functionality.</p>
+<p>The key classes involved are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">py.Model</span></code>: (new) Class encapsulating the model for running a model efficiently in Python code</p></li>
+<li><p>A scikit-learn interface, starting with<code class="docutils literal notranslate"><span class="pre">.fit</span></code>and <code class="docutils literal notranslate"><span class="pre">.predict</span></code>for regression</p></li>
+</ul>
+<p>The ui library will likely also need some updates to support the configuration
+of the scikit-learn like behavior.</p>
+<p>Keeping the machine learning analogy in mind, the key elements from
+scikit-learn for this design is regression. This will keep the design focused
+and unlock future advances.</p>
+<section id="the-road-ahead">
+<h3>The Road Ahead<a class="headerlink" href="#the-road-ahead" title="Permalink to this heading">¶</a></h3>
+<p>I mentioned it above in passing above, but I want to repeat it again for
+emphasis:</p>
+<p>Conceptually, a detailed, physical model derived from first principles describes
+both one complex model, as well as a space of models derived via
+simplifications, enhancements or even disconnected approximations from the
+original model. Using data from the system we hope to describe, we can select
+the appropriate model from the space. This process is analogous to a machine
+learning model, where we have one idea of how to approximate the system and
+want to select machine learning models (in a more algorithmic sense of the term
+models) and their parameters to best fit data.</p>
+<p>As a psuedo-roadmap for future integrations, model selection, dimensionality
+reduction and the preprocessing steps to augment a model with extra features
+are promising for areas where a scikit-learn integration (being able to treat
+the model as yet another scikit-learn regression) could easily yield a lot of
+fruit. This would allow for features like:</p>
+<ol class="arabic simple">
+<li><p>Given two models: a complicated model with position/velocity/acceleration/heading and a simple model with position/velocity, match fake data with position, velocity and select to the simpler model (Model selection)</p></li>
+<li><p>Given a complicated model with position/velocity/acceleration/heading, match fake data with position, velocity and down select to a simpler position/velocity model (Preprocessing/Dimensionality Reduction)</p></li>
+<li><p>Given a simple model with position/velocity, match fake data with position, velocity and acceleration and augment to the more complicated model (Preprocessing/Model Augmentation)</p></li>
+</ol>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>This feature is specific to the Python interface. There will be X feature tests:</p>
+<ol class="arabic simple">
+<li><p>Set up a simple scikit-learn pipeline and run it against the code (basic UI)</p></li>
+<li><p>Generate some fake data for a known model and fit a model to it (Regression)</p></li>
+</ol>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Document the functionality</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p>
+<ol class="arabic simple">
+<li><p>Good</p></li>
+<li><p>Bad</p></li>
+<li><p>What was added?</p></li>
+<li><p>What was removed from the design?</p></li>
+<li><p>Anything else?</p></li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2022-12-21<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<section id="retro-the-good">
+<h4>Retro: The Good<a class="headerlink" href="#retro-the-good" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>I think the overall idea and borrowing UI design is a helpful place to start</p></li>
+<li><p>Self review provided some good ideas</p></li>
+</ul>
+</section>
+<section id="retro-the-bad">
+<h4>Retro: The Bad<a class="headerlink" href="#retro-the-bad" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>The delays</p></li>
+<li><p>Mixing in linting with something that was already going slowly</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h3>2022-12-19<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<p>Some thoughts:</p>
+<p>It was tough to get myself back into completing the PR (by dates it took more
+than 2 months of mostly not much activity.</p>
+<p>That said, fixing the PR just took about 30 min to an hour of debugging and
+re-reading through stuff and being frustrated with past self for mixing things
+up. I’m hoping that some ammount of typing in the future will make it easier to
+sort out these kinds of mistakes with a tool instead of requiring me to look
+through to see where I’d mixed things up myself.</p>
+<p>Self reviewing code was a win: I came out with some ideas for improving the
+code that I’d missed when I was heads down writing the code. I’ll need to have
+a place to keep track of code review comments I’ve made but didn’t implement.</p>
+<p>Adding all the linting tools as part of this PR will make further review more
+burdensome because it’s touching lots of files. Probably a net win for
+improving the codebase, but I still haven’t gotten to mypy yet.</p>
+</section>
+<section id="id3">
+<h3>2022-10-06<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<section id="interface">
+<h4>Interface<a class="headerlink" href="#interface" title="Permalink to this heading">¶</a></h4>
+<p>One of the things that was poorly specified in the original design was what
+part of the scikit-learn interface that I’d adopt. In the end, the list is:</p>
+<p>The common stuff:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fit</span></code>: common to all scikit-learn use cases</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">score</span></code>: common</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get_param</span></code>: common, useful for the in-place modification scikit-learn does to estimators</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_param</span></code>: common, useful for the in-place modification scikit-learn does to estimators</p></li>
+</ul>
+<p>Inspired by the Covariance models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mahalanobis</span></code>: from the Covariance class, pretty easily falls out of the Extended Kalman Filter design</p></li>
+</ul>
+<p>Inspired by the manifold learning models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transform</span></code>: This takes the view that the Kalman Filter can also be used as a method to transform an input sequence into a series of errors/innovations based on its model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit_transform</span></code>: Same as transform, except that because both transform and fit calculate innovations we can save some computation by performing them together</p></li>
+</ul>
+</section>
+<section id="model-location">
+<h4>Model location<a class="headerlink" href="#model-location" title="Permalink to this heading">¶</a></h4>
+<p>The location for integrating with scikt-learn moved from the <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to the
+<code class="docutils literal notranslate"><span class="pre">python.EKF</span></code> class.</p>
+<p>I’d originally written the scikit-learn interface as part of the <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>,
+but I essentially had to re-implement the <code class="docutils literal notranslate"><span class="pre">python.EKF</span></code> class in order to
+implement fit and score. This also created some circular dependencies because
+the <code class="docutils literal notranslate"><span class="pre">formak.python</span></code> library loads <code class="docutils literal notranslate"><span class="pre">formak.ui</span></code> but <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> would want to load
+<code class="docutils literal notranslate"><span class="pre">python.EKF</span></code> to perform the optimization.</p>
+<p>This change solidifies the <code class="docutils literal notranslate"><span class="pre">ui</span></code> classes as helpers for the symbolic model and
+then <code class="docutils literal notranslate"><span class="pre">python</span></code> as one of the ways to fit or run the model.</p>
+</section>
+<section id="documentation">
+<h4>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h4>
+<p>Added documentation as a step in the design / PR process.</p>
+<p>Also, adds having a diff in the docs folder (not including the designs) as a
+Github Action. Not required, but will surface if there have been no docs
+changes.</p>
+</section>
+</section>
+</section>
+<section id="appendix">
+<h2>Appendix<a class="headerlink" href="#appendix" title="Permalink to this heading">¶</a></h2>
+<section id="citing-scikit-learn">
+<h3>Citing scikit-learn<a class="headerlink" href="#citing-scikit-learn" title="Permalink to this heading">¶</a></h3>
+<p>If you use scikit-learn in a scientific publication, we would appreciate citations to the following paper:
+Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
+Bibtex entry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">scikit</span><span class="o">-</span><span class="n">learn</span><span class="p">,</span>
+ <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Scikit</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span> <span class="n">Machine</span> <span class="n">Learning</span> <span class="ow">in</span> <span class="p">{</span><span class="n">P</span><span class="p">}</span><span class="n">ython</span><span class="p">},</span>
+ <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Pedregosa</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Varoquaux</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Gramfort</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Michel</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span>
+         <span class="ow">and</span> <span class="n">Thirion</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Grisel</span><span class="p">,</span> <span class="n">O</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Blondel</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Prettenhofer</span><span class="p">,</span> <span class="n">P</span><span class="o">.</span>
+         <span class="ow">and</span> <span class="n">Weiss</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Dubourg</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Vanderplas</span><span class="p">,</span> <span class="n">J</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Passos</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span> <span class="ow">and</span>
+         <span class="n">Cournapeau</span><span class="p">,</span> <span class="n">D</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Brucher</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Perrot</span><span class="p">,</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="n">Duchesnay</span><span class="p">,</span> <span class="n">E</span><span class="o">.</span><span class="p">},</span>
+ <span class="n">journal</span><span class="o">=</span><span class="p">{</span><span class="n">Journal</span> <span class="n">of</span> <span class="n">Machine</span> <span class="n">Learning</span> <span class="n">Research</span><span class="p">},</span>
+ <span class="n">volume</span><span class="o">=</span><span class="p">{</span><span class="mi">12</span><span class="p">},</span>
+ <span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">2825</span><span class="o">--</span><span class="mi">2830</span><span class="p">},</span>
+ <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2011</span><span class="p">}</span>
+<span class="p">}</span>
+
+</pre></div>
+</div>
+<p>If you want to cite scikit-learn for its API or design, you may also want to consider the following paper:
+API design for machine learning software: experiences from the scikit-learn project, Buitinck et al., 2013.
+Bibtex entry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%</span> <span class="n">raw</span> <span class="o">%</span><span class="p">}</span>
+<span class="nd">@inproceedings</span><span class="p">{</span><span class="n">sklearn_api</span><span class="p">,</span>
+  <span class="n">author</span>    <span class="o">=</span> <span class="p">{</span><span class="n">Lars</span> <span class="n">Buitinck</span> <span class="ow">and</span> <span class="n">Gilles</span> <span class="n">Louppe</span> <span class="ow">and</span> <span class="n">Mathieu</span> <span class="n">Blondel</span> <span class="ow">and</span>
+               <span class="n">Fabian</span> <span class="n">Pedregosa</span> <span class="ow">and</span> <span class="n">Andreas</span> <span class="n">Mueller</span> <span class="ow">and</span> <span class="n">Olivier</span> <span class="n">Grisel</span> <span class="ow">and</span>
+               <span class="n">Vlad</span> <span class="n">Niculae</span> <span class="ow">and</span> <span class="n">Peter</span> <span class="n">Prettenhofer</span> <span class="ow">and</span> <span class="n">Alexandre</span> <span class="n">Gramfort</span>
+               <span class="ow">and</span> <span class="n">Jaques</span> <span class="n">Grobler</span> <span class="ow">and</span> <span class="n">Robert</span> <span class="n">Layton</span> <span class="ow">and</span> <span class="n">Jake</span> <span class="n">VanderPlas</span> <span class="ow">and</span>
+               <span class="n">Arnaud</span> <span class="n">Joly</span> <span class="ow">and</span> <span class="n">Brian</span> <span class="n">Holt</span> <span class="ow">and</span> <span class="n">Ga</span><span class="p">{</span>\<span class="s2">&quot;</span><span class="si">{e}</span><span class="s2">}l Varoquaux},</span>
+  <span class="n">title</span>     <span class="o">=</span> <span class="p">{{</span><span class="n">API</span><span class="p">}</span> <span class="n">design</span> <span class="k">for</span> <span class="n">machine</span> <span class="n">learning</span> <span class="n">software</span><span class="p">:</span> <span class="n">experiences</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span>
+               <span class="n">project</span><span class="p">},</span>
+  <span class="n">booktitle</span> <span class="o">=</span> <span class="p">{</span><span class="n">ECML</span> <span class="n">PKDD</span> <span class="n">Workshop</span><span class="p">:</span> <span class="n">Languages</span> <span class="k">for</span> <span class="n">Data</span> <span class="n">Mining</span> <span class="ow">and</span> <span class="n">Machine</span> <span class="n">Learning</span><span class="p">},</span>
+  <span class="n">year</span>      <span class="o">=</span> <span class="p">{</span><span class="mi">2013</span><span class="p">},</span>
+  <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">108</span><span class="o">--</span><span class="mi">122</span><span class="p">},</span>
+<span class="p">}</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endraw</span> <span class="o">%</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Scikit-Learn integration</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#the-dream">The Dream</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#context">Context</a><ul>
+<li><a class="reference internal" href="#scikit-learn">Scikit-Learn</a><ul>
+<li><a class="reference internal" href="#regression">Regression</a></li>
+<li><a class="reference internal" href="#dimensionality-reduction">Dimensionality Reduction</a></li>
+<li><a class="reference internal" href="#model-selection">Model Selection</a></li>
+<li><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
+<li><a class="reference internal" href="#unsupervised-learning">Unsupervised Learning</a><ul>
+<li><a class="reference internal" href="#gaussian-mixture-models">Gaussian mixture models</a></li>
+<li><a class="reference internal" href="#manifold-learning">Manifold learning</a></li>
+<li><a class="reference internal" href="#matrix-factorization-pca">Matrix factorization/PCA</a></li>
+<li><a class="reference internal" href="#biclustering">Biclustering</a></li>
+<li><a class="reference internal" href="#covariance-estimation">Covariance estimation</a></li>
+<li><a class="reference internal" href="#outlier-detection">Outlier Detection</a></li>
+<li><a class="reference internal" href="#other-unsupervised-learning">Other Unsupervised Learning</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#inspection-aka-interpretability">Inspection (aka Interpretability)</a></li>
+<li><a class="reference internal" href="#visualizations">Visualizations</a></li>
+<li><a class="reference internal" href="#dataset-transformations">Dataset Transformations</a></li>
+<li><a class="reference internal" href="#pipelines-and-feature-unions">Pipelines and Feature Unions</a></li>
+<li><a class="reference internal" href="#dataset-tools-loading-generating-etc">Dataset tools (loading, generating, etc)</a></li>
+<li><a class="reference internal" href="#computing-aka-performance">Computing (aka Performance)</a></li>
+<li><a class="reference internal" href="#model-persistence">Model Persistence</a></li>
+<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#the-road-ahead">The Road Ahead</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2022-12-21</a><ul>
+<li><a class="reference internal" href="#retro-the-good">Retro: The Good</a></li>
+<li><a class="reference internal" href="#retro-the-bad">Retro: The Bad</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">2022-12-19</a></li>
+<li><a class="reference internal" href="#id3">2022-10-06</a><ul>
+<li><a class="reference internal" href="#interface">Interface</a></li>
+<li><a class="reference internal" href="#model-location">Model location</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#appendix">Appendix</a><ul>
+<li><a class="reference internal" href="#citing-scikit-learn">Citing scikit-learn</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="runtime.html"
+                          title="previous chapter">FormaK Managed Runtime</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/sklearn-integration.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="FormaK Managed Runtime"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Scikit-Learn integration</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FormaK V0 &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Generate C++ from AST" href="generate_cpp_from_ast.html" />
+    <link rel="prev" title="Common Subexpression Elimination" href="cse.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK V0</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="formak-v0">
+<h1>FormaK V0<a class="headerlink" href="#formak-v0" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2022-08-24</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2022-08-26</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK provides the tooling so that you can easily derive Python and C++
+implementations for optimal models that best match your data given the
+constraints, models that are fast and models that can be generated with
+automation. FormaK aims to combine symbolic modeling for fast, efficient system
+modelling with code generation to create performant code that is easy to use.</p>
+<p>The values of the FormaK project (in order) are:</p>
+<ul class="simple">
+<li><p>Easy to use</p></li>
+<li><p>Performant</p></li>
+</ul>
+<section id="the-persona">
+<h3>The Persona<a class="headerlink" href="#the-persona" title="Permalink to this heading">¶</a></h3>
+<p>Who is this for?</p>
+<p>The user of FormaK is someone with domain expertise who is looking to take
+their knowledge and their data and quickly (measured in the user’s time) create
+a model, either as a project in itself or as part of a larger project.</p>
+<p>The user isn’t expected to know or have to understand the mechanics of what’s
+going on under the hood in order to get value from the library. This means
+things like sane defaults and an easy to use interface that’s hard to misuse
+are highly important. The library should encapsulate a collective knowledge
+that, as it improves over time, can improve everyone’s work.</p>
+<p>On the flip side, a user with more familiarity of the modelling process or the
+FormaK tool should be able to use more advanced features and select
+configuration that better matches their use case.</p>
+</section>
+<section id="the-five-keys">
+<h3>The Five Keys<a class="headerlink" href="#the-five-keys" title="Permalink to this heading">¶</a></h3>
+<p>In line with the values and the intended user, the intended user experience is
+as follows. The user provides:</p>
+<ul class="simple">
+<li><p>Model that describes the physics of the system</p></li>
+<li><p>Execution criteria (e.g. memory usage, execution time)</p></li>
+<li><p>Time series data for the system</p></li>
+</ul>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+</section>
+<section id="under-the-hood">
+<h3>Under the Hood<a class="headerlink" href="#under-the-hood" title="Permalink to this heading">¶</a></h3>
+<p>Under the hood, the library will provide optimizations for improved accuracy,
+selecting better underlying problem formulations and reduced compute time during
+model execution. The library will also perform transparent optimizations at the
+model-definition and C++ implementation levels.</p>
+</section>
+</section>
+<section id="roadmap-and-milestones">
+<h2>Roadmap and Milestones<a class="headerlink" href="#roadmap-and-milestones" title="Permalink to this heading">¶</a></h2>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" checked="checked" disabled="disabled" type="checkbox"> Python UI Demo - defining models</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Python Models</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Python Model Selection with scikit-learn integration</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> C++ Generation Demo</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Automated CI</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Automated Feature Test Reporting</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Writeup of the demo</p></li>
+</ul>
+</section>
+<section id="development-process">
+<h2>Development Process<a class="headerlink" href="#development-process" title="Permalink to this heading">¶</a></h2>
+<p>The development process for adding features will be:</p>
+<ol class="arabic simple">
+<li><p>Write a Design Doc</p></li>
+<li><p>Write feature tests. When the feature tests pass, the feature is nominally
+working at an alpha level</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Implement the feature, including additional testing</p></li>
+<li><p>Code Review, Refactor</p></li>
+<li><p>Merge via PR</p></li>
+<li><p>Write up successes, retro of what changed (to include that feedback in future
+designs)</p></li>
+</ol>
+<section id="note-1">
+<h3>Note 1<a class="headerlink" href="#note-1" title="Permalink to this heading">¶</a></h3>
+<p>This project covers three “languages”:</p>
+<ul class="simple">
+<li><p>Python</p></li>
+<li><p>C++</p></li>
+<li><p>C++ wrapped in Python</p></li>
+</ul>
+<p>This means that most features will have feature tests across the three language
+use cases.</p>
+</section>
+<section id="note-2">
+<h3>Note 2<a class="headerlink" href="#note-2" title="Permalink to this heading">¶</a></h3>
+<p>Features can track and share their status by referring to these stages
+in the development process. This makes it easier to share what features are in
+what stage of the development process over time and for each release.</p>
+</section>
+<section id="example-development-process">
+<h3>Example Development Process<a class="headerlink" href="#example-development-process" title="Permalink to this heading">¶</a></h3>
+<p>Making this a little more specific, the development process for calling C++ from
+Python would look something like the following:</p>
+<ol class="arabic simple">
+<li><p>Write a Design Doc. This includes context for the feature, the problem (use
+C++ from Python), the expected solution approach and feature tests. The
+feature tests function as success criteria for the design</p></li>
+<li><p>Write the feature test(s): Python file with tests where the tests pass if it
+successfully calls C++ logic</p></li>
+<li><p>Build a simple prototype: call a simple C++ function that returns integers</p></li>
+<li><p>Build the feature to wrap the C++ model library interface</p></li>
+<li><p>Add additional unit tests to explore variations of possible model uses</p></li>
+<li><p>Code review</p></li>
+<li><p>Merge PR</p></li>
+<li><p>Write up the project</p></li>
+</ol>
+</section>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>Combine tooling and libraries in Python:</p>
+<ul class="simple">
+<li><p>sympy</p></li>
+<li><p>scikit-learn</p></li>
+<li><p>hypothesis</p></li>
+<li><p>etc</p></li>
+</ul>
+<p>with libraries and benefits of C++:</p>
+<ul class="simple">
+<li><p>performant, only pay for what you use</p></li>
+<li><p>Eigen</p></li>
+<li><p>etc</p></li>
+</ul>
+<p>and end up with an easy to use interface so it’s easy to adopt and use. Working
+together, we can build “Middle-Out”. On the frontend, we can add features to
+the Python interface. On the backend, we augment the features with performant
+implementations.</p>
+<ul class="simple">
+<li><p>Python, and specifically sympy, is the primary interface for interacting with
+the library with a focus on ease of use.</p></li>
+<li><p>C++ is a “backend” that executes the model defined in Python with a focus on
+performance.</p></li>
+<li><p>Pure Python and Python wrapping C++ are alternative backends for executing the
+model</p></li>
+</ul>
+</section>
+<section id="revisions">
+<h2>Revisions:<a class="headerlink" href="#revisions" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2022-08-26<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Add the Persona section</p></li>
+<li><p>Revise some language in the Overview</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">FormaK V0</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#the-persona">The Persona</a></li>
+<li><a class="reference internal" href="#the-five-keys">The Five Keys</a></li>
+<li><a class="reference internal" href="#under-the-hood">Under the Hood</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roadmap-and-milestones">Roadmap and Milestones</a></li>
+<li><a class="reference internal" href="#development-process">Development Process</a><ul>
+<li><a class="reference internal" href="#note-1">Note 1</a></li>
+<li><a class="reference internal" href="#note-2">Note 2</a></li>
+<li><a class="reference internal" href="#example-development-process">Example Development Process</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a></li>
+<li><a class="reference internal" href="#revisions">Revisions:</a><ul>
+<li><a class="reference internal" href="#id1">2022-08-26</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="cse.html"
+                          title="previous chapter">Common Subexpression Elimination</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="generate_cpp_from_ast.html"
+                          title="next chapter">Generate C++ from AST</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/formak_v0.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK V0</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

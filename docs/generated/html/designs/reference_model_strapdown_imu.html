@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Reference Model: Strapdown IMU &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FormaK Managed Runtime" href="runtime.html" />
+    <link rel="prev" title="Python UI Demo" href="python_ui_demo.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="FormaK Managed Runtime"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="python_ui_demo.html" title="Python UI Demo"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Reference Model: Strapdown IMU</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="reference-model-strapdown-imu">
+<h1>Reference Model: Strapdown IMU<a class="headerlink" href="#reference-model-strapdown-imu" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin <a class="reference external" href="https://fosstodon.org/&#64;buck">&#64;buck&#64;fosstodon.org</a></p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-09-19</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-10-29</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="python_ui_demo.html"><span class="std std-doc">designs/python_ui_demo.md</span></a></p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design focuses on an example of the “Python Interface to define models” to
+define a reference model for a strapdown IMU. This serves two purposes:</p>
+<ol class="arabic simple">
+<li><p>Provide a reference for implementing a strapdown IMU as a part of other models</p></li>
+<li><p>Further exercise the FormaK interface to sand down rough edges</p></li>
+</ol>
+<p>As a third consideration, this will also provide a reference design for how
+other reference models will be designed and presented in the future.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<section id="the-strapdown-imu">
+<h3>The Strapdown IMU<a class="headerlink" href="#the-strapdown-imu" title="Permalink to this heading">¶</a></h3>
+<p>What is a strapdown IMU?</p>
+<p>A strapdown IMU is an IMU mounted to the vehicle of interest (instead of being
+mounted on a gimbal or on some reference point).</p>
+</section>
+<section id="definitions">
+<h3>Definitions<a class="headerlink" href="#definitions" title="Permalink to this heading">¶</a></h3>
+<p>This design will implement the strapdown IMU model defined by the source
+<a class="reference external" href="https://rotations.berkeley.edu/strapdown-inertial-navigation/">Strapdown inertial navigation | Rotations</a>.
+The site is a joint resource from the mechanical engineering departments at
+Rose-Hulman Institute of Technology and UC Berkeley.</p>
+<p><img alt="Definition of terminology and axis" src="../_images/tracked-body.png" /></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://rotations.berkeley.edu/wp-content/uploads/2017/10/tracked-body.png">Source</a></p></li>
+<li><p><span class="math notranslate nohighlight">\(e_{i}\)</span> axis of rigid body (1, 2, 3)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\omega\)</span> vector of rotations of the rigid body</p></li>
+<li><p><span class="math notranslate nohighlight">\(\omega_{i}(t) = \omega \cdot e_{i}\)</span> IMU reading of rotation</p></li>
+<li><p><span class="math notranslate nohighlight">\(g\)</span> acceleration due to gravity</p></li>
+<li><p><span class="math notranslate nohighlight">\(\ddot{x_{A}}\)</span> acceleration of the rigid body at the IMU measurement point A</p></li>
+<li><p><span class="math notranslate nohighlight">\(f_{i}(t) = (\ddot{x_{A}} - g) \cdot e_{i}\)</span> IMU reading of acceleration (specific force)</p></li>
+</ul>
+<p>The reference design uses 3-2-1 Euler angles.</p>
+<p><img alt="Rotations" src="../_images/rotations.svg" /></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-5bc0ef31513d8f6aa027b50b28f7dba9_l3.svg">Source</a></p></li>
+</ul>
+<p><img alt="Accelerations" src="../_images/accelerations.svg" /></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://rotations.berkeley.edu/wp-content/ql-cache/quicklatex.com-7dc4cf09b3717d6ebc1d7ca32a1e3dda_l3.svg">Source</a></p></li>
+</ul>
+<p>With the accelerations defined, we can then integrate the acceleration once into velocity and then twice into position.</p>
+<div class="math notranslate nohighlight">
+\[v_{t + 1} = v_{t} + dt * a_{t}\]</div>
+<div class="math notranslate nohighlight">
+\[x_{t + 1} = x_{t}_{} + dt * x_{t} + \dfrac{1}{2} dt^{2} * a_{t}\]</div>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>The “Rotations” resource also provides an implementation of the strapdown IMU
+model for tracking a
+<a class="reference external" href="https://rotations.berkeley.edu/reconstructing-the-motion-of-a-tossed-iphone/">tumbling smartphone</a>.</p>
+<p>The feature test will implement the strapdown model based on the data provided
+and revisions to the reference model suggested in the resource.</p>
+</section>
+<section id="roadmap-and-process">
+<h2>Roadmap and Process<a class="headerlink" href="#roadmap-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)
+3A. Experiments
+3B. Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-10-29<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>This design has grown in time further than I would have liked. Originally, I’d
+aimed for 2 weeks to 4 weeks, and it’s now closer to 6.</p>
+<p>A few things have stayed the same. The design remains intended to provide a
+reference for inclusion in other designs and I was able to learn from some of
+FormaK’s rough edges. Unfortunately, one aspect (simplify execution time)
+cropped up again and I did not reach a suitable resolution.</p>
+<p>The few things that have stayed the same are notable because pretty much every
+aspect of this design has been adapted from the original.</p>
+<section id="sympy-quaternions">
+<h4>Sympy, Quaternions<a class="headerlink" href="#sympy-quaternions" title="Permalink to this heading">¶</a></h4>
+<p>The math outlined above was largely replaced by using the Sympy Quaternion
+model. This was absolutely the correct decision and I should have done some
+more research before starting to see if Sympy had this type of rotation
+representation already. At latest, this should have been found in the
+experimental phase of the project. In the end, ~3 weeks could have been cut out
+of the timeline if I’d recognized this at the experimental phase.</p>
+</section>
+<section id="feature-testing">
+<h4>Feature Testing<a class="headerlink" href="#feature-testing" title="Permalink to this heading">¶</a></h4>
+<p>The feature test was also replaced wholesale. This was partly for convenience
+(I already have NASA data) but also because the NASA data comes with clearly
+defined motion information. The start of the data is pre-ignition and then
+there are also known times for ignition and liftoff. This pre-ignition data
+serves as a more test-able feature test because I can know the orientation of
+the IMU (provided by the NASA documentation) and perform a pseudo-static test
+to assert that the motion of the sensor data doesn’t move. This pseudo-static
+test made it easy to understand when the model wasn’t oriented correctly or
+incorrectly accommodating gravity. For example, something is off when there’s a
+2g (19.62 m/s2) effect in what should be a static test.</p>
+<p>The change in feature test also provided the motion for two extensions to the
+model beyond the basics: calibration for IMU orientation and calibration for
+IMU acceleration biases.</p>
+<p>First, the IMU was rotated in all axis away from the nominal navigation frame,
+motivating the use of calibration to “remove” this in favor of reporting in
+neat and tidy vehicle aligned axis.</p>
+<p>Second, the IMU exhibited acceleration bias that quickly caused non-zero motion
+even over relatively short time scales (~1 second). Some of the bias could be
+corrected, but some was also a random walk that would need to be modeled within
+the noise in a full filter implementation and corrected for via fusion with the
+onboard LIDAR system.</p>
+<p><img alt="Biased velocity data" src="../_images/biased_imu_vel_data.png" /></p>
+<p><img alt="Biased acceleration data with approximate visual center not at 0, 0" src="../_images/biased_imu_accel_data.png" /></p>
+</section>
+<section id="unit-testing">
+<h4>Unit Testing<a class="headerlink" href="#unit-testing" title="Permalink to this heading">¶</a></h4>
+<p>The design also missed some straightforward opportunities for unit testing.
+Specifically, the final implementation has unit tests for static motion and
+circular motion that have straightforward closed-form references to compare to
+the IMU model.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Reference Model: Strapdown IMU</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#the-strapdown-imu">The Strapdown IMU</a></li>
+<li><a class="reference internal" href="#definitions">Definitions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#roadmap-and-process">Roadmap and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-10-29</a><ul>
+<li><a class="reference internal" href="#sympy-quaternions">Sympy, Quaternions</a></li>
+<li><a class="reference internal" href="#feature-testing">Feature Testing</a></li>
+<li><a class="reference internal" href="#unit-testing">Unit Testing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="python_ui_demo.html"
+                          title="previous chapter">Python UI Demo</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="runtime.html"
+                          title="next chapter">FormaK Managed Runtime</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/reference_model_strapdown_imu.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runtime.html" title="FormaK Managed Runtime"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="python_ui_demo.html" title="Python UI Demo"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Reference Model: Strapdown IMU</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

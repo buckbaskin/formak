@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Calibration &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="C++ Library for Model Evaluation" href="cpp_library_for_model_evaluation.html" />
+    <link rel="prev" title="Design Documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cpp_library_for_model_evaluation.html" title="C++ Library for Model Evaluation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Design Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Calibration</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="calibration">
+<h1>Calibration<a class="headerlink" href="#calibration" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-05-06</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-05-06</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cpp_library_for_model_evaluation.html"><span class="std std-doc">designs/cpp_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>This design provides an extension to the fifth of the Five Keys
+“C++ interfaces to support a variety of model uses”.</p>
+<p>When defining a model, in theory everything can be estimated as a state or
+provided as a control input; however, having the ability to provide
+calibrations can be helpful or even essential. For example, in the NASA rocket
+dataset the position of the IMU on the rocket is calibrated ahead of time so it
+doesn’t need to be estimated online.</p>
+<p>For the case of a suite of ranging sensors (say ultra-wideband time of flight
+sensors), the calibration term allows for easily setting up a single model with
+different calibrations for the known positions of each sensor in the reference
+frame. Without the calibration, each pose would be arbitrary and require
+solving a problem beyond what is suited to a Kalman Filter. With the
+calibration, the sensor model can be defined once and then calibrated multiple
+times at runtime based on how the sensors are set up for a particular use case.</p>
+<p>The Calibration use case also provides additional functionality on top of the
+Control inputs. The two categories conceptually overlap as “known” values that
+are accepted in the state update; however, the Calibration values are also
+available within the sensor model. With just a State and Control input, the
+state needs to accept control inputs as a pass through to sensor models. This
+adds a compute penalty for computations with the state.</p>
+<p>Supporting calibration is a big step forward in functionality for FormaK that
+enables a variety of new model use cases.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The basic approach will be to pass in calibrated values to both the process
+model and sensor model, largely following the implementation of the Control
+type (except that it will also be provided to sensor models).</p>
+<p>The key classes in the implementation are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>: Revised to support the calibration parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python.Model</span></code>: Revised to support the calibration parameters</p></li>
+<li><p>Generated <code class="docutils literal notranslate"><span class="pre">Calibration</span></code>: (new) Generated type to provide calibration terms at runtime</p></li>
+</ul>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>This design was retcon’d based on a feature test of developing a model for a
+rocket launch based on NASA data.</p>
+<p><a class="reference external" href="https://data.nasa.gov/Aerospace/Deorbit-Descent-and-Landing-Flight-1-DDL-F1-/vicw-ivgd">NASA Dataset Page</a>
+<a class="reference external" href="https://www.youtube.com/watch?v=O97dPDkUGg4">YouTube Video of Launch</a></p>
+<p>The feature tests for this design are based on defining a model of the rocket
+motion and then generating Python and C++ models for the model. The
+implementation exposed a missing aspect of the FormaK model, specifically the
+introduction of the information about the pose of the IMU in the navigation
+frame of the rocket. This is provided with the dataset, but is not easily
+integrated into the model when it could only be a state (and therefore
+estimated based on an initial condition) or control (and therefore not
+available when calculating a sensor model for the IMU).</p>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-05-05<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>This design (cut out of the broader rocket model work) accidentally took
+exactly how long I wanted, specifically landing one month after the post-review
+of the previous feature. This was a happy accident because I’d originally
+intended for the rocket model itself to land in this time and instead wandered
+into this feature to design and deliver early.</p>
+<section id="original-list-of-features-expected-for-the-rocket-model">
+<h4>Original List of Features Expected For The Rocket Model<a class="headerlink" href="#original-list-of-features-expected-for-the-rocket-model" title="Permalink to this heading">¶</a></h4>
+<p>Note: the only thing that came out of this was the calibration, partial vector
+support and partial rotation support…</p>
+<ul class="simple">
+<li><p>Vector support</p></li>
+<li><p>Rotations</p></li>
+<li><p>Units</p></li>
+<li><p>Map</p></li>
+<li><p>Data ingestion helpers</p></li>
+</ul>
+</section>
+<section id="design-changes-code">
+<h4>Design Changes - Code<a class="headerlink" href="#design-changes-code" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Passing calibration into every function call. In the future, a managed filter can construct the calibration once, but for now they’re stateless “pure” functions so they need to get the calibration passed in.</p></li>
+<li><p>Update of the interface to be “don’t pay for what you don’t use”. This applies both to optional arguments on the Python side and C++ that is conditionally generated only if the appropriate Calibration/Control is needed</p></li>
+<li><p>Rotations, translations, velocities, etc got their own named generators in the model definition code. I expect this will be expanded in the future to enable easier model generation and moved into the UI code itself (e.g. rigid transforms, etc)</p></li>
+<li><p>Overall, I opted to remove some of the <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> functionality that was taking a long time for a larger model in favor of faster iteration and some testing after the fact. This was a key win because I was sitting around for 5 minutes at a time at the slowest point</p></li>
+<li><p>Better error messages along the way. I had enough failures and time to think to find the failure, write an error message for it and rewrite the error message the second time around</p></li>
+</ul>
+</section>
+<section id="design-changes-tooling">
+<h4>Design Changes - Tooling<a class="headerlink" href="#design-changes-tooling" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Complete rewrite of C++ code gen templates with if-based optional inclusion. This got quite messy and is still in Jinja but maybe not for long.</p></li>
+<li><p>I chose to unwind some of the changes I’d made to check models for invalid cases. It was slow to execute and false-positive prone.</p></li>
+<li><p>Basic testing went a long way to finding obvious stuff and not-so obvious stuff. I bet there are edge cases, but most of the basics are covered</p></li>
+<li><p>Sympy <code class="docutils literal notranslate"><span class="pre">simplify</span></code> is too slow to be useful without a more careful application</p></li>
+<li><p>It’s helpful to not have to write to a file all the time. Tests will just dump the model writing to stdout if there’s no file specified so the C++ compile calls can be run in tests</p></li>
+</ul>
+</section>
+<section id="some-things-i-learned-i-didn-t-know">
+<h4>Some Things I Learned I Didn’t Know<a class="headerlink" href="#some-things-i-learned-i-didn-t-know" title="Permalink to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Rotations. I have the nominal math, but still not a completely satisfying approach</p></li>
+<li><p>Benchmarking is important even for smaller models</p></li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Calibration</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a></li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-05-05</a><ul>
+<li><a class="reference internal" href="#original-list-of-features-expected-for-the-rocket-model">Original List of Features Expected For The Rocket Model</a></li>
+<li><a class="reference internal" href="#design-changes-code">Design Changes - Code</a></li>
+<li><a class="reference internal" href="#design-changes-tooling">Design Changes - Tooling</a></li>
+<li><a class="reference internal" href="#some-things-i-learned-i-didn-t-know">Some Things I Learned I Didn’t Know</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Design Documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="cpp_library_for_model_evaluation.html"
+                          title="next chapter">C++ Library for Model Evaluation</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/calibration.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cpp_library_for_model_evaluation.html" title="C++ Library for Model Evaluation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Design Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Calibration</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

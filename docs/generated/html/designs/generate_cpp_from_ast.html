@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Generate C++ from AST &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b76e3c8a" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Innovation Filtering" href="innovation_filtering.html" />
+    <link rel="prev" title="FormaK V0" href="formak_v0.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Generate C++ from AST</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="generate-c-from-ast">
+<h1>Generate C++ from AST<a class="headerlink" href="#generate-c-from-ast" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-06-12</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-06-12</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cpp_library_for_model_evaluation.html"><span class="std std-doc">designs/cpp_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-odd">Status<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>This design provides an extension to the fifth of the Five Keys
+“C++ interfaces to support a variety of model uses” by reworking how C++
+generation is done for easier extensions. After the Calibration design, a lot
+of the code templates looked like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="n">StateAndVariance</span>
+        <span class="n">ExtendedKalmanFilter</span><span class="p">::</span><span class="n">process_model</span><span class="p">(</span>
+            <span class="n">double</span> <span class="n">dt</span><span class="p">,</span>
+            <span class="n">const</span> <span class="n">StateAndVariance</span><span class="o">&amp;</span> <span class="nb">input</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">off</span>
+<span class="p">{</span><span class="o">%</span> <span class="k">if</span> <span class="n">enable_calibration</span> <span class="o">%</span><span class="p">}</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">on</span>
+            <span class="p">,</span>
+            <span class="n">const</span> <span class="n">Calibration</span><span class="o">&amp;</span> <span class="n">input_calibration</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">off</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>  <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">on</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">off</span>
+<span class="p">{</span><span class="o">%</span> <span class="k">if</span> <span class="n">enable_control</span> <span class="o">%</span><span class="p">}</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">on</span>
+            <span class="p">,</span>
+            <span class="n">const</span> <span class="n">Control</span><span class="o">&amp;</span> <span class="n">input_control</span>
+            <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">off</span>
+<span class="p">{</span><span class="o">%</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>  <span class="o">//</span> <span class="n">clang</span><span class="o">-</span><span class="nb">format</span> <span class="n">on</span>
+        <span class="p">)</span> <span class="p">{</span>
+</pre></div>
+</div>
+<p>Instead of relying on increasingly intricate Jinja templating and managing
+formatting via flagging clang-format on and off, I instead opted for another
+approach: generate the code from an AST that approximated the Python AST. The
+reason to go with something that approximates the Python AST is to have an
+inspiration and a guide from an AST that has accumulated experience.</p>
+<p>Afterwards, the code can look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Arg</span><span class="p">(</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">),</span>
+            <span class="n">Arg</span><span class="p">(</span><span class="s2">&quot;const StateAndVariance&amp;&quot;</span><span class="p">,</span> <span class="s2">&quot;input_state&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+
+        <span class="k">if</span> <span class="n">enable_calibration</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Arg</span><span class="p">(</span><span class="s2">&quot;const Calibration&amp;&quot;</span><span class="p">,</span> <span class="s2">&quot;input_calibration&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">enable_control</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Arg</span><span class="p">(</span><span class="s2">&quot;const Control&amp;&quot;</span><span class="p">,</span> <span class="s2">&quot;input_control&quot;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">FunctionDeclaration</span><span class="p">(</span>
+            <span class="s2">&quot;StateAndVariance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;process_model&quot;</span><span class="p">,</span>
+            <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">modifier</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>This approach isn’t necessarily shorter, but it allows for replacing Jinja
+templating with manipulating Python structures (primarily lists) in code. It
+also generates cleaner code without droppings for clang-formatting</p>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>The feature tests for this were originally based on generating code to match
+strings of examples purely in Python. Eventually, they were moved to C++
+compilation to capture ensuring the overall feature generated valid C++.</p>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-06-12<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>Overall, this design was a lot of manual work to translate over. I remain
+optimistic that this translation will be worth it.</p>
+<p>There are some areas where the learnings evolved over the project. Primarily,
+this was the patterns for concisely and clearly manipulating the structures as
+they were being implemented, especially args. Things evolved through:</p>
+<ul class="simple">
+<li><p>copying and pasting code</p></li>
+<li><p>wrapping the logic in functions, but still with repeated code (see <code class="docutils literal notranslate"><span class="pre">State_model</span></code>)</p></li>
+<li><p>finding the <code class="docutils literal notranslate"><span class="pre">standard_args</span></code> pattern (see the <code class="docutils literal notranslate"><span class="pre">ClassDef</span></code> for <code class="docutils literal notranslate"><span class="pre">{reading_type.typename}SensorModel</span></code>)</p></li>
+<li><p>In theory, this could go to filtering args based on zipping with an enable value, but I haven’t gone to this yet (some of the other functional changes got quite long and full of parens)</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Generate C++ from AST</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-06-12</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="formak_v0.html"
+                          title="previous chapter">FormaK V0</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="innovation_filtering.html"
+                          title="next chapter">Innovation Filtering</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/generate_cpp_from_ast.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Generate C++ from AST</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>
