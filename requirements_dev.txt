@@ -11,6 +11,7 @@ myst-parser
 pip-tools
 pre-commit
 pydocstringformatter
+Pygments==2.15.1
 pylint
 pyupgrade
 sphinx==7.1.2
