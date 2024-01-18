@@ -1,5 +1,7 @@
 # FormaK
 
+<!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
+
 FormaK builds fast, reliable, easy to use state estimation.
 
 FormaK is tooling to easily derive Python and C++ implementations of models
