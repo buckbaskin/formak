@@ -6,7 +6,7 @@ Demonstrate tuning a model for two different innovation filtering hyper-paramete
 
 
 import numpy as np
-from formak.ui import DesignManager
+from formak.ui import DesignManager, StateId
 from model import (
     calibration_map,
     process_noise,
@@ -53,12 +53,12 @@ def test_with_synthetic_data():
 def test_state_machine_interface():
     initial_state = DesignManager(name="mercury")
 
-    assert initial_state.history() == ["Start"]
+    assert initial_state.history() == [StateId.Start]
     assert initial_state.available_transitions() == ["symbolic_model"]
-    assert initial_state.search("Fit Model") == ["symbolic_model", "fit_model"]
+    assert initial_state.search(StateId.Fit_Model) == ["symbolic_model", "fit_model"]
 
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
-    assert symbolic_model_state.history() == ["Start", "Symbolic Model"]
+    assert symbolic_model_state.history() == [StateId.Start, StateId.Symbolic_Model]
     assert symbolic_model_state.available_transitions() == ["fit_model"]
-    assert symbolic_model_state.search("Fit Model") == ["fit_model"]
+    assert symbolic_model_state.search(StateId.Fit_Model) == ["fit_model"]

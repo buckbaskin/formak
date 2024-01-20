@@ -21,7 +21,8 @@ SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
 class StateId(Enum):
     Start = 0
-    Sensor0 = auto()
+    Symbolic_Model = auto()
+    Fit_Model = auto()
 
 
 class ConfigView(python.Config):
@@ -67,13 +68,21 @@ class StateMachineState:
         return self._history
 
     @classmethod
-    def available_transitions(cls) -> List[StateId]:
+    def available_transitions(cls) -> List[str]:
+        """
+        Available function calls
+
+        for each name in the list, getattr(state, name)(*args, **kwargs) will perform the state transition
+        """
         raise NotImplementedError()
 
     def search(
         self, end_state: str, *, max_iter: int = 100, debug: bool = True
-    ) -> List[StateId]:
-        """Breadth First Search of state transitions."""
+    ) -> List[str]:
+        """Breadth First Search of state transitions.
+
+        For each name in the list, next_state = getattr(current_state, name)(*args, **kwargs) will perform the next state transition
+        """
         frontier = [SearchState(self, [])]
 
         if debug:
@@ -159,7 +168,7 @@ class FitModelState(StateMachineState):
         return StateId.Fit_Model
 
     @classmethod
-    def available_transitions(cls) -> List[StateId]:
+    def available_transitions(cls) -> List[str]:
         return []
 
     def export_python(self) -> python.ExtendedKalmanFilter:
@@ -274,7 +283,7 @@ class SymbolicModelState(StateMachineState):
         return StateId.Symbolic_Model
 
     @classmethod
-    def available_transitions(cls) -> List[StateId]:
+    def available_transitions(cls) -> List[str]:
         return ["fit_model"]
 
     def fit_model(
@@ -319,8 +328,8 @@ class DesignManager(StateMachineState):
         return StateId.Start
 
     @classmethod
-    def available_transitions(cls) -> List[StateId]:
-        return [StateId.Symbolic_Model]
+    def available_transitions(cls) -> List[str]:
+        return ["symbolic_model"]
 
     def symbolic_model(self, model: ui_model.Model) -> SymbolicModelState:
         return SymbolicModelState(name=self.name, history=self.history(), model=model)
