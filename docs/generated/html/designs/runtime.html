@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FormaK Managed Runtime &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scikit-Learn integration" href="sklearn-integration.html" />
+    <link rel="prev" title="Reference Model: Strapdown IMU" href="reference_model_strapdown_imu.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sklearn-integration.html" title="Scikit-Learn integration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="reference_model_strapdown_imu.html" title="Reference Model: Strapdown IMU"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK Managed Runtime</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="formak-managed-runtime">
+<h1>FormaK Managed Runtime<a class="headerlink" href="#formak-managed-runtime" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2023-07-13</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2023-07-15</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cpp_library_for_model_evaluation.html"><span class="std std-doc">designs/cpp_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design provides an extension to the second of the Five Keys “Python
+implementation of the model…” and the fifth of the Five Keys “C++ interfaces
+to support a variety of model uses” to support easier to use filters. The
+current implementation provides some of the math for the EKF (process update,
+sensor update) which can be used in a flexible manner, but don’t necessarily
+meet the easy to use goal for the project.</p>
+<p>This feature aims to make the library easier to use by providing a managed
+filter with a single interface.</p>
+<p>This feature also has a forward looking benefit: by setting up the Managed
+Filter structure now, it will be easier to add “netcode” features, logging and
+other runtime benefits within the context of a unified Managed Filter.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The primary class of interest will be a new class <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> (in both C++
+and Python).</p>
+<p>This class will have a member function <code class="docutils literal notranslate"><span class="pre">tick</span></code> that will be the primary user
+facing to the rest of the filter logic.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>// No sensor reading, process update only
+tick(time)
+tick(time, [])
+
+// One sensor reading
+tick(time, [reading])
+
+// Multiple sensor readings
+tick(time, [reading1, reading2, reading3])
+</pre></div>
+</div>
+<p>The function will return the current state and variance of the filter after
+processing the tick. By using the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> wrapper, the user doesn’t
+need to worry about tracking states, variances, times, the process model (or
+models in the future), sensor models. Instead the user just passes in the
+desired output time and any new information from sensors and gets the result.</p>
+<section id="goals-for-the-managedfilter-class">
+<h3>Goals for the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> class<a class="headerlink" href="#goals-for-the-managedfilter-class" title="Permalink to this heading">¶</a></h3>
+<p>Goals for the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> class:</p>
+<ol class="arabic simple">
+<li><p>Minimal overhead on top of the underlying filter</p></li>
+<li><p>Easy to use</p></li>
+<li><p>Hard to misuse</p></li>
+<li><p>No code generation</p></li>
+<li><p>Compatible with multiple potential filters</p></li>
+</ol>
+<p>FormaK’s high level goals also apply to this class design.</p>
+<blockquote>
+<div><p>FormaK aims … to create performant code that is easy to use [in that order]</p>
+</div></blockquote>
+<p>For this design, “performance” will be focused on minimizing unnecessary copies
+and allocations during filter management via clean implementation. At a future
+point, profiling will provide data to inform evolutions of the design
+internals.</p>
+<p>This means that the primary driving principle for the design will be ease of
+use.</p>
+<p>A sub-goal of <code class="docutils literal notranslate"><span class="pre">Easy</span> <span class="pre">to</span> <span class="pre">use</span></code> is making it hard to misuse. If the code compiles,
+the user should be confident that the underlying filter is working as expected.</p>
+<p>Another sub-goal of <code class="docutils literal notranslate"><span class="pre">Easy</span> <span class="pre">to</span> <span class="pre">use</span></code>: No code generation. If the interface to the
+class changed based on code generation, it could make it harder to understand
+how to use it correctly. The existing filters take on a large amount of
+complexity to make their use both powerful and avoid the cost of unused
+features via code generation. The <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> shouldn’t pass through this
+complexity to the user.</p>
+<p>This last goal is primarily forward looking. The <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> should be
+compatible with multiple filter implementations for two use cases. First, as
+FormaK evolves it may make sense to have different filter types being managed
+(e.g. EKF and UKF or multiple EKF for a multiple model filter). Second, users
+could provide their own variation of a filter implementation with features not
+included in FormaK filters. If the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> can support this, the user
+can still get the benefits of the runtime even if they don’t want the specific
+filter details. This second benefit should, with marginal effort, fall out as a
+consequence of the first use case.</p>
+</section>
+<section id="managing-computation">
+<h3>Managing Computation<a class="headerlink" href="#managing-computation" title="Permalink to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">tick</span></code> member function will manage the computation of the underlying
+filter. The basic underlying algorithm will be:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>def tick(output_time, readings):
+    for sensor_reading in readings:
+        process_update(sensor_reading.time)
+        sensor_update(sensor_reading)
+
+    process_update(output_time)
+</pre></div>
+</div>
+<p>The initial approach for the Filter will take inspiration from delay-based
+netcode and hold back its state to the last sensor time. This should ensure
+maximal information gain by minimizing uncertainty gained due to rolling back
+in time. This makes the underlying algorithm only slightly more complicated:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>def tick(output_time, readings):
+    for sensor_reading in readings:
+        self.state = process_update(self.state, sensor_reading.time)
+        self.state = sensor_update(self.state, sensor_reading)
+
+    return process_update(self.state, output_time)
+</pre></div>
+</div>
+<p>Note that the last process update is returned but doesn’t update the state of
+the model.</p>
+</section>
+<section id="managing-memory">
+<h3>Managing Memory<a class="headerlink" href="#managing-memory" title="Permalink to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> class will own the memory for the underlying computation;
+however, the layout for the underlying computation will need to be provided by
+the generated computation as a struct.</p>
+<p>This is an expansion of the responsibility for the underlying filter
+implementer (also FormaK at this time), but should help separate concerns.</p>
+<ul class="simple">
+<li><p>State is owned by the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code></p></li>
+<li><p>Stateless mathematical logic is owned by the filter implementation</p></li>
+</ul>
+<p>This may also require a refactor in how the underlying filter implementation is
+defined. Currently, it is done as a mix of free functions. To support the move
+to the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> the generation may move to bundling these functions into
+a class to make it easier to tag the filter implementation with metadata (at
+minimum but not limited to the memory layout).</p>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> constructor should accept a struct <code class="docutils literal notranslate"><span class="pre">ManagedFilterOptions</span></code>
+to allow for user selection of different features. This could be omitted if
+there are no options for the current implementation. The options will certainly
+come in the future.</p>
+<p>One thing that isn’t clear is how these options will interact with the options
+specified by users during filter generation.</p>
+<p>Perhaps they are a second set of configuration related to filter management
+that is only relevant to the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code>?</p>
+<p>That doesn’t hold water at this time because model fitting behavior will depend
+on how the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> would be run (e.g. does it perform out of order
+sensor updates?) but I don’t have a good answer at design time.</p>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>The feature tests for this design will focus on the tick interface in a few
+combinations:</p>
+<ul class="simple">
+<li><p>No sensor updates (process only)</p></li>
+<li><p>One sensor update</p></li>
+<li><p>Multiple sensor updates</p></li>
+</ul>
+<p>The goal for the feature tests is to focus on the filter management and its
+ease of use, not the EKF math itself, so assertions will focus on time
+management and broad trends in state and variance for a simple model where it’s
+easy to calculate model evolution by hand.</p>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-08-04<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>Getting this feature 80% done was pretty quick. Getting what felt like the rest
+of the 20% took longer than I hoped.</p>
+<p>Things I liked:</p>
+<ul class="simple">
+<li><p>Covering all combinations for sensor ordering in Python and C++ for testing</p></li>
+<li><p>Using the <code class="docutils literal notranslate"><span class="pre">hypothesis</span></code> testing library to handle the permutations logic for me</p></li>
+<li><p>The implementation was much improved by going from Python -&gt; C++ -&gt; C++ detailed testing -&gt; Python detailed testing. Each step of the way improved the design in some way.</p></li>
+<li><p>Feature tests were a good proxy stand in for considering how the user would use the interface</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">wrap</span></code> function call. It almost feels magical being able to create a list of many types of readings</p></li>
+<li><p>I could lean on some of the existing tests to tell me when I broke things with the AST. Otherwise I don’t know when I would have found out</p></li>
+<li><p>Testing just the constructor was instructive. It surfaced (via compiler warning/error) that the <code class="docutils literal notranslate"><span class="pre">Impl</span> <span class="pre">_impl</span></code> internally to the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> wasn’t getting initialized properly</p></li>
+</ul>
+<p>Added to the design:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">::Tag</span></code> type for the filter to aggregate all the various signaling the type needs to do to coordinate with the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code>. We’ll see if this design choice holds up.</p></li>
+<li><p><a class="reference external" href="https://en.cppreference.com/w/cpp/language/sfinae"><code class="docutils literal notranslate"><span class="pre">SFINAE</span></code></a>: Substitution Failure Is Not An Error. In order to support code generation that may or may not have a <code class="docutils literal notranslate"><span class="pre">Calibration</span></code> type or a <code class="docutils literal notranslate"><span class="pre">Control</span></code> type I opted to use SFINAE to selectively add or remove different interfaces. This was simplified somewhat by using if-constexpr internally, but the interfaces are still messy and it feels close to repeated code copy-pasting. This generation with different interfaces for the end user is adding additional complication for me, but I hope it continues to fall under the heading of accept complexity on my side to achieve an easier to use / more focused version for users.</p></li>
+</ul>
+<p>Things missing from the final version:</p>
+<ul class="simple">
+<li><p>Performance guaruntees</p></li>
+<li><p>Some testing of edge cases</p></li>
+<li><p>A memory management concept. In practice, it seems like the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> will be managing both the runtime logic and the memory initialization and layout</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">FormaK Managed Runtime</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#goals-for-the-managedfilter-class">Goals for the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> class</a></li>
+<li><a class="reference internal" href="#managing-computation">Managing Computation</a></li>
+<li><a class="reference internal" href="#managing-memory">Managing Memory</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-08-04</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="reference_model_strapdown_imu.html"
+                          title="previous chapter">Reference Model: Strapdown IMU</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="sklearn-integration.html"
+                          title="next chapter">Scikit-Learn integration</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/runtime.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sklearn-integration.html" title="Scikit-Learn integration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="reference_model_strapdown_imu.html" title="Reference Model: Strapdown IMU"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK Managed Runtime</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

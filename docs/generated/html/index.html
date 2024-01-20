@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FormaK &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started for Users" href="getting-started.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="getting-started.html" title="Getting Started for Users"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="formak">
+<h1>FormaK<a class="headerlink" href="#formak" title="Permalink to this heading">¶</a></h1>
+<!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
+<p>FormaK builds fast, reliable, easy to use state estimation.</p>
+<p>FormaK is tooling to easily derive Python and C++ implementations of models
+based on your data (or even before you have data). The models are fast and are
+generated with automation to help you generate and maintain them. FormaK uses
+symbolic mathematics for fast, efficient system modelling and applies compiler
+techniques to code generation to create performant code that is easy to use.</p>
+<p>The values of the FormaK project (in order) are:</p>
+<ul class="simple">
+<li><p>Easy to use</p></li>
+<li><p>Performant</p></li>
+</ul>
+<p>FormaK is open source and uses the MIT license.</p>
+<p>If you’d like to jump in to using FormaK: <a class="reference internal" href="getting-started.html"><span class="doc std std-doc">Getting Started</span></a> or
+access the full <a class="reference internal" href="#"><span class="doc std std-doc">Documentation</span></a></p>
+<p>The code is hosted on Github: <a class="reference external" href="https://github.com/buckbaskin/formak">github.com/buckbaskin/formak</a></p>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started for Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html#getting-started-for-developers">Getting Started For Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development-status.html">Development Status</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thinking-with-formak.html">Thinking With FormaK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whats-new.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mathematical-glossary.html">Mathematical Glossary</a></li>
+</ul>
+</div>
+<p>Developer documentation is contained in the <code class="docutils literal notranslate"><span class="pre">formak/</span></code> subdirectory.
+Documentation of design decisions are contained in the <code class="docutils literal notranslate"><span class="pre">designs/</span></code> directory.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="formak/index.html">FormaK Developer Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="designs/index.html">Design Documentation</a></li>
+</ul>
+</div>
+</section>
+<section id="the-persona">
+<h2>The Persona<a class="headerlink" href="#the-persona" title="Permalink to this heading">¶</a></h2>
+<p>Who is this for?</p>
+<p>The user of FormaK is someone with domain expertise who is looking to take
+their knowledge and their data and quickly (measured in the user’s time) create
+a model, either as a project in itself or as part of a larger project.</p>
+<p>The user isn’t expected to know or have to understand the mechanics of what’s
+going on under the hood in order to get value from the library. This means
+things like sane defaults and an easy to use interface that’s hard to misuse
+are highly important. The library should encapsulate a collective knowledge
+that, as it improves over time, can improve everyone’s work.</p>
+<p>On the flip side, a user with more familiarity of the modelling process or the
+FormaK tool should be able to use more advanced features and select
+configuration that better matches their use case.</p>
+</section>
+<section id="the-five-keys">
+<h2>The Five Keys<a class="headerlink" href="#the-five-keys" title="Permalink to this heading">¶</a></h2>
+<p>In line with the values and the intended user, the intended user experience is
+as follows. The user provides:</p>
+<ul class="simple">
+<li><p>Model that describes the physics of the system</p></li>
+<li><p>Execution criteria (e.g. memory usage, execution time)</p></li>
+<li><p>Time series data for the system</p></li>
+</ul>
+<p>and in return the user gets an optimal model.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<p>What does this look like?</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="n">vp</span> <span class="o">=</span> <span class="n">vehicle_properties</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">]}</span>
+<span class="n">fuel_burn_rate</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;fuel_burn_rate&quot;</span><span class="p">)</span>
+
+<span class="n">state</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vehicle_properties</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="n">control</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">fuel_burn_rate</span><span class="p">])</span>  <span class="c1"># kg/sec</span>
+
+<span class="c1"># momentum = mv</span>
+<span class="c1"># dmomentum / dt = F = d(mv)/dt</span>
+<span class="c1"># F = m dv/dt + dm/dt v</span>
+<span class="c1"># a = dv / dt = (F - dm/dt * v) / m</span>
+
+<span class="n">F</span> <span class="o">=</span> <span class="o">-</span><span class="n">gravitational_force</span><span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">],</span> <span class="n">Earth_Mass</span><span class="p">,</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">Earth_Equatorial_Radius</span><span class="p">)</span>
+
+<span class="n">state_model</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">fuel_burn_rate</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span>
+    <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span>
+    <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]:</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span>
+    <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]:</span> <span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="p">(</span><span class="n">fuel_burn_rate</span> <span class="o">*</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]))</span> <span class="o">/</span> <span class="n">vp</span><span class="p">[</span><span class="s2">&quot;m&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+<span class="n">orbital_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">control</span><span class="o">=</span><span class="n">control</span><span class="p">,</span> <span class="n">state_model</span><span class="o">=</span><span class="n">state_model</span><span class="p">)</span>
+
+<span class="n">python_implementation</span> <span class="o">=</span> <span class="n">python</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">orbital_model</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Tools for creating models</p></li>
+<li><p>Optimize the models</p></li>
+<li><p>Generate Python from models</p></li>
+<li><p>Generate C++ from models</p></li>
+<li><p>(planned) Integrations for model fitting, model selection</p></li>
+</ul>
+</section>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Bazel</p></li>
+<li><p>Clang-12 / C++17</p></li>
+<li><p>Python3</p></li>
+<li><p>pip</p></li>
+</ul>
+</section>
+<section id="contacts">
+<h2>Contacts<a class="headerlink" href="#contacts" title="Permalink to this heading">¶</a></h2>
+<p>Have a question?</p>
+<ul class="simple">
+<li><p>Reach out on Mastodon: <a class="reference external" href="https://fosstodon.org/&#64;formak">&#64;formak</a></p></li>
+<li><p>Create a <a class="reference external" href="https://github.com/buckbaskin/formak/issues/new">Github Issue</a></p></li>
+<li><p>Email the author: <a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a></p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">FormaK</a><ul>
+<li><a class="reference internal" href="#table-of-contents">Table of Contents</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-persona">The Persona</a></li>
+<li><a class="reference internal" href="#the-five-keys">The Five Keys</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#contacts">Contacts</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="getting-started.html"
+                          title="next chapter">Getting Started for Users</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="getting-started.html" title="Getting Started for Users"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">FormaK  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FormaK</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

@@ -1,10 +1,14 @@
 # FormaK
 
-FormaK provides the tooling so that you can easily derive Python and C++
-implementations for models that best match your data given the constraints,
-models that are fast and models that can be generated with automation. FormaK
-aims to combine symbolic modeling for fast, efficient system modelling with
-code generation to create performant code that is easy to use.
+<!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
+
+FormaK builds fast, reliable, easy to use state estimation.
+
+FormaK is tooling to easily derive Python and C++ implementations of models
+based on your data (or even before you have data). The models are fast and are
+generated with automation to help you generate and maintain them. FormaK uses
+symbolic mathematics for fast, efficient system modelling and applies compiler
+techniques to code generation to create performant code that is easy to use.
 
 The values of the FormaK project (in order) are:
 
@@ -13,13 +17,37 @@ The values of the FormaK project (in order) are:
 
 FormaK is open source and uses the MIT license.
 
-<strong>Sign up for email updates at https://tinyletter.com/formak</strong>
-
-If you'd like to jump in to using FormaK: [Getting Started](getting-started.html)
+If you'd like to jump in to using FormaK: [Getting Started](getting-started) or
+access the full [Documentation](https://buckbaskin.com/formak/generated/html/index.html)
 
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
-### The Persona
+## Table of Contents
+
+```{toctree}
+  :maxdepth: 1
+
+getting-started
+faq
+
+development-status
+thinking-with-formak
+whats-new
+runtime
+mathematical-glossary
+```
+
+Developer documentation is contained in the `formak/` subdirectory.
+Documentation of design decisions are contained in the `designs/` directory.
+
+```{toctree}
+  :maxdepth: 1
+
+formak/index
+designs/index
+```
+
+## The Persona
 
 Who is this for?
 
@@ -37,7 +65,7 @@ On the flip side, a user with more familiarity of the modelling process or the
 FormaK tool should be able to use more advanced features and select
 configuration that better matches their use case.
 
-### The Five Keys
+## The Five Keys
 
 In line with the values and the intended user, the intended user experience is
 as follows. The user provides:
@@ -102,3 +130,11 @@ python_implementation = python.compile(orbital_model)
 - Clang-12 / C++17
 - Python3
 - pip
+
+## Contacts
+
+Have a question?
+
+- Reach out on Mastodon: [@formak](https://fosstodon.org/@formak)
+- Create a [Github Issue](https://github.com/buckbaskin/formak/issues/new)
+- Email the author: [formak.open.source@gmail.com](mailto:formak.open.source@gmail.com)

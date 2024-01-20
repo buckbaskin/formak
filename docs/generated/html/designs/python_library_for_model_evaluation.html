@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Python Library for Model Evaluation &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Python UI Demo" href="python_ui_demo.html" />
+    <link rel="prev" title="Innovation Filtering" href="innovation_filtering.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_ui_demo.html" title="Python UI Demo"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python Library for Model Evaluation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="python-library-for-model-evaluation">
+<h1>Python Library for Model Evaluation<a class="headerlink" href="#python-library-for-model-evaluation" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin &#64;buck&#64;fosstodon.org</p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2022-08-26</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2022-09-13</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="formak_v0.html"><span class="std std-doc">designs/formak_v0.md</span></a></p>
+</dd>
+<dt class="field-odd">See Also<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="python_ui_demo.html"><span class="std std-doc">designs/python_ui_demo.md</span></a></p>
+</dd>
+<dt class="field-even">Status<span class="colon">:</span></dt>
+<dd class="field-even"><p>Merged</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The values (in order) are:</p>
+<ul class="simple">
+<li><p>Easy to use</p></li>
+<li><p>Performant</p></li>
+</ul>
+<p>The Five Key Elements the library provides to achieve this (see parent) are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design provides the initial implementation of second of the Five Keys
+“Python implementation of the model and supporting tooling”. This design also
+prepares for the third of the 5 Keys: “Integration to scikit-learn to leverage
+the model selection and parameter tuning functions”. At this stage it is
+helpful to inform the design of the tooling so that it won’t have any big
+hurdles to the next steps in the design.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>The basic step will be to translate from Sympy to Python (without a sympy
+dependency). Sympy provides this functionality already, so getting the basics
+working won’t be too hard. The follow on work to refactor will be important in
+order to make sure that the library remains easy to use.</p>
+<p>The key classes involved are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>: User interface class encapsulating the information required to
+define the model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">py.Model</span></code>: (new) Class encapsulating the model for running a model
+efficiently in Python code</p></li>
+</ul>
+<p>To keep things neatly separated, the translation from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">py.Model</span></code>
+will be handled by a separate free function that takes a <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> as an
+argument and returns a <code class="docutils literal notranslate"><span class="pre">py.Model</span></code>.</p>
+<section id="tooling">
+<h3>Tooling<a class="headerlink" href="#tooling" title="Permalink to this heading">¶</a></h3>
+<p>Along with the <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> encapsulation, also provide an Extended Kalman Filter
+implementation to quantify variance (based on best fit of a Kalman Filter to
+data) and outliers (innovation as a function of variance). This part of the
+design is more focused on being used with the coming scikit-learn integration.</p>
+<p>The key classes involved are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">py.Model</span></code>: (new) Class encapsulating the model for running a model efficiently in Python code</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">py.ExtendedKalmanFilter</span></code>: (new)</p>
+<ul>
+<li><p>Looking ahead to model fitting, characterize model quality, data variance by fitting an EKF</p></li>
+<li><p>Constructor should accept state type, state to state process model (<code class="docutils literal notranslate"><span class="pre">py.Model</span></code>? <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>?), process noise, sensor types, state to sensor models, sensor noise</p></li>
+<li><p>Process Model Function: take in current state, current variance, dt/update time. Return new state, new variance</p></li>
+<li><p>Sensor Model Function: take in current state, current variance, sensor id, sensor reading</p></li>
+</ul>
+</li>
+</ul>
+<p>These two classes will likely share a lot under the hood because they both want
+to run Python efficiently; however, they’ll remain independent classes to start
+for a separation of concerns. The EKF class at this point is more aimed to
+using it under the hood of the scikit-learn stuff whereas the <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> class
+is aimed at the Formak User (easy to use first, performant second).</p>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>Numpy will likely feature heavily here</p></li>
+</ul>
+</section>
+<section id="the-cherry-on-top-transparent-compilation">
+<h3>The Cherry On Top - Transparent Compilation<a class="headerlink" href="#the-cherry-on-top-transparent-compilation" title="Permalink to this heading">¶</a></h3>
+<p>In addition to merely repackaging the model defined in the <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code>, this
+design will integrate with Python compiler tooling (something like
+Numba/Cython) to write Python in the <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> class, but JIT compile or
+C-Compile high use model functions.</p>
+<p>This will have some trade-offs (increased implementation complexity, increased
+startup time), but should likely also have some performance benefits especially
+for longer-running analysis use cases (e.g. running with a long sequence of
+data).</p>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>Don’t forget the order of the values: easy to use first, performant second. The compiler shouldn’t unnecessarily complicate the interface to the <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> class</p></li>
+<li><p>The particular compiler will be selected during the project by experimenting with different compilers</p></li>
+<li><p>In the spirit of don’t pay for what you don’t use, this will also motivate the creation of a common configuration pattern. We want to be able to (at conversion time) selectively enable or disable the compilation. Putting some thought into a common configuration pattern will make it easier to reuse in future designs (e.g. selecting configuration about other model optimizations)</p></li>
+<li><p>The configuration should also be able to be disabled automatically if the selected compiler library isn’t available. This will ensure that the dependency on the compiler is optional (but recommended).</p></li>
+</ul>
+<p>The Python compiler step will require some basic profiling as a feature
+test/acceptance test.</p>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>This feature is specific to the Python interface. There will be four feature
+tests:</p>
+<ol class="arabic simple">
+<li><p>UI -&gt; Python: Simple 2D model of a parabolic trajectory converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> (no compilation)</p></li>
+<li><p>Tooling: Simple 2D model of a parabolic trajectory converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">py.ExtendedKalmanFilter</span></code></p></li>
+<li><p>Compilation: Simple 2D model of a parabolic trajectory converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> (compilation)</p></li>
+<li><p>Compilation: Model converting from <code class="docutils literal notranslate"><span class="pre">ui.Model</span></code> to <code class="docutils literal notranslate"><span class="pre">py.Model</span></code>. Run against a sequence of data and profile. Assert <code class="docutils literal notranslate"><span class="pre">py.Model</span></code> with compilation faster than no compilation (excluding startup time).</p></li>
+</ol>
+<p>For the compilation specifically, if there aren’t any performance benefits to
+be demonstrated, then remove it from the PR  in favor of a later design that
+can more specifically focus on compilation.</p>
+</section>
+<section id="road-map-and-process">
+<h2>Road Map and Process<a class="headerlink" href="#road-map-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)</p></li>
+<li><p>Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<p>The big change from the original design was the lack of performance boost from the compiler. It was pitched as an optional feature, but I’ll be curious to investigate more over time to see what performance is left on the table.</p>
+<p>On a smaller note, more of the logic than I would have liked ended up in the constructors (instead of the compiler functions) for the Model and Extended Kalman Filter. Perhaps this can be moved out in a future refactor.</p>
+<section id="id1">
+<h3>2022-09-10<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>Selecting <code class="docutils literal notranslate"><span class="pre">numba</span></code> for the Python compiler</p>
+<ul class="simple">
+<li><p>Pure python written source code</p></li>
+<li><p>Simple Python -&gt; compiled Python syntax</p></li>
+<li><p>Designed for use with numpy</p></li>
+<li><p>SIMD vectorization under the hood</p></li>
+</ul>
+<p>Key Features used from Sympy:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/utilities/lambdify.html#sympy.utilities.lambdify.lambdify">lambdify</a></p></li>
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/simplify/simplify.html#sympy.simplify.cse_main.cse">common subexpression elimination</a></p></li>
+<li><p><a class="reference external" href="https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrices.MatrixCalculus.jacobian">jacobian</a></p></li>
+</ul>
+<p>Following the EKF math from Probabilistic Robotics</p>
+<ul class="simple">
+<li><p>S. Thrun, W. Burgard, and D. Fox, Probabilistic robotics. Cambridge, Mass.: Mit Press, 2010.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>2022-09-11<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<p>Compilation doesn’t do as much to improve performance for a simple example. It doesn’t appear to be because of a big JIT step, just that it only slightly improves things.</p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Python Library for Model Evaluation</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#tooling">Tooling</a></li>
+<li><a class="reference internal" href="#the-cherry-on-top-transparent-compilation">The Cherry On Top - Transparent Compilation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#road-map-and-process">Road Map and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2022-09-10</a></li>
+<li><a class="reference internal" href="#id2">2022-09-11</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="innovation_filtering.html"
+                          title="previous chapter">Innovation Filtering</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="python_ui_demo.html"
+                          title="next chapter">Python UI Demo</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/python_library_for_model_evaluation.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_ui_demo.html" title="Python UI Demo"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python Library for Model Evaluation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>
