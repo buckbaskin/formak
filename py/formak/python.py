@@ -975,7 +975,6 @@ class SklearnEKFAdapter(BaseEstimator):
     def transform(
         self, X: Any, include_states=False
     ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
-        print("transform", len(self.sensor_models))
         self.model_ = compile_ekf(
             self.symbolic_model,
             self.process_noise,
@@ -984,6 +983,9 @@ class SklearnEKFAdapter(BaseEstimator):
             self.calibration_map,
             config=self.config,
         )
+        if len(self.model_.sensor_models) <= 0:
+            raise ValueError("Sensor Models required to calculate innovation")
+
         X = force_to_ndarray(X)
         if len(X.shape) == 1:
             X = np.reshape(X, (len(X), 1))
@@ -998,9 +1000,6 @@ class SklearnEKFAdapter(BaseEstimator):
         innovations = [[0.0] * len(self.model_.sensor_models)]
         states = [state]
         covariances = [covariance]
-
-        if len(self.model_.sensor_models) <= 0:
-            raise ValueError("Sensor Models required to calculate innovation")
 
         for key in sorted(list(self.model_.sensor_models)):
             sensor_size = len(self.model_.sensor_models[key])

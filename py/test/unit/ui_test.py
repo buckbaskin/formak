@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Dict
 
 import numpy as np
+import pytest
 from formak.ui import DesignManager, Model, NisScore, Symbol
 from formak.ui_state_machine import StateId
 
@@ -45,32 +46,16 @@ def test_fit_model_missing_parameter_defaults() -> None:
 
     symbolic_model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
-    process_noise = {thrust: 0.01}
-    sensor_models = {"velocity": {tp["v"]: tp["v"]}}
-    sensor_noises = {"velocity": {tp["v"]: 1.0}}
-    calibration_map = {}  # type: Dict[str, float]
-
     initial_state = DesignManager(name="mercury")
 
     symbolic_model_state = initial_state.symbolic_model(model=symbolic_model)
 
     # Called with default parameters, empty data
-    fit_model_state = symbolic_model_state.fit_model(
-        parameter_space={},
-        data=[0, 0, 0],
-    )
-
-    result = fit_model_state.fit_estimator.named_steps["kalman"].get_params()
-
-    # Expect that the model fits to sane defaults for the part of the parameter
-    # space (all of it) that don't have values specified
-    assert result["process_noise"] is not None
-    assert result["sensor_models"] is not None
-    assert result["sensor_noises"] is not None
-    assert result["calibration_map"] is not None
-
-    assert result["innovation_filtering"] == 5.0
-
+    with pytest.raises(ValueError):
+        fit_model_state = symbolic_model_state.fit_model(
+            parameter_space={},
+            data=[0, 0, 0],
+        )
 
 def test_non_zero_nis_score():
     dt = Symbol("dt")
