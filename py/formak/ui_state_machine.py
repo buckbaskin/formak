@@ -77,18 +77,26 @@ class StateMachineState:
         raise NotImplementedError()
 
     def search(
-        self, end_state: str, *, max_iter: int = 100, debug: bool = True
+        self, end_state: StateId, *, max_iter: int = 100, debug: bool = True
     ) -> List[str]:
         """Breadth First Search of state transitions.
 
         For each name in the list, next_state = getattr(current_state, name)(*args, **kwargs) will perform the next state transition
         """
+        if not isinstance(end_state, StateId):
+            raise ValueError(
+                f"Could not match state of type {type(end_state)}, expected StateId"
+            )
+
         frontier = [SearchState(self, [])]
 
         if debug:
             print("Initial State\n", frontier)
 
         for i in range(max_iter):
+            if len(frontier) <= 0:
+                break
+
             current_state, transitions = frontier[0]
             frontier = frontier[1:]
 
@@ -110,8 +118,9 @@ class StateMachineState:
 
             if debug:
                 print("State After", i, "\n", frontier)
+
         raise ValueError(
-            "Could not find a path from state {self.state_id()} to {end_state} in {max_iter} iterations"
+            f"Could not find a path from state {self.state_id()} to desired state '{end_state}' in {i} iterations"
         )
 
 
@@ -151,6 +160,17 @@ class FitModelState(StateMachineState):
         self.parameter_space = parameter_space
         self.data = data
 
+        required_keys = {
+            "process_noise": {},
+            "sensor_models": {},
+            "sensor_noises": {},
+            "calibration_map": {},
+        }
+
+        for key, default in required_keys.items():
+            if key not in self.parameter_space or not self.parameter_space[key]:
+                self.parameter_space[key] = [default]
+
         # 3. Parameter Space Search/Sampling
         self.parameter_sampling_strategy = parameter_sampling_strategy
 
@@ -189,10 +209,14 @@ class FitModelState(StateMachineState):
         X = self.data
 
         n_samples = len(X)
-        if n_samples < 2:
+        MIN_SAMPLES = 3
+        if n_samples < MIN_SAMPLES:
             raise ModelFitError(
-                "Model fitting requires at least two samples for the train-test split. %d samples provided"
-                % (n_samples,)
+                "Model fitting requires at least %d samples for the train-test split. %d samples provided"
+                % (
+                    MIN_SAMPLES,
+                    n_samples,
+                )
             )
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
@@ -211,7 +235,9 @@ class FitModelState(StateMachineState):
 
         # pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
 
-        ts_cv = TimeSeriesSplit(n_splits=5, gap=0)
+        n_splits = min(len(X) - 1, 5)
+
+        ts_cv = TimeSeriesSplit(n_splits=n_splits, gap=0)
 
         # Maybe useful: all_splits = ts_cv.split(X)
 
@@ -292,7 +318,7 @@ class SymbolicModelState(StateMachineState):
         data,
         *,
         parameter_sampling_strategy=None,
-        cross_validation_strategy=None
+        cross_validation_strategy=None,
     ) -> FitModelState:
         """
         Symbolic Model -> Fit Model.

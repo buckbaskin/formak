@@ -845,6 +845,7 @@ class SklearnEKFAdapter(BaseEstimator):
             self.set_params(**scoring_params)
 
             score = self.score(X, y, sample_weight)
+            print("minimize_this %.3f" % (score,))
 
             self.set_params(**holdout_params)
             return score
@@ -864,9 +865,15 @@ class SklearnEKFAdapter(BaseEstimator):
     # Compute the squared Mahalanobis distances of given observations.
     def mahalanobis(self, X) -> NDArray:
         innovations, states, covariances = self.transform(X, include_states=True)
+        print(type(innovations), 1, innovations.shape)
+        if len(innovations.shape) == 1:
+            innovations = np.reshape(innovations, (len(innovations), 1))
+        print(type(innovations), 2, innovations.shape)
         n_samples, n_sensors = innovations.shape
 
+        print(type(innovations), 3, innovations.shape)
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+        print(type(innovations), 4, innovations.dtype, innovations.shape)
 
         if np.any(innovations < 0.0):
             for idx, (x, innovation) in enumerate(
@@ -893,6 +900,11 @@ class SklearnEKFAdapter(BaseEstimator):
         mahalanobis_distance_squared = self.mahalanobis(X)
         normalized_innovations = np.sqrt(mahalanobis_distance_squared)
 
+        if len(normalized_innovations) <= 0:
+            raise ValueError(
+                f"No innovations calculated from data shape {X.shape}. Calculated {normalized_innovations.shape}"
+            )
+
         if sample_weight is None:
             avg = np.sum(np.square(np.mean(normalized_innovations)))
             var = np.sum(mahalanobis_distance_squared)
@@ -904,10 +916,18 @@ class SklearnEKFAdapter(BaseEstimator):
         bias_weight = 1e1
         bias_score = avg
 
+        if not np.isfinite(bias_score):
+            raise ValueError(
+                f"Bias Score not finite: {bias_score} from innovations {normalized_innovations}"
+            )
+
         # variance->1
         # minima at var = 1, innovations match noise model
         variance_weight = 1e0
         variance_score = (1.0 / var + var) / 2.0
+
+        if not np.isfinite(variance_score):
+            raise ValueError(f"Variance Score not finite: {variance_score}")
 
         # prefer smaller matrix terms
         matrix_weight = 1e-2
@@ -926,13 +946,19 @@ class SklearnEKFAdapter(BaseEstimator):
                 np.square(list(self._flatten_dict_diagonal(noise_mapping, arglist)))
             )
 
+        result = (
+            bias_weight * bias_score
+            + variance_weight * variance_score
+            + matrix_weight * matrix_score
+        )
+        if np.isnan(result):
+            print(
+                f"NaN result: {bias_weight} * {bias_score} + {variance_weight} * {variance_score} + {matrix_weight} * {matrix_score}"
+            )
+
         if explain_score:
             return (
-                (
-                    bias_weight * bias_score
-                    + variance_weight * variance_score
-                    + matrix_weight * matrix_score
-                ),
+                result,
                 (
                     bias_weight,
                     bias_score,
@@ -943,16 +969,13 @@ class SklearnEKFAdapter(BaseEstimator):
                 ),
             )
 
-        return (
-            bias_weight * bias_score
-            + variance_weight * variance_score
-            + matrix_weight * matrix_score
-        )
+        return result
 
     # Transform readings to innovations
     def transform(
         self, X: Any, include_states=False
     ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
+        print("transform", len(self.sensor_models))
         self.model_ = compile_ekf(
             self.symbolic_model,
             self.process_noise,
@@ -962,6 +985,8 @@ class SklearnEKFAdapter(BaseEstimator):
             config=self.config,
         )
         X = force_to_ndarray(X)
+        if len(X.shape) == 1:
+            X = np.reshape(X, (len(X), 1))
 
         n_samples, n_features = X.shape
 
@@ -970,12 +995,16 @@ class SklearnEKFAdapter(BaseEstimator):
         state = self.model_.State()
         covariance = self.model_.Covariance()
 
-        innovations = []
+        innovations = [[0.0] * len(self.model_.sensor_models)]
         states = [state]
         covariances = [covariance]
 
+        if len(self.model_.sensor_models) <= 0:
+            raise ValueError("Sensor Models required to calculate innovation")
+
         for key in sorted(list(self.model_.sensor_models)):
             sensor_size = len(self.model_.sensor_models[key])
+            # Incomplete thought
 
         for idx in range(X.shape[0]):
             controls_input, the_rest = (
@@ -1034,11 +1063,18 @@ class SklearnEKFAdapter(BaseEstimator):
             innovations.append(innovation)
             assert innovations[-1] is not None
 
+        print("transform", len(innovations))
+        for idx, val in enumerate(innovations):
+            print("transform", idx, len(val))
         # minima at x = 1, innovations match noise model
         if include_states:
-            return np.array(innovations), np.array(states), np.array(covariances)
+            return (
+                np.array(innovations, dtype="float"),
+                np.array(states),
+                np.array(covariances),
+            )
 
-        return np.array(innovations)
+        return np.array(innovations, dtype="float")
 
     # Fit the model to data and transform readings to innovations
     def fit_transform(self, X, y=None) -> NDArray | tuple[NDArray, NDArray, NDArray]:

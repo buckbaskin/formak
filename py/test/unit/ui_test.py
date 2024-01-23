@@ -21,8 +21,9 @@ def test_ui_state_machine_ids_are_enums():
     assert isinstance(initial_state.state_id(), Enum)
     assert initial_state.state_id() == StateId.Start
 
-    assert all(isinstance(k, Enum) for k in initial_state.available_transitions())
-    assert all(isinstance(k, Enum) for k in initial_state.search("Fit Model"))
+    # strings match function call names
+    assert all(isinstance(k, str) for k in initial_state.available_transitions())
+    assert all(isinstance(k, str) for k in initial_state.search(StateId.Fit_Model))
 
 
 def test_fit_model_missing_parameter_defaults() -> None:
@@ -56,7 +57,7 @@ def test_fit_model_missing_parameter_defaults() -> None:
     # Called with default parameters, empty data
     fit_model_state = symbolic_model_state.fit_model(
         parameter_space={},
-        data=[0, 0],
+        data=[0, 0, 0],
     )
 
     result = fit_model_state.fit_estimator.named_steps["kalman"].get_params()
