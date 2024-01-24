@@ -24,7 +24,7 @@ def model_validation(
     extra_validation=False,
     calibration_map: Dict[Symbol, float],
 ):
-    assert isinstance(process_noise, dict)
+    assert isinstance(process_noise, dict), f"process_noise type: {type(process_noise)}"
     allowed_keys = set(
         list(state_model.control)
         + [

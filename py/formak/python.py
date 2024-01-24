@@ -708,7 +708,7 @@ class SklearnEKFAdapter(BaseEstimator):
             "config": config,
         }
 
-        estimator = cls(**parameters)
+        estimator = cls(**parameters, _allow_direct=True)
 
     def __init__(
         self,
@@ -719,7 +719,13 @@ class SklearnEKFAdapter(BaseEstimator):
         calibration_map=None,
         *,
         config=None,
+        _allow_direct=False,
     ):
+        if not _allow_direct:
+            raise ModelConstructionError(
+                "SklearnEKFAdapter should be constructed via Create function"
+            )
+
         self.symbolic_model = symbolic_model
         self.process_noise = process_noise
         self.sensor_models = sensor_models
@@ -975,6 +981,8 @@ class SklearnEKFAdapter(BaseEstimator):
     def transform(
         self, X: Any, include_states=False
     ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
+        assert self.symbolic_model is not None
+        assert self.process_noise is not None
         self.model_ = compile_ekf(
             self.symbolic_model,
             self.process_noise,

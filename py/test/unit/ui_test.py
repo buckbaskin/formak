@@ -57,6 +57,7 @@ def test_fit_model_missing_parameter_defaults() -> None:
             data=[0, 0, 0],
         )
 
+
 def test_non_zero_nis_score():
     dt = Symbol("dt")
 
@@ -75,8 +76,11 @@ def test_non_zero_nis_score():
     }
 
     symbolic_model = Model(dt=dt, state=state, control=control, state_model=state_model)
-    adapter = python.SklearnEKFAdapter(
+    adapter = python.SklearnEKFAdapter.Create(
         symbolic_model=symbolic_model,
+        process_noise={thrust: 1.0},
+        sensor_models={"simple": {tp["v"]: tp["v"]}},
+        sensor_noises={"simple": {tp["v"]: 1.0}},
     )
 
     scoring_function = NisScore(estimator=adapter)
