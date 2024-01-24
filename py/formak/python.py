@@ -846,7 +846,6 @@ class SklearnEKFAdapter(BaseEstimator):
             self.set_params(**scoring_params)
 
             score = self.score(X, y, sample_weight)
-            print("minimize_this %.3f" % (score,))
 
             self.set_params(**holdout_params)
             return score
@@ -866,15 +865,11 @@ class SklearnEKFAdapter(BaseEstimator):
     # Compute the squared Mahalanobis distances of given observations.
     def mahalanobis(self, X) -> NDArray:
         innovations, states, covariances = self.transform(X, include_states=True)
-        print(type(innovations), 1, innovations.shape)
         if len(innovations.shape) == 1:
             innovations = np.reshape(innovations, (len(innovations), 1))
-        print(type(innovations), 2, innovations.shape)
         n_samples, n_sensors = innovations.shape
 
-        print(type(innovations), 3, innovations.shape)
         innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
-        print(type(innovations), 4, innovations.dtype, innovations.shape)
 
         if np.any(innovations < 0.0):
             for idx, (x, innovation) in enumerate(
@@ -1000,7 +995,7 @@ class SklearnEKFAdapter(BaseEstimator):
         state = self.model_.State()
         covariance = self.model_.Covariance()
 
-        innovations = [[0.0] * len(self.model_.sensor_models)]
+        innovations = []
         states = [state]
         covariances = [covariance]
 
@@ -1065,9 +1060,6 @@ class SklearnEKFAdapter(BaseEstimator):
             innovations.append(innovation)
             assert innovations[-1] is not None
 
-        print("transform", len(innovations))
-        for idx, val in enumerate(innovations):
-            print("transform", idx, len(val))
         # minima at x = 1, innovations match noise model
         if include_states:
             return (
@@ -1097,19 +1089,6 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Set the parameters of this estimator.
     def set_params(self, **params) -> SklearnEKFAdapter:
-        # print("SklearnEKFAdapter.set_params")
-        # if "config" in params:
-        #     print(
-        #         "  - innovation_filtering:",
-        #         type(params["config"]),
-        #         params["config"].innovation_filtering,
-        #     )
-        # if 'innovation_filtering' in params:
-        #     print(
-        #         "  - innovation_filtering:",
-        #         params['innovation_filtering'],
-        #     )
-
         for key in params:
             if key in self.allowed_keys:
                 setattr(self, key, params[key])

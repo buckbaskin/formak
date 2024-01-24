@@ -125,12 +125,8 @@ class StateMachineState:
 
 
 class NisScore:
-    def __init__(self, estimator: Union[python.SklearnEKFAdapter, Pipeline]):
-        assert estimator is not None
-        self.estimator = estimator
-
-    def __call__(self, X, y=None) -> float:
-        score = self.estimator.score(X=X, y=y)
+    def __call__(self, estimator: python.SklearnEKFAdapter, X, y=None) -> float:
+        score = estimator.score(X=X, y=y)
 
         assert isinstance(score, float)
 
@@ -232,7 +228,7 @@ class FitModelState(StateMachineState):
         )
 
         if self.scoring is None:
-            self.scoring = NisScore(estimator=adapter)
+            self.scoring = NisScore()
 
         # pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
 

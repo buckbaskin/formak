@@ -83,6 +83,6 @@ def test_non_zero_nis_score():
         sensor_noises={"simple": {tp["v"]: 1.0}},
     )
 
-    scoring_function = NisScore(estimator=adapter)
+    scoring_function = NisScore()
 
-    assert scoring_function(X=np.ones((1, 2))) != 0.0
+    assert scoring_function(estimator=adapter, X=np.ones((1, 2))) != 0.0
