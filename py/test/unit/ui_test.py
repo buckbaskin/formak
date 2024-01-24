@@ -85,4 +85,4 @@ def test_non_zero_nis_score():
 
     scoring_function = NisScore(estimator=adapter)
 
-    assert scoring_function(X=np.ones((1, 1))) != 0.0
+    assert scoring_function(X=np.ones((1, 2))) != 0.0

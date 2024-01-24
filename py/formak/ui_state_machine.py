@@ -126,6 +126,7 @@ class StateMachineState:
 
 class NisScore:
     def __init__(self, estimator: Union[python.SklearnEKFAdapter, Pipeline]):
+        assert estimator is not None
         self.estimator = estimator
 
     def __call__(self, X, y=None) -> float:
@@ -221,7 +222,7 @@ class FitModelState(StateMachineState):
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
 
-        adapter = python.SklearnEKFAdapter(
+        adapter = python.SklearnEKFAdapter.Create(
             symbolic_model=self.symbolic_model,
             process_noise=self.parameter_space["process_noise"][0],
             sensor_models=self.parameter_space["sensor_models"][0],
