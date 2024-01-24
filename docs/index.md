@@ -1,6 +1,7 @@
 # FormaK
 
 <!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8333/badge)](https://www.bestpractices.dev/projects/8333)
 
 FormaK builds fast, reliable, easy to use state estimation.
 
