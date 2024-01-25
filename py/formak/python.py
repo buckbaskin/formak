@@ -497,6 +497,13 @@ class ExtendedKalmanFilter:
         return result
 
     def process_model(self, dt, state, covariance, control=None):
+        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
+        if np.any(covariance_eigenvalues < 0.0):
+            # negative definite matrix is not a valid representation of uncertainty
+            raise AssertionError(
+                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+            )
+
         if control is None:
             control = self.Control()
 
@@ -531,6 +538,13 @@ class ExtendedKalmanFilter:
         next_state = self._state_model.model(dt, state, control)
         assert isinstance(next_state, self.State)
 
+        covariance_eigenvalues = np.linalg.eig(next_covariance.data)[0]
+        if np.any(covariance_eigenvalues < 0.0):
+            # negative definite matrix is not a valid representation of uncertainty
+            raise AssertionError(
+                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+            )
+
         return StateAndCovariance(
             next_state, self.Covariance.from_data(next_covariance)
         )
@@ -546,6 +560,13 @@ class ExtendedKalmanFilter:
         return normalized_innovation > expected_innovation
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
+        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
+        if np.any(covariance_eigenvalues < 0.0):
+            # negative definite matrix is not a valid representation of uncertainty
+            raise AssertionError(
+                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+            )
+
         model_impl = self.sensor_models[sensor_key]
         sensor_size = len(model_impl.readings)
         Q_t = _model_noise = self.sensor_noises[sensor_key]
@@ -575,14 +596,18 @@ class ExtendedKalmanFilter:
         covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
         if np.any(covariance_eigenvalues < 0.0):
             # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(f'Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}')
+            raise AssertionError(
+                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+            )
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
         )
         if np.any(np.linalg.eig(S_t)[0] < 0.0):
             # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(f'Negative Sensor Uncertainty: {S_t} = {H_t} * {covariance.data} * {H_t.transpose()} + {Q_t.data}')
+            raise AssertionError(
+                f"Negative Sensor Uncertainty: {S_t} = {H_t} * {covariance.data} * {H_t.transpose()} + {Q_t.data}"
+            )
         S_inv = np.linalg.inv(S_t)
 
         self.innovations[sensor_key] = innovation = (
@@ -1003,6 +1028,13 @@ class SklearnEKFAdapter(BaseEstimator):
         state = self.model_.State()
         covariance = self.model_.Covariance()
 
+        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
+        if np.any(covariance_eigenvalues < 0.0):
+            # negative definite matrix is not a valid representation of uncertainty
+            raise AssertionError(
+                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+            )
+
         innovations = []
         states = [state]
         covariances = [covariance]
@@ -1023,6 +1055,12 @@ class SklearnEKFAdapter(BaseEstimator):
             state, covariance = self.model_.process_model(
                 dt, state, covariance, controls_input
             )
+            covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
+            if np.any(covariance_eigenvalues < 0.0):
+                # negative definite matrix is not a valid representation of uncertainty
+                raise AssertionError(
+                    f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+                )
 
             innovation = []
 
@@ -1043,6 +1081,14 @@ class SklearnEKFAdapter(BaseEstimator):
                     sensor_key=key,
                     sensor_reading=sensor_input,
                 )
+
+                covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
+                if np.any(covariance_eigenvalues < 0.0):
+                    # negative definite matrix is not a valid representation of uncertainty
+                    raise AssertionError(
+                        f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
+                    )
+
                 # Normalized by the uncertainty at the time of the measurement
                 # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
                 # for:
@@ -1063,12 +1109,12 @@ class SklearnEKFAdapter(BaseEstimator):
                     )
                 )
                 if np.any(self.model_.sensor_prediction_uncertainty[key] < 0.0):
-                    print(idx, 'key', key)
-                    print(idx, 'innovations')
+                    print(idx, "key", key)
+                    print(idx, "innovations")
                     print(self.model_.innovations[key])
-                    print(idx, 'uncertainty')
+                    print(idx, "uncertainty")
                     print(self.model_.sensor_prediction_uncertainty[key])
-                    print(idx, 'result')
+                    print(idx, "result")
                     print(innovation[-1])
 
             states.append(state)
@@ -1076,13 +1122,15 @@ class SklearnEKFAdapter(BaseEstimator):
             innovations.append(innovation)
             assert innovations[-1] is not None
             if np.any(np.array(innovations[-1]) < 0.0):
-                raise AssertionError(f'Negative assertion detected at index {len(innovations) - 1}. Value {innovations[-1]}')
+                raise AssertionError(
+                    f"Negative assertion detected at index {len(innovations) - 1}. Value {innovations[-1]}"
+                )
 
         innovations = np.array(innovations, dtype="float")
         if np.any(innovations < 0.0):
-            print('Negative Innovation Detected')
+            print("Negative Innovation Detected")
             print(innovations[innovations < 0.0])
-            raise AssertionError('All innovations should be non-negative.')
+            raise AssertionError("All innovations should be non-negative.")
 
         # minima at x = 1, innovations match noise model
         if include_states:
