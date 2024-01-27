@@ -15,7 +15,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Design Documentation" href="../../designs/index.html" />
+    <link rel="next" title="formak.ast_fragments" href="formak.ast_fragments.html" />
     <link rel="prev" title="formak.microbenchmark" href="formak.microbenchmark.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -28,7 +28,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../../designs/index.html" title="Design Documentation"
+          <a href="formak.ast_fragments.html" title="formak.ast_fragments"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="formak.microbenchmark.html" title="formak.microbenchmark"
@@ -69,6 +69,9 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#formak.python.ExtendedKalmanFilter" title="formak.python.ExtendedKalmanFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtendedKalmanFilter</span></code></a></p></td>
 <td></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.python.SklearnEKFAdapter" title="formak.python.SklearnEKFAdapter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SklearnEKFAdapter</span></code></a></p></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -76,10 +79,19 @@
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h3>
 <table class="autosummary longtable docutils align-left">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.python.assert_valid_covariance" title="formak.python.assert_valid_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assert_valid_covariance</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.python.nearest_positive_definite" title="formak.python.nearest_positive_definite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nearest_positive_definite</span></code></a></p></td>
+<td></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#formak.python.compile" title="formak.python.compile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile</span></code></a></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#formak.python.compile_ekf" title="formak.python.compile_ekf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile_ekf</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.python.force_to_ndarray" title="formak.python.force_to_ndarray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">force_to_ndarray</span></code></a></p></td>
 <td></td>
 </tr>
 </tbody>
@@ -124,7 +136,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.python.Config.python_modules">
-<span class="sig-name descname"><span class="pre">python_modules</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#formak.python.Config.python_modules" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">python_modules</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#formak.python.Config.python_modules" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -139,14 +151,14 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.python.Config.innovation_filtering">
-<span class="sig-name descname"><span class="pre">innovation_filtering</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5.0</span></em><a class="headerlink" href="#formak.python.Config.innovation_filtering" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">innovation_filtering</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5.0</span></em><a class="headerlink" href="#formak.python.Config.innovation_filtering" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="formak.python.BasicBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">BasicBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arglist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.python.Config" title="formak.python.Config"><span class="pre">formak.python.Config</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.BasicBlock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">BasicBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arglist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.python.Config" title="formak.python.Config"><span class="pre">formak.python.Config</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.BasicBlock" title="Permalink to this definition">¶</a></dt>
 <dd><p>A run of statements without control flow.</p>
 <p>All statements can be reordered or changed to improve performance.</p>
 <p class="rubric">Initialization</p>
@@ -200,9 +212,19 @@
 <span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">StateAndCovariance</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'namedtuple(...)'</span></em><a class="headerlink" href="#formak.python.StateAndCovariance" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.python.assert_valid_covariance">
+<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">assert_valid_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covariance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Covariance'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.assert_valid_covariance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.python.nearest_positive_definite">
+<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">nearest_positive_definite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covariance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.nearest_positive_definite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">ExtendedKalmanFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter" title="Permalink to this definition">¶</a></dt>
 <dd><p class="rubric">Initialization</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter._construct_process">
@@ -211,7 +233,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter._construct_sensors">
-<span class="sig-name descname"><span class="pre">_construct_sensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter._construct_sensors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_sensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.python.Config" title="formak.python.Config"><span class="pre">formak.python.Config</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter._construct_sensors" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -241,57 +263,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.remove_innovation">
-<span class="sig-name descname"><span class="pre">remove_innovation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">innovation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S_inv</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.remove_innovation" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">remove_innovation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">innovation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.typing.NDArray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S_inv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.typing.NDArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.remove_innovation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.sensor_model">
 <span class="sig-name descname"><span class="pre">sensor_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_reading</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.sensor_model" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter._flatten_scoring_params">
-<span class="sig-name descname"><span class="pre">_flatten_scoring_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter._flatten_scoring_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter._inverse_flatten_scoring_params">
-<span class="sig-name descname"><span class="pre">_inverse_flatten_scoring_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flattened</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter._inverse_flatten_scoring_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.fit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.mahalanobis">
-<span class="sig-name descname"><span class="pre">mahalanobis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.mahalanobis" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.score">
-<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.score" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.transform" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.fit_transform">
-<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.fit_transform" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.get_params">
-<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.get_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="formak.python.ExtendedKalmanFilter.set_params">
-<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.ExtendedKalmanFilter.set_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -303,8 +280,112 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="formak.python.compile_ekf">
-<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">compile_ekf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.common.html#formak.common.UiModelBase" title="formak.common.UiModelBase"><span class="pre">formak.common.UiModelBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.compile_ekf" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">compile_ekf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbolic_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.common.html#formak.common.UiModelBase" title="formak.common.UiModelBase"><span class="pre">formak.common.UiModelBase</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.python.ExtendedKalmanFilter" title="formak.python.ExtendedKalmanFilter"><span class="pre">formak.python.ExtendedKalmanFilter</span></a></span></span><a class="headerlink" href="#formak.python.compile_ekf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="formak.python.force_to_ndarray">
+<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">force_to_ndarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.typing.NDArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#formak.python.force_to_ndarray" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">SklearnEKFAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbolic_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code></p>
+<p class="rubric">Initialization</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.allowed_keys">
+<span class="sig-name descname"><span class="pre">allowed_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['symbolic_model',</span> <span class="pre">'process_noise',</span> <span class="pre">'sensor_models',</span> <span class="pre">'sensor_noises',</span> <span class="pre">'calibration_map',</span> <span class="pre">'config']</span></em><a class="headerlink" href="#formak.python.SklearnEKFAdapter.allowed_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.Create">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbolic_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.Create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide an interface with required arguments to be more structured and.</p>
+<p>opinionated about how to Create this class. scikit-learn guides towards
+doing no construction or validation of the inputs in the __init__
+method, some is also done in this method with the goal of guiding the
+user earlier in the process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._flatten_process_noise">
+<span class="sig-name descname"><span class="pre">_flatten_process_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process_noise</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._flatten_process_noise" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._sensor_noise_to_array">
+<span class="sig-name descname"><span class="pre">_sensor_noise_to_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor_noises</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._sensor_noise_to_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._compile_sensor_models">
+<span class="sig-name descname"><span class="pre">_compile_sensor_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sensor_models</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._compile_sensor_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._flatten_dict_diagonal">
+<span class="sig-name descname"><span class="pre">_flatten_dict_diagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arglist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">sympy.Symbol</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._flatten_dict_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._inverse_flatten_dict_diagonal">
+<span class="sig-name descname"><span class="pre">_inverse_flatten_dict_diagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arglist</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._inverse_flatten_dict_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._flatten_scoring_params">
+<span class="sig-name descname"><span class="pre">_flatten_scoring_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._flatten_scoring_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Note: Known limitation, this only flattens the diagonals to simplify.</p>
+<p>the <cite>fit</cite> optimizaiton problem</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter._inverse_flatten_scoring_params">
+<span class="sig-name descname"><span class="pre">_inverse_flatten_scoring_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flattened</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter._inverse_flatten_scoring_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.python.SklearnEKFAdapter" title="formak.python.SklearnEKFAdapter"><span class="pre">formak.python.SklearnEKFAdapter</span></a></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.mahalanobis">
+<span class="sig-name descname"><span class="pre">mahalanobis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.typing.NDArray</span></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.mahalanobis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.score">
+<span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explain_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.score" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.typing.NDArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.typing.NDArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.typing.NDArray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.fit_transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.get_params">
+<span class="sig-name descname"><span class="pre">get_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.get_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.python.SklearnEKFAdapter" title="formak.python.SklearnEKFAdapter"><span class="pre">formak.python.SklearnEKFAdapter</span></a></span></span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.set_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.python.SklearnEKFAdapter.export_python">
+<span class="sig-name descname"><span class="pre">export_python</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.SklearnEKFAdapter.export_python" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 </section>
 </section>
@@ -351,6 +432,8 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#formak.python.StateAndCovariance"><code class="docutils literal notranslate"><span class="pre">StateAndCovariance</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.assert_valid_covariance"><code class="docutils literal notranslate"><span class="pre">assert_valid_covariance()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.nearest_positive_definite"><code class="docutils literal notranslate"><span class="pre">nearest_positive_definite()</span></code></a></li>
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter</span></code></a><ul>
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter._construct_process"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter._construct_process()</span></code></a></li>
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter._construct_sensors"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter._construct_sensors()</span></code></a></li>
@@ -361,19 +444,31 @@
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.process_model"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.process_model()</span></code></a></li>
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.remove_innovation"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.remove_innovation()</span></code></a></li>
 <li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.sensor_model"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.sensor_model()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter._flatten_scoring_params"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter._flatten_scoring_params()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter._inverse_flatten_scoring_params"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter._inverse_flatten_scoring_params()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.fit"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.fit()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.mahalanobis"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.mahalanobis()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.score"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.score()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.transform"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.transform()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.fit_transform"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.fit_transform()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.get_params"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.get_params()</span></code></a></li>
-<li><a class="reference internal" href="#formak.python.ExtendedKalmanFilter.set_params"><code class="docutils literal notranslate"><span class="pre">ExtendedKalmanFilter.set_params()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#formak.python.compile"><code class="docutils literal notranslate"><span class="pre">compile()</span></code></a></li>
 <li><a class="reference internal" href="#formak.python.compile_ekf"><code class="docutils literal notranslate"><span class="pre">compile_ekf()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.force_to_ndarray"><code class="docutils literal notranslate"><span class="pre">force_to_ndarray()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter</span></code></a><ul>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.allowed_keys"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.allowed_keys</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.Create"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.Create()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._flatten_process_noise"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._flatten_process_noise()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._sensor_noise_to_array"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._sensor_noise_to_array()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._compile_sensor_models"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._compile_sensor_models()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._flatten_dict_diagonal"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._flatten_dict_diagonal()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._inverse_flatten_dict_diagonal"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._inverse_flatten_dict_diagonal()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._flatten_scoring_params"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._flatten_scoring_params()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter._inverse_flatten_scoring_params"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter._inverse_flatten_scoring_params()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.fit"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.fit()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.mahalanobis"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.mahalanobis()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.score"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.score()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.transform"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.transform()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.fit_transform"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.fit_transform()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.get_params"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.get_params()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.set_params"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.set_params()</span></code></a></li>
+<li><a class="reference internal" href="#formak.python.SklearnEKFAdapter.export_python"><code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter.export_python()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -390,8 +485,8 @@
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="../../designs/index.html"
-                          title="next chapter">Design Documentation</a></p>
+    <p class="topless"><a href="formak.ast_fragments.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_fragments</span></code></a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -424,7 +519,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../../designs/index.html" title="Design Documentation"
+          <a href="formak.ast_fragments.html" title="formak.ast_fragments"
              >next</a> |</li>
         <li class="right" >
           <a href="formak.microbenchmark.html" title="formak.microbenchmark"

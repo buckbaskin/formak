@@ -1,6 +1,7 @@
 # FormaK
 
 <!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8333/badge)](https://www.bestpractices.dev/projects/8333)
 
 FormaK builds fast, reliable, easy to use state estimation.
 
@@ -18,7 +19,7 @@ The values of the FormaK project (in order) are:
 FormaK is open source and uses the MIT license.
 
 If you'd like to jump in to using FormaK: [Getting Started](getting-started) or
-access the full [Documentation](index)
+access the full [Documentation](https://buckbaskin.com/formak/generated/html/index.html)
 
 The code is hosted on Github: [github.com/buckbaskin/formak](https://github.com/buckbaskin/formak)
 
@@ -45,6 +46,7 @@ Documentation of design decisions are contained in the `designs/` directory.
 
 formak/index
 designs/index
+issue_templates/index
 ```
 
 ## The Persona

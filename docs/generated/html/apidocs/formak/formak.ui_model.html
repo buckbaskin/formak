@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>formak.microbenchmark &#8212; FormaK  documentation</title>
+    <title>formak.ui_model &#8212; FormaK  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=89b800e6" />
     
@@ -15,8 +15,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="formak.python" href="formak.python.html" />
-    <link rel="prev" title="formak.ui" href="formak.ui.html" /> 
+    <link rel="next" title="formak.cpp" href="formak.cpp.html" />
+    <link rel="prev" title="formak.common" href="formak.common.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,16 +28,16 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="formak.python.html" title="formak.python"
+          <a href="formak.cpp.html" title="formak.cpp"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="formak.ui.html" title="formak.ui"
+          <a href="formak.common.html" title="formak.common"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="formak.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.microbenchmark</span></code></a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_model</span></code></a></li> 
       </ul>
     </div>  
 
@@ -46,26 +46,26 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="module-formak.microbenchmark">
-<span id="formak-microbenchmark"></span><h1><a class="reference internal" href="#module-formak.microbenchmark" title="formak.microbenchmark"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.microbenchmark</span></code></a><a class="headerlink" href="#module-formak.microbenchmark" title="Permalink to this heading">¶</a></h1>
+  <section id="module-formak.ui_model">
+<span id="formak-ui-model"></span><h1><a class="reference internal" href="#module-formak.ui_model" title="formak.ui_model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_model</span></code></a><a class="headerlink" href="#module-formak.ui_model" title="Permalink to this heading">¶</a></h1>
 <section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">¶</a></h2>
-<section id="functions">
-<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h3>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">¶</a></h3>
 <table class="autosummary longtable docutils align-left">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#formak.microbenchmark.microbenchmark" title="formak.microbenchmark.microbenchmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">microbenchmark</span></code></a></p></td>
-<td><p>Time the lambda function for each input.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_model.Model" title="formak.ui_model.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="api">
 <h3>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h3>
-<dl class="py function">
-<dt class="sig sig-object py" id="formak.microbenchmark.microbenchmark">
-<span class="sig-prename descclassname"><span class="pre">formak.microbenchmark.</span></span><span class="sig-name descname"><span class="pre">microbenchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_iterable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.microbenchmark.microbenchmark" title="Permalink to this definition">¶</a></dt>
-<dd><p>Time the lambda function for each input.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_model.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proactive_simplify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="formak.common.html#formak.common.UiModelBase" title="formak.common.UiModelBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.common.UiModelBase</span></code></a></p>
 </dd></dl>
 
 </section>
@@ -82,11 +82,11 @@
   <div>
     <h3><a href="../../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.microbenchmark</span></code></a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_model</span></code></a><ul>
 <li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
-<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#classes">Classes</a></li>
 <li><a class="reference internal" href="#api">API</a><ul>
-<li><a class="reference internal" href="#formak.microbenchmark.microbenchmark"><code class="docutils literal notranslate"><span class="pre">microbenchmark()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -98,18 +98,18 @@
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="formak.ui.html"
-                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui</span></code></a></p>
+    <p class="topless"><a href="formak.common.html"
+                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.common</span></code></a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="formak.python.html"
-                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.python</span></code></a></p>
+    <p class="topless"><a href="formak.cpp.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.cpp</span></code></a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/apidocs/formak/formak.microbenchmark.rst.txt"
+      <li><a href="../../_sources/apidocs/formak/formak.ui_model.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -137,16 +137,16 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="formak.python.html" title="formak.python"
+          <a href="formak.cpp.html" title="formak.cpp"
              >next</a> |</li>
         <li class="right" >
-          <a href="formak.ui.html" title="formak.ui"
+          <a href="formak.common.html" title="formak.common"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="formak.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.microbenchmark</span></code></a></li> 
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_model</span></code></a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

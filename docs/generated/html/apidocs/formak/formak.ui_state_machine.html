@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>formak.ui_state_machine &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="formak.runtime" href="formak.runtime.html" />
+    <link rel="prev" title="formak.ast_tools" href="formak.ast_tools.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak.runtime.html" title="formak.runtime"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="formak.ast_tools.html" title="formak.ast_tools"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="formak.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_state_machine</span></code></a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-formak.ui_state_machine">
+<span id="formak-ui-state-machine"></span><h1><a class="reference internal" href="#module-formak.ui_state_machine" title="formak.ui_state_machine"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_state_machine</span></code></a><a class="headerlink" href="#module-formak.ui_state_machine" title="Permalink to this heading">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">¶</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-left">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateId</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ui_state_machine.ConfigView" title="formak.ui_state_machine.ConfigView"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigView</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_state_machine.StateMachineState" title="formak.ui_state_machine.StateMachineState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StateMachineState</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ui_state_machine.NisScore" title="formak.ui_state_machine.NisScore"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NisScore</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_state_machine.FitModelState" title="formak.ui_state_machine.FitModelState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitModelState</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState" title="formak.ui_state_machine.SymbolicModelState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SymbolicModelState</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_state_machine.DesignManager" title="formak.ui_state_machine.DesignManager"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DesignManager</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="data">
+<h3>Data<a class="headerlink" href="#data" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-left">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#formak.ui_state_machine.SearchState" title="formak.ui_state_machine.SearchState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SearchState</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#formak.ui_state_machine.PIPELINE_STAGE_NAME" title="formak.ui_state_machine.PIPELINE_STAGE_NAME"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PIPELINE_STAGE_NAME</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Permalink to this heading">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="formak.ui_state_machine.SearchState">
+<span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">SearchState</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'namedtuple(...)'</span></em><a class="headerlink" href="#formak.ui_state_machine.SearchState" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateId">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">StateId</span></span><a class="headerlink" href="#formak.ui_state_machine.StateId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateId.Start">
+<span class="sig-name descname"><span class="pre">Start</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#formak.ui_state_machine.StateId.Start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateId.Symbolic_Model">
+<span class="sig-name descname"><span class="pre">Symbolic_Model</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'auto(...)'</span></em><a class="headerlink" href="#formak.ui_state_machine.StateId.Symbolic_Model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateId.Fit_Model">
+<span class="sig-name descname"><span class="pre">Fit_Model</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'auto(...)'</span></em><a class="headerlink" href="#formak.ui_state_machine.StateId.Fit_Model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">ConfigView</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.ConfigView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="formak.python.html#formak.python.Config" title="formak.python.Config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.python.Config</span></code></a></p>
+<p class="rubric">Initialization</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView.common_subexpression_elimination">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">common_subexpression_elimination</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#formak.ui_state_machine.ConfigView.common_subexpression_elimination" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView.python_modules">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">python_modules</span></span><a class="headerlink" href="#formak.ui_state_machine.ConfigView.python_modules" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView.extra_validation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_validation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#formak.ui_state_machine.ConfigView.extra_validation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView.max_dt_sec">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_dt_sec</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#formak.ui_state_machine.ConfigView.max_dt_sec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="formak.ui_state_machine.ConfigView.innovation_filtering">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">innovation_filtering</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#formak.ui_state_machine.ConfigView.innovation_filtering" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateMachineState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">StateMachineState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.StateMachineState" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateMachineState.state_id">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.StateMachineState.state_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateMachineState.history">
+<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.StateMachineState.history" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateMachineState.available_transitions">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_transitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.StateMachineState.available_transitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Available function calls</p>
+<p>for each name in the list, getattr(state, name)(<a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs) will perform the state transition</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.StateMachineState.search">
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">end_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.StateMachineState.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Breadth First Search of state transitions.</p>
+<p>For each name in the list, next_state = getattr(current_state, name)(<a href="#id5"><span class="problematic" id="id6">*</span></a>args, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs) will perform the next state transition</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.NisScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">NisScore</span></span><a class="headerlink" href="#formak.ui_state_machine.NisScore" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.NisScore.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.python.html#formak.python.SklearnEKFAdapter" title="formak.python.SklearnEKFAdapter"><span class="pre">formak.python.SklearnEKFAdapter</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#formak.ui_state_machine.NisScore.__call__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="formak.ui_state_machine.PIPELINE_STAGE_NAME">
+<span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">PIPELINE_STAGE_NAME</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'kalman'</span></em><a class="headerlink" href="#formak.ui_state_machine.PIPELINE_STAGE_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.FitModelState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">FitModelState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.ui_model.html#formak.ui_model.Model" title="formak.ui_model.Model"><span class="pre">formak.ui_model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_sampling_strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_validation_strategy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.FitModelState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#formak.ui_state_machine.StateMachineState" title="formak.ui_state_machine.StateMachineState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ui_state_machine.StateMachineState</span></code></a></p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.FitModelState.state_id">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.FitModelState.state_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.FitModelState.available_transitions">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_transitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.FitModelState.available_transitions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.FitModelState.export_python">
+<span class="sig-name descname"><span class="pre">export_python</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="formak.python.html#formak.python.ExtendedKalmanFilter" title="formak.python.ExtendedKalmanFilter"><span class="pre">formak.python.ExtendedKalmanFilter</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.FitModelState.export_python" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.FitModelState._fit_model_impl">
+<span class="sig-name descname"><span class="pre">_fit_model_impl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.FitModelState._fit_model_impl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.SymbolicModelState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">SymbolicModelState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.ui_model.html#formak.ui_model.Model" title="formak.ui_model.Model"><span class="pre">formak.ui_model.Model</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.SymbolicModelState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#formak.ui_state_machine.StateMachineState" title="formak.ui_state_machine.StateMachineState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ui_state_machine.StateMachineState</span></code></a></p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.SymbolicModelState.state_id">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.SymbolicModelState.state_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.SymbolicModelState.available_transitions">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_transitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.SymbolicModelState.available_transitions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.SymbolicModelState.fit_model">
+<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_sampling_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_validation_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.FitModelState" title="formak.ui_state_machine.FitModelState"><span class="pre">formak.ui_state_machine.FitModelState</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.SymbolicModelState.fit_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symbolic Model -&gt; Fit Model.</p>
+<p>Given the symbolic model contained and the given parameters for
+hyper-parameter search, perform the hyper-parameter search.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="formak.ui_state_machine.DesignManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ui_state_machine.</span></span><span class="sig-name descname"><span class="pre">DesignManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ui_state_machine.DesignManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#formak.ui_state_machine.StateMachineState" title="formak.ui_state_machine.StateMachineState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ui_state_machine.StateMachineState</span></code></a></p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.DesignManager.state_id">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.StateId" title="formak.ui_state_machine.StateId"><span class="pre">formak.ui_state_machine.StateId</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.DesignManager.state_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.DesignManager.available_transitions">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_transitions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#formak.ui_state_machine.DesignManager.available_transitions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="formak.ui_state_machine.DesignManager.symbolic_model">
+<span class="sig-name descname"><span class="pre">symbolic_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="formak.ui_model.html#formak.ui_model.Model" title="formak.ui_model.Model"><span class="pre">formak.ui_model.Model</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState" title="formak.ui_state_machine.SymbolicModelState"><span class="pre">formak.ui_state_machine.SymbolicModelState</span></a></span></span><a class="headerlink" href="#formak.ui_state_machine.DesignManager.symbolic_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_state_machine</span></code></a><ul>
+<li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#classes">Classes</a></li>
+<li><a class="reference internal" href="#data">Data</a></li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.SearchState"><code class="docutils literal notranslate"><span class="pre">SearchState</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateId"><code class="docutils literal notranslate"><span class="pre">StateId</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateId.Start"><code class="docutils literal notranslate"><span class="pre">StateId.Start</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateId.Symbolic_Model"><code class="docutils literal notranslate"><span class="pre">StateId.Symbolic_Model</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateId.Fit_Model"><code class="docutils literal notranslate"><span class="pre">StateId.Fit_Model</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView"><code class="docutils literal notranslate"><span class="pre">ConfigView</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView.common_subexpression_elimination"><code class="docutils literal notranslate"><span class="pre">ConfigView.common_subexpression_elimination</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView.python_modules"><code class="docutils literal notranslate"><span class="pre">ConfigView.python_modules</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView.extra_validation"><code class="docutils literal notranslate"><span class="pre">ConfigView.extra_validation</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView.max_dt_sec"><code class="docutils literal notranslate"><span class="pre">ConfigView.max_dt_sec</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.ConfigView.innovation_filtering"><code class="docutils literal notranslate"><span class="pre">ConfigView.innovation_filtering</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateMachineState"><code class="docutils literal notranslate"><span class="pre">StateMachineState</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateMachineState.state_id"><code class="docutils literal notranslate"><span class="pre">StateMachineState.state_id()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateMachineState.history"><code class="docutils literal notranslate"><span class="pre">StateMachineState.history()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateMachineState.available_transitions"><code class="docutils literal notranslate"><span class="pre">StateMachineState.available_transitions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.StateMachineState.search"><code class="docutils literal notranslate"><span class="pre">StateMachineState.search()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.NisScore"><code class="docutils literal notranslate"><span class="pre">NisScore</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.NisScore.__call__"><code class="docutils literal notranslate"><span class="pre">NisScore.__call__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.PIPELINE_STAGE_NAME"><code class="docutils literal notranslate"><span class="pre">PIPELINE_STAGE_NAME</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.FitModelState"><code class="docutils literal notranslate"><span class="pre">FitModelState</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.FitModelState.state_id"><code class="docutils literal notranslate"><span class="pre">FitModelState.state_id()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.FitModelState.available_transitions"><code class="docutils literal notranslate"><span class="pre">FitModelState.available_transitions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.FitModelState.export_python"><code class="docutils literal notranslate"><span class="pre">FitModelState.export_python()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.FitModelState._fit_model_impl"><code class="docutils literal notranslate"><span class="pre">FitModelState._fit_model_impl()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState"><code class="docutils literal notranslate"><span class="pre">SymbolicModelState</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState.state_id"><code class="docutils literal notranslate"><span class="pre">SymbolicModelState.state_id()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState.available_transitions"><code class="docutils literal notranslate"><span class="pre">SymbolicModelState.available_transitions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.SymbolicModelState.fit_model"><code class="docutils literal notranslate"><span class="pre">SymbolicModelState.fit_model()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formak.ui_state_machine.DesignManager"><code class="docutils literal notranslate"><span class="pre">DesignManager</span></code></a><ul>
+<li><a class="reference internal" href="#formak.ui_state_machine.DesignManager.state_id"><code class="docutils literal notranslate"><span class="pre">DesignManager.state_id()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.DesignManager.available_transitions"><code class="docutils literal notranslate"><span class="pre">DesignManager.available_transitions()</span></code></a></li>
+<li><a class="reference internal" href="#formak.ui_state_machine.DesignManager.symbolic_model"><code class="docutils literal notranslate"><span class="pre">DesignManager.symbolic_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="formak.ast_tools.html"
+                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ast_tools</span></code></a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="formak.runtime.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.runtime</span></code></a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/apidocs/formak/formak.ui_state_machine.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak.runtime.html" title="formak.runtime"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="formak.ast_tools.html" title="formak.ast_tools"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index.html" >API Reference</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="formak.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak</span></code></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_state_machine</span></code></a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>
