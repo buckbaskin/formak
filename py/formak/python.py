@@ -280,6 +280,16 @@ class SensorModel:
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
 
 
+def assert_valid_covariance(covariance, *, name="Covariance"):
+    assert isinstance(covariance, np.ndarray)
+    covariance_eigenvalues = np.linalg.eig(covariance)[0]
+    if np.any(covariance_eigenvalues < 0.0):
+        # negative definite matrix is not a valid representation of uncertainty
+        raise AssertionError(
+            f"Negative {str(name)}:\n{covariance}\n{covariance_eigenvalues}"
+        )
+
+
 class ExtendedKalmanFilter:
     def __init__(
         self,
@@ -356,6 +366,7 @@ class ExtendedKalmanFilter:
                 process_noise_matrix[jIdx, iIdx] = value
 
         self.process_noise = process_noise_matrix
+        assert_valid_covariance(self.process_noise)
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
@@ -497,12 +508,7 @@ class ExtendedKalmanFilter:
         return result
 
     def process_model(self, dt, state, covariance, control=None):
-        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-        if np.any(covariance_eigenvalues < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-            )
+        assert_valid_covariance(covariance.data)
 
         if control is None:
             control = self.Control()
@@ -527,10 +533,15 @@ class ExtendedKalmanFilter:
         )
         assert next_state_covariance.shape == covariance.shape
 
+        assert_valid_covariance(self.process_noise)
+
         next_control_covariance = np.matmul(
             V_t, np.matmul(self.process_noise, V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
+
+        assert_valid_covariance(next_state_covariance)
+        assert_valid_covariance(next_control_covariance)
 
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape
@@ -538,12 +549,7 @@ class ExtendedKalmanFilter:
         next_state = self._state_model.model(dt, state, control)
         assert isinstance(next_state, self.State)
 
-        covariance_eigenvalues = np.linalg.eig(next_covariance.data)[0]
-        if np.any(covariance_eigenvalues < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-            )
+        assert_valid_covariance(next_covariance)
 
         return StateAndCovariance(
             next_state, self.Covariance.from_data(next_covariance)
@@ -560,12 +566,7 @@ class ExtendedKalmanFilter:
         return normalized_innovation > expected_innovation
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
-        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-        if np.any(covariance_eigenvalues < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-            )
+        assert_valid_covariance(covariance.data)
 
         model_impl = self.sensor_models[sensor_key]
         sensor_size = len(model_impl.readings)
@@ -593,21 +594,13 @@ class ExtendedKalmanFilter:
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
 
-        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-        if np.any(covariance_eigenvalues < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-            )
+        assert_valid_covariance(covariance.data)
 
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
         )
-        if np.any(np.linalg.eig(S_t)[0] < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Sensor Uncertainty: {S_t} = {H_t} * {covariance.data} * {H_t.transpose()} + {Q_t.data}"
-            )
+        assert_valid_covariance(S_t, name="Sensor Uncertainty")
+
         S_inv = np.linalg.inv(S_t)
 
         self.innovations[sensor_key] = innovation = (
@@ -1028,12 +1021,7 @@ class SklearnEKFAdapter(BaseEstimator):
         state = self.model_.State()
         covariance = self.model_.Covariance()
 
-        covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-        if np.any(covariance_eigenvalues < 0.0):
-            # negative definite matrix is not a valid representation of uncertainty
-            raise AssertionError(
-                f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-            )
+        assert_valid_covariance(covariance.data)
 
         innovations = []
         states = [state]
@@ -1055,12 +1043,7 @@ class SklearnEKFAdapter(BaseEstimator):
             state, covariance = self.model_.process_model(
                 dt, state, covariance, controls_input
             )
-            covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-            if np.any(covariance_eigenvalues < 0.0):
-                # negative definite matrix is not a valid representation of uncertainty
-                raise AssertionError(
-                    f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-                )
+            assert_valid_covariance(covariance.data)
 
             innovation = []
 
@@ -1082,12 +1065,7 @@ class SklearnEKFAdapter(BaseEstimator):
                     sensor_reading=sensor_input,
                 )
 
-                covariance_eigenvalues = np.linalg.eig(covariance.data)[0]
-                if np.any(covariance_eigenvalues < 0.0):
-                    # negative definite matrix is not a valid representation of uncertainty
-                    raise AssertionError(
-                        f"Negative Covariance:\n{covariance.data}\n{covariance_eigenvalues}"
-                    )
+                assert_valid_covariance(covariance.data)
 
                 # Normalized by the uncertainty at the time of the measurement
                 # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
