@@ -288,6 +288,9 @@ scikit-learn"
 
 ## Solution Approach
 
+**Note 2024-01-27**: This design was significantly revisted by the design
+[Hyper Parameter Tuning](../designs/hyper_parameter_tuning.md).
+
 The basic step will be to integrate the ui.Model into an interface like a
 scikit-learn model. This will allow for easy integration with scikit-learn
 pipelines, model selection and other functionality.
