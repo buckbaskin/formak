@@ -290,6 +290,13 @@ def assert_valid_covariance(covariance, *, name="Covariance"):
         )
 
 
+def nearest_positive_definite(covariance):
+    assert isinstance(covariance, dict)
+    REWRITE_TOL = 1e-6
+
+    return {k: max(REWRITE_TOL, v) for k, v in covariance.items()}
+
+
 class ExtendedKalmanFilter:
     def __init__(
         self,
@@ -754,6 +761,8 @@ class SklearnEKFAdapter(BaseEstimator):
         self.calibration_map = calibration_map
         self.config = config
 
+        # print("SklearnEKFAdapter __init__ process_noise", self.process_noise)
+
     def _flatten_process_noise(self, process_noise):
         for iIdx, iSymbol in enumerate(self.arglist_control):
             for jIdx, jSymbol in enumerate(self.arglist_control):
@@ -775,6 +784,7 @@ class SklearnEKFAdapter(BaseEstimator):
             readings = sorted(list(model.keys()))
             ReadingCovariance = common.named_vector("ReadingCovariance", readings)
 
+            assert_valid_covariance(sensor_noises[key], f"Sensor Noise [{key}]")
             matrix_sensor_noises[key] = ReadingCovariance.from_dict(sensor_noises[key])
 
         return matrix_sensor_noises
@@ -816,6 +826,7 @@ class SklearnEKFAdapter(BaseEstimator):
             list(self.symbolic_model.control), key=lambda x: x.name
         )
 
+        # print("_flatten_scoring_params", self.process_noise)
         flattened = list(
             self._flatten_dict_diagonal(self.process_noise, arglist_control)
         )
@@ -841,9 +852,10 @@ class SklearnEKFAdapter(BaseEstimator):
             flattened[control_size:],
         )
 
-        params["process_noise"] = dict(
-            self._inverse_flatten_dict_diagonal(controls, arglist_control)
+        params["process_noise"] = nearest_positive_definite(
+            dict(self._inverse_flatten_dict_diagonal(controls, arglist_control))
         )
+        # print("_inverse_flatten_dict_diagonal", params["process_noise"])
 
         for key, mapping in sorted(list(self.sensor_noises.items())):
             sensor_size = len(mapping)
@@ -999,12 +1011,13 @@ class SklearnEKFAdapter(BaseEstimator):
     ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
         assert self.symbolic_model is not None
         assert self.process_noise is not None
+        # print("transform process_noise", self.process_noise)
         self.model_ = compile_ekf(
-            self.symbolic_model,
-            self.process_noise,
-            self.sensor_models,
-            self.sensor_noises,
-            self.calibration_map,
+            symbolic_model=self.symbolic_model,
+            process_noise=self.process_noise,
+            sensor_models=self.sensor_models,
+            sensor_noises=self.sensor_noises,
+            calibration_map=self.calibration_map,
             config=self.config,
         )
         if len(self.model_.sensor_models) <= 0:

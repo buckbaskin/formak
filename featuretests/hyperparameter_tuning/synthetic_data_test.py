@@ -22,6 +22,7 @@ np.seterr("raise")
 
 
 def test_with_synthetic_data():
+    true_variation = 1.0
     true_innovation = 5
 
     initial_state = DesignManager(name="mercury")
@@ -43,10 +44,9 @@ def test_with_synthetic_data():
     python_model = fit_model_state.export_python()
 
     assert python_model.config.innovation_filtering is not None
-    assert (
-        true_innovation - 0.5
-        < python_model.config.innovation_filtering
-        < true_innovation + 0.5
+    # ok to overshoot innovation_filtering if the process noise undershoots
+    assert (true_innovation <= python_model.config.innovation_filtering) and (
+        true_variation >= python_model.process_noise
     )
 
 

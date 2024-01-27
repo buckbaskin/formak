@@ -189,7 +189,7 @@ class FitModelState(StateMachineState):
         return []
 
     def export_python(self) -> python.ExtendedKalmanFilter:
-        return self.fit_estimator.named_steps[PIPELINE_STAGE_NAME].export_python()
+        return self.fit_estimator.export_python()
 
     def _fit_model_impl(self):
         # This impl function contains all of the scikit-learn wrangling to
@@ -265,7 +265,7 @@ class FitModelState(StateMachineState):
         estimator_params = grid_search.cv_results_["params"]
         train_scores = grid_search.cv_results_["mean_train_score"]
 
-        for idx, (test_score, estimator, train_score) in enumerate(
+        for idx, (test_score, estimator_params, train_score) in enumerate(
             sorted(
                 zip(
                     test_scores,
@@ -279,19 +279,11 @@ class FitModelState(StateMachineState):
             print(test_score, train_score)
             print(
                 "innovation_filtering",
-                estimator.named_steps[PIPELINE_STAGE_NAME].config.innovation_filtering,
+                estimator_params["innovation_filtering"],
             )
 
             if idx >= 5:
                 break
-
-        print(
-            "innovation_filtering",
-            [
-                estimator.named_steps[PIPELINE_STAGE_NAME].config.innovation_filtering
-                for estimator in estimator_params
-            ],
-        )
 
         self.fit_estimator = grid_search.best_estimator_
 
