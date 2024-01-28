@@ -74,6 +74,7 @@ def test_set_params():
     # Set the parameters of this estimator.
     assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
 
+
 def test_scoring_params_round_trip():
     # _flatten_scoring_params
     dt = ui.Symbol("dt")
@@ -109,5 +110,3 @@ def test_scoring_params_round_trip():
     assert type(original) == type(reconstructed)
     for key, reference in original.items():
         assert reference == reconstructed[key]
-
-

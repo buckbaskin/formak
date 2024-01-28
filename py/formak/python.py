@@ -5,9 +5,10 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
+import sympy
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numpy.typing import NDArray
 from scipy.optimize import minimize
@@ -280,7 +281,7 @@ class SensorModel:
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
 
 
-def assert_valid_covariance(covariance, *, name="Covariance"):
+def assert_valid_covariance(covariance: NDArray, *, name: str = "Covariance"):
     assert isinstance(covariance, np.ndarray)
     covariance_eigenvalues = np.linalg.eig(covariance)[0]
     if np.any(covariance_eigenvalues < 0.0):
@@ -290,7 +291,7 @@ def assert_valid_covariance(covariance, *, name="Covariance"):
         )
 
 
-def nearest_positive_definite(covariance):
+def nearest_positive_definite(covariance: Dict[str, float]):
     assert isinstance(covariance, dict)
     REWRITE_TOL = 1e-6
 
@@ -302,10 +303,10 @@ class ExtendedKalmanFilter:
         self,
         state_model,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
-        sensor_models,
-        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float],
-        config,
-        calibration_map=None,
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        config: Config,
+        calibration_map: Optional[dict[Symbol, float]] = None,
     ):
         if calibration_map is None:
             calibration_map = {}
@@ -330,9 +331,6 @@ class ExtendedKalmanFilter:
         self.Control = common.named_vector("Control", self.arglist_control)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
-        self.process_noise = None
-        self.sensor_models = sensor_models
-        self.sensor_noises = sensor_noises
         self.calibration_map = calibration_map
 
         self._construct_process(
@@ -349,7 +347,13 @@ class ExtendedKalmanFilter:
             config=config,
         )
 
-    def _construct_process(self, state_model, process_noise, calibration_map, config):
+    def _construct_process(
+        self,
+        state_model,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
+        calibration_map: dict[Symbol, float],
+        config: Config,
+    ) -> None:
         self._state_model = Model(
             symbolic_model=state_model, calibration_map=calibration_map, config=config
         )
@@ -409,8 +413,13 @@ class ExtendedKalmanFilter:
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
 
     def _construct_sensors(
-        self, state_model, sensor_models, sensor_noises, calibration_map, config: Config
-    ):
+        self,
+        state_model: common.UiModelBase,
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        calibration_map: dict[Symbol, float],
+        config: Config,
+    ) -> None:
         assert set(sensor_models.keys()) == set(sensor_noises.keys())
         assert isinstance(sensor_noises, dict)
         assert len(sensor_noises) == len(sensor_models)
@@ -657,9 +666,9 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 def compile_ekf(
     symbolic_model: common.UiModelBase,
     process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
-    sensor_models,
+    sensor_models: dict[str, sympy.core.expr.Expr],
     sensor_noises,
-    calibration_map=None,
+    calibration_map: Optional[dict[Symbol, float]] = None,
     *,
     config=None,
 ) -> ExtendedKalmanFilter:
@@ -716,13 +725,13 @@ class SklearnEKFAdapter(BaseEstimator):
     @classmethod
     def Create(
         cls,
-        symbolic_model,
+        symbolic_model: common.UiModelBase,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
-        sensor_models,
-        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float],
-        calibration_map=None,
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        calibration_map: Optional[dict[Symbol, float]] = None,
         *,
-        config=None,
+        config: Optional[Config] = None,
     ):
         """
         Provide an interface with required arguments to be more structured and.
@@ -746,13 +755,13 @@ class SklearnEKFAdapter(BaseEstimator):
 
     def __init__(
         self,
-        symbolic_model=None,
-        process_noise=None,
-        sensor_models=None,
-        sensor_noises=None,
-        calibration_map=None,
+        symbolic_model: Optional[common.UiModelBase] = None,
+        process_noise: Optional[dict[Symbol | tuple[Symbol, Symbol], float]] = None,
+        sensor_models: Optional[dict[Symbol, sympy.core.expr.Expr]] = None,
+        sensor_noises: Optional[dict[Symbol | tuple[Symbol, Symbol], float]] = None,
+        calibration_map: Optional[dict[Symbol, float]] = None,
         *,
-        config=None,
+        config: Optional[Config] = None,
     ):
         self.symbolic_model = symbolic_model
         self.process_noise = process_noise
@@ -763,7 +772,9 @@ class SklearnEKFAdapter(BaseEstimator):
 
         # print("SklearnEKFAdapter __init__ process_noise", self.process_noise)
 
-    def _flatten_process_noise(self, process_noise):
+    def _flatten_process_noise(
+        self, process_noise: dict[Symbol | tuple[Symbol, Symbol], float]
+    ):
         for iIdx, iSymbol in enumerate(self.arglist_control):
             for jIdx, jSymbol in enumerate(self.arglist_control):
                 if (iSymbol, jSymbol) in process_noise:
@@ -776,7 +787,10 @@ class SklearnEKFAdapter(BaseEstimator):
                     value = 0.0
                 yield (iSymbol, jSymbol, value)
 
-    def _sensor_noise_to_array(self, sensor_noises):
+    def _sensor_noise_to_array(
+        self,
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+    ):
         matrix_sensor_noises = {}
         for key, model in self.sensor_models.items():
             assert isinstance(sensor_noises[key], dict)
@@ -789,7 +803,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
         return matrix_sensor_noises
 
-    def _compile_sensor_models(self, sensor_models):
+    def _compile_sensor_models(self, sensor_models: dict[str, sympy.core.expr.Expr]):
         return {
             k: SensorModel(
                 state_model=self.state_model,
@@ -800,7 +814,11 @@ class SklearnEKFAdapter(BaseEstimator):
             for k, model in sensor_models.items()
         }
 
-    def _flatten_dict_diagonal(self, mapping, arglist: list[Symbol]):
+    def _flatten_dict_diagonal(
+        self,
+        mapping: dict[Symbol | tuple[Symbol, Symbol], float],
+        arglist: list[Symbol],
+    ) -> Iterator[float]:
         for iIdx, iSymbol in enumerate(arglist):
             if (iSymbol, iSymbol) in mapping:
                 value = mapping[(iSymbol, iSymbol)]
@@ -810,11 +828,13 @@ class SklearnEKFAdapter(BaseEstimator):
                 value = 0.0
             yield value
 
-    def _inverse_flatten_dict_diagonal(self, vector, arglist):
+    def _inverse_flatten_dict_diagonal(
+        self, vector, arglist
+    ) -> dict[Symbol | tuple[Symbol, Symbol], float]:
         for iIdx, iSymbol in enumerate(arglist):
             yield (iSymbol, vector[iIdx])
 
-    def _flatten_scoring_params(self):
+    def _flatten_scoring_params(self) -> list[float]:
         """
         Note: Known limitation, this only flattens the diagonals to simplify.
 
@@ -838,7 +858,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
         return flattened
 
-    def _inverse_flatten_scoring_params(self, flattened):
+    def _inverse_flatten_scoring_params(self, flattened: list[float]) -> dict[str, Any]:
         # Note: duplicated code from EKF
         arglist_control = sorted(
             list(self.symbolic_model.control), key=lambda x: x.name
@@ -870,14 +890,16 @@ class SklearnEKFAdapter(BaseEstimator):
         return params
 
     # Fit the model to data
-    def fit(self, X, y=None, sample_weight=None) -> SklearnEKFAdapter:
+    def fit(
+        self, X: Any, y: Optional[Any] = None, sample_weight: Optional[NDArray] = None
+    ) -> SklearnEKFAdapter:
         assert self.process_noise is not None
         assert self.sensor_models is not None
         assert self.sensor_noises is not None
 
         x0 = self._flatten_scoring_params()
 
-        def minimize_this(x):
+        def minimize_this(x: NDArray) -> float:
             holdout_params = dict(self.get_params())
 
             scoring_params = self._inverse_flatten_scoring_params(x)
@@ -901,7 +923,7 @@ class SklearnEKFAdapter(BaseEstimator):
         return self
 
     # Compute the squared Mahalanobis distances of given observations.
-    def mahalanobis(self, X) -> NDArray:
+    def mahalanobis(self, X: Any) -> NDArray:
         innovations, states, covariances = self.transform(X, include_states=True)
         if len(innovations.shape) == 1:
             innovations = np.reshape(innovations, (len(innovations), 1))
@@ -925,7 +947,11 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
     def score(
-        self, X: Any, y=None, sample_weight=None, explain_score=False
+        self,
+        X: Any,
+        y: Optional[Any] = None,
+        sample_weight: Optional[Any] = None,
+        explain_score: bool = False,
     ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
         X = force_to_ndarray(X)
         y = force_to_ndarray(y)
@@ -1140,7 +1166,7 @@ class SklearnEKFAdapter(BaseEstimator):
         return self.transform(X)
 
     # Get parameters for this estimator.
-    def get_params(self, deep=True) -> dict[str, Any]:
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
         return {
             "symbolic_model": self.symbolic_model,
             "process_noise": self.process_noise,
@@ -1166,7 +1192,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
         return self
 
-    def export_python(self):
+    def export_python(self) -> ExtendedKalmanFilter:
         return compile_ekf(
             self.symbolic_model,
             self.process_noise,
