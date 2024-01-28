@@ -252,7 +252,7 @@ class FitModelState(StateMachineState):
         estimator_params = grid_search.cv_results_["params"]
         train_scores = grid_search.cv_results_["mean_train_score"]
 
-        for idx, (test_score, estimator_params, train_score) in enumerate(
+        for idx, (test_score, estimator_param, train_score) in enumerate(
             sorted(
                 zip(
                     test_scores,
@@ -266,7 +266,7 @@ class FitModelState(StateMachineState):
             print(test_score, train_score)
             print(
                 "innovation_filtering",
-                estimator_params["innovation_filtering"],
+                estimator_param["innovation_filtering"],
             )
 
             if idx >= 5:

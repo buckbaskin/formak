@@ -5,7 +5,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, Optional, Tuple, Union
 
 import numpy as np
 import sympy
@@ -777,8 +777,8 @@ class SklearnEKFAdapter(BaseEstimator):
     def _flatten_process_noise(
         self, process_noise: dict[Symbol | tuple[Symbol, Symbol], float]
     ):
-        for iIdx, iSymbol in enumerate(self.arglist_control):
-            for jIdx, jSymbol in enumerate(self.arglist_control):
+        for iSymbol in self.arglist_control:
+            for jSymbol in self.arglist_control:
                 if (iSymbol, jSymbol) in process_noise:
                     value = process_noise[(iSymbol, jSymbol)]
                 elif (jSymbol, iSymbol) in process_noise:
@@ -821,7 +821,7 @@ class SklearnEKFAdapter(BaseEstimator):
         mapping: dict[Symbol | tuple[Symbol, Symbol], float],
         arglist: list[Symbol],
     ) -> Iterator[float]:
-        for iIdx, iSymbol in enumerate(arglist):
+        for iSymbol in arglist:
             if (iSymbol, iSymbol) in mapping:
                 value = mapping[(iSymbol, iSymbol)]
             elif iSymbol in mapping:
@@ -853,7 +853,7 @@ class SklearnEKFAdapter(BaseEstimator):
             self._flatten_dict_diagonal(self.process_noise, arglist_control)
         )
 
-        for key, mapping in sorted(list(self.sensor_noises.items())):
+        for _key, mapping in sorted(list(self.sensor_noises.items())):
             arglist = sorted(list(mapping.keys()))
 
             flattened.extend(self._flatten_dict_diagonal(mapping, arglist))
