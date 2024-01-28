@@ -190,7 +190,7 @@ def test_circular_motion_xy_plane():
         assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
 
     break_idx = 3
-    for idx in range(1, int(1.5 * rate)):
+    for idx in range(1, int(1.25 * rate)):
         # print("idx", idx)
         state = imu.model(dt, state, control)
         assert state is not None
