@@ -162,7 +162,7 @@ class FitModelState(StateMachineState):
             "sensor_models": {},
             "sensor_noises": {},
             "calibration_map": {},
-        }
+        }  # type: Dict[str, Dict[Any,Any]]
 
         for key, default in required_keys.items():
             if key not in self.parameter_space or not self.parameter_space[key]:
@@ -192,9 +192,11 @@ class FitModelState(StateMachineState):
         return self.fit_estimator.export_python()
 
     def _fit_model_impl(self):
-        # This impl function contains all of the scikit-learn wrangling to
-        # organize it away from the logical flow of the state machine. This may
-        # move to its own separate helper file.
+        """
+        This impl function contains all of the scikit-learn wrangling to
+        organize it away from the logical flow of the state machine. This may
+        move to its own separate helper file.
+        """
 
         if self.cross_validation_strategy is None:
             self.cross_validation_strategy = TimeSeriesSplit
@@ -230,24 +232,9 @@ class FitModelState(StateMachineState):
         if self.scoring is None:
             self.scoring = NisScore()
 
-        # pipeline = Pipeline([(PIPELINE_STAGE_NAME, adapter)])
-
         n_splits = min(len(X) - 1, 5)
 
         ts_cv = TimeSeriesSplit(n_splits=n_splits, gap=0)
-
-        # Maybe useful: all_splits = ts_cv.split(X)
-
-        # cv_scores = cross_validate(
-        #     estimator=pipeline,
-        #     X=X,
-        #     y=None,
-        #     cv=ts_cv,
-        #     scoring=self.scoring,
-        #     error_score="raise",
-        #     return_estimator=True,
-        #     return_train_score=True,
-        # )
 
         grid_search = GridSearchCV(
             # estimator=pipeline,
