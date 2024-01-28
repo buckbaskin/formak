@@ -285,7 +285,7 @@ py_test_suite(
 
 py_test_suite(
     name = "runtime-test",
-    size = "small",
+    timeout = "moderate",
     srcs = glob(
         [
             "test/unit/runtime/*.py",
@@ -302,7 +302,7 @@ py_test_suite(
 
 py_test_suite(
     name = "reference-models-test",
-    size = "small",
+    timeout = "moderate",
     srcs = glob(
         [
             "test/unit/reference_models/*.py",

@@ -4,7 +4,7 @@ from typing import Dict
 import numpy as np
 import pytest
 from formak.ui import DesignManager, Model, NisScore, Symbol
-from formak.ui_state_machine import StateId, ConfigView
+from formak.ui_state_machine import ConfigView, StateId
 
 from formak import python
 
@@ -86,6 +86,7 @@ def test_non_zero_nis_score():
     scoring_function = NisScore()
 
     assert scoring_function(estimator=adapter, X=np.ones((1, 2))) != 0.0
+
 
 def test_ConfigView():
     params = {"common_subexpression_elimination": True}
