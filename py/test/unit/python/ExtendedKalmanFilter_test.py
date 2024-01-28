@@ -236,3 +236,19 @@ def test_EKF_sensor_jacobian_calibration():
     calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
 
     assert read_once(calibration_map) == 1.2
+
+
+def test_nearest_positive_definite_diagonal():
+    cov = {
+        ui.Symbol("diagonalA"): -1.0,
+        ui.Symbol("diagonalB"): 1.0,
+        (ui.Symbol("diagonalA"), ui.Symbol("diagonalB")): -10.0,
+    }
+
+    result = python.nearest_positive_definite(cov)
+
+    assert result[ui.Symbol("diagonalA")] > 0.0
+    assert result[ui.Symbol("diagonalB")] > 0.0
+
+    # ok for off diagonal terms to be negative
+    assert result[(ui.Symbol("diagonalA"), ui.Symbol("diagonalB"))] < 0.0

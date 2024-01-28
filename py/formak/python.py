@@ -291,7 +291,9 @@ def assert_valid_covariance(covariance: NDArray, *, name: str = "Covariance"):
         )
 
 
-def nearest_positive_definite(covariance: Dict[str, float]):
+def nearest_positive_definite(
+    covariance: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float]
+):
     assert isinstance(covariance, dict)
     REWRITE_TOL = 1e-6
 
