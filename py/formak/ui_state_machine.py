@@ -191,7 +191,7 @@ class FitModelState(StateMachineState):
     def export_python(self) -> python.ExtendedKalmanFilter:
         return self.fit_estimator.export_python()
 
-    def _fit_model_impl(self):
+    def _fit_model_impl(self, debug_print=False):
         """
         This impl function contains all of the scikit-learn wrangling to
         organize it away from the logical flow of the state machine. This may
@@ -252,25 +252,26 @@ class FitModelState(StateMachineState):
         estimator_params = grid_search.cv_results_["params"]
         train_scores = grid_search.cv_results_["mean_train_score"]
 
-        for idx, (test_score, estimator_param, train_score) in enumerate(
-            sorted(
-                zip(
-                    test_scores,
-                    estimator_params,
-                    train_scores,
-                ),
-                key=lambda k: (k[0], k[2]),
-            )
-        ):
-            print("\n--> Result", idx)
-            print(test_score, train_score)
-            print(
-                "innovation_filtering",
-                estimator_param["innovation_filtering"],
-            )
+        if debug_print:
+            for idx, (test_score, estimator_param, train_score) in enumerate(
+                sorted(
+                    zip(
+                        test_scores,
+                        estimator_params,
+                        train_scores,
+                    ),
+                    key=lambda k: (k[0], k[2]),
+                )
+            ):
+                print("\n--> Result", idx)
+                print(test_score, train_score)
+                print(
+                    "innovation_filtering",
+                    estimator_param["innovation_filtering"],
+                )
 
-            if idx >= 5:
-                break
+                if idx >= 5:
+                    break
 
         self.fit_estimator = grid_search.best_estimator_
 
