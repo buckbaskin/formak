@@ -142,7 +142,7 @@ class FitModelState(StateMachineState):
         name: str,
         history: List[StateId],
         model: ui_model.Model,
-        parameter_space,
+        parameter_space: Dict[str, List[Any]],
         parameter_sampling_strategy,
         data,
         cross_validation_strategy,
@@ -303,7 +303,7 @@ class SymbolicModelState(StateMachineState):
 
     def fit_model(
         self,
-        parameter_space,
+        parameter_space: Dict[str, List[Any]],
         data,
         *,
         parameter_sampling_strategy=None,
@@ -315,13 +315,6 @@ class SymbolicModelState(StateMachineState):
         Given the symbolic model contained and the given parameters for
         hyper-parameter search, perform the hyper-parameter search.
         """
-        # TODO parameter space should at least be heavily inspired by
-        # scikit-learn parameter space
-
-        # TODO parameter space needs a type
-
-        # TODO data needs a type (sklearn database? dataset? you know the one
-        # I'm talking about)
 
         return FitModelState(
             name=self.name,
