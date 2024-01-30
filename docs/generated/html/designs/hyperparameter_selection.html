@@ -280,6 +280,56 @@ real-world phenomena).</p>
 </section>
 <section id="post-review">
 <h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-11-09<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<section id="pipelines">
+<h4>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this heading">¶</a></h4>
+<p>The organization of the fititng structure via state machine could be thought of
+like a Scikit-Learn Pipeline; however, I’m hoping that the interface will be
+more of a guided tutorial for self-assembly, so a fixed pipeline isn’t the
+answer. Under the hood, a pipeline may ultimately become the answer.</p>
+<p>The two seem similar, but they are orthogonal axis. The state machine is an
+organizational tool for creating the estimator, the pipeline is for fitting.</p>
+</section>
+</section>
+<section id="id2">
+<h3>2023-11-12<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<section id="formak-python-ui-change">
+<h4><code class="docutils literal notranslate"><span class="pre">formak.python</span></code> UI change<a class="headerlink" href="#formak-python-ui-change" title="Permalink to this heading">¶</a></h4>
+<p>Previously, the scikit-learn interface was mixed with the Kalman Filter
+interface. To better support the contract that scikit-learn expects for its
+estimators, the two are now split. There’s an EKF and then a
+<code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter</span></code> that inherits from scikit-learn’s <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code>.</p>
+</section>
+</section>
+<section id="id3">
+<h3>2023-11-16<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<section id="python-typing">
+<h4>Python Typing<a class="headerlink" href="#python-typing" title="Permalink to this heading">¶</a></h4>
+<p>Under the hood, this design marks the integration of the library with material
+use of Python typing.</p>
+</section>
+</section>
+<section id="id4">
+<h3>2024-01-29<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<section id="defining-parameters-to-select">
+<h4>Defining Parameters to Select<a class="headerlink" href="#defining-parameters-to-select" title="Permalink to this heading">¶</a></h4>
+<p>The parameter space used in the <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> class is designed to be a
+look-alike substitution for the
+<a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search"><code class="docutils literal notranslate"><span class="pre">param_grid</span></code></a>
+used in scikit-learn. In practice it behaves differently, but the hope is that
+these differences can be minimized over time and FormaK can benefit from the
+usability and predictability of sharing an interface with a popular Python
+library.</p>
+</section>
+<section id="data-format">
+<h4>Data Format<a class="headerlink" href="#data-format" title="Permalink to this heading">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> currently uses numpy arrays as the data type expected;
+however, it may be a better fit in the future to move to conventions followed
+in scikit-learn’s
+<a class="reference external" href="https://scikit-learn.org/stable/datasets.html">general dataset API</a>.</p>
+</section>
+</section>
 </section>
 </section>
 
@@ -313,7 +363,26 @@ real-world phenomena).</p>
 <li><a class="reference internal" href="#experiments">Experiments</a></li>
 <li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
 <li><a class="reference internal" href="#roadmap-and-process">Roadmap and Process</a></li>
-<li><a class="reference internal" href="#post-review">Post Review</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-11-09</a><ul>
+<li><a class="reference internal" href="#pipelines">Pipelines</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">2023-11-12</a><ul>
+<li><a class="reference internal" href="#formak-python-ui-change"><code class="docutils literal notranslate"><span class="pre">formak.python</span></code> UI change</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id3">2023-11-16</a><ul>
+<li><a class="reference internal" href="#python-typing">Python Typing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id4">2024-01-29</a><ul>
+<li><a class="reference internal" href="#defining-parameters-to-select">Defining Parameters to Select</a></li>
+<li><a class="reference internal" href="#data-format">Data Format</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

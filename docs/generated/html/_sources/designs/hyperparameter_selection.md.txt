@@ -241,3 +241,50 @@ real-world phenomena).
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2023-11-09
+
+#### Pipelines
+
+The organization of the fititng structure via state machine could be thought of
+like a Scikit-Learn Pipeline; however, I'm hoping that the interface will be
+more of a guided tutorial for self-assembly, so a fixed pipeline isn't the
+answer. Under the hood, a pipeline may ultimately become the answer.
+
+The two seem similar, but they are orthogonal axis. The state machine is an
+organizational tool for creating the estimator, the pipeline is for fitting.
+
+### 2023-11-12
+
+#### `formak.python` UI change
+
+Previously, the scikit-learn interface was mixed with the Kalman Filter
+interface. To better support the contract that scikit-learn expects for its
+estimators, the two are now split. There's an EKF and then a
+`SklearnEKFAdapter` that inherits from scikit-learn's `BaseEstimator`.
+
+### 2023-11-16
+
+#### Python Typing
+
+Under the hood, this design marks the integration of the library with material
+use of Python typing.
+
+### 2024-01-29
+
+#### Defining Parameters to Select
+
+The parameter space used in the `DesignManager` class is designed to be a
+look-alike substitution for the
+[`param_grid`](https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search)
+used in scikit-learn. In practice it behaves differently, but the hope is that
+these differences can be minimized over time and FormaK can benefit from the
+usability and predictability of sharing an interface with a popular Python
+library.
+
+#### Data Format
+
+The `DesignManager` currently uses numpy arrays as the data type expected;
+however, it may be a better fit in the future to move to conventions followed
+in scikit-learn's
+[general dataset API](https://scikit-learn.org/stable/datasets.html).

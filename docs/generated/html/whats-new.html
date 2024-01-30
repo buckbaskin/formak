@@ -46,6 +46,21 @@
   <section class="tex2jax_ignore mathjax_ignore" id="what-s-new">
 <h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this heading">¶</a></h1>
 <p>Release Notes</p>
+<section id="hyperparameter-tuning">
+<h2>2024-01-28 Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Permalink to this heading">¶</a></h2>
+<p>FormaK now provides functionality to select hyperparameters from a known set.
+For example, an innovation filtering (see below) level can be selected from
+data. This method is general and can be used to select categorical values for
+configuring a model or estimator.</p>
+<p><em>Breaking Changes</em>:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">formak.python</span></code> EKF is no longer scikit-learn compatible. To use it with scikit-learn, it should be wrapper in the <code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter</span></code> class.</p></li>
+</ul>
+<p>Other Improvements:</p>
+<ul class="simple">
+<li><p>There is the introduction of a significant quantity of Python types for function signatures in this design</p></li>
+</ul>
+</section>
 <section id="better-documentation">
 <h2>2024-01-17 Better Documentation<a class="headerlink" href="#better-documentation" title="Permalink to this heading">¶</a></h2>
 <p>FormaK now provides HTML documentation in the <code class="docutils literal notranslate"><span class="pre">docs/generated/html/</span></code> directory.
@@ -150,6 +165,7 @@ science tools ecosystem.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">What’s New</a><ul>
+<li><a class="reference internal" href="#hyperparameter-tuning">2024-01-28 Hyperparameter Tuning</a></li>
 <li><a class="reference internal" href="#better-documentation">2024-01-17 Better Documentation</a></li>
 <li><a class="reference internal" href="#reference-model-strapdown-imu">2023-10-29 Reference Model: Strapdown IMU</a></li>
 <li><a class="reference internal" href="#innovation-filtering">2023-09-18 Innovation Filtering</a></li>

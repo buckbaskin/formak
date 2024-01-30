@@ -92,6 +92,21 @@ state vector or simplifying the state vector.</p>
 <ul class="simple">
 <li><p>If you want to access part or all of the State at runtime, define a sensor model to return that state member. This will allow you to access the state regardless of if the underlying state representation changes.</p></li>
 </ul>
+<section id="patterns-and-anti-patterns">
+<h2>Patterns and Anti-Patterns<a class="headerlink" href="#patterns-and-anti-patterns" title="Permalink to this heading">¶</a></h2>
+<section id="managedfilter">
+<h3>ManagedFilter<a class="headerlink" href="#managedfilter" title="Permalink to this heading">¶</a></h3>
+<p>If you find yourself manually constructing sensor readings, sensor maps,
+control inputs and then calling the processs model or sensor model, consider if
+your use case could be served by a <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> instead.</p>
+<p>If you pass in the sensors and control information, the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> will
+take care of the rest. This reduces code complexity for you and opens the
+opportunity to adapt additional benefits as well.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> isn’t serving your use case, please reach out to
+<a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a> . I’d love to learn more about your use case and
+see if it’s something that can be supported by the library.</p>
+</section>
+</section>
 </section>
 
 
@@ -101,6 +116,19 @@ state vector or simplifying the state vector.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Thinking With FormaK</a><ul>
+<li><a class="reference internal" href="#patterns-and-anti-patterns">Patterns and Anti-Patterns</a><ul>
+<li><a class="reference internal" href="#managedfilter">ManagedFilter</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="development-status.html"

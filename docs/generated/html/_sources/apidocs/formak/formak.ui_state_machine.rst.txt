@@ -172,7 +172,7 @@ API
 
    .. autodoc2-docstring:: formak.ui_state_machine.PIPELINE_STAGE_NAME
 
-.. py:class:: FitModelState(name: str, history: typing.List[formak.ui_state_machine.StateId], model: formak.ui_model.Model, parameter_space, parameter_sampling_strategy, data, cross_validation_strategy)
+.. py:class:: FitModelState(name: str, history: typing.List[formak.ui_state_machine.StateId], model: formak.ui_model.Model, parameter_space: typing.Dict[str, typing.List[typing.Any]], parameter_sampling_strategy, data, cross_validation_strategy)
    :canonical: formak.ui_state_machine.FitModelState
 
    Bases: :py:obj:`formak.ui_state_machine.StateMachineState`
@@ -198,7 +198,7 @@ API
 
       .. autodoc2-docstring:: formak.ui_state_machine.FitModelState.export_python
 
-   .. py:method:: _fit_model_impl()
+   .. py:method:: _fit_model_impl(debug_print=False)
       :canonical: formak.ui_state_machine.FitModelState._fit_model_impl
 
       .. autodoc2-docstring:: formak.ui_state_machine.FitModelState._fit_model_impl
@@ -224,7 +224,7 @@ API
       :canonical: formak.ui_state_machine.SymbolicModelState.available_transitions
       :classmethod:
 
-   .. py:method:: fit_model(parameter_space, data, *, parameter_sampling_strategy=None, cross_validation_strategy=None) -> formak.ui_state_machine.FitModelState
+   .. py:method:: fit_model(parameter_space: typing.Dict[str, typing.List[typing.Any]], data, *, parameter_sampling_strategy=None, cross_validation_strategy=None) -> formak.ui_state_machine.FitModelState
       :canonical: formak.ui_state_machine.SymbolicModelState.fit_model
 
       .. autodoc2-docstring:: formak.ui_state_machine.SymbolicModelState.fit_model

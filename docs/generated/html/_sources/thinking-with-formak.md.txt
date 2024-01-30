@@ -37,3 +37,19 @@ collection. Examples of internal representation changes include: re-ordering
 the states, representing the states in a non-vector format, augmenting the
 state vector or simplifying the state vector.
 - If you want to access part or all of the State at runtime, define a sensor model to return that state member. This will allow you to access the state regardless of if the underlying state representation changes.
+
+## Patterns and Anti-Patterns
+
+### ManagedFilter
+
+If you find yourself manually constructing sensor readings, sensor maps,
+control inputs and then calling the processs model or sensor model, consider if
+your use case could be served by a `ManagedFilter` instead.
+
+If you pass in the sensors and control information, the `ManagedFilter` will
+take care of the rest. This reduces code complexity for you and opens the
+opportunity to adapt additional benefits as well.
+
+If `ManagedFilter` isn't serving your use case, please reach out to
+formak.open.source@gmail.com . I'd love to learn more about your use case and
+see if it's something that can be supported by the library.
