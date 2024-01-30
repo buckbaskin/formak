@@ -7,6 +7,7 @@ scikit-learn-like interface
 Passes if the interfaces return results that match the expected shape of each
 scikit-learn interface
 """
+
 import numpy as np
 
 from formak import python, ui
@@ -35,7 +36,7 @@ def test_UI_like_sklearn():
         "sensor_noises": {"simple": {ui.Symbol("v"): 1.0}},
     }
 
-    model = python.compile_ekf(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -62,7 +63,7 @@ def test_UI_like_sklearn():
     assert n_features == n_control + n_readings
 
     # Fit the model to data
-    assert isinstance(model.fit(readings), python.ExtendedKalmanFilter)
+    assert isinstance(model.fit(readings), python.SklearnEKFAdapter)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit
@@ -83,4 +84,4 @@ def test_UI_like_sklearn():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.ExtendedKalmanFilter)
+    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)

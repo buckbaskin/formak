@@ -5,6 +5,7 @@ Fit a Python model via the scikit-learn interface.
 
 Passes if the fit model scores better than the unfit model
 """
+
 import numpy as np
 
 from formak import python, ui
@@ -35,7 +36,7 @@ def test_like_sklearn_regression():
         },
         "sensor_noises": {"z": {ui.Symbol("z"): 1.0}, "v": {ui.Symbol("v"): 1.0}},
     }
-    model = python.compile_ekf(
+    model = python.SklearnEKFAdapter(
         ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

@@ -37,3 +37,8 @@ API
    :canonical: formak.exceptions.ModelConstructionError
 
    Bases: :py:obj:`formak.exceptions.FormakBaseException`
+
+.. py:exception:: ModelFitError()
+   :canonical: formak.exceptions.ModelFitError
+
+   Bases: :py:obj:`formak.exceptions.FormakBaseException`

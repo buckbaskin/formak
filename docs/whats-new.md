@@ -2,6 +2,19 @@
 
 Release Notes
 
+## 2024-01-28 Hyperparameter Tuning
+
+FormaK now provides functionality to select hyperparameters from a known set.
+For example, an innovation filtering (see below) level can be selected from
+data. This method is general and can be used to select categorical values for
+configuring a model or estimator.
+
+*Breaking Changes*:
+- The `formak.python` EKF is no longer scikit-learn compatible. To use it with scikit-learn, it should be wrapper in the `SklearnEKFAdapter` class.
+
+Other Improvements:
+- There is the introduction of a significant quantity of Python types for function signatures in this design
+
 ## 2024-01-17 Better Documentation
 
 FormaK now provides HTML documentation in the `docs/generated/html/` directory.

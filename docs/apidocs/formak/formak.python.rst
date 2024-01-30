@@ -31,6 +31,9 @@ Classes
    * - :py:obj:`ExtendedKalmanFilter <formak.python.ExtendedKalmanFilter>`
      - .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter
           :summary:
+   * - :py:obj:`SklearnEKFAdapter <formak.python.SklearnEKFAdapter>`
+     - .. autodoc2-docstring:: formak.python.SklearnEKFAdapter
+          :summary:
 
 Functions
 ~~~~~~~~~
@@ -39,11 +42,20 @@ Functions
    :class: autosummary longtable
    :align: left
 
+   * - :py:obj:`assert_valid_covariance <formak.python.assert_valid_covariance>`
+     - .. autodoc2-docstring:: formak.python.assert_valid_covariance
+          :summary:
+   * - :py:obj:`nearest_positive_definite <formak.python.nearest_positive_definite>`
+     - .. autodoc2-docstring:: formak.python.nearest_positive_definite
+          :summary:
    * - :py:obj:`compile <formak.python.compile>`
      - .. autodoc2-docstring:: formak.python.compile
           :summary:
    * - :py:obj:`compile_ekf <formak.python.compile_ekf>`
      - .. autodoc2-docstring:: formak.python.compile_ekf
+          :summary:
+   * - :py:obj:`force_to_ndarray <formak.python.force_to_ndarray>`
+     - .. autodoc2-docstring:: formak.python.force_to_ndarray
           :summary:
 
 Data
@@ -83,6 +95,7 @@ API
 
    .. py:attribute:: python_modules
       :canonical: formak.python.Config.python_modules
+      :type: tuple[typing.Any, typing.Any, typing.Any, typing.Any]
       :value: None
 
       .. autodoc2-docstring:: formak.python.Config.python_modules
@@ -103,12 +116,12 @@ API
 
    .. py:attribute:: innovation_filtering
       :canonical: formak.python.Config.innovation_filtering
-      :type: float
+      :type: float | None
       :value: 5.0
 
       .. autodoc2-docstring:: formak.python.Config.innovation_filtering
 
-.. py:class:: BasicBlock(*, arglist: typing.List[str], statements: typing.List[typing.Any], config: formak.python.Config)
+.. py:class:: BasicBlock(*, arglist: list[str], statements: list[typing.Any], config: formak.python.Config)
    :canonical: formak.python.BasicBlock
 
    .. autodoc2-docstring:: formak.python.BasicBlock
@@ -171,7 +184,17 @@ API
 
    .. autodoc2-docstring:: formak.python.StateAndCovariance
 
-.. py:class:: ExtendedKalmanFilter(state_model, process_noise: typing.Dict[typing.Union[sympy.Symbol, typing.Tuple[sympy.Symbol, sympy.Symbol]], float], sensor_models, sensor_noises: typing.Dict[typing.Union[sympy.Symbol, typing.Tuple[sympy.Symbol, sympy.Symbol]], float], config, calibration_map=None)
+.. py:function:: assert_valid_covariance(covariance: numpy.typing.NDArray, *, name: str = 'Covariance', negative_tol: float = -1e-15)
+   :canonical: formak.python.assert_valid_covariance
+
+   .. autodoc2-docstring:: formak.python.assert_valid_covariance
+
+.. py:function:: nearest_positive_definite(covariance: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float])
+   :canonical: formak.python.nearest_positive_definite
+
+   .. autodoc2-docstring:: formak.python.nearest_positive_definite
+
+.. py:class:: ExtendedKalmanFilter(state_model, process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float], sensor_models: dict[str, sympy.core.expr.Expr], sensor_noises: dict[str, dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float]], config: formak.python.Config, calibration_map: dict[sympy.Symbol, float] | None = None)
    :canonical: formak.python.ExtendedKalmanFilter
 
    .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter
@@ -180,12 +203,12 @@ API
 
    .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.__init__
 
-   .. py:method:: _construct_process(state_model, process_noise, calibration_map, config)
+   .. py:method:: _construct_process(state_model, process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float], calibration_map: dict[sympy.Symbol, float], config: formak.python.Config) -> None
       :canonical: formak.python.ExtendedKalmanFilter._construct_process
 
       .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter._construct_process
 
-   .. py:method:: _construct_sensors(state_model, sensor_models, sensor_noises, calibration_map, config)
+   .. py:method:: _construct_sensors(state_model: formak.common.UiModelBase, sensor_models: dict[str, sympy.core.expr.Expr], sensor_noises: dict[str, dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float]], calibration_map: dict[sympy.Symbol, float], config: formak.python.Config) -> None
       :canonical: formak.python.ExtendedKalmanFilter._construct_sensors
 
       .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter._construct_sensors
@@ -215,7 +238,7 @@ API
 
       .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.process_model
 
-   .. py:method:: remove_innovation(innovation, S_inv)
+   .. py:method:: remove_innovation(innovation: numpy.typing.NDArray, S_inv: numpy.typing.NDArray) -> bool
       :canonical: formak.python.ExtendedKalmanFilter.remove_innovation
 
       .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.remove_innovation
@@ -225,57 +248,115 @@ API
 
       .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.sensor_model
 
-   .. py:method:: _flatten_scoring_params(params)
-      :canonical: formak.python.ExtendedKalmanFilter._flatten_scoring_params
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter._flatten_scoring_params
-
-   .. py:method:: _inverse_flatten_scoring_params(flattened)
-      :canonical: formak.python.ExtendedKalmanFilter._inverse_flatten_scoring_params
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter._inverse_flatten_scoring_params
-
-   .. py:method:: fit(X, y=None, sample_weight=None)
-      :canonical: formak.python.ExtendedKalmanFilter.fit
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.fit
-
-   .. py:method:: mahalanobis(X)
-      :canonical: formak.python.ExtendedKalmanFilter.mahalanobis
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.mahalanobis
-
-   .. py:method:: score(X, y=None, sample_weight=None, explain_score=False)
-      :canonical: formak.python.ExtendedKalmanFilter.score
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.score
-
-   .. py:method:: transform(X, include_states=False)
-      :canonical: formak.python.ExtendedKalmanFilter.transform
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.transform
-
-   .. py:method:: fit_transform(X, y=None)
-      :canonical: formak.python.ExtendedKalmanFilter.fit_transform
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.fit_transform
-
-   .. py:method:: get_params(deep=True) -> dict
-      :canonical: formak.python.ExtendedKalmanFilter.get_params
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.get_params
-
-   .. py:method:: set_params(**params)
-      :canonical: formak.python.ExtendedKalmanFilter.set_params
-
-      .. autodoc2-docstring:: formak.python.ExtendedKalmanFilter.set_params
-
 .. py:function:: compile(symbolic_model, calibration_map=None, *, config=None)
    :canonical: formak.python.compile
 
    .. autodoc2-docstring:: formak.python.compile
 
-.. py:function:: compile_ekf(state_model: formak.common.UiModelBase, process_noise: typing.Dict[typing.Union[sympy.Symbol, typing.Tuple[sympy.Symbol, sympy.Symbol]], float], sensor_models, sensor_noises, calibration_map=None, *, config=None)
+.. py:function:: compile_ekf(symbolic_model: formak.common.UiModelBase, process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float], sensor_models: dict[str, sympy.core.expr.Expr], sensor_noises, calibration_map: dict[sympy.Symbol, float] | None = None, *, config=None) -> formak.python.ExtendedKalmanFilter
    :canonical: formak.python.compile_ekf
 
    .. autodoc2-docstring:: formak.python.compile_ekf
+
+.. py:function:: force_to_ndarray(mat: typing.Any) -> numpy.typing.NDArray | None
+   :canonical: formak.python.force_to_ndarray
+
+   .. autodoc2-docstring:: formak.python.force_to_ndarray
+
+.. py:class:: SklearnEKFAdapter(symbolic_model: formak.common.UiModelBase | None = None, process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float] | None = None, sensor_models: dict[sympy.Symbol, sympy.core.expr.Expr] | None = None, sensor_noises: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float] | None = None, calibration_map: dict[sympy.Symbol, float] | None = None, *, config: formak.python.Config | None = None)
+   :canonical: formak.python.SklearnEKFAdapter
+
+   Bases: :py:obj:`sklearn.base.BaseEstimator`
+
+   .. autodoc2-docstring:: formak.python.SklearnEKFAdapter
+
+   .. rubric:: Initialization
+
+   .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.__init__
+
+   .. py:attribute:: allowed_keys
+      :canonical: formak.python.SklearnEKFAdapter.allowed_keys
+      :value: ['symbolic_model', 'process_noise', 'sensor_models', 'sensor_noises', 'calibration_map', 'config']
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.allowed_keys
+
+   .. py:method:: Create(symbolic_model: formak.common.UiModelBase, process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float], sensor_models: dict[str, sympy.core.expr.Expr], sensor_noises: dict[str, dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float]], calibration_map: dict[sympy.Symbol, float] | None = None, *, config: formak.python.Config | None = None)
+      :canonical: formak.python.SklearnEKFAdapter.Create
+      :classmethod:
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.Create
+
+   .. py:method:: _flatten_process_noise(process_noise: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float])
+      :canonical: formak.python.SklearnEKFAdapter._flatten_process_noise
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._flatten_process_noise
+
+   .. py:method:: _sensor_noise_to_array(sensor_noises: dict[str, dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float]])
+      :canonical: formak.python.SklearnEKFAdapter._sensor_noise_to_array
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._sensor_noise_to_array
+
+   .. py:method:: _compile_sensor_models(sensor_models: dict[str, sympy.core.expr.Expr])
+      :canonical: formak.python.SklearnEKFAdapter._compile_sensor_models
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._compile_sensor_models
+
+   .. py:method:: _flatten_dict_diagonal(mapping: dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float], arglist: list[sympy.Symbol]) -> typing.Iterator[float]
+      :canonical: formak.python.SklearnEKFAdapter._flatten_dict_diagonal
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._flatten_dict_diagonal
+
+   .. py:method:: _inverse_flatten_dict_diagonal(vector, arglist) -> dict[sympy.Symbol | tuple[sympy.Symbol, sympy.Symbol], float]
+      :canonical: formak.python.SklearnEKFAdapter._inverse_flatten_dict_diagonal
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._inverse_flatten_dict_diagonal
+
+   .. py:method:: _flatten_scoring_params() -> list[float]
+      :canonical: formak.python.SklearnEKFAdapter._flatten_scoring_params
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._flatten_scoring_params
+
+   .. py:method:: _inverse_flatten_scoring_params(flattened: list[float]) -> dict[str, typing.Any]
+      :canonical: formak.python.SklearnEKFAdapter._inverse_flatten_scoring_params
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter._inverse_flatten_scoring_params
+
+   .. py:method:: fit(X: typing.Any, y: typing.Any | None = None, sample_weight: numpy.typing.NDArray | None = None) -> formak.python.SklearnEKFAdapter
+      :canonical: formak.python.SklearnEKFAdapter.fit
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.fit
+
+   .. py:method:: mahalanobis(X: typing.Any) -> numpy.typing.NDArray
+      :canonical: formak.python.SklearnEKFAdapter.mahalanobis
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.mahalanobis
+
+   .. py:method:: score(X: typing.Any, y: typing.Any | None = None, sample_weight: typing.Any | None = None, explain_score: bool = False) -> float | tuple[float, tuple[float, float, float, float, float, float]]
+      :canonical: formak.python.SklearnEKFAdapter.score
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.score
+
+   .. py:method:: transform(X: typing.Any, include_states=False) -> numpy.typing.NDArray | tuple[numpy.typing.NDArray, numpy.typing.NDArray, numpy.typing.NDArray]
+      :canonical: formak.python.SklearnEKFAdapter.transform
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.transform
+
+   .. py:method:: fit_transform(X, y=None) -> numpy.typing.NDArray | tuple[numpy.typing.NDArray, numpy.typing.NDArray, numpy.typing.NDArray]
+      :canonical: formak.python.SklearnEKFAdapter.fit_transform
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.fit_transform
+
+   .. py:method:: get_params(deep: bool = True) -> dict[str, typing.Any]
+      :canonical: formak.python.SklearnEKFAdapter.get_params
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.get_params
+
+   .. py:method:: set_params(**params) -> formak.python.SklearnEKFAdapter
+      :canonical: formak.python.SklearnEKFAdapter.set_params
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.set_params
+
+   .. py:method:: export_python() -> formak.python.ExtendedKalmanFilter
+      :canonical: formak.python.SklearnEKFAdapter.export_python
+
+      .. autodoc2-docstring:: formak.python.SklearnEKFAdapter.export_python

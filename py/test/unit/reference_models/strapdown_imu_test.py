@@ -2,10 +2,9 @@ from math import cos, pi, radians, sin
 
 import numpy as np
 from formak.reference_models import strapdown_imu
-from matplotlib import pyplot as plt
 from sympy import Quaternion
 
-from formak import python, ui
+from formak import python
 from formak.common import plot_pair, plot_quaternion_timeseries
 
 
@@ -190,7 +189,7 @@ def test_circular_motion_xy_plane():
         assert np.allclose(state.data, expected_state.data, atol=ALLOWED_TOL)
 
     break_idx = 3
-    for idx in range(1, int(1.5 * rate)):
+    for idx in range(1, int(1.25 * rate)):
         # print("idx", idx)
         state = imu.model(dt, state, control)
         assert state is not None

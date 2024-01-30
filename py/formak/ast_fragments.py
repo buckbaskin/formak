@@ -3,6 +3,7 @@ AST Fragments.
 
 Combinations of the basics from AST Tools representing fragments of the final AST structure
 """
+
 from itertools import chain
 from typing import Iterable
 

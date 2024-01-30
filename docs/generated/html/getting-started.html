@@ -64,7 +64,29 @@
     <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">control</span><span class="p">,</span> <span class="n">state_model</span><span class="p">,</span> <span class="n">debug_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>More coming soon!</p>
+<p>The above code can be extended with the <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> to help select
+appropriate parameters.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span>    <span class="n">manager</span> <span class="o">=</span> <span class="n">DesignManager</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mercury&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Define the symbolic model</span>
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">symbolic_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Select model parameters, such as innovation_filtering from data</span>
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">symbolic_model_state</span><span class="o">.</span><span class="n">fit_model</span><span class="p">(</span>
+        <span class="n">parameter_space</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;process_noise&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">process_noise</span><span class="p">],</span>
+            <span class="s2">&quot;sensor_models&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">sensor_models</span><span class="p">],</span>
+            <span class="s2">&quot;sensor_noises&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">sensor_noises</span><span class="p">],</span>
+            <span class="s2">&quot;calibration_map&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">calibration_map</span><span class="p">],</span>
+            <span class="s2">&quot;innovation_filtering&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Export the refined model. Note: not a state transition</span>
+    <span class="n">python_model</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">export_python</span><span class="p">()</span>
+</pre></div>
+</div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="getting-started-for-developers">
 <h1>Getting Started For Developers<a class="headerlink" href="#getting-started-for-developers" title="Permalink to this heading">¶</a></h1>

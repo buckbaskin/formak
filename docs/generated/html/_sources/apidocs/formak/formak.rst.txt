@@ -13,12 +13,14 @@ Submodules
    :titlesonly:
    :maxdepth: 1
 
-   formak.exceptions
-   formak.ast_tools
-   formak.runtime
-   formak.cpp
-   formak.ui
    formak.common
-   formak.ast_fragments
+   formak.ui_model
+   formak.cpp
+   formak.ast_tools
+   formak.ui_state_machine
+   formak.runtime
+   formak.exceptions
+   formak.ui
    formak.microbenchmark
    formak.python
+   formak.ast_fragments

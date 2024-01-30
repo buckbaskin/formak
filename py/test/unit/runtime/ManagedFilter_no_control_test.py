@@ -67,7 +67,7 @@ def make_ekf(calibration_map):
     )
 
     ekf = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise={},
         sensor_models={"simple": {state: state}},
         sensor_noises={"simple": {state: 1e-9}},

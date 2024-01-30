@@ -1,11 +1,12 @@
 import abc
 import types
 from itertools import product
-from typing import Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 from formak.exceptions import ModelConstructionError
 from matplotlib import pyplot as plt
+from numpy.typing import NDArray
 from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 
@@ -23,7 +24,7 @@ def model_validation(
     extra_validation=False,
     calibration_map: Dict[Symbol, float],
 ):
-    assert isinstance(process_noise, dict)
+    assert isinstance(process_noise, dict), f"process_noise type: {type(process_noise)}"
     allowed_keys = set(
         list(state_model.control)
         + [
@@ -60,11 +61,17 @@ def model_validation(
     allowed_symbols = set(state_model.state) | set(state_model.calibration)
     for k, model_set in sensor_models.items():
         for k2, model in model_set.items():
-            if not set(model.free_symbols).issubset(allowed_symbols):
-                extra_symbols = sorted(list(set(model.free_symbols) - allowed_symbols))
-                raise ModelConstructionError(
-                    f"Sensor Model[{k}][{k2}] has symbols not in state, calibration: {extra_symbols}"
-                )
+            extra_symbols = []
+            try:
+                if not set(model.free_symbols).issubset(allowed_symbols):
+                    extra_symbols = sorted(
+                        list(set(model.free_symbols) - allowed_symbols)
+                    )
+                    raise ModelConstructionError(
+                        f"Sensor Model[{k}][{k2}] has symbols not in state, calibration: {extra_symbols}"
+                    )
+            except AttributeError:
+                continue
 
     # Note: flagging this off for now because it was running into performance issues
     if extra_validation:
@@ -94,9 +101,10 @@ def model_validation(
 
 
 class _NamedArrayBase(abc.ABC):
-    def __init__(self, name, kwargs):
+    def __init__(self, name: str, kwargs: Dict[Any, Any]):
         self.name = name
         self._kwargs = kwargs
+        self.data = None  # type: Optional[NDArray]
 
     def __repr__(self):
         kwargs = ", ".join(

@@ -31,7 +31,7 @@ class Add(Instruction):
         return WideRegister(*[l[idx] + r[idx] for idx in range(4)])
 
 
-CpuArchitectureInfo = namedtuple("CPU_Architecture_Info", ["latency", "throughput"])
+CpuArchitectureInfo = namedtuple("CpuArchitectureInfo", ["latency", "throughput"])
 
 SKYLAKE = CpuArchitectureInfo(latency={Add: 4}, throughput={Add: Fraction(1, 2)})
 
@@ -85,7 +85,7 @@ def cpu_tick(state, instructions, cpu_architecture_info):
 
 
 state = initial_state()
-instructions = []
+instructions = []  # type: List[Instruction]
 
 
 def run_instruction_list(

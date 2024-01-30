@@ -58,7 +58,7 @@ API
 
    .. autodoc2-docstring:: formak.common.model_validation
 
-.. py:class:: _NamedArrayBase(name, kwargs)
+.. py:class:: _NamedArrayBase(name: str, kwargs: typing.Dict[typing.Any, typing.Any])
    :canonical: formak.common._NamedArrayBase
 
    Bases: :py:obj:`abc.ABC`

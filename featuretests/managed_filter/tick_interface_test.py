@@ -6,6 +6,7 @@ Run the new ManagedFilter with a generated EKF. Run it with and without sensor r
 Passes if the ManagedFilter updates the state (other testing checks if it's
 working correctly).
 """
+
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
 
@@ -34,7 +35,7 @@ def make_ekf():
     model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
     ekf = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {v: v}},
         sensor_noises={"simple": {v: 1.0}},

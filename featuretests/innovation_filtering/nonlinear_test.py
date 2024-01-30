@@ -10,6 +10,7 @@ working as expected, then the model will flip into the wrong direction.
 
 Passes if the model rejects the high innovation updates.
 """
+
 from math import degrees, radians
 
 import numpy as np
@@ -40,7 +41,7 @@ def make_ekf():
     config = python.Config(innovation_filtering=4)
 
     ekf = python.compile_ekf(
-        state_model=model,
+        symbolic_model=model,
         process_noise={velocity: 1.0, _heading_err: 0.1},
         sensor_models={"compass": {heading: heading}},
         sensor_noises={"compass": {heading: 1.0}},

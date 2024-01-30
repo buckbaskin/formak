@@ -1,12 +1,18 @@
+from __future__ import annotations
+
+import dataclasses
 from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Iterator
 
 import numpy as np
+import sympy
 from formak.exceptions import MinimizationFailure, ModelConstructionError
+from numpy.typing import NDArray
 from scipy.optimize import minimize
+from sklearn.base import BaseEstimator
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
 
@@ -15,7 +21,7 @@ from formak import common
 DEFAULT_MODULES = ("scipy", "numpy", "math", {"sec": lambda v: 1.0 / np.cos(v)})
 
 
-@dataclass
+@dataclass(frozen=True)
 class Config:
     """
     Options for generating C++.
@@ -29,10 +35,10 @@ class Config:
     """
 
     common_subexpression_elimination: bool = True
-    python_modules = DEFAULT_MODULES
+    python_modules: tuple[Any, Any, Any, Any] = DEFAULT_MODULES
     extra_validation: bool = False
     max_dt_sec: float = 0.1
-    innovation_filtering: float = 5.0
+    innovation_filtering: float | None = 5.0
 
 
 class BasicBlock:
@@ -42,7 +48,7 @@ class BasicBlock:
     All statements can be reordered or changed to improve performance.
     """
 
-    def __init__(self, *, arglist: List[str], statements: List[Any], config: Config):
+    def __init__(self, *, arglist: list[str], statements: list[Any], config: Config):
         self._arglist = arglist
         self._exprs = statements
         self._config = config
@@ -81,9 +87,11 @@ class BasicBlock:
         self._body = [
             lambdify(
                 self._arglist + temporaries,
-                simplify(expr)
-                if self._config.common_subexpression_elimination
-                else expr,
+                (
+                    simplify(expr)
+                    if self._config.common_subexpression_elimination
+                    else expr
+                ),
                 modules=self._config.python_modules,
                 cse=False,
             )
@@ -275,24 +283,60 @@ class SensorModel:
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
 
 
+def assert_valid_covariance(
+    covariance: NDArray, *, name: str = "Covariance", negative_tol: float = -1e-15
+):
+    """
+    Check that the covariance array is well formed:
+
+    - symmetric (approximately)
+    - positive semidefinite (approximately)
+    """
+    assert isinstance(covariance, np.ndarray)
+    assert np.allclose(covariance, covariance.T)
+
+    covariance_eigenvalues = np.linalg.eig(covariance)[0]
+    if np.any(covariance_eigenvalues < negative_tol):
+        # negative definite matrix is not a valid representation of uncertainty
+        raise AssertionError(
+            f"Negative {str(name)}:\n{covariance}\nEigen Values: {min(covariance_eigenvalues)}\n{covariance_eigenvalues}"
+        )
+
+
+def nearest_positive_definite(covariance: dict[Symbol | tuple[Symbol, Symbol], float]):
+    assert isinstance(covariance, dict)
+    REWRITE_TOL = 1e-6
+
+    def nearest_positive_definite_impl():
+        for key, value in covariance.items():
+            if isinstance(key, tuple):
+                l, r = key
+                if l != r:
+                    yield key, value
+                    continue
+            yield key, max(REWRITE_TOL, value)
+
+    return dict(nearest_positive_definite_impl())
+
+
 class ExtendedKalmanFilter:
     def __init__(
         self,
         state_model,
-        process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
-        sensor_models,
-        sensor_noises: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
-        config,
-        calibration_map=None,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        config: Config,
+        calibration_map: dict[Symbol, float] | None = None,
     ):
-        self.config = config
-
         if calibration_map is None:
             calibration_map = {}
 
         assert isinstance(config, Config)
         assert isinstance(process_noise, dict)
         assert isinstance(calibration_map, dict)
+
+        self.config = config
 
         self.state_size = len(state_model.state)
         self.control_size = len(state_model.control)
@@ -308,12 +352,7 @@ class ExtendedKalmanFilter:
         self.Control = common.named_vector("Control", self.arglist_control)
         self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
 
-        self.params = {
-            "process_noise": None,
-            "sensor_models": sensor_models,
-            "sensor_noises": sensor_noises,
-            "calibration_map": calibration_map,
-        }
+        self.calibration_map = calibration_map
 
         self._construct_process(
             state_model=state_model,
@@ -329,7 +368,13 @@ class ExtendedKalmanFilter:
             config=config,
         )
 
-    def _construct_process(self, state_model, process_noise, calibration_map, config):
+    def _construct_process(
+        self,
+        state_model,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
+        calibration_map: dict[Symbol, float],
+        config: Config,
+    ) -> None:
         self._state_model = Model(
             symbolic_model=state_model, calibration_map=calibration_map, config=config
         )
@@ -352,7 +397,8 @@ class ExtendedKalmanFilter:
                 process_noise_matrix[iIdx, jIdx] = value
                 process_noise_matrix[jIdx, iIdx] = value
 
-        self.params["process_noise"] = process_noise_matrix
+        self.process_noise = process_noise_matrix
+        assert_valid_covariance(self.process_noise)
 
         # TODO(buck): Reorder state vector (arglist*) to take advantage of sparse blocks (e.g. assign in a block, skip a block, etc)
 
@@ -388,13 +434,18 @@ class ExtendedKalmanFilter:
         assert len(self._impl_control_jacobian) == self.control_size * self.state_size
 
     def _construct_sensors(
-        self, state_model, sensor_models, sensor_noises, calibration_map, config
-    ):
+        self,
+        state_model: common.UiModelBase,
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        calibration_map: dict[Symbol, float],
+        config: Config,
+    ) -> None:
         assert set(sensor_models.keys()) == set(sensor_noises.keys())
         assert isinstance(sensor_noises, dict)
         assert len(sensor_noises) == len(sensor_models)
 
-        self.params["sensor_models"] = {
+        self.sensor_models = {
             k: SensorModel(
                 state_model=state_model,
                 sensor_model=model,
@@ -405,22 +456,21 @@ class ExtendedKalmanFilter:
         }
 
         matrix_sensor_noises = {}
-        for key, model in self.params["sensor_models"].items():
+        for key, model in self.sensor_models.items():
             assert isinstance(sensor_noises[key], dict)
-            assert (
-                len(sensor_noises[key]) == self.params["sensor_models"][key].sensor_size
-            )
+            assert len(sensor_noises[key]) == self.sensor_models[key].sensor_size
+
             matrix_sensor_noises[key] = model.ReadingCovariance.from_dict(
                 sensor_noises[key]
             )
 
-        self.params["sensor_noises"] = matrix_sensor_noises
+        self.sensor_noises = matrix_sensor_noises  # type: Dict[str, NDArray]
 
         self.arglist_sensor = self.arglist_state + self.arglist_calibration
 
         self._impl_sensor_jacobians = {}
 
-        for k, sensor_model in self.params["sensor_models"].items():
+        for k, sensor_model in self.sensor_models.items():
             sensor_size = len(sensor_model.readings)
 
             sensor_matrix = Matrix(
@@ -445,14 +495,14 @@ class ExtendedKalmanFilter:
             # TODO(buck): allow for compiling only process, sensors or list of specific sensors
             self._impl_sensor_jacobians[k] = impl_sensor_jacobian
 
-        self.innovations = {}
-        self.sensor_prediction_uncertainty = {}
+        self.innovations = {}  # type: Dict[str, NDArray]
+        self.sensor_prediction_uncertainty = {}  # type: Dict[str, NDArray]
 
     def make_reading(self, key, *, data=None, **kwargs):
         if len(kwargs) == 0 and data is not None:
-            return self.params["sensor_models"][key].Reading.from_data(data)
+            return self.sensor_models[key].Reading.from_data(data)
 
-        return self.params["sensor_models"][key].Reading(**kwargs)
+        return self.sensor_models[key].Reading(**kwargs)
 
     def process_jacobian(self, dt, state, control):
         computed_jacobian = list(
@@ -481,7 +531,7 @@ class ExtendedKalmanFilter:
         return result
 
     def sensor_jacobian(self, sensor_key, state):
-        sensor_size = self.params["sensor_models"][sensor_key].sensor_size
+        sensor_size = self.sensor_models[sensor_key].sensor_size
 
         impl_sensor_jacobian = self._impl_sensor_jacobians[sensor_key]
 
@@ -495,6 +545,9 @@ class ExtendedKalmanFilter:
         return result
 
     def process_model(self, dt, state, covariance, control=None):
+        assert_valid_covariance(covariance.data)
+        assert_valid_covariance(self.process_noise)
+
         if control is None:
             control = self.Control()
 
@@ -517,14 +570,17 @@ class ExtendedKalmanFilter:
             G_t, np.matmul(covariance.data, G_t.transpose())
         )
         assert next_state_covariance.shape == covariance.shape
+        assert_valid_covariance(next_state_covariance)
 
         next_control_covariance = np.matmul(
-            V_t, np.matmul(self.params["process_noise"], V_t.transpose())
+            V_t, np.matmul(self.process_noise, V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
+        assert_valid_covariance(next_control_covariance)
 
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape
+        assert_valid_covariance(next_covariance)
 
         next_state = self._state_model.model(dt, state, control)
         assert isinstance(next_state, self.State)
@@ -533,17 +589,22 @@ class ExtendedKalmanFilter:
             next_state, self.Covariance.from_data(next_covariance)
         )
 
-    def remove_innovation(self, innovation, S_inv):
-        editing_threshold = self.config.innovation_filtering
+    def remove_innovation(self, innovation: NDArray, S_inv: NDArray) -> bool:
+        if self.config.innovation_filtering is None:
+            return False
+
+        editing_threshold = self.config.innovation_filtering  # type: float
         normalized_innovation = innovation.transpose() * S_inv * innovation
         (sensor_size, _) = innovation.shape
         expected_innovation = editing_threshold * sqrt(2 * sensor_size) + sensor_size
         return normalized_innovation > expected_innovation
 
     def sensor_model(self, state, covariance, *, sensor_key, sensor_reading):
-        model_impl = self.params["sensor_models"][sensor_key]
+        assert_valid_covariance(covariance.data)
+
+        model_impl = self.sensor_models[sensor_key]
         sensor_size = len(model_impl.readings)
-        Q_t = _model_noise = self.params["sensor_noises"][sensor_key]
+        Q_t = _model_noise = self.sensor_noises[sensor_key]
 
         try:
             assert isinstance(state, self.State)
@@ -567,18 +628,21 @@ class ExtendedKalmanFilter:
         H_t = self.sensor_jacobian(sensor_key, state)
         assert H_t.shape == (sensor_size, self.state_size)
 
+        assert_valid_covariance(covariance.data)
+
         self.sensor_prediction_uncertainty[sensor_key] = S_t = (
             np.matmul(H_t, np.matmul(covariance.data, H_t.transpose())) + Q_t.data
         )
+        assert_valid_covariance(S_t, name="Sensor Uncertainty")
+
         S_inv = np.linalg.inv(S_t)
 
         self.innovations[sensor_key] = innovation = (
             sensor_reading.data - expected_reading.data
         )
 
-        if self.config.innovation_filtering is not None:
-            if self.remove_innovation(innovation, S_inv):
-                return StateAndCovariance(state, covariance)
+        if self.remove_innovation(innovation, S_inv):
+            return StateAndCovariance(state, covariance)
 
         K_t = _kalman_gain = np.matmul(
             covariance.data, np.matmul(H_t.transpose(), S_inv)
@@ -593,216 +657,6 @@ class ExtendedKalmanFilter:
         return StateAndCovariance(
             self.State.from_data(next_state), self.Covariance.from_data(next_covariance)
         )
-
-    ### scikit-learn / sklearn interface ###
-
-    def _flatten_scoring_params(self, params):
-        flattened = list(np.diagonal(params["process_noise"]))
-        for key in sorted(list(params["sensor_models"])):
-            flattened.extend(np.diagonal(params["sensor_noises"][key].data))
-
-        return flattened
-
-    def _inverse_flatten_scoring_params(self, flattened):
-        params = {k: v for k, v in self.params.items()}
-
-        controls, flattened = (
-            flattened[: self.control_size],
-            flattened[self.control_size :],
-        )
-
-        np.fill_diagonal(params["process_noise"], controls)
-
-        for key in sorted(list(self.params["sensor_models"])):
-            sensor_size = len(np.diagonal(params["sensor_noises"][key].data))
-            sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
-            np.fill_diagonal(params["sensor_noises"][key].data, sensor)
-
-        return params
-
-    # Fit the model to data
-    def fit(self, X, y=None, sample_weight=None):
-        assert self.params["process_noise"] is not None
-        assert self.params["sensor_models"] is not None
-        assert self.params["sensor_noises"] is not None
-
-        x0 = self._flatten_scoring_params(self.params)
-
-        def minimize_this(x):
-            holdout_params = dict(self.get_params())
-
-            scoring_params = self._inverse_flatten_scoring_params(x)
-            self.set_params(**scoring_params)
-
-            score = self.score(X, y, sample_weight)
-
-            self.set_params(**holdout_params)
-            return score
-
-        minimize_this(x0)
-
-        result = minimize(minimize_this, x0, tol=1.0e-1)
-
-        if not result.success:
-            raise MinimizationFailure(result)
-
-        soln_as_params = self._inverse_flatten_scoring_params(result.x)
-        self.set_params(**soln_as_params)
-
-        return self
-
-    # Compute the squared Mahalanobis distances of given observations.
-    def mahalanobis(self, X):
-        innovations, states, covariances = self.transform(X, include_states=True)
-        n_samples, n_sensors = innovations.shape
-
-        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
-
-        return innovations.flatten()
-
-    # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
-    def score(self, X, y=None, sample_weight=None, explain_score=False):
-        mahalanobis_distance_squared = self.mahalanobis(X)
-        normalized_innovations = np.sqrt(mahalanobis_distance_squared)
-
-        if sample_weight is None:
-            avg = np.sum(np.square(np.average(normalized_innovations)))
-            var = np.sum(mahalanobis_distance_squared)
-        else:
-            avg = np.sum(
-                np.square(np.average(normalized_innovations, weights=sample_weight))
-            )
-            var = np.sum(mahalanobis_distance_squared * sample_weight)
-
-        # bias->0
-        bias_weight = 1e1
-        bias_score = avg
-
-        # variance->1
-        # minima at var = 1, innovations match noise model
-        variance_weight = 1e0
-        variance_score = (1.0 / var + var) / 2.0
-
-        # prefer smaller matrix terms
-        matrix_weight = 1e-2
-        matrix_score = np.sum(np.square(self.params["process_noise"]))
-        for sensor_noise in self.params["sensor_noises"].values():
-            matrix_score += np.sum(np.square(sensor_noise.data))
-
-        if explain_score:
-            return (
-                (
-                    bias_weight * bias_score
-                    + variance_weight * variance_score
-                    + matrix_weight * matrix_score
-                ),
-                (
-                    bias_weight,
-                    bias_score,
-                    variance_weight,
-                    variance_score,
-                    matrix_weight,
-                    matrix_score,
-                ),
-            )
-
-        return (
-            bias_weight * bias_score
-            + variance_weight * variance_score
-            + matrix_weight * matrix_score
-        )
-
-    # Transform readings to innovations
-    def transform(self, X, include_states=False):
-        n_samples, n_features = X.shape
-
-        dt = 0.1
-
-        state = self.State()
-        covariance = self.Covariance()
-
-        innovations = []
-        states = [state]
-        covariances = [covariance]
-
-        for idx in range(X.shape[0]):
-            controls_input, the_rest = (
-                X[idx, : self.control_size],
-                X[idx, self.control_size :],
-            )
-            controls_input = self.Control.from_data(
-                controls_input.reshape((self.control_size, 1))
-            )
-
-            state, covariance = self.process_model(
-                dt, state, covariance, controls_input
-            )
-
-            innovation = []
-
-            for key in sorted(list(self.params["sensor_models"])):
-                sensor_size = len(self.params["sensor_models"][key])
-
-                sensor_input, the_rest = (
-                    the_rest[:sensor_size],
-                    the_rest[sensor_size:],
-                )
-                sensor_input = self.make_reading(
-                    key, data=sensor_input.reshape((sensor_size, 1))
-                )
-
-                state, covariance = self.sensor_model(
-                    state=state,
-                    covariance=covariance,
-                    sensor_key=key,
-                    sensor_reading=sensor_input,
-                )
-                # Normalized by the uncertainty at the time of the measurement
-                # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
-                # for:
-                #   u: predicted sensor readings
-                #   x: sensor readings
-                #   S: predicted sensor variance
-                innovation.append(
-                    float(
-                        np.matmul(
-                            np.matmul(
-                                self.innovations[key].T,
-                                np.linalg.inv(self.sensor_prediction_uncertainty[key]),
-                            ),
-                            self.innovations[key],
-                        )
-                    )
-                )
-
-            states.append(state)
-            covariances.append(covariance)
-            innovations.append(innovation)
-            assert innovations[-1] is not None
-
-        # minima at x = 1, innovations match noise model
-        if include_states:
-            return np.array(innovations), np.array(states), np.array(covariances)
-
-        return np.array(innovations)
-
-    # Fit the model to data and transform readings to innovations
-    def fit_transform(self, X, y=None):
-        # TODO(buck): Implement the combined version (return innovations calculated while fitting)
-        self.fit(X, y)
-        return self.transform(X)
-
-    # Get parameters for this estimator.
-    def get_params(self, deep=True) -> dict:
-        return self.params
-
-    # Set the parameters of this estimator.
-    def set_params(self, **params):
-        for p in params:
-            if p in self.params:
-                self.params[p] = params[p]
-
-        return self
 
 
 def compile(symbolic_model, calibration_map=None, *, config=None):
@@ -828,14 +682,14 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 
 def compile_ekf(
-    state_model: common.UiModelBase,
-    process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],
-    sensor_models,
+    symbolic_model: common.UiModelBase,
+    process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
+    sensor_models: dict[str, sympy.core.expr.Expr],
     sensor_noises,
-    calibration_map=None,
+    calibration_map: dict[Symbol, float] | None = None,
     *,
     config=None,
-):
+) -> ExtendedKalmanFilter:
     if config is None:
         config = Config()
     elif isinstance(config, dict):
@@ -845,7 +699,7 @@ def compile_ekf(
         calibration_map = {}
 
     common.model_validation(
-        state_model,
+        symbolic_model,
         process_noise,
         sensor_models,
         calibration_map=calibration_map,
@@ -853,10 +707,504 @@ def compile_ekf(
     )
 
     return ExtendedKalmanFilter(
-        state_model=state_model,
+        state_model=symbolic_model,
         process_noise=process_noise,
         sensor_models=sensor_models,
         sensor_noises=sensor_noises,
         calibration_map=calibration_map,
         config=config,
     )
+
+
+def force_to_ndarray(mat: Any) -> NDArray | None:
+    if mat is None:
+        return mat
+
+    if isinstance(mat, list):
+        return np.array(mat)
+    if not isinstance(mat, np.ndarray):
+        mat = mat.__array__()
+
+    assert isinstance(mat, np.ndarray)
+
+    return mat
+
+
+class SklearnEKFAdapter(BaseEstimator):
+    allowed_keys = [
+        "symbolic_model",
+        "process_noise",
+        "sensor_models",
+        "sensor_noises",
+        "calibration_map",
+        "config",
+    ]
+
+    @classmethod
+    def Create(
+        cls,
+        symbolic_model: common.UiModelBase,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
+        sensor_models: dict[str, sympy.core.expr.Expr],
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+        calibration_map: dict[Symbol, float] | None = None,
+        *,
+        config: Config | None = None,
+    ):
+        """
+        Provide an interface with required arguments to be more structured and.
+
+        opinionated about how to Create this class. scikit-learn guides towards
+        doing no construction or validation of the inputs in the __init__
+        method, some is also done in this method with the goal of guiding the
+        user earlier in the process.
+        """
+        parameters = {
+            "symbolic_model": symbolic_model,
+            "process_noise": process_noise,
+            "sensor_models": sensor_models,
+            "sensor_noises": sensor_noises,
+            "calibration_map": calibration_map,
+            "config": config,
+        }
+
+        estimator = cls(**parameters)
+        return estimator
+
+    def __init__(
+        self,
+        symbolic_model: common.UiModelBase | None = None,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
+        sensor_models: dict[Symbol, sympy.core.expr.Expr] | None = None,
+        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
+        calibration_map: dict[Symbol, float] | None = None,
+        *,
+        config: Config | None = None,
+    ):
+        self.symbolic_model = symbolic_model
+        self.process_noise = process_noise
+        self.sensor_models = sensor_models
+        self.sensor_noises = sensor_noises
+        self.calibration_map = calibration_map
+        self.config = config
+
+    def _flatten_process_noise(
+        self, process_noise: dict[Symbol | tuple[Symbol, Symbol], float]
+    ):
+        for iSymbol in self.arglist_control:
+            for jSymbol in self.arglist_control:
+                if (iSymbol, jSymbol) in process_noise:
+                    value = process_noise[(iSymbol, jSymbol)]
+                elif (jSymbol, iSymbol) in process_noise:
+                    value = process_noise[(jSymbol, iSymbol)]
+                elif iSymbol == jSymbol and iSymbol in process_noise:
+                    value = process_noise[iSymbol]
+                else:
+                    value = 0.0
+                yield (iSymbol, jSymbol, value)
+
+    def _sensor_noise_to_array(
+        self,
+        sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
+    ):
+        matrix_sensor_noises = {}
+        for key, model in self.sensor_models.items():
+            assert isinstance(sensor_noises[key], dict)
+            assert len(sensor_noises[key]) == len(self.sensor_models[key].keys())
+            readings = sorted(list(model.keys()))
+            ReadingCovariance = common.named_vector("ReadingCovariance", readings)
+
+            assert_valid_covariance(sensor_noises[key], f"Sensor Noise [{key}]")
+            matrix_sensor_noises[key] = ReadingCovariance.from_dict(sensor_noises[key])
+
+        return matrix_sensor_noises
+
+    def _compile_sensor_models(self, sensor_models: dict[str, sympy.core.expr.Expr]):
+        return {
+            k: SensorModel(
+                state_model=self.state_model,
+                sensor_model=model,
+                calibration_map=self.calibration_map,
+                config=self.config,
+            )
+            for k, model in sensor_models.items()
+        }
+
+    def _flatten_dict_diagonal(
+        self,
+        mapping: dict[Symbol | tuple[Symbol, Symbol], float],
+        arglist: list[Symbol],
+    ) -> Iterator[float]:
+        for iSymbol in arglist:
+            if (iSymbol, iSymbol) in mapping:
+                value = mapping[(iSymbol, iSymbol)]
+            elif iSymbol in mapping:
+                value = mapping[iSymbol]
+            else:
+                value = 0.0
+            yield value
+
+    def _inverse_flatten_dict_diagonal(
+        self, vector, arglist
+    ) -> dict[Symbol | tuple[Symbol, Symbol], float]:
+        for iIdx, iSymbol in enumerate(arglist):
+            yield (iSymbol, vector[iIdx])
+
+    def _flatten_scoring_params(self) -> list[float]:
+        """
+        Note: Known limitation, this only flattens the diagonals to simplify.
+
+        the `fit` optimizaiton problem
+        """
+
+        # Note: duplicated code from EKF
+        arglist_control = sorted(
+            list(self.symbolic_model.control), key=lambda x: x.name
+        )
+
+        flattened = list(
+            self._flatten_dict_diagonal(self.process_noise, arglist_control)
+        )
+
+        for _key, mapping in sorted(list(self.sensor_noises.items())):
+            arglist = sorted(list(mapping.keys()))
+
+            flattened.extend(self._flatten_dict_diagonal(mapping, arglist))
+
+        return flattened
+
+    def _inverse_flatten_scoring_params(self, flattened: list[float]) -> dict[str, Any]:
+        # Note: duplicated code from EKF
+        arglist_control = sorted(
+            list(self.symbolic_model.control), key=lambda x: x.name
+        )
+        # Note: duplicated code from EKF
+        control_size = len(self.symbolic_model.control)
+
+        params = {k: getattr(self, k) for k in self.allowed_keys}
+        controls, flattened = (
+            flattened[:control_size],
+            flattened[control_size:],
+        )
+
+        params["process_noise"] = nearest_positive_definite(
+            dict(self._inverse_flatten_dict_diagonal(controls, arglist_control))
+        )
+
+        for key, mapping in sorted(list(self.sensor_noises.items())):
+            sensor_size = len(mapping)
+            sensor, flattened = flattened[:sensor_size], flattened[sensor_size:]
+
+            arglist = sorted(list(mapping.keys()))
+
+            params["sensor_noises"][key] = dict(
+                self._inverse_flatten_dict_diagonal(sensor, arglist)
+            )
+
+        return params
+
+    # Fit the model to data
+    def fit(
+        self, X: Any, y: Any | None = None, sample_weight: NDArray | None = None
+    ) -> SklearnEKFAdapter:
+        assert self.process_noise is not None
+        assert self.sensor_models is not None
+        assert self.sensor_noises is not None
+
+        x0 = self._flatten_scoring_params()
+
+        def minimize_this(x: NDArray) -> float:
+            holdout_params = dict(self.get_params())
+
+            scoring_params = self._inverse_flatten_scoring_params(x)
+            self.set_params(**scoring_params)
+
+            score = self.score(X, y, sample_weight)
+
+            self.set_params(**holdout_params)
+            return score
+
+        minimize_this(x0)
+
+        result = minimize(minimize_this, x0, tol=1.0e-1)
+
+        if not result.success:
+            raise MinimizationFailure(result)
+
+        soln_as_params = self._inverse_flatten_scoring_params(result.x)
+        self.set_params(**soln_as_params)
+
+        return self
+
+    # Compute the squared Mahalanobis distances of given observations.
+    def mahalanobis(self, X: Any) -> NDArray:
+        innovations, states, covariances = self.transform(X, include_states=True)
+        if len(innovations.shape) == 1:
+            innovations = np.reshape(innovations, (len(innovations), 1))
+        n_samples, n_sensors = innovations.shape
+
+        innovations = np.array(innovations).reshape((n_samples, n_sensors, 1))
+
+        if np.any(innovations < 0.0):
+            for idx, (x, innovation) in enumerate(
+                zip(X.flatten(), innovations.flatten())
+            ):
+                if innovation < 0.0:
+                    print(idx, x, innovation, states[idx])
+            print("X\n", X.flatten())
+            print("Innovations\n", innovations.flatten())
+            raise AssertionError("innovations squared includes negative values")
+
+        return innovations.flatten()
+
+    # Compute something like the log-likelihood of X_test under the estimated Gaussian model.
+    def score(
+        self,
+        X: Any,
+        y: Any | None = None,
+        sample_weight: Any | None = None,
+        explain_score: bool = False,
+    ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
+        X = force_to_ndarray(X)
+        y = force_to_ndarray(y)
+        sample_weight = force_to_ndarray(sample_weight)
+
+        mahalanobis_distance_squared = self.mahalanobis(X)
+        normalized_innovations = np.sqrt(mahalanobis_distance_squared)
+
+        if len(normalized_innovations) <= 0:
+            raise ValueError(
+                f"No innovations calculated from data shape {X.shape}. Calculated {normalized_innovations.shape}"
+            )
+
+        if sample_weight is None:
+            avg = np.sum(np.square(np.mean(normalized_innovations)))
+            var = np.sum(mahalanobis_distance_squared)
+        else:
+            avg = np.sum(np.square(np.mean(normalized_innovations * sample_weight)))
+            var = np.sum(mahalanobis_distance_squared * sample_weight)
+
+        # bias->0
+        bias_weight = 1e1
+        bias_score = avg
+
+        if not np.isfinite(bias_score):
+            raise ValueError(
+                f"Bias Score not finite: {bias_score} from innovations {normalized_innovations}"
+            )
+
+        # variance->1
+        # minima at var = 1, innovations match noise model
+        variance_weight = 1e0
+        variance_score = (1.0 / var + var) / 2.0
+
+        if not np.isfinite(variance_score):
+            raise ValueError(f"Variance Score not finite: {variance_score}")
+
+        # prefer smaller matrix terms
+        matrix_weight = 1e-2
+        matrix_score = np.sum(
+            np.square(
+                list(
+                    self._flatten_dict_diagonal(
+                        self.process_noise, self.model_.arglist_control
+                    )
+                )
+            )
+        )
+        for noise_mapping in self.sensor_noises.values():
+            arglist = sorted(list(noise_mapping.keys()))
+            matrix_score += np.sum(
+                np.square(list(self._flatten_dict_diagonal(noise_mapping, arglist)))
+            )
+
+        result = (
+            bias_weight * bias_score
+            + variance_weight * variance_score
+            + matrix_weight * matrix_score
+        )
+
+        if explain_score:
+            return (
+                result,
+                (
+                    bias_weight,
+                    bias_score,
+                    variance_weight,
+                    variance_score,
+                    matrix_weight,
+                    matrix_score,
+                ),
+            )
+
+        return result
+
+    # Transform readings to innovations
+    def transform(
+        self, X: Any, include_states=False
+    ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
+        assert self.symbolic_model is not None
+        assert self.process_noise is not None
+        self.model_ = compile_ekf(
+            symbolic_model=self.symbolic_model,
+            process_noise=self.process_noise,
+            sensor_models=self.sensor_models,
+            sensor_noises=self.sensor_noises,
+            calibration_map=self.calibration_map,
+            config=self.config,
+        )
+        if len(self.model_.sensor_models) <= 0:
+            raise ValueError("Sensor Models required to calculate innovation")
+
+        X = force_to_ndarray(X)
+        if len(X.shape) == 1:
+            X = np.reshape(X, (len(X), 1))
+
+        n_samples, n_features = X.shape
+
+        dt = 0.1
+
+        state = self.model_.State()
+        covariance = self.model_.Covariance()
+
+        assert_valid_covariance(covariance.data)
+
+        innovations = []
+        states = [state]
+        covariances = [covariance]
+
+        for key in sorted(list(self.model_.sensor_models)):
+            sensor_size = len(self.model_.sensor_models[key])
+            # Incomplete thought
+
+        for idx in range(X.shape[0]):
+            controls_input, the_rest = (
+                X[idx, : self.model_.control_size],
+                X[idx, self.model_.control_size :],
+            )
+            controls_input = self.model_.Control.from_data(
+                controls_input.reshape((self.model_.control_size, 1))
+            )
+
+            state, covariance = self.model_.process_model(
+                dt, state, covariance, controls_input
+            )
+            assert_valid_covariance(covariance.data)
+
+            innovation = []
+
+            for idx, key in enumerate(sorted(list(self.model_.sensor_models))):
+                sensor_size = len(self.model_.sensor_models[key])
+
+                sensor_input, the_rest = (
+                    the_rest[:sensor_size],
+                    the_rest[sensor_size:],
+                )
+                sensor_input = self.model_.make_reading(
+                    key, data=sensor_input.reshape((sensor_size, 1))
+                )
+
+                state, covariance = self.model_.sensor_model(
+                    state=state,
+                    covariance=covariance,
+                    sensor_key=key,
+                    sensor_reading=sensor_input,
+                )
+
+                assert_valid_covariance(covariance.data)
+
+                # Normalized by the uncertainty at the time of the measurement
+                # Mahalanobis distance = sqrt((x - u).T * S^{-1} * (x - u))
+                # for:
+                #   u: predicted sensor readings
+                #   x: sensor readings
+                #   S: predicted sensor variance
+                innovation.append(
+                    float(
+                        np.matmul(
+                            np.matmul(
+                                self.model_.innovations[key].T,
+                                np.linalg.inv(
+                                    self.model_.sensor_prediction_uncertainty[key]
+                                ),
+                            ),
+                            self.model_.innovations[key],
+                        )
+                    )
+                )
+                if np.any(self.model_.sensor_prediction_uncertainty[key] < 0.0):
+                    print(idx, "key", key)
+                    print(idx, "innovations")
+                    print(self.model_.innovations[key])
+                    print(idx, "uncertainty")
+                    print(self.model_.sensor_prediction_uncertainty[key])
+                    print(idx, "result")
+                    print(innovation[-1])
+
+            states.append(state)
+            covariances.append(covariance)
+            innovations.append(innovation)
+            assert innovations[-1] is not None
+            if np.any(np.array(innovations[-1]) < 0.0):
+                raise AssertionError(
+                    f"Negative assertion detected at index {len(innovations) - 1}. Value {innovations[-1]}"
+                )
+
+        innovations = np.array(innovations, dtype="float")
+        if np.any(innovations < 0.0):
+            print("Negative Innovation Detected")
+            print(innovations[innovations < 0.0])
+            raise AssertionError("All innovations should be non-negative.")
+
+        # minima at x = 1, innovations match noise model
+        if include_states:
+            return (
+                innovations,
+                np.array(states),
+                np.array(covariances),
+            )
+
+        return innovations
+
+    # Fit the model to data and transform readings to innovations
+    def fit_transform(self, X, y=None) -> NDArray | tuple[NDArray, NDArray, NDArray]:
+        # TODO(buck): Implement the combined version (return innovations calculated while fitting)
+        self.fit(X, y)
+        return self.transform(X)
+
+    # Get parameters for this estimator.
+    def get_params(self, deep: bool = True) -> dict[str, Any]:
+        return {
+            "symbolic_model": self.symbolic_model,
+            "process_noise": self.process_noise,
+            "sensor_models": self.sensor_models,
+            "sensor_noises": self.sensor_noises,
+            "calibration_map": self.calibration_map,
+            "config": self.config,
+        }
+
+    # Set the parameters of this estimator.
+    def set_params(self, **params) -> SklearnEKFAdapter:
+        for key in params:
+            if key in self.allowed_keys:
+                setattr(self, key, params[key])
+            elif key in dataclasses.asdict(self.config):
+                mutable_version = dataclasses.asdict(self.config)
+                mutable_version[key] = params[key]
+                self.config = Config(**mutable_version)
+            else:
+                raise ModelConstructionError(
+                    f"set_params called with invalid key {key}"
+                )
+
+        return self
+
+    def export_python(self) -> ExtendedKalmanFilter:
+        return compile_ekf(
+            self.symbolic_model,
+            self.process_noise,
+            self.sensor_models,
+            self.sensor_noises,
+            self.calibration_map,
+            config=self.config,
+        )

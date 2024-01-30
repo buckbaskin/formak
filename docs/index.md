@@ -46,6 +46,7 @@ Documentation of design decisions are contained in the `designs/` directory.
 
 formak/index
 designs/index
+issue_templates/index
 ```
 
 ## The Persona

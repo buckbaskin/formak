@@ -8,6 +8,7 @@ Provide heading readings, expect rejecting 180 degree heading errors.
 Nonlinear model provides clear divergence signal. If innovation filtering isn't
 working as expected, then the model will flip into the wrong direction.
 """
+
 from math import radians
 
 from sympy import cos, sin

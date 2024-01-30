@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hyper-parameter Selection &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Innovation Filtering" href="innovation_filtering.html" />
+    <link rel="prev" title="Generate C++ from AST" href="generate_cpp_from_ast.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hyper-parameter Selection</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="hyper-parameter-selection">
+<h1>Hyper-parameter Selection<a class="headerlink" href="#hyper-parameter-selection" title="Permalink to this heading">¶</a></h1>
+<p>Author: Buck Baskin <a class="reference external" href="https://fosstodon.org/&#64;buck">&#64;buck&#64;fosstodon.org</a>
+Created: 2023-11-08
+Updated: 2023-11-08
+Parent Design: <a class="reference internal" href="sklearn-integration.html"><span class="std std-doc">designs/sklearn-integration.md</span></a>
+See Also: <a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a>, <a class="reference internal" href="innovation_filtering.html"><span class="std std-doc">designs/innovation_filtering.md</span></a></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast, efficient system modelling
+with code generation to create performant code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design focuses on “Integration to scikit-learn to leverage the model
+selection and parameter tuning functions”. More specifically, this design
+focuses on using scikit-learn tooling to automatically select the innovation
+filtering level from data.</p>
+<p>The promise of this design is that all parameters could be selected
+automatically based on data instead of requiring hand tuning; however, this
+design will focus narrowly on selecting the innovation filtering level as a
+motivating example.</p>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<p>How can FormaK build a repeatable process for selecting model parameters?</p>
+<p>To start, FormaK will follow the process laid out by <a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html#tuning-the-hyper-parameters-of-an-estimator">scikit-learn docs for tuning the hyper-parameters of an estimator</a></p>
+<p>The high level process is composed of the following elements:</p>
+<ul class="simple">
+<li><p>The estimator</p></li>
+<li><p>The parameter space</p></li>
+<li><p>The method for searching or sampling candidates</p></li>
+<li><p>The cross-validation scheme</p></li>
+<li><p>The score function</p></li>
+</ul>
+<section id="estimator">
+<h3>Estimator<a class="headerlink" href="#estimator" title="Permalink to this heading">¶</a></h3>
+<p>FormaK is already equipped to define symbolic models and then generate Python
+estimators that follow the scikit-learn interface. While I don’t expect this
+aspect to change significantly, if a major interface change will make the
+Python estimators easier to use then I am open to reworking the interface
+because I suspect making this design easier to implement is correlated with
+making the classes easier to use and easier to use correctly.</p>
+<section id="estimator-interface">
+<h4>Estimator Interface<a class="headerlink" href="#estimator-interface" title="Permalink to this heading">¶</a></h4>
+<p>The design will have the user provide the symbolic model and allow the FormaK
+tooling to handle generating a Python implementation.</p>
+</section>
+</section>
+<section id="parameter-space">
+<h3>Parameter Space<a class="headerlink" href="#parameter-space" title="Permalink to this heading">¶</a></h3>
+<p>The parameter space for this problem is positive floats. The problem could be
+thought of as positive integers (how many standard deviations are acceptable)
+but the positive floats should be easier to optimize as a continuous parameter.</p>
+<p>The default method for parameter optimization is
+<a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search">exhaustive grid search</a>.
+For this problem of selecting a single or reduced set of parameters it should
+be okay to use the baseline; however, the design will include an experiment to
+compare between grid search and randomized search. The benefit of randomized
+search is that a specific budget can be set and the approach will, with high
+probability, find the best result in the same search space as the grid search
+but with fewer iterations.</p>
+<p>The parameter search algorithm will be an optional configuration option, with
+FormaK picking a sane default (likely random search).</p>
+</section>
+<section id="cross-validation">
+<h3>Cross Validation<a class="headerlink" href="#cross-validation" title="Permalink to this heading">¶</a></h3>
+<p>The
+<a class="reference external" href="https://scikit-learn.org/stable/modules/cross_validation.html">cross-validation approach</a>
+suggested by scikit-learn to choose the hyper-parameter with the highest
+cross-validation score:</p>
+<ol class="arabic simple">
+<li><p>Hold aside a test time series that does not overlap with the rest of the data set</p></li>
+<li><p>Within the remaining data, the training time series, subdivide into different folds where one part of each fold is used to train the model and a subset is used for validation. By selecting many folds, we can reduce the chance that the parameters are overfit to noise in a particular test evaluation.</p></li>
+<li><p>Perform final scoring against the held out test data.</p></li>
+</ol>
+<p>One thing to note: I’ve used time series here instead of the usual set because
+time series have an explicit order in their samples so the usual selection of
+folds for cross validation won’t apply. Instead, the cross validation will use
+an approach like scikit-learn’s
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html#sklearn.model_selection.TimeSeriesSplit"><code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code></a>.</p>
+<p>The Cross Validation approach will be an optional configuraiton option, with
+FormaK picking a sane default (TimeSeriesSplit).</p>
+</section>
+<section id="metrics-score-function">
+<h3>Metrics / Score Function<a class="headerlink" href="#metrics-score-function" title="Permalink to this heading">¶</a></h3>
+<p>Metric to minimize: Normalized Innovation Squared (NIS). NIS is defined as</p>
+<div class="math notranslate nohighlight">
+\[\tilde{z} = z - \hat{z}
+S = H \overline{\Sigma} H^{T} + Q
+NIS = \tilde{z}^{T} S^{-1} \tilde{z}\]</div>
+<p>Roughly, it looks at the magnitude of the reading error <span class="math notranslate nohighlight">\(\tilde{z}\)</span> vs the
+expected variation <span class="math notranslate nohighlight">\(S\)</span>. FormaK uses the NIS metric because it doesn’t require
+ground truth data. An alternative, Normalized Estimation Error Squared (NEES)
+looks at the errors vs ground truth. [3]</p>
+<p>[3] NEES definition taken from “Kalman Filter Tuning with Bayesian
+Optimization” by Chen et al.</p>
+<p>One small problem with this measure:</p>
+<ol class="arabic simple">
+<li><p>The score will decrease consistently as the size of the error goes down (this is good, this means that the model is more accurate</p></li>
+<li><p>The score will decrease consistently as the size of the variance goes up (this is bad, the optimization could increase the estimated variance to achieve a better score)</p></li>
+</ol>
+<p>To remedy that, the metric to minimize is consistency instead of the true
+minimum NIS. Taking advantage of the fact that we know that the errors should
+follow a <span class="math notranslate nohighlight">\(\chi^{2}\)</span> distribution, we can calculate consistency as follows:</p>
+<div class="highlight-math notranslate"><div class="highlight"><pre><span></span>\xi_{K_{r}} = NIS
+\overline{\xi_K} = \sum_{r=1}^{r=N} \xi_{K_{r}}
+F_{K}^{\chi^{2}} = Prob{\chi^{2}_n &lt; \overline{\xi_K}
+d_{i(k)} = F_{K}^{\chi^{2}} - \dfrac{i(k)}{N_{K}}
+Consistency = \dfrac{1}{N_{K}} \sum_{1}^{N_{K}} \lvert d_{i_{(K)}} \rvert
+</pre></div>
+</div>
+<p>[1] This approach to innovation filtering, referred to as editing in the text,
+is adapted from “Advanced Kalman Filtering, Least Squares and Modeling” by
+Bruce P. Gibbs (referred to as [1] or AKFLSM)
+This consistency calculation is based on [2]
+<a class="reference external" href="https://arc.aiaa.org/doi/10.2514/6.2000-4558">Optimal Tuning Of A Kalman Filter Using Genetic Algorithms by Yaakov Oshman and Ilan Shaviv</a>, but implemented with the NIS metric from [1].</p>
+<p>Testing Notes:</p>
+<ul class="simple">
+<li><p>For testing, innovation, NIS and consistency, go to the math. Everything else in this feature is built on the metrics being evaluated correctly</p></li>
+<li><p>Test with mocked EKF so you can return a fixed state, covariance to get known innovation from readings</p></li>
+</ul>
+</section>
+<section id="state-management">
+<h3>State Management<a class="headerlink" href="#state-management" title="Permalink to this heading">¶</a></h3>
+<p>All of the above design aspects have alluded to management tasks. This
+funcitonality will be managed by a FormaK state machine for model creation
+called <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code>.</p>
+<p>A state machine provides a straightforward concept for users interacting with
+FormaK. Instead of having to re-invent a combination of tools each time a user
+wants to use FormaK, they can instead follow one or more orchestrated flows
+through the state machine to reach their goal.</p>
+<p>The initial states for the state machine are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Start</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Fit</span> <span class="pre">Model</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Final</span> <span class="pre">Model</span></code></p></li>
+</ul>
+<p>An example state transition would be <code class="docutils literal notranslate"><span class="pre">Start</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code>. In code this
+would look like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">starting_state</span> <span class="o">=</span> <span class="n">formak</span><span class="o">.</span><span class="n">DesignManager</span><span class="p">(</span><span class="n">design_name</span><span class="o">=</span><span class="s1">&#39;mercury&#39;</span><span class="p">)</span>
+
+<span class="n">symbolic_state</span> <span class="o">=</span> <span class="n">starting_state</span><span class="o">.</span><span class="n">symbolic_model</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">user_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The high level requirements for a hyper-parameter search can be slotted into
+the various state transitions:</p>
+<ul class="simple">
+<li><p>The user will provide a symbolic model used to underly the estimator generation process in the <code class="docutils literal notranslate"><span class="pre">Start</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code> transition</p></li>
+<li><p>The user will provide the parameter space in the <code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Fit</span> <span class="pre">Model</span></code> transition</p></li>
+<li><p>The user can provide configuration for the parameter search in the <code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Fit</span> <span class="pre">Model</span></code> transition</p></li>
+<li><p>The user can provide configuration for the cross validation in the <code class="docutils literal notranslate"><span class="pre">Symbolic</span> <span class="pre">Model</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Fit</span> <span class="pre">Model</span></code> transition</p></li>
+<li><p>The score function will be hard coded for now within the FormaK model</p></li>
+</ul>
+<p>Testing Notes:</p>
+<ul class="simple">
+<li><p>Every state transition should be covered. This can be tested by checking the return type. The desired functionality of the returned object should be independent of the state transition(s) used to get there.</p></li>
+</ul>
+<section id="usability-and-the-discoverability-interface">
+<h4>Usability and the Discoverability Interface<a class="headerlink" href="#usability-and-the-discoverability-interface" title="Permalink to this heading">¶</a></h4>
+<p>To make the state machine easier to use, the public functions available on the
+state machine will be minimized to those available for valid transitions with
+three exceptions. The required arguments to each function represent the
+required information to achieve the state transition.</p>
+<p>The three exceptions:</p>
+<p>First, a <code class="docutils literal notranslate"><span class="pre">history()</span></code> function can be called that will provide a user-readable
+history of state transitions covered so far.</p>
+<p>Second, a <code class="docutils literal notranslate"><span class="pre">transition_options()</span></code> function that will provide a list of function
+names that can be called from the current state.</p>
+<p>Third, a <code class="docutils literal notranslate"><span class="pre">search(desired_state)</span></code> function which will return a list of
+transitions to take to reach the desired state. This search will be
+accomplished dynamically by <a class="reference external" href="https://docs.python.org/3/library/inspect.html#introspecting-callables-with-the-signature-object">inspecting the return
+types</a>
+of each transition out of the current state in a breadth first manner. From
+there the transitions from each returned type can be used to identify
+additional reachable states by taking two transitions. If this is not found the
+process can be repeated to some known finite maximum depth. Breadth first
+search should help identify a shortest path to the goal, although it may not
+identify all paths.</p>
+<p>Each state will be immutable.</p>
+<p>Each state shall inherit from a common base class.</p>
+</section>
+</section>
+<section id="new-class-es">
+<h3>New Class(es)<a class="headerlink" href="#new-class-es" title="Permalink to this heading">¶</a></h3>
+<p>This feature may require implementing a new class or classes to interface with
+scikit-learn tooling:</p>
+<ol class="arabic simple">
+<li><p>Metric function or class to pass to scikit-learn (see the <a class="reference external" href="https://scikit-learn.org/stable/modules/model_evaluation.html#defining-your-scoring-strategy-from-metric-functions"><code class="docutils literal notranslate"><span class="pre">make_scorer</span></code></a> interface)</p></li>
+<li><p>Dataset class. Most scikit-learn tooling deals in vectors and that may not be fully suitable for sensor data</p></li>
+</ol>
+</section>
+</section>
+<section id="experiments">
+<h2>Experiments<a class="headerlink" href="#experiments" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>State Discovery via <a class="reference external" href="https://docs.python.org/3/library/inspect.html#introspecting-callables-with-the-signature-object">inspection</a></p></li>
+<li><p>Compare grid search and randomized search for parameter evaluation. Optionally, compare with <a class="reference external" href="https://scikit-learn.org/stable/modules/classes.html#hyper-parameter-optimizers">other search algorithms</a>.</p></li>
+</ul>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>Compare a correct model with a dataset with arbitrary, incorrect +- 5 std dev
+noise inserted around other noise that is normally distributed. Selecting
+parameter should be less than 5. This can be repeated for multiple correct
+values of innovation filtering, say in the range 4-10.</p>
+<p>By using synthetic data, a known correct answer can be used and the complexity
+of the feature test can be focused on demonstrating the interface (instead of
+say demonstrating the construction of a complex model to deal with complex
+real-world phenomena).</p>
+</section>
+<section id="roadmap-and-process">
+<h2>Roadmap and Process<a class="headerlink" href="#roadmap-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)
+3A. Experiments
+3B. Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2023-11-09<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<section id="pipelines">
+<h4>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this heading">¶</a></h4>
+<p>The organization of the fititng structure via state machine could be thought of
+like a Scikit-Learn Pipeline; however, I’m hoping that the interface will be
+more of a guided tutorial for self-assembly, so a fixed pipeline isn’t the
+answer. Under the hood, a pipeline may ultimately become the answer.</p>
+<p>The two seem similar, but they are orthogonal axis. The state machine is an
+organizational tool for creating the estimator, the pipeline is for fitting.</p>
+</section>
+</section>
+<section id="id2">
+<h3>2023-11-12<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<section id="formak-python-ui-change">
+<h4><code class="docutils literal notranslate"><span class="pre">formak.python</span></code> UI change<a class="headerlink" href="#formak-python-ui-change" title="Permalink to this heading">¶</a></h4>
+<p>Previously, the scikit-learn interface was mixed with the Kalman Filter
+interface. To better support the contract that scikit-learn expects for its
+estimators, the two are now split. There’s an EKF and then a
+<code class="docutils literal notranslate"><span class="pre">SklearnEKFAdapter</span></code> that inherits from scikit-learn’s <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code>.</p>
+</section>
+</section>
+<section id="id3">
+<h3>2023-11-16<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<section id="python-typing">
+<h4>Python Typing<a class="headerlink" href="#python-typing" title="Permalink to this heading">¶</a></h4>
+<p>Under the hood, this design marks the integration of the library with material
+use of Python typing.</p>
+</section>
+</section>
+<section id="id4">
+<h3>2024-01-29<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<section id="defining-parameters-to-select">
+<h4>Defining Parameters to Select<a class="headerlink" href="#defining-parameters-to-select" title="Permalink to this heading">¶</a></h4>
+<p>The parameter space used in the <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> class is designed to be a
+look-alike substitution for the
+<a class="reference external" href="https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search"><code class="docutils literal notranslate"><span class="pre">param_grid</span></code></a>
+used in scikit-learn. In practice it behaves differently, but the hope is that
+these differences can be minimized over time and FormaK can benefit from the
+usability and predictability of sharing an interface with a popular Python
+library.</p>
+</section>
+<section id="data-format">
+<h4>Data Format<a class="headerlink" href="#data-format" title="Permalink to this heading">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> currently uses numpy arrays as the data type expected;
+however, it may be a better fit in the future to move to conventions followed
+in scikit-learn’s
+<a class="reference external" href="https://scikit-learn.org/stable/datasets.html">general dataset API</a>.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Hyper-parameter Selection</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#estimator">Estimator</a><ul>
+<li><a class="reference internal" href="#estimator-interface">Estimator Interface</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parameter-space">Parameter Space</a></li>
+<li><a class="reference internal" href="#cross-validation">Cross Validation</a></li>
+<li><a class="reference internal" href="#metrics-score-function">Metrics / Score Function</a></li>
+<li><a class="reference internal" href="#state-management">State Management</a><ul>
+<li><a class="reference internal" href="#usability-and-the-discoverability-interface">Usability and the Discoverability Interface</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#new-class-es">New Class(es)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#experiments">Experiments</a></li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#roadmap-and-process">Roadmap and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2023-11-09</a><ul>
+<li><a class="reference internal" href="#pipelines">Pipelines</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">2023-11-12</a><ul>
+<li><a class="reference internal" href="#formak-python-ui-change"><code class="docutils literal notranslate"><span class="pre">formak.python</span></code> UI change</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id3">2023-11-16</a><ul>
+<li><a class="reference internal" href="#python-typing">Python Typing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id4">2024-01-29</a><ul>
+<li><a class="reference internal" href="#defining-parameters-to-select">Defining Parameters to Select</a></li>
+<li><a class="reference internal" href="#data-format">Data Format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="generate_cpp_from_ast.html"
+                          title="previous chapter">Generate C++ from AST</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="innovation_filtering.html"
+                          title="next chapter">Innovation Filtering</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/hyperparameter_selection.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="innovation_filtering.html" title="Innovation Filtering"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="generate_cpp_from_ast.html" title="Generate C++ from AST"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hyper-parameter Selection</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

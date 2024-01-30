@@ -25,11 +25,11 @@ lint:
 	pyupgrade $(PYTARGETS)
 	# format docstrings
 	pydocstringformatter -w py/formak/ py/test/formak/ py/test/unit/cpp/ py/test/unit/python/ experimental/ featuretests/
-	# check writing rules
-	proselint --config=common/proselint.json  docs/designs/*.md docs/formak/*.md docs/*.md
 	# pre-commit
 	pre-commit --version
 	pre-commit run --all-files
+	# check writing rules
+	proselint --config=common/proselint.json  docs/designs/*.md docs/formak/*.md docs/*.md
 	# interrogate
 	interrogate --version
 	interrogate -vv py/formak/
@@ -40,3 +40,6 @@ tidy:
 
 pipsetup:
 	bash actions/pip_setup.bash
+
+mypy:
+	mypy $(ag --py  -g ".")

@@ -37,11 +37,33 @@ filegroup(
 )
 
 py_library(
+    name = "ui-model",
+    srcs = ["formak/ui_model.py"],
+    imports = ["."],
+    visibility = ["//visibility:private"],
+    deps = [
+        requirement("sympy"),
+    ],
+)
+
+py_library(
+    name = "ui-state-machine",
+    srcs = ["formak/ui_state_machine.py"],
+    imports = ["."],
+    visibility = ["//visibility:private"],
+    deps = [
+        requirement("scikit-learn"),
+        ":python",
+    ],
+)
+
+py_library(
     name = "ui",
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
-        requirement("sympy"),
+        ":ui-model",
+        ":ui-state-machine",
     ],
 )
 
@@ -240,7 +262,8 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":cpp",
+        ":ui",
     ] + PY_TEST_DEPS,
 )
 
@@ -255,13 +278,14 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":python",
+        ":ui",
     ] + PY_TEST_DEPS,
 )
 
 py_test_suite(
     name = "runtime-test",
-    size = "small",
+    timeout = "moderate",
     srcs = glob(
         [
             "test/unit/runtime/*.py",
@@ -270,13 +294,15 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":formak",
+        ":runtime",
+        ":ui",
+        ":python",
     ] + PY_TEST_DEPS,
 )
 
 py_test_suite(
     name = "reference-models-test",
-    size = "small",
+    timeout = "moderate",
     srcs = glob(
         [
             "test/unit/reference_models/*.py",

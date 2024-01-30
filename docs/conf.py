@@ -23,7 +23,7 @@ myst_enable_extensions = [
     "strikethrough",
     "tasklist",
 ]
-myst_heading_anchors = 2 # h1, h2
+myst_heading_anchors = 2  # h1, h2
 
 autodoc2_packages = ["../py/formak/"]
 
