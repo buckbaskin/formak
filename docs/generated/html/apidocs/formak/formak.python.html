@@ -80,7 +80,7 @@
 <table class="autosummary longtable docutils align-left">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#formak.python.assert_valid_covariance" title="formak.python.assert_valid_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assert_valid_covariance</span></code></a></p></td>
-<td></td>
+<td><p>Check that the covariance array is well formed:</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#formak.python.nearest_positive_definite" title="formak.python.nearest_positive_definite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nearest_positive_definite</span></code></a></p></td>
 <td></td>
@@ -214,8 +214,13 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="formak.python.assert_valid_covariance">
-<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">assert_valid_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covariance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.typing.NDArray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Covariance'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.assert_valid_covariance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">formak.python.</span></span><span class="sig-name descname"><span class="pre">assert_valid_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">covariance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.typing.NDArray</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Covariance'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1e-15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.python.assert_valid_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the covariance array is well formed:</p>
+<ul class="simple">
+<li><p>symmetric (approximately)</p></li>
+<li><p>positive semidefinite (approximately)</p></li>
+</ul>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="formak.python.nearest_positive_definite">

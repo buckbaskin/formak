@@ -184,7 +184,7 @@ API
 
    .. autodoc2-docstring:: formak.python.StateAndCovariance
 
-.. py:function:: assert_valid_covariance(covariance: numpy.typing.NDArray, *, name: str = 'Covariance')
+.. py:function:: assert_valid_covariance(covariance: numpy.typing.NDArray, *, name: str = 'Covariance', negative_tol: float = -1e-15)
    :canonical: formak.python.assert_valid_covariance
 
    .. autodoc2-docstring:: formak.python.assert_valid_covariance
