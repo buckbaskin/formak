@@ -297,7 +297,16 @@ def nearest_positive_definite(covariance: dict[Symbol | tuple[Symbol, Symbol], f
     assert isinstance(covariance, dict)
     REWRITE_TOL = 1e-6
 
-    return {k: max(REWRITE_TOL, v) for k, v in covariance.items()}
+    def nearest_positive_definite_impl():
+        for key, value in covariance.items():
+            if isinstance(key, tuple):
+                l, r = key
+                if l != r:
+                    yield key, value
+                    continue
+            yield key, max(REWRITE_TOL, value)
+
+    return dict(nearest_positive_definite_impl())
 
 
 class ExtendedKalmanFilter:
