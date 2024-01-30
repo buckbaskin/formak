@@ -60,9 +60,11 @@ class Config:
                         MemberDeclaration(
                             "static constexpr bool",
                             "common_subexpression_elimination",
-                            "true"
-                            if self.common_subexpression_elimination
-                            else "false",
+                            (
+                                "true"
+                                if self.common_subexpression_elimination
+                                else "false"
+                            ),
                         ),
                         MemberDeclaration(
                             "static constexpr bool",
@@ -75,9 +77,11 @@ class Config:
                         MemberDeclaration(
                             "static constexpr double",
                             "innovation_filtering",
-                            self.innovation_filtering
-                            if self.innovation_filtering
-                            else 0.0,
+                            (
+                                self.innovation_filtering
+                                if self.innovation_filtering
+                                else 0.0
+                            ),
                         ),
                     ],
                 )

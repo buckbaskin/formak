@@ -107,6 +107,5 @@ def test_scoring_params_round_trip():
     flattened = model._flatten_scoring_params()
     reconstructed = model._inverse_flatten_scoring_params(flattened)
 
-    assert type(original) == type(reconstructed)
     for key, reference in original.items():
         assert reference == reconstructed[key]

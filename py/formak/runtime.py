@@ -3,6 +3,7 @@ Python Runtime.
 
 A collection of classes and tools for running filters and providing additional functionality around the filter
 """
+
 from collections import namedtuple
 from math import floor
 from typing import List, Optional

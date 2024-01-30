@@ -2,10 +2,9 @@ from math import cos, pi, radians, sin
 
 import numpy as np
 from formak.reference_models import strapdown_imu
-from matplotlib import pyplot as plt
 from sympy import Quaternion
 
-from formak import python, ui
+from formak import python
 from formak.common import plot_pair, plot_quaternion_timeseries
 
 

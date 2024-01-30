@@ -5,6 +5,7 @@ Define a C++ implementation of a rocket model
 
 Passes if the C++ implementation is written to disk without an exception
 """
+
 from model_definition import model_definition
 
 from formak import cpp, ui

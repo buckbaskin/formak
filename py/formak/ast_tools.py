@@ -3,6 +3,7 @@ AST Tools.
 
 Building blocks for representing a subset of C++ (and not necessarily a valid set by itself) to make for easier assembly than trying to add a combination of options to templates
 """
+
 import ast
 import os
 from dataclasses import dataclass

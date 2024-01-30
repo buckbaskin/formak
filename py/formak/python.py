@@ -5,7 +5,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from itertools import count
 from math import sqrt
-from typing import Any, Dict, Iterator, Optional, Tuple, Union
+from typing import Any, Iterator
 
 import numpy as np
 import sympy
@@ -87,9 +87,11 @@ class BasicBlock:
         self._body = [
             lambdify(
                 self._arglist + temporaries,
-                simplify(expr)
-                if self._config.common_subexpression_elimination
-                else expr,
+                (
+                    simplify(expr)
+                    if self._config.common_subexpression_elimination
+                    else expr
+                ),
                 modules=self._config.python_modules,
                 cse=False,
             )
@@ -291,9 +293,7 @@ def assert_valid_covariance(covariance: NDArray, *, name: str = "Covariance"):
         )
 
 
-def nearest_positive_definite(
-    covariance: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float]
-):
+def nearest_positive_definite(covariance: dict[Symbol | tuple[Symbol, Symbol], float]):
     assert isinstance(covariance, dict)
     REWRITE_TOL = 1e-6
 
@@ -308,7 +308,7 @@ class ExtendedKalmanFilter:
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
         config: Config,
-        calibration_map: Optional[dict[Symbol, float]] = None,
+        calibration_map: dict[Symbol, float] | None = None,
     ):
         if calibration_map is None:
             calibration_map = {}
@@ -670,7 +670,7 @@ def compile_ekf(
     process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
     sensor_models: dict[str, sympy.core.expr.Expr],
     sensor_noises,
-    calibration_map: Optional[dict[Symbol, float]] = None,
+    calibration_map: dict[Symbol, float] | None = None,
     *,
     config=None,
 ) -> ExtendedKalmanFilter:
@@ -731,9 +731,9 @@ class SklearnEKFAdapter(BaseEstimator):
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
-        calibration_map: Optional[dict[Symbol, float]] = None,
+        calibration_map: dict[Symbol, float] | None = None,
         *,
-        config: Optional[Config] = None,
+        config: Config | None = None,
     ):
         """
         Provide an interface with required arguments to be more structured and.
@@ -757,13 +757,13 @@ class SklearnEKFAdapter(BaseEstimator):
 
     def __init__(
         self,
-        symbolic_model: Optional[common.UiModelBase] = None,
-        process_noise: Optional[dict[Symbol | tuple[Symbol, Symbol], float]] = None,
-        sensor_models: Optional[dict[Symbol, sympy.core.expr.Expr]] = None,
-        sensor_noises: Optional[dict[Symbol | tuple[Symbol, Symbol], float]] = None,
-        calibration_map: Optional[dict[Symbol, float]] = None,
+        symbolic_model: common.UiModelBase | None = None,
+        process_noise: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
+        sensor_models: dict[Symbol, sympy.core.expr.Expr] | None = None,
+        sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
+        calibration_map: dict[Symbol, float] | None = None,
         *,
-        config: Optional[Config] = None,
+        config: Config | None = None,
     ):
         self.symbolic_model = symbolic_model
         self.process_noise = process_noise
@@ -889,7 +889,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
     # Fit the model to data
     def fit(
-        self, X: Any, y: Optional[Any] = None, sample_weight: Optional[NDArray] = None
+        self, X: Any, y: Any | None = None, sample_weight: NDArray | None = None
     ) -> SklearnEKFAdapter:
         assert self.process_noise is not None
         assert self.sensor_models is not None
@@ -945,8 +945,8 @@ class SklearnEKFAdapter(BaseEstimator):
     def score(
         self,
         X: Any,
-        y: Optional[Any] = None,
-        sample_weight: Optional[Any] = None,
+        y: Any | None = None,
+        sample_weight: Any | None = None,
         explain_score: bool = False,
     ) -> float | tuple[float, tuple[float, float, float, float, float, float]]:
         X = force_to_ndarray(X)

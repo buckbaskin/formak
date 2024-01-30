@@ -1,3 +1,5 @@
+"""Define elements of a common model with simple dynamics to demonstrate parameter fitting."""
+
 from formak import ui
 
 dt = ui.Symbol("dt")

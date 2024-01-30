@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from formak.exceptions import ModelDefinitionError
-from sympy import Matrix, Symbol, simplify, symbols
+from sympy import simplify
 from sympy.parsing.sympy_parser import parse_expr
 
 from formak.common import UiModelBase

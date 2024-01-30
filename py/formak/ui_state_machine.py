@@ -2,17 +2,10 @@ import dataclasses
 import inspect
 from collections import namedtuple
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from formak.exceptions import ModelFitError
-from sklearn.metrics import make_scorer
-from sklearn.model_selection import (
-    GridSearchCV,
-    TimeSeriesSplit,
-    cross_validate,
-    train_test_split,
-)
-from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
 from formak import python, ui_model
 
@@ -70,7 +63,7 @@ class StateMachineState:
     @classmethod
     def available_transitions(cls) -> List[str]:
         """
-        Available function calls
+        Available function calls.
 
         for each name in the list, getattr(state, name)(*args, **kwargs) will perform the state transition
         """
@@ -193,7 +186,8 @@ class FitModelState(StateMachineState):
 
     def _fit_model_impl(self, debug_print=False):
         """
-        This impl function contains all of the scikit-learn wrangling to
+        This impl function contains all of the scikit-learn wrangling to.
+
         organize it away from the logical flow of the state machine. This may
         move to its own separate helper file.
         """

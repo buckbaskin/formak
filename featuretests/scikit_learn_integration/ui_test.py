@@ -7,6 +7,7 @@ scikit-learn-like interface
 Passes if the interfaces return results that match the expected shape of each
 scikit-learn interface
 """
+
 import numpy as np
 
 from formak import python, ui

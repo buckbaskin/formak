@@ -4,7 +4,6 @@
 Demonstrate tuning a model for two different innovation filtering hyper-parameters using the same process.
 """
 
-
 import numpy as np
 from formak.ui import DesignManager, StateId
 from model import (

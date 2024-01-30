@@ -6,6 +6,7 @@ Run the new ManagedFilter with a generated EKF. Run it with and without sensor r
 Passes if the ManagedFilter updates the state (other testing checks if it's
 working correctly).
 """
+
 import numpy as np
 from formak.runtime import ManagedFilter, StampedReading
 

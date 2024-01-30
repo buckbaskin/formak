@@ -10,6 +10,7 @@ working as expected, then the model will flip into the wrong direction.
 
 Passes if the model rejects the high innovation updates.
 """
+
 from math import degrees, radians
 
 import numpy as np

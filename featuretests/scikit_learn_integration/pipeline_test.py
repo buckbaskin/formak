@@ -3,6 +3,7 @@ Feature Test.
 
 Passes if running a model in a pipeline doesn't raise exceptions
 """
+
 import numpy as np
 from sklearn.pipeline import Pipeline
 

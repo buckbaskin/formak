@@ -5,6 +5,7 @@ Create a model with excessive duplication, then generate it with and without
 common subexpression elimination.
 Passes if CSE demonstrates a significant outperformance in all examples.
 """
+
 from functools import partial
 
 import numpy as np

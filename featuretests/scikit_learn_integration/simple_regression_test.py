@@ -5,6 +5,7 @@ Fit a Python model via the scikit-learn interface.
 
 Passes if the fit model scores better than the unfit model
 """
+
 import numpy as np
 
 from formak import python, ui

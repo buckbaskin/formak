@@ -2,6 +2,7 @@ import numpy as np
 
 
 def generate_data(innovation, *, samples=100):
+    """Generate synthetic data with a known level of innovation."""
     rng = np.random.default_rng(seed=5)
 
     mean = 0
