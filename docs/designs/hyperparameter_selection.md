@@ -269,3 +269,22 @@ estimators, the two are now split. There's an EKF and then a
 
 Under the hood, this design marks the integration of the library with material
 use of Python typing.
+
+### 2024-01-29
+
+#### Defining Parameters to Select
+
+The parameter space used in the `DesignManager` class is designed to be a
+look-alike substitution for the
+[`param_grid`](https://scikit-learn.org/stable/modules/grid_search.html#exhaustive-grid-search)
+used in scikit-learn. In practice it behaves differently, but the hope is that
+these differences can be minimized over time and FormaK can benefit from the
+usability and predictability of sharing an interface with a popular Python
+library.
+
+#### Data Format
+
+The `DesignManager` currently uses numpy arrays as the data type expected;
+however, it may be a better fit in the future to move to conventions followed
+in scikit-learn's
+[general dataset API](https://scikit-learn.org/stable/datasets.html).

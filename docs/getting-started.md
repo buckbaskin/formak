@@ -22,7 +22,30 @@ Some highlights:
     model = Model(dt, state, control, state_model, debug_print=True)
 ```
 
-More coming soon!
+The above code can be extended with the `DesignManager` to help select
+appropriate parameters.
+
+```py
+    manager = DesignManager(name="mercury")
+
+    # Define the symbolic model
+    manager = manager.symbolic_model(model=model)
+
+    # Select model parameters, such as innovation_filtering from data
+    manager = symbolic_model_state.fit_model(
+        parameter_space={
+            "process_noise": [process_noise],
+            "sensor_models": [sensor_models],
+            "sensor_noises": [sensor_noises],
+            "calibration_map": [calibration_map],
+            "innovation_filtering": [None, 1, 2, 3, 4, 5, 6, 7],
+        },
+        data=data,
+    )
+
+    # Export the refined model. Note: not a state transition
+    python_model = manager.export_python()
+```
 
 # Getting Started For Developers
 
