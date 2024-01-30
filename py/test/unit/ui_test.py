@@ -51,7 +51,7 @@ def test_fit_model_missing_parameter_defaults() -> None:
 
     # Called with default parameters, empty data
     with pytest.raises(ValueError):
-        fit_model_state = symbolic_model_state.fit_model(
+        symbolic_model_state.fit_model(
             parameter_space={},
             data=[0, 0, 0],
         )

@@ -283,13 +283,23 @@ class SensorModel:
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
 
 
-def assert_valid_covariance(covariance: NDArray, *, name: str = "Covariance"):
+def assert_valid_covariance(
+    covariance: NDArray, *, name: str = "Covariance", negative_tol: float = -1e-15
+):
+    """
+    Check that the covariance array is well formed:
+
+    - symmetric (approximately)
+    - positive semidefinite (approximately)
+    """
     assert isinstance(covariance, np.ndarray)
+    assert np.allclose(covariance, covariance.T)
+
     covariance_eigenvalues = np.linalg.eig(covariance)[0]
-    if np.any(covariance_eigenvalues < 0.0):
+    if np.any(covariance_eigenvalues < negative_tol):
         # negative definite matrix is not a valid representation of uncertainty
         raise AssertionError(
-            f"Negative {str(name)}:\n{covariance}\n{covariance_eigenvalues}"
+            f"Negative {str(name)}:\n{covariance}\nEigen Values: {min(covariance_eigenvalues)}\n{covariance_eigenvalues}"
         )
 
 
@@ -536,6 +546,7 @@ class ExtendedKalmanFilter:
 
     def process_model(self, dt, state, covariance, control=None):
         assert_valid_covariance(covariance.data)
+        assert_valid_covariance(self.process_noise)
 
         if control is None:
             control = self.Control()
@@ -559,24 +570,20 @@ class ExtendedKalmanFilter:
             G_t, np.matmul(covariance.data, G_t.transpose())
         )
         assert next_state_covariance.shape == covariance.shape
-
-        assert_valid_covariance(self.process_noise)
+        assert_valid_covariance(next_state_covariance)
 
         next_control_covariance = np.matmul(
             V_t, np.matmul(self.process_noise, V_t.transpose())
         )
         assert next_control_covariance.shape == covariance.shape
-
-        assert_valid_covariance(next_state_covariance)
         assert_valid_covariance(next_control_covariance)
 
         next_covariance = next_state_covariance + next_control_covariance
         assert next_covariance.shape == covariance.shape
+        assert_valid_covariance(next_covariance)
 
         next_state = self._state_model.model(dt, state, control)
         assert isinstance(next_state, self.State)
-
-        assert_valid_covariance(next_covariance)
 
         return StateAndCovariance(
             next_state, self.Covariance.from_data(next_covariance)
