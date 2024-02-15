@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("//py:defs.bzl", "cc_formak_model", "py_test_suite")
 load("@pip_deps//:requirements.bzl", "requirement")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 
@@ -233,5 +234,20 @@ py_binary(
     deps = [
         requirement("sympy"),
         requirement("numpy"),
+    ],
+)
+
+py_library(
+    name = "superoptimizer",
+    srcs = ["src/superoptimizer.py"],
+    imports = ["src"],
+)
+
+py_test_suite(
+    name = "superoptimizer-test",
+    srcs = ["test/superoptimizer_test.py"],
+    deps = [
+        ":superoptimizer",
+        requirement("pytest"),
     ],
 )
