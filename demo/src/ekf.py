@@ -5,6 +5,9 @@ This file demonstrates defining a symbolic model with some simple approximate
 physics. Then, compile it into a Python EKF implementation
 
 The same symbolic model could also be compiled into a C++ implementation.
+
+See featuretests/python_library_for_model_evaluation/simple_to_ekf_test.py and
+the featuretests/ directory for additional features and examples.
 """
 
 from formak.ui import Model, symbols, Symbol
