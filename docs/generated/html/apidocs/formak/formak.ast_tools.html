@@ -15,8 +15,8 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="formak.ui_state_machine" href="formak.ui_state_machine.html" />
-    <link rel="prev" title="formak.cpp" href="formak.cpp.html" /> 
+    <link rel="next" title="formak.runtime" href="formak.runtime.html" />
+    <link rel="prev" title="formak.exceptions" href="formak.exceptions.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,10 +28,10 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="formak.ui_state_machine.html" title="formak.ui_state_machine"
+          <a href="formak.runtime.html" title="formak.runtime"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="formak.cpp.html" title="formak.cpp"
+          <a href="formak.exceptions.html" title="formak.exceptions"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>
@@ -152,6 +152,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">BaseAst</span></span><a class="headerlink" href="#formak.ast_tools.BaseAst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">ast.AST</span></code></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.ast_tools.BaseAst.compile">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.ast_tools.CompileState" title="formak.ast_tools.CompileState"><span class="pre">formak.ast_tools.CompileState</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ast_tools.BaseAst.compile" title="Permalink to this definition">¶</a></dt>
@@ -175,6 +176,7 @@
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p>Include a line for “public:”.</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.ast_tools.Public.compile">
 <span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.ast_tools.CompileState" title="formak.ast_tools.CompileState"><span class="pre">formak.ast_tools.CompileState</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ast_tools.Public.compile" title="Permalink to this definition">¶</a></dt>
@@ -188,6 +190,7 @@
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p>Include a line for “private:”.</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="formak.ast_tools.Private.compile">
 <span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#formak.ast_tools.CompileState" title="formak.ast_tools.CompileState"><span class="pre">formak.ast_tools.CompileState</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#formak.ast_tools.Private.compile" title="Permalink to this definition">¶</a></dt>
@@ -200,6 +203,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">Arg</span></span><a class="headerlink" href="#formak.ast_tools.Arg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.Arg._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('type_',</span> <span class="pre">'name')</span></em><a class="headerlink" href="#formak.ast_tools.Arg._fields" title="Permalink to this definition">¶</a></dt>
@@ -228,6 +232,7 @@
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p>Include start and end lines for a C++ namespace.</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.Namespace._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('name',</span> <span class="pre">'body')</span></em><a class="headerlink" href="#formak.ast_tools.Namespace._fields" title="Permalink to this definition">¶</a></dt>
@@ -255,6 +260,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">HeaderFile</span></span><a class="headerlink" href="#formak.ast_tools.HeaderFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.HeaderFile._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('pragma',</span> <span class="pre">'includes',</span> <span class="pre">'namespaces')</span></em><a class="headerlink" href="#formak.ast_tools.HeaderFile._fields" title="Permalink to this definition">¶</a></dt>
@@ -287,6 +293,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">SourceFile</span></span><a class="headerlink" href="#formak.ast_tools.SourceFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.SourceFile._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('includes',</span> <span class="pre">'namespaces')</span></em><a class="headerlink" href="#formak.ast_tools.SourceFile._fields" title="Permalink to this definition">¶</a></dt>
@@ -315,6 +322,7 @@
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p>Generate lines to set up a C++ struct or class.</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.ClassDef._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('tag',</span> <span class="pre">'name',</span> <span class="pre">'bases',</span> <span class="pre">'body')</span></em><a class="headerlink" href="#formak.ast_tools.ClassDef._fields" title="Permalink to this definition">¶</a></dt>
@@ -352,6 +360,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">EnumClassDef</span></span><a class="headerlink" href="#formak.ast_tools.EnumClassDef" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.EnumClassDef._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('name',</span> <span class="pre">'members')</span></em><a class="headerlink" href="#formak.ast_tools.EnumClassDef._fields" title="Permalink to this definition">¶</a></dt>
@@ -379,6 +388,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">ForwardClassDeclaration</span></span><a class="headerlink" href="#formak.ast_tools.ForwardClassDeclaration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.ForwardClassDeclaration._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('tag',</span> <span class="pre">'name')</span></em><a class="headerlink" href="#formak.ast_tools.ForwardClassDeclaration._fields" title="Permalink to this definition">¶</a></dt>
@@ -406,6 +416,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">MemberDeclaration</span></span><a class="headerlink" href="#formak.ast_tools.MemberDeclaration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.MemberDeclaration._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('type_',</span> <span class="pre">'name',</span> <span class="pre">'value')</span></em><a class="headerlink" href="#formak.ast_tools.MemberDeclaration._fields" title="Permalink to this definition">¶</a></dt>
@@ -438,6 +449,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">UsingDeclaration</span></span><a class="headerlink" href="#formak.ast_tools.UsingDeclaration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.UsingDeclaration._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('name',</span> <span class="pre">'type_')</span></em><a class="headerlink" href="#formak.ast_tools.UsingDeclaration._fields" title="Permalink to this definition">¶</a></dt>
@@ -465,6 +477,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">ConstructorDeclaration</span></span><a class="headerlink" href="#formak.ast_tools.ConstructorDeclaration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.ConstructorDeclaration._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('args',)</span></em><a class="headerlink" href="#formak.ast_tools.ConstructorDeclaration._fields" title="Permalink to this definition">¶</a></dt>
@@ -487,6 +500,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">ConstructorDefinition</span></span><a class="headerlink" href="#formak.ast_tools.ConstructorDefinition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.ConstructorDefinition._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('classname',</span> <span class="pre">'args',</span> <span class="pre">'initializer_list')</span></em><a class="headerlink" href="#formak.ast_tools.ConstructorDefinition._fields" title="Permalink to this definition">¶</a></dt>
@@ -520,6 +534,7 @@
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p>Generate lines to set up a function definition (separate from a function declaration).</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.FunctionDef._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('return_type',</span> <span class="pre">'name',</span> <span class="pre">'args',</span> <span class="pre">'modifier',</span> <span class="pre">'body')</span></em><a class="headerlink" href="#formak.ast_tools.FunctionDef._fields" title="Permalink to this definition">¶</a></dt>
@@ -562,6 +577,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">FunctionDeclaration</span></span><a class="headerlink" href="#formak.ast_tools.FunctionDeclaration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.FunctionDeclaration._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('return_type',</span> <span class="pre">'name',</span> <span class="pre">'args',</span> <span class="pre">'modifier')</span></em><a class="headerlink" href="#formak.ast_tools.FunctionDeclaration._fields" title="Permalink to this definition">¶</a></dt>
@@ -599,6 +615,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">Return</span></span><a class="headerlink" href="#formak.ast_tools.Return" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.Return._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('value',)</span></em><a class="headerlink" href="#formak.ast_tools.Return._fields" title="Permalink to this definition">¶</a></dt>
@@ -623,6 +640,7 @@
 <p>Generate an if statement.</p>
 <p>Naming follows the Python AST</p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.If._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('test',</span> <span class="pre">'body',</span> <span class="pre">'orelse')</span></em><a class="headerlink" href="#formak.ast_tools.If._fields" title="Permalink to this definition">¶</a></dt>
@@ -655,6 +673,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">Templated</span></span><a class="headerlink" href="#formak.ast_tools.Templated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.Templated._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('template_args',</span> <span class="pre">'templated')</span></em><a class="headerlink" href="#formak.ast_tools.Templated._fields" title="Permalink to this definition">¶</a></dt>
@@ -682,6 +701,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">FromFileTemplate</span></span><a class="headerlink" href="#formak.ast_tools.FromFileTemplate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.FromFileTemplate._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('name',</span> <span class="pre">'inserts')</span></em><a class="headerlink" href="#formak.ast_tools.FromFileTemplate._fields" title="Permalink to this definition">¶</a></dt>
@@ -709,6 +729,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">formak.ast_tools.</span></span><span class="sig-name descname"><span class="pre">Escape</span></span><a class="headerlink" href="#formak.ast_tools.Escape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#formak.ast_tools.BaseAst" title="formak.ast_tools.BaseAst"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formak.ast_tools.BaseAst</span></code></a></p>
 <p class="rubric">Initialization</p>
+<p>Initialize self.  See help(type(self)) for accurate signature.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="formak.ast_tools.Escape._fields">
 <span class="sig-name descname"><span class="pre">_fields</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('string',)</span></em><a class="headerlink" href="#formak.ast_tools.Escape._fields" title="Permalink to this definition">¶</a></dt>
@@ -908,13 +929,13 @@
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="formak.cpp.html"
-                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.cpp</span></code></a></p>
+    <p class="topless"><a href="formak.exceptions.html"
+                          title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.exceptions</span></code></a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="formak.ui_state_machine.html"
-                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.ui_state_machine</span></code></a></p>
+    <p class="topless"><a href="formak.runtime.html"
+                          title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">formak.runtime</span></code></a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -947,10 +968,10 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="formak.ui_state_machine.html" title="formak.ui_state_machine"
+          <a href="formak.runtime.html" title="formak.runtime"
              >next</a> |</li>
         <li class="right" >
-          <a href="formak.cpp.html" title="formak.cpp"
+          <a href="formak.exceptions.html" title="formak.exceptions"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">FormaK  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../formak/index.html" >FormaK Developer Documentation</a> &#187;</li>

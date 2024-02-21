@@ -3,7 +3,7 @@
 <!-- If you'd like to generate the documentation as HTML pages, run the command `make html` from the `docs/` directory -->
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8333/badge)](https://www.bestpractices.dev/projects/8333)
 
-FormaK builds fast, reliable, easy to use state estimation.
+FormaK builds fast, reliable, easy to use online state estimation.
 
 FormaK is tooling to easily derive Python and C++ implementations of models
 based on your data (or even before you have data). The models are fast and are
@@ -38,6 +38,8 @@ runtime
 mathematical-glossary
 ```
 
+Demos are in the [`demo/`](https://github.com/buckbaskin/formak/tree/main/demo)
+subdirectory.
 Developer documentation is contained in the `formak/` subdirectory.
 Documentation of design decisions are contained in the `designs/` directory.
 
