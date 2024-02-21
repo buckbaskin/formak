@@ -1,12 +1,14 @@
-'''
+"""
 # Symbolic Model
 
 This file demonstrates defining a symbolic model with some simple approximate
-physics. To use this model, it should be compiled into either a Python or a C++
-implementation.
-'''
+physics. To use this model, it is compiled into a Python implementation.
+
+The same symbolic model could also be compiled into a C++ implementation.
+"""
 
 from formak.ui import Model, symbols, Symbol
+from formak import python
 
 from collections import defaultdict
 
@@ -18,6 +20,12 @@ Earth_Equatorial_Radius = 6378.137  # m
 
 
 def SaturnVMass():
+    """
+    Summarize the mass distribution from the Apollo 7 launch vehicle. This mass
+    will be used to initialize the state of the model.
+
+    The details of the exact masses don't impact the definition of the model
+    """
     # Apollo 7
     masses = {
         "SIB_dry": 84530,
@@ -64,23 +72,49 @@ Vehicle_Mass_Properties = SaturnVMass()
 
 
 def gravitational_force(m_1, m_2, r):
-    return G * (m_1 * m_2) / (r**2)
+    """
+    Calculate the gravitational force acting between two bodies.
+
+    This function can be called with floating point values or symbolic values
+    representing the possible masses and radii between the two masses. For this
+    example, it's used to encapsulate the calculation of the gravitational
+    force acting on the simplified model of a launch vehicle.
+    """
+    return -G * (m_1 * m_2) / (r**2)
 
 
 def main():
+    """
+    The main function encapsulates a few common steps for all models:
+    1. Defining symbols
+    2. Identifying the symbol(s) used in the model state
+    3. Identifying the symbol(s) used in the control inputs
+    4. Defining the discrete state update
+    5. Constructing the Model class
+
+    The file also demonstrates:
+    6. Compiling from the symbolic class to a Python model implementation
+    7. Running a model update with the Python model
+    """
+
+    # 1. Defining symbols
     vp = vehicle_properties = {k: Symbol(k) for k in ["m", "x", "v", "a"]}
     fuel_burn_rate = Symbol("fuel_burn_rate")
 
+    # 2. Identifying the symbol(s) used in the model state
     state = set(vehicle_properties.values())
 
+    # 3. Identifying the symbol(s) used in the control inputs
     control = {fuel_burn_rate}  # kg/sec
+
+    # 4. Defining the discrete state update
 
     # momentum = mv
     # dmomentum / dt = F = d(mv)/dt
     # F = m dv/dt + dm/dt v
     # a = dv / dt = (F - dm/dt * v) / m
 
-    F = -gravitational_force(vp["m"], Earth_Mass, vp["x"] + Earth_Equatorial_Radius)
+    F = gravitational_force(vp["m"], Earth_Mass, vp["x"] + Earth_Equatorial_Radius)
 
     state_model = {
         vp["m"]: vp["m"] - fuel_burn_rate * dt,
@@ -89,6 +123,7 @@ def main():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
+    # 5. Constructing the Model class
     symbolic_model = Model(dt, state, control, state_model, debug_print=True)
 
     initial_state = {
@@ -98,9 +133,22 @@ def main():
         vp["a"]: 0.0,
     }
 
+    # 6. Compiling from the symbolic class to a Python model implementation
+    python_model = python.compile(symbolic_model=symbolic_model)
+
+    state_vector = python_model.State.from_dict(initial_state)
+    control_vector = python_model.Control.from_dict({fuel_burn_rate: 0.0})
+
     print("Initial State")
-    for k in sorted(list(initial_state.keys()), key=lambda x: x.name):
-        print("  {}: {}".format(k, initial_state[k]))
+    print(state_vector)
+
+    # 7. Running a model update with the Python model
+    state_vector_next = python_model.model(
+        dt=0.1, state=state_vector, control=control_vector
+    )
+
+    print("Next State")
+    print(state_vector_next)
 
     return 0
 

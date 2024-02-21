@@ -2,9 +2,9 @@ load("@rules_python//python:defs.bzl", "py_binary")
 load("@pip_deps//:requirements.bzl", "requirement")
 
 py_binary(
-    name = "orbital-model",
-    srcs = ["src/orbital_model.py"],
-    main = "src/orbital_model.py",
+    name = "symbolic-model",
+    srcs = ["src/symbolic_model.py"],
+    main = "src/symbolic_model.py",
     deps = [
         "//py:formak",
     ],
