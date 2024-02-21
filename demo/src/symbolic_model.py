@@ -1,4 +1,12 @@
-from formak.ui import *
+'''
+# Symbolic Model
+
+This file demonstrates defining a symbolic model with some simple approximate
+physics. To use this model, it should be compiled into either a Python or a C++
+implementation.
+'''
+
+from formak.ui import Model, symbols, Symbol
 
 from collections import defaultdict
 
@@ -81,7 +89,7 @@ def main():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
-    model = Model(dt, state, control, state_model, debug_print=True)
+    symbolic_model = Model(dt, state, control, state_model, debug_print=True)
 
     initial_state = {
         vp["m"]: Vehicle_Mass_Properties["dry"] + Vehicle_Mass_Properties["consumable"],
