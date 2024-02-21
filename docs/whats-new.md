@@ -2,6 +2,14 @@
 
 Release Notes
 
+## 2024-02-20 Introductory Documentation
+
+Update the `demo/` directory to provide more written documentation of the
+features and what's going on.
+
+Additional examples for using each feature are located in the `featuretests/`
+directory.
+
 ## 2024-01-28 Hyperparameter Tuning
 
 FormaK now provides functionality to select hyperparameters from a known set.
