@@ -38,6 +38,8 @@ runtime
 mathematical-glossary
 ```
 
+Demos are in the [`demo/`](https://github.com/buckbaskin/formak/tree/main/demo)
+subdirectory.
 Developer documentation is contained in the `formak/` subdirectory.
 Documentation of design decisions are contained in the `designs/` directory.
 
