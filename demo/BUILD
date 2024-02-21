@@ -9,3 +9,12 @@ py_binary(
         "//py:formak",
     ],
 )
+
+py_binary(
+    name = "ekf",
+    srcs = ["src/ekf.py"],
+    main = "src/ekf.py",
+    deps = [
+        "//py:formak",
+    ],
+)

@@ -136,13 +136,13 @@ def main():
     # 6. Compiling from the symbolic class to a Python model implementation
     python_model = python.compile(symbolic_model=symbolic_model)
 
+    # 7. Running a model update with the Python model
     state_vector = python_model.State.from_dict(initial_state)
     control_vector = python_model.Control.from_dict({fuel_burn_rate: 0.0})
 
     print("Initial State")
     print(state_vector)
 
-    # 7. Running a model update with the Python model
     state_vector_next = python_model.model(
         dt=0.1, state=state_vector, control=control_vector
     )
