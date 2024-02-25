@@ -1,52 +1,50 @@
-class ActionBase():
+from __future__ import annotations
+from collections import namedtuple
+
+
+class ActionBase:
     def cost(self) -> float:
         raise NotImplementedError()
 
-class StateBase():
-    def __init__(self, cost_to_reach:float, path: list[ActionBase]):
-        self.cost_to_reach = cost_to_reach
-        self.path = path
 
-    def alternate_path(self, cost_to_reach:float, path: list[ActionBase]) -> None:
-        if cost_to_reach < self.cost_to_reach:
-            self.cost_to_reach = cost_to_reach
-            self.path = path
-
-    def possible_cost(self, goal) -> float:
-        return self.cost_to_reach + self.heuristic(goal)
-
-    def heuristic(self, goal: StateBase) -> float:
+class StateBase:
+    def __eq__(self, other: StateBase) -> bool:
         raise NotImplementedError()
 
-    def available_edges(self) -> list[ActionBase]:
+    def __hash__(self):
         raise NotImplementedError()
 
-    def next_state(self, action: ActionBase) -> StateBase:
-        raise NotImplementedError()
 
-class Frontier():
-    def __init__(self):
-        self.q = []
+FrontTuple = namedtuple("FrontTuple", ["state", "path", "reach", "heuristic"])
 
-    def extend(self, state: StateBase, possible_actions: list[StateBase]):
-        for action in possible_actions:
-            possible_state = state.next_state(action)
 
-            try:
-                key = self.q.index(possible_state)
+class Frontier:
+    def __init__(self, initial_state):
+        self.q = [FrontTuple(initial_state, [], 0.0, 0.0)]
 
-                self.q[key].alternate_path(state.cost_to_reach + action.cost(), state.path + [action])
-            except ValueError:
-                # state not in frontier
-                self.q.append(possible_state)
+    def append(
+        self,
+        state: StateBase,
+        path: List[ActionBase],
+        reach: float,
+        heuristic: float,
+        *,
+        debug=False,
+    ):
+        self.q.append(FrontTuple(state, path, reach, heuristic))
 
-        sort(self.q, key=lambda state: state.possible_cost())
-        print([state.possible_cost() for state in self.q])
-        1/0
+        self.q.sort(key=lambda t: t.reach + t.heuristic)
+        if debug:
+            print(
+                [
+                    (t.state._name, t.reach, t.heuristic, t.reach + t.heuristic)
+                    for t in self.q
+                ]
+            )
 
     def pop(self) -> StateBase:
         if len(self.q) == 0:
-            raise ValueError('Empty Frontier')
+            raise ValueError("Empty Frontier")
 
         result = self.q[0]
         self.q = self.q[1:]
@@ -54,26 +52,39 @@ class Frontier():
         return result
 
 
-def astar(initial_state: StateBase, goal: StateBase, *, max_iterations):
-    visited_states = set([initial_state])
-    frontier = initial_state.available_edges()
+def astar(
+    initial_state: StateBase,
+    goal_state: StateBase,
+    transition,
+    heuristic,
+    edges,
+    *,
+    max_iter=1000,
+):
+    frontier = Frontier(initial_state)
+    visited = set()
 
-    for i in range(max_iterations):
-        if len(frontier) == 0:
-            break
+    for i in range(max_iter):
+        state, path, reach_cost, _ = frontier.pop()
 
-        next_state = frontier[0]
-        frontier = frontier[1:]
+        if state == goal_state:
+            return path
 
-        if next_state == goal:
-            # done
-            raise AttributeError('done, but do not know how I got here')
+        if state in visited:
+            continue
 
-        frontier.extend(next_state, next_state.available_edges())
-        
-        pass
+        visited.add(state)
 
-    raise ValueError('Failed to terminate in max iterations')
+        for action in edges(state):
+            next_state = transition(state, action)
+            frontier.append(
+                next_state,
+                path + [action],
+                reach_cost + action.cost,
+                heuristic(next_state),
+            )
+
+    raise ValueError("Failed to terminate in max iterations")
 
 
 def superoptimizer():
