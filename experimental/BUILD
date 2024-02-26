@@ -249,5 +249,6 @@ py_test_suite(
     deps = [
         ":superoptimizer",
         requirement("pytest"),
+        requirement("sympy"),
     ],
 )

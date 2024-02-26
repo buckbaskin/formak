@@ -1,4 +1,5 @@
 from superoptimizer import superoptimizer, astar, StateBase, ActionBase
+from sympy import symbols
 from collections import namedtuple
 
 # A -> B
@@ -131,5 +132,8 @@ def test_astar_full():
 
 
 def test_superoptimizer():
-    result = superoptimizer()
-    assert result == ["add", "mul"]
+    a, b = symbols(["a", "b"])
+    expr = a + b
+    result = superoptimizer(expr, [a, b])
+
+    assert result == ["add"]
