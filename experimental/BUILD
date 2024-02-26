@@ -241,6 +241,9 @@ py_library(
     name = "superoptimizer",
     srcs = ["src/superoptimizer.py"],
     imports = ["src"],
+    deps = [
+        requirement("sympy"),
+    ],
 )
 
 py_test_suite(

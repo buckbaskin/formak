@@ -1,5 +1,7 @@
 from __future__ import annotations
 from collections import namedtuple
+import sympy
+from sympy import Symbol, Expr, symbols
 
 
 class ActionBase:
@@ -71,7 +73,8 @@ def astar(
             print("iter", i)
             raise
 
-        if state == goal_state:
+        # Note: put goal_state first so it can override equality (if desired)
+        if goal_state == state:
             return path
 
         if state in visited:
@@ -123,26 +126,62 @@ class Add(BinOpBase):
     def __repr__(self):
         return f"Add({self.l}, {self.r})"
 
+    def __eq__(self, other):
+        if not isinstance(other, Add):
+            return False
+
+        return (self.l, self.r) == (other.l, other.r)
+
+    def __hash__(self):
+        return hash(("Add", self.l, self.r))
+
 
 class Mul(BinOpBase):
     def __repr__(self):
         return f"Mul({self.l}, {self.r})"
 
+    def __eq__(self, other):
+        if not isinstance(other, Mul):
+            return False
+
+        return (self.l, self.r) == (other.l, other.r)
+
+    def __hash__(self):
+        return hash(("Mul", self.l, self.r))
+
+
+def decompose_goal(expr: Expr):
+    for child in expr.args:
+        yield from decompose_goal(child)
+
+    yield expr
+
 
 class CpuState(StateBase):
     @classmethod
-    def Start(cls, free_symbols):
+    def Start(cls, free_symbols, goal_expr):
         pipeline = (Nop(), Nop(), Nop())
 
-        return cls(pipeline, free_symbols)
+        goal_exprs = list(decompose_goal(goal_expr))
+        print("Goal", goal_expr)
+        print("Decomposed")
+        print(goal_exprs)
 
-    def __init__(self, pipeline: List[InstructionBase], free_symbols: Iterable[Any]):
+        return cls(pipeline, free_symbols, goal_exprs)
+
+    def __init__(
+        self,
+        pipeline: List[InstructionBase],
+        free_symbols: Iterable[Any],
+        goal_exprs: List[Expr],
+    ):
         self.instruction_set = (Add, Mul, Nop)
 
         self.cycle_count = 0
 
         self.pipeline = pipeline
         self.computed_values = frozenset(free_symbols)
+        self.goal_exprs = frozenset(goal_exprs) - self.computed_values
 
     def __repr__(self):
         return f"CpuState(pipline={self.pipeline},computed={self.computed_values})"
@@ -151,7 +190,11 @@ class CpuState(StateBase):
         if not isinstance(other, type(self)):
             return False
 
-        return self._name == other._name
+        return (self.pipeline, self.computed_values, self.goal_exprs,) == (
+            other.pipeline,
+            other.computed_values,
+            other.goal_exprs,
+        )
 
     def __hash__(self):
         return hash((self.pipeline, self.computed_values))
@@ -162,16 +205,19 @@ class CpuState(StateBase):
         result, next_pipeline = self.pipeline[0], self.pipeline[1:] + (instruction,)
 
         if isinstance(result, Nop):
-            next_computed = self.computed_values
+            newly_computed = set()
         elif isinstance(result, Add):
-            next_computed = self.computed_values.union([result.l + result.r])
+            newly_computed = set([result.l + result.r])
         elif isinstance(result, Mul):
-            next_computed = self.computed_values.union([result.l * result.r])
+            newly_computed = set([result.l * result.r])
         else:
             raise TypeError(f"Misconfigured Instruction Type {type(result)}")
 
+        next_computed = self.computed_values.union(newly_computed)
+        next_goal = self.goal_exprs.difference(newly_computed)
+
         assert next_computed is not None
-        return CpuState(next_pipeline, next_computed)
+        return CpuState(next_pipeline, next_computed, next_goal)
 
 
 class InstructionAction(ActionBase):
@@ -208,17 +254,34 @@ class GoalMultiState:
 
 
 def heuristic(state: CpuState):
-    return 0.0
+    return len(state.goal_exprs)
+
+
+def available(expr, computed_values):
+    if len(expr.args) != 2:
+        raise ValueError(f"Expression with args {len(expr.args)}: {expr}")
+
+    l, r = expr.args
+
+    return l in computed_values and r in computed_values
 
 
 def available_edges(state: CpuState):
-    for InstructionType in state.instruction_set:
-        if InstructionType == Nop:
-            continue
+    for expr in state.goal_exprs:
+        if available(expr, state.computed_values):
 
-        for lhs in state.computed_values:
-            for rhs in state.computed_values:
-                yield InstructionAction(instruction=InstructionType(lhs, rhs))
+            if expr.func == sympy.core.add.Add:
+                if len(expr.args) != 2:
+                    raise ValueError(f"Expression with args {len(expr.args)}: {expr}")
+                l, r = expr.args
+
+                candidate = InstructionAction(Add(l, r))
+
+                if candidate.instruction not in state.pipeline:
+                    yield candidate
+            else:
+                print(expr.func)
+                1 / 0
 
     if state.pipeline != (Nop(), Nop(), Nop()):
         yield InstructionAction(instruction=Nop())
@@ -230,7 +293,7 @@ def transition(state: CpuState, action: InstructionAction):
 
 def superoptimizer(expression, free_symbols):
     assert (Nop(), Nop(), Nop()) == (Nop(), Nop(), Nop())
-    initial_state = CpuState.Start(free_symbols)
+    initial_state = CpuState.Start(free_symbols, expression)
     goal_state = GoalMultiState(expression)
 
     instruction_seequence = astar(
