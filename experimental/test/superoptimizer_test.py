@@ -155,7 +155,7 @@ def test_superoptimizer_simple():
     assert instruction_seequence == [Add(a, b)]
 
 
-def test_superoptimizer_simple():
+def test_superoptimizer_two_op():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     expr = (a + b) * (c + d)
     instruction_seequence, stats = superoptimizer(expr, [a, b, c, d])
