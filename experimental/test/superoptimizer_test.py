@@ -1,5 +1,5 @@
 from superoptimizer import superoptimizer, astar, StateBase, ActionBase, Add, Mul
-from sympy import symbols, Symbol
+from sympy import symbols, Symbol, Quaternion
 from collections import namedtuple
 
 # A -> B
@@ -159,6 +159,28 @@ def test_superoptimizer_two_op():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     expr = (a + b) * (c + d)
     instruction_seequence, stats = superoptimizer(expr, [a, b, c, d])
+
+    print("superoptimizer")
+    print("result")
+    print(stats["full"])
+    print("minimized")
+    print(instruction_seequence)
+
+    # Cycle count includes time to pass operations through the full pipeline
+    assert stats["cycle count"] == 9
+
+    # Instruction Sequence strips out Nop, leading to the expected single operation
+    assert len(instruction_seequence) == 3
+    assert instruction_seequence == [Add(a, b), Add(c, d), Mul(a + b, c + d)]
+
+
+def test_superoptimizer_quaternion_multiply():
+    a, b, c, d = symbols(["a", "b", "c", "d"])
+    w, x, y, z = symbols(["w", "x", "y", "z"])
+
+    expr = Quaternion(a, b, c, d, norm=1.0) * Quaternion(w, x, y, z, norm=1.0)
+
+    instruction_seequence, stats = superoptimizer(expr, [a, b, c, d, w, x, y, z])
 
     print("superoptimizer")
     print("result")
