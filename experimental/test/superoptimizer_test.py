@@ -133,7 +133,7 @@ def test_astar_full():
 
 def test_superoptimizer_result_exists():
     a = Symbol("a")
-    instruction_seequence, _ = superoptimizer(a, [a])
+    instruction_seequence, _ = superoptimizer([a], [a])
 
     assert instruction_seequence == []
 
@@ -141,7 +141,7 @@ def test_superoptimizer_result_exists():
 def test_superoptimizer_simple():
     a, b = symbols(["a", "b"])
     expr = a + b
-    instruction_seequence, stats = superoptimizer(expr, [a, b])
+    instruction_seequence, stats = superoptimizer([expr], [a, b])
 
     print("superoptimizer")
     print("result")
@@ -158,7 +158,7 @@ def test_superoptimizer_simple():
 def test_superoptimizer_two_op():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     expr = (a + b) * (c + d)
-    instruction_seequence, stats = superoptimizer(expr, [a, b, c, d])
+    instruction_seequence, stats = superoptimizer([expr], [a, b, c, d])
 
     print("superoptimizer")
     print("result")
@@ -178,9 +178,11 @@ def test_superoptimizer_quaternion_multiply():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     w, x, y, z = symbols(["w", "x", "y", "z"])
 
-    expr = Quaternion(a, b, c, d, norm=1.0) * Quaternion(w, x, y, z, norm=1.0)
+    quat = Quaternion(a, b, c, d, norm=1.0).mul(Quaternion(w, x, y, z, norm=1.0))
 
-    instruction_seequence, stats = superoptimizer(expr, [a, b, c, d, w, x, y, z])
+    instruction_seequence, stats = superoptimizer(
+        [quat.a, quat.b, quat.c, quat.d], [a, b, c, d, w, x, y, z]
+    )
 
     print("superoptimizer")
     print("result")

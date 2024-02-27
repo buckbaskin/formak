@@ -147,19 +147,33 @@ class Mul(BinOpBase):
         return hash(("Mul", self.l, self.r))
 
 
-def decompose_goal(expr: Expr):
-    for child in expr.args:
-        yield from decompose_goal(child)
+def decompose_goal(expr: Union[Expr, List[Expr]]):
+    if isinstance(expr, list):
+        for child in expr:
+            yield from decompose_goal(child)
+    elif expr.func == sympy.core.add.Add and len(expr.args) > 2:
+        # Incomplete Hack, in theory should allow for many trees of addition
+        # Also, this could become an invalid approximation if SIMD allows for adding, say 4x at a time
+        yield expr.args[0]
+        yield from decompose_goal(sympy.core.add.Add(*expr.args[1:]))
+    elif expr.func == sympy.core.mul.Mul and len(expr.args) > 2:
+        # Incomplete Hack, in theory should allow for many trees of multiplication
+        # Also, this could become an invalid approximation if SIMD allows for multiplying, say 4x at a time
+        yield expr.args[0]
+        yield from decompose_goal(sympy.core.mul.Mul(*expr.args[1:]))
+    else:
+        for child in expr.args:
+            yield from decompose_goal(child)
 
-    yield expr
+        yield expr
 
 
 class CpuState(StateBase):
     @classmethod
-    def Start(cls, free_symbols, goal_expr):
+    def Start(cls, free_symbols, goal_exprs):
         pipeline = (Nop(), Nop(), Nop())
 
-        goal_exprs = list(decompose_goal(goal_expr))
+        goal_exprs = list(decompose_goal(goal_exprs))
 
         return cls(
             cycle_count=0,
@@ -244,14 +258,14 @@ class InstructionAction(ActionBase):
 
 
 class GoalMultiState:
-    def __init__(self, target_expr):
-        self.target_expr = target_expr
+    def __init__(self, target_exprs):
+        self.target_exprs = target_exprs
 
     def __eq__(self, other):
         if not isinstance(other, CpuState):
             return False
 
-        if self.target_expr in other.computed_values:
+        if all(t in other.computed_values for t in self.target_exprs):
             return True
 
         return False
@@ -261,13 +275,11 @@ def heuristic(state: CpuState):
     return len(state.goal_exprs)
 
 
-def available(expr, computed_values):
-    if len(expr.args) != 2:
-        raise ValueError(f"Expression with args {len(expr.args)}: {expr}")
+def available(expr: Expr, computed_values: Iterable[Expr]) -> bool:
+    if expr.func == sympy.core.numbers.NegativeOne:
+        return True
 
-    l, r = expr.args
-
-    return l in computed_values and r in computed_values
+    return all(v in computed_values for v in expr.args)
 
 
 def available_edges(state: CpuState):
@@ -304,13 +316,15 @@ def transition(state: CpuState, action: InstructionAction):
     return state.cycle(action.instruction)
 
 
-def superoptimizer(expression, free_symbols):
+def superoptimizer(expressions: List[expr], free_symbols: List[Any]):
     assert (Nop(), Nop(), Nop()) == (Nop(), Nop(), Nop())
 
+    assert len(expressions) >= 1
     assert len(free_symbols) >= 1
+    free_symbols += [0, 1, -1]
 
-    initial_state = CpuState.Start(free_symbols, expression)
-    goal_state = GoalMultiState(expression)
+    initial_state = CpuState.Start(free_symbols=free_symbols, goal_exprs=expressions)
+    goal_state = GoalMultiState(expressions)
 
     instruction_seequence = astar(
         initial_state=initial_state,
