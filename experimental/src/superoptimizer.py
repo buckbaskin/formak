@@ -82,11 +82,8 @@ def astar(
 
         visited.add(state)
 
-        # print("Debug", "edges", list(edges(state)))
-
         for action in edges(state):
             next_state = transition(state, action)
-            # print("Debug", "transition", state, "->", next_state)
 
             frontier.append(
                 next_state,
@@ -163,21 +160,24 @@ class CpuState(StateBase):
         pipeline = (Nop(), Nop(), Nop())
 
         goal_exprs = list(decompose_goal(goal_expr))
-        print("Goal", goal_expr)
-        print("Decomposed")
-        print(goal_exprs)
 
-        return cls(pipeline, free_symbols, goal_exprs)
+        return cls(
+            cycle_count=0,
+            pipeline=pipeline,
+            free_symbols=free_symbols,
+            goal_exprs=goal_exprs,
+        )
 
     def __init__(
         self,
+        cycle_count: int,
         pipeline: List[InstructionBase],
         free_symbols: Iterable[Any],
         goal_exprs: List[Expr],
     ):
         self.instruction_set = (Add, Mul, Nop)
 
-        self.cycle_count = 0
+        self.cycle_count = cycle_count
 
         self.pipeline = pipeline
         self.computed_values = frozenset(free_symbols)
@@ -200,7 +200,7 @@ class CpuState(StateBase):
         return hash((self.pipeline, self.computed_values))
 
     def cycle(self, instruction):
-        self.cycle_count += 1
+        cycle_count = self.cycle_count + 1
 
         result, next_pipeline = self.pipeline[0], self.pipeline[1:] + (instruction,)
 
@@ -217,7 +217,12 @@ class CpuState(StateBase):
         next_goal = self.goal_exprs.difference(newly_computed)
 
         assert next_computed is not None
-        return CpuState(next_pipeline, next_computed, next_goal)
+        return CpuState(
+            cycle_count=cycle_count,
+            pipeline=next_pipeline,
+            free_symbols=next_computed,
+            goal_exprs=next_goal,
+        )
 
 
 class InstructionAction(ActionBase):
@@ -235,7 +240,7 @@ class InstructionAction(ActionBase):
         )
 
     def __repr__(self):
-        return f"InstructionAction({self.instruction}, {self.cost})"
+        return f"I_A_({self.instruction}, {self.cost})"
 
 
 class GoalMultiState:
@@ -243,7 +248,6 @@ class GoalMultiState:
         self.target_expr = target_expr
 
     def __eq__(self, other):
-        print("GoalMultiState __eq__")
         if not isinstance(other, CpuState):
             return False
 
@@ -267,7 +271,7 @@ def available(expr, computed_values):
 
 
 def available_edges(state: CpuState):
-    for expr in state.goal_exprs:
+    for expr in sorted(list(state.goal_exprs), key=lambda expr: str(expr)):
         if available(expr, state.computed_values):
 
             if expr.func == sympy.core.add.Add:
@@ -276,6 +280,15 @@ def available_edges(state: CpuState):
                 l, r = expr.args
 
                 candidate = InstructionAction(Add(l, r))
+
+                if candidate.instruction not in state.pipeline:
+                    yield candidate
+            elif expr.func == sympy.core.mul.Mul:
+                if len(expr.args) != 2:
+                    raise ValueError(f"Expression with args {len(expr.args)}: {expr}")
+                l, r = expr.args
+
+                candidate = InstructionAction(Mul(l, r))
 
                 if candidate.instruction not in state.pipeline:
                     yield candidate
@@ -293,6 +306,9 @@ def transition(state: CpuState, action: InstructionAction):
 
 def superoptimizer(expression, free_symbols):
     assert (Nop(), Nop(), Nop()) == (Nop(), Nop(), Nop())
+
+    assert len(free_symbols) >= 1
+
     initial_state = CpuState.Start(free_symbols, expression)
     goal_state = GoalMultiState(expression)
 
@@ -303,7 +319,14 @@ def superoptimizer(expression, free_symbols):
         heuristic=heuristic,
         edges=available_edges,
     )
-    print("superoptimizer")
-    print("result")
-    print(instruction_seequence)
-    1 / 0
+
+    stats = {
+        "cycle count": len(instruction_seequence),
+        "full": [a.instruction for a in instruction_seequence],
+    }
+
+    operations = [
+        a.instruction for a in instruction_seequence if a.instruction != Nop()
+    ]
+
+    return operations, stats

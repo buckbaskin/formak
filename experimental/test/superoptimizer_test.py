@@ -1,5 +1,5 @@
-from superoptimizer import superoptimizer, astar, StateBase, ActionBase
-from sympy import symbols
+from superoptimizer import superoptimizer, astar, StateBase, ActionBase, Add, Mul
+from sympy import symbols, Symbol
 from collections import namedtuple
 
 # A -> B
@@ -131,9 +131,44 @@ def test_astar_full():
     ]
 
 
-def test_superoptimizer():
+def test_superoptimizer_result_exists():
+    a = Symbol("a")
+    instruction_seequence, _ = superoptimizer(a, [a])
+
+    assert instruction_seequence == []
+
+
+def test_superoptimizer_simple():
     a, b = symbols(["a", "b"])
     expr = a + b
-    result = superoptimizer(expr, [a, b])
+    instruction_seequence, stats = superoptimizer(expr, [a, b])
 
-    assert result == ["add"]
+    print("superoptimizer")
+    print("result")
+    print(instruction_seequence)
+
+    # Cycle count includes time to pass operations through the full pipeline
+    assert stats["cycle count"] == 4
+
+    # Instruction Sequence strips out Nop, leading to the expected single operation
+    assert len(instruction_seequence) == 1
+    assert instruction_seequence == [Add(a, b)]
+
+
+def test_superoptimizer_simple():
+    a, b, c, d = symbols(["a", "b", "c", "d"])
+    expr = (a + b) * (c + d)
+    instruction_seequence, stats = superoptimizer(expr, [a, b, c, d])
+
+    print("superoptimizer")
+    print("result")
+    print(stats["full"])
+    print("minimized")
+    print(instruction_seequence)
+
+    # Cycle count includes time to pass operations through the full pipeline
+    assert stats["cycle count"] == 9
+
+    # Instruction Sequence strips out Nop, leading to the expected single operation
+    assert len(instruction_seequence) == 3
+    assert instruction_seequence == [Add(a, b), Add(c, d), Mul(a + b, c + d)]
