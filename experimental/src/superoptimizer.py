@@ -147,6 +147,27 @@ class Mul(BinOpBase):
         return hash(("Mul", self.l, self.r))
 
 
+def rewrite_expr(expr: Expr):
+    # leaf
+    if len(expr.args) == 0:
+        return expr
+
+    if expr.func == sympy.core.add.Add and len(expr.args) > 2:
+        return sympy.core.add.Add(
+            rewrite_expr(expr.args[0]),
+            rewrite_expr(sympy.core.add.Add(*expr.args[1:])),
+            evaluate=False,
+        )
+    if expr.func == sympy.core.mul.Mul and len(expr.args) > 2:
+        return sympy.core.mul.Mul(
+            rewrite_expr(expr.args[0]),
+            rewrite_expr(sympy.core.mul.Mul(*expr.args[1:])),
+            evaluate=False,
+        )
+
+    return expr.func(*[rewrite_expr(arg) for arg in expr.args])
+
+
 def decompose_goal(expr: Union[Expr, List[Expr]]):
     if isinstance(expr, list):
         for child in expr:
@@ -154,13 +175,11 @@ def decompose_goal(expr: Union[Expr, List[Expr]]):
     elif expr.func == sympy.core.add.Add and len(expr.args) > 2:
         # Incomplete Hack, in theory should allow for many trees of addition
         # Also, this could become an invalid approximation if SIMD allows for adding, say 4x at a time
-        yield expr.args[0]
-        yield from decompose_goal(sympy.core.add.Add(*expr.args[1:]))
+        yield from decompose_goal(rewrite_expr(expr))
     elif expr.func == sympy.core.mul.Mul and len(expr.args) > 2:
         # Incomplete Hack, in theory should allow for many trees of multiplication
         # Also, this could become an invalid approximation if SIMD allows for multiplying, say 4x at a time
-        yield expr.args[0]
-        yield from decompose_goal(sympy.core.mul.Mul(*expr.args[1:]))
+        yield from decompose_goal(rewrite_expr(expr))
     else:
         for child in expr.args:
             yield from decompose_goal(child)
