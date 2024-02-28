@@ -1,3 +1,6 @@
+import datetime
+import pytest
+
 from superoptimizer import superoptimizer, astar, StateBase, ActionBase, Add, Mul
 from sympy import symbols, Symbol, Quaternion
 from collections import namedtuple
@@ -158,7 +161,10 @@ def test_superoptimizer_simple():
 def test_superoptimizer_two_op():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     expr = (a + b) * (c + d)
+
+    start = datetime.datetime.now()
     instruction_seequence, stats = superoptimizer([expr], [a, b, c, d])
+    end = datetime.datetime.now()
 
     print("superoptimizer")
     print("result")
@@ -172,6 +178,8 @@ def test_superoptimizer_two_op():
     # Instruction Sequence strips out Nop, leading to the expected single operation
     assert len(instruction_seequence) == 3
     assert instruction_seequence == [Add(a, b), Add(c, d), Mul(a + b, c + d)]
+
+    raise AssertionError(f"Elapsed Time {(end - start).total_seconds()} seconds")
 
 
 def test_superoptimizer_quaternion_multiply():
@@ -180,19 +188,12 @@ def test_superoptimizer_quaternion_multiply():
 
     quat = Quaternion(a, b, c, d, norm=1.0).mul(Quaternion(w, x, y, z, norm=1.0))
 
-    instruction_seequence, stats = superoptimizer(
-        [quat.a, quat.b, quat.c, quat.d], [a, b, c, d, w, x, y, z]
-    )
+    start = datetime.datetime.now()
+    with pytest.raises(ValueError):
+        instruction_seequence, stats = superoptimizer(
+            [quat.a, quat.b, quat.c, quat.d], [a, b, c, d, w, x, y, z]
+        )
 
-    print("superoptimizer")
-    print("result")
-    print(stats["full"])
-    print("minimized")
-    print(instruction_seequence)
+    end = datetime.datetime.now()
 
-    # Cycle count includes time to pass operations through the full pipeline
-    assert stats["cycle count"] == 9
-
-    # Instruction Sequence strips out Nop, leading to the expected single operation
-    assert len(instruction_seequence) == 3
-    assert instruction_seequence == [Add(a, b), Add(c, d), Mul(a + b, c + d)]
+    raise AssertionError(f"Elapsed Time {(end - start).total_seconds()} seconds")
