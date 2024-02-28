@@ -2,7 +2,7 @@
 
 :Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
 :Created: 2024-02-14
-:Updated: 2024-02-14
+:Updated: 2024-02-27
 :Parent Design: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md)
 
 ## Overview
@@ -48,7 +48,7 @@ By taking a graph-based approach, the search algorithm A* (A-star) can be used t
 
 > a heuristic function is said to be **consistent**, …  if its estimate is always less than or equal to the estimated distance from any neighboring vertex to the goal, plus the cost of reaching that neighbor.
 
-The quick to compute part is relevant because the end to end search time could end up being slower if it’s faster to evaluate some large portion of the graph than to evaluate the heuristic function. In this case, given that the CPU model may grow to be somewhat complex, the heuristic should have a low hurdle to step over (or a high ceiling to step under?) to 
+The quick to compute part is relevant because the end to end search time could end up being slower if it’s faster to evaluate some large portion of the graph than to evaluate the heuristic function. In this case, given that the CPU model may grow to be somewhat complex, the heuristic should have a low hurdle to step over (or a high ceiling to step under?).
 
 ### CPU Model
 
@@ -86,3 +86,58 @@ subexpression elimination on its own.
 
 ## Post Review
 
+### 2024-02-27
+
+Overall, I'd say the experiment is a success. I added an `A*` implementation
+and did some code search with a CPU model.
+
+The key risks to keep an eye out for:
+1. Fully understanding the possible operations in use by sympy, and how that maps (almost but not quite 1:1) to the desired operations set
+2. Maximum runtime: the current version can go from fast for simple operations (<< 1 second) to very slow when it times out (10s of seconds)
+
+I'd be curious to do some more literature review to understand potential areas
+for improvements.
+
+In addition, a good heuristic seems essential to reduce states evaluated and
+overall performance would be important for the end user experience. Perhaps
+this is a flag that can be turned on for release builds (evaluating a slightly
+suboptimal model should probably be fine).
+
+#### Wins
+
+I'm really happy with the architectural approach/design of the astar
+implementation. I think it makes intuitive sense and has a nice functional
+programming aesthetic. That said, I've been plagued by nagging doubts that it
+may not be correct. Given the time-bounded experimental nature I didn't spend
+more time testing, but would like to in the future (e.g. make assertions on
+evaluating the minimum number of states for a small-to-medium complexity
+problem).
+
+#### Opportunities for improvements
+
+##### Multi-scale search
+
+If I have a set of expressions and the topological mapping between them, I can
+only evaluate the frontier of potential elements to evaluate for expressions
+that don't have topological dependencies (given the currently available set).
+This will play nicely with common subexpression elimination which generates the
+nice tree of values.
+
+Multi-scale search should also help with register spilling in that it'll put
+more constraints on the values to be evaluated, which should reduce the
+potential number of values "in-flight". With the topological mapping, a set of
+up to `number of registers` (maybe `number of registers / 2` for binary
+operations) functions can be evaluated in parallel via the
+[Coffman–Graham algorithm](https://en.wikipedia.org/wiki/Coffman%E2%80%93Graham_algorithm).
+This would lead to not starting to evaluate a new topological-level expression
+until at least one of the existing expressions is complete to minimize
+contention for registers. This would also add an additional benefit to the
+higher level search where the evaluation order of many potential expressions
+could have a benefit given the constraint on registers available.
+
+##### Python Compiler Tools
+
+Perhaps the state space evaluation or heuristic evaluation could reduce their
+execution time via numba or Cython. Previous evaluations of this approach
+didn't show a benefit proportional to the effort to maintain these
+dependencies, but maybe this time it's different.
