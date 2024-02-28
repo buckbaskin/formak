@@ -68,7 +68,6 @@ def gravitational_force(m_1, m_2, r):
 
 
 def test_orbital_example():
-
     vp = vehicle_properties = {k: ui.Symbol(k) for k in ["m", "x", "v", "a"]}
     fuel_burn_rate = ui.Symbol("fuel_burn_rate")
 

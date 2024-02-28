@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Experiment: Superoptimization &#8212; FormaK  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=89b800e6" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FormaK V0" href="formak_v0.html" />
+    <link rel="prev" title="Common Subexpression Elimination" href="cse.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Experiment: Superoptimization</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section class="tex2jax_ignore mathjax_ignore" id="experiment-superoptimization">
+<h1>Experiment: Superoptimization<a class="headerlink" href="#experiment-superoptimization" title="Permalink to this heading">¶</a></h1>
+<dl class="myst field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Buck Baskin <a class="reference external" href="https://fosstodon.org/&#64;buck">&#64;buck&#64;fosstodon.org</a></p>
+</dd>
+<dt class="field-even">Created<span class="colon">:</span></dt>
+<dd class="field-even"><p>2024-02-14</p>
+</dd>
+<dt class="field-odd">Updated<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2024-02-27</p>
+</dd>
+<dt class="field-even">Parent Design<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="python_library_for_model_evaluation.html"><span class="std std-doc">designs/python_library_for_model_evaluation.md</span></a></p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>FormaK aims to combine symbolic modeling for fast,
+efficient system modelling with code generation to create performant
+code that is easy to use.</p>
+<p>The Five Key Elements the library provides to achieve this user experience are:</p>
+<ol class="arabic simple">
+<li><p>Python Interface to define models</p></li>
+<li><p>Python implementation of the model and supporting tooling</p></li>
+<li><p>Integration to scikit-learn to leverage the model selection and parameter tuning functions</p></li>
+<li><p>C++ and Python to C++ interoperability for performance</p></li>
+<li><p>C++ interfaces to support a variety of model uses</p></li>
+</ol>
+<p>This design focuses on experimenting with the possible performance benefits from the straightforward (common subexpression elimination) to the magical: super-optimization.</p>
+<p>The performance is relevant in two key ways:</p>
+<ol class="arabic simple">
+<li><p>Evaluating the runtime of the output program vs the current system</p></li>
+<li><p>Evaluating the compile time of the super-optimizing program to see if it is sufficiently fast to be usable</p></li>
+</ol>
+<p>This design is experimental in nature, so the end goal is only to collect this data to establish a data point from which future work can proceed. There is no goal to have this design be a full feature of the project.</p>
+<section id="superoptimization">
+<h3>Superoptimization<a class="headerlink" href="#superoptimization" title="Permalink to this heading">¶</a></h3>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Superoptimization">Superoptimization</a> is the process of searching to find the optimal code sequence to compute a function.</p>
+<p>For this design, the approach will be to perform a search on the compute graph to find the sequence of operations that lead to the fastest possible computation. To do that search, a CPU model will be used to allow for mapping operations to a more detailed sense of time (vs assigning each operation a fixed time), primarily focusing on modeling memory latency and CPU pipelining. This will allow the search to model the state of the CPU at each instruction and have a better approximation of the total time to compute the sequence.</p>
+</section>
+</section>
+<section id="solution-approach">
+<h2>Solution Approach<a class="headerlink" href="#solution-approach" title="Permalink to this heading">¶</a></h2>
+<section id="search">
+<h3>Search<a class="headerlink" href="#search" title="Permalink to this heading">¶</a></h3>
+<p>By taking a graph-based approach, the search algorithm A* (A-star) can be used to speed up the search with heuristics. The key to using A* search effectively is a heuristic that is quick to compute, admissible and consistent.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Admissible_heuristic">Admissible</a></p>
+<blockquote>
+<div><p>a heuristic function is said to be <strong>admissible</strong> if it never overestimates the cost of reaching the goal, i.e. the cost it estimates to reach the goal is not higher than the lowest possible cost from the current point in the path</p>
+</div></blockquote>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Consistent_heuristic">Consistent</a></p>
+<blockquote>
+<div><p>a heuristic function is said to be <strong>consistent</strong>, …  if its estimate is always less than or equal to the estimated distance from any neighboring vertex to the goal, plus the cost of reaching that neighbor.</p>
+</div></blockquote>
+<p>The quick to compute part is relevant because the end to end search time could end up being slower if it’s faster to evaluate some large portion of the graph than to evaluate the heuristic function. In this case, given that the CPU model may grow to be somewhat complex, the heuristic should have a low hurdle to step over (or a high ceiling to step under?).</p>
+</section>
+<section id="cpu-model">
+<h3>CPU Model<a class="headerlink" href="#cpu-model" title="Permalink to this heading">¶</a></h3>
+<p>The CPU model used in this superoptimization will focus on a few key features of CPUs: pipelining of independent operations and memory load latency. This focus comes because the modeling of these two effects is approximately tractable and the two effects should have a straightforward implications for the output graph:</p>
+<ul class="simple">
+<li><p>If you can change the order of two compute operations so more are running in parallel via pipelining than the overall compute will be faster.</p></li>
+<li><p>If you can load some memory earlier, than later computations may not need to wait as long</p></li>
+</ul>
+<p>For kicks, they’re also parts of the CPU I’m interested in modeling.</p>
+</section>
+</section>
+<section id="feature-tests">
+<h2>Feature Tests<a class="headerlink" href="#feature-tests" title="Permalink to this heading">¶</a></h2>
+<p>The feature test for this will be setting up a simple compute graph and running
+the superoptimizer experiment on the graph. Given a simple-enough graph, it
+should be feasible to predetermine the optimal result and match it to the
+algorithm’s result.</p>
+<p>From there, the time to run the super-optimized version will be compared to the
+time to run the basic version (with common subexpression elimination) and the
+time to run the superoptimizer can be compared to the time to run the common
+subexpression elimination on its own.</p>
+</section>
+<section id="roadmap-and-process">
+<h2>Roadmap and Process<a class="headerlink" href="#roadmap-and-process" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Write a design</p></li>
+<li><p>Write a feature test(s)
+3A. Experiments
+3B. Build a simple prototype</p></li>
+<li><p>Pass feature tests</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Build an instructive prototype (e.g. something that looks like the project vision but doesn’t need to be the full thing)</p></li>
+<li><p>Add unit testing, etc</p></li>
+<li><p>Refactor/cleanup</p></li>
+<li><p>Write up successes, retro of what changed (so I can check for this in future designs)</p></li>
+</ol>
+</section>
+<section id="post-review">
+<h2>Post Review<a class="headerlink" href="#post-review" title="Permalink to this heading">¶</a></h2>
+<section id="id1">
+<h3>2024-02-27<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>Overall, I’d say the experiment is a success. I added an <code class="docutils literal notranslate"><span class="pre">A*</span></code> implementation
+and did some code search with a CPU model.</p>
+<p>The key risks to keep an eye out for:</p>
+<ol class="arabic simple">
+<li><p>Fully understanding the possible operations in use by sympy, and how that maps (almost but not quite 1:1) to the desired operations set</p></li>
+<li><p>Maximum runtime: the current version can go from fast for simple operations (&lt;&lt; 1 second) to very slow when it times out (10s of seconds)</p></li>
+</ol>
+<p>I’d be curious to do some more literature review to understand potential areas
+for improvements.</p>
+<p>In addition, a good heuristic seems essential to reduce states evaluated and
+overall performance would be important for the end user experience. Perhaps
+this is a flag that can be turned on for release builds (evaluating a slightly
+suboptimal model should probably be fine).</p>
+<section id="wins">
+<h4>Wins<a class="headerlink" href="#wins" title="Permalink to this heading">¶</a></h4>
+<p>I’m really happy with the architectural approach/design of the astar
+implementation. I think it makes intuitive sense and has a nice functional
+programming aesthetic. That said, I’ve been plagued by nagging doubts that it
+may not be correct. Given the time-bounded experimental nature I didn’t spend
+more time testing, but would like to in the future (e.g. make assertions on
+evaluating the minimum number of states for a small-to-medium complexity
+problem).</p>
+</section>
+<section id="opportunities-for-improvements">
+<h4>Opportunities for improvements<a class="headerlink" href="#opportunities-for-improvements" title="Permalink to this heading">¶</a></h4>
+<section id="multi-scale-search">
+<h5>Multi-scale search<a class="headerlink" href="#multi-scale-search" title="Permalink to this heading">¶</a></h5>
+<p>If I have a set of expressions and the topological mapping between them, I can
+only evaluate the frontier of potential elements to evaluate for expressions
+that don’t have topological dependencies (given the currently available set).
+This will play nicely with common subexpression elimination which generates the
+nice tree of values.</p>
+<p>Multi-scale search should also help with register spilling in that it’ll put
+more constraints on the values to be evaluated, which should reduce the
+potential number of values “in-flight”. With the topological mapping, a set of
+up to <code class="docutils literal notranslate"><span class="pre">number</span> <span class="pre">of</span> <span class="pre">registers</span></code> (maybe <code class="docutils literal notranslate"><span class="pre">number</span> <span class="pre">of</span> <span class="pre">registers</span> <span class="pre">/</span> <span class="pre">2</span></code> for binary
+operations) functions can be evaluated in parallel via the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Coffman%E2%80%93Graham_algorithm">Coffman–Graham algorithm</a>.
+This would lead to not starting to evaluate a new topological-level expression
+until at least one of the existing expressions is complete to minimize
+contention for registers. This would also add an additional benefit to the
+higher level search where the evaluation order of many potential expressions
+could have a benefit given the constraint on registers available.</p>
+</section>
+<section id="python-compiler-tools">
+<h5>Python Compiler Tools<a class="headerlink" href="#python-compiler-tools" title="Permalink to this heading">¶</a></h5>
+<p>Perhaps the state space evaluation or heuristic evaluation could reduce their
+execution time via numba or Cython. Previous evaluations of this approach
+didn’t show a benefit proportional to the effort to maintain these
+dependencies, but maybe this time it’s different.</p>
+</section>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Experiment: Superoptimization</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#superoptimization">Superoptimization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solution-approach">Solution Approach</a><ul>
+<li><a class="reference internal" href="#search">Search</a></li>
+<li><a class="reference internal" href="#cpu-model">CPU Model</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#feature-tests">Feature Tests</a></li>
+<li><a class="reference internal" href="#roadmap-and-process">Roadmap and Process</a></li>
+<li><a class="reference internal" href="#post-review">Post Review</a><ul>
+<li><a class="reference internal" href="#id1">2024-02-27</a><ul>
+<li><a class="reference internal" href="#wins">Wins</a></li>
+<li><a class="reference internal" href="#opportunities-for-improvements">Opportunities for improvements</a><ul>
+<li><a class="reference internal" href="#multi-scale-search">Multi-scale search</a></li>
+<li><a class="reference internal" href="#python-compiler-tools">Python Compiler Tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="cse.html"
+                          title="previous chapter">Common Subexpression Elimination</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="formak_v0.html"
+                          title="next chapter">FormaK V0</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/designs/experiment_superoptimizer.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="formak_v0.html" title="FormaK V0"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cse.html" title="Common Subexpression Elimination"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">FormaK  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Design Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Experiment: Superoptimization</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Buck Baskin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    </div>
+  </body>
+</html>

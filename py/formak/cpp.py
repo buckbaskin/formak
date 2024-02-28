@@ -662,7 +662,6 @@ class ExtendedKalmanFilter:
 def _generate_model_function_bodies(
     header_location, namespace, symbolic_model, calibration_map, config
 ):
-
     # For .../generated/formak/xyz.h
     # I want formak/xyz.h , so strip a leading generated prefix if present
     if header_location is not None and "generated/" in header_location:

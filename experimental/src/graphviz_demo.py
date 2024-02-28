@@ -79,7 +79,6 @@ def enumerate_multiple(exprs, subgraph_name="<>", *, path=None):
 
 
 def main():
-
     v1, v2 = make_expr()
 
     dot = Digraph(comment="Compute Graph")

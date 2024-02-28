@@ -77,7 +77,6 @@ def stream_sample():
 
 
 def starting_rotation():
-
     att_dcm_CON_IMU = np.array(
         [
             [-0.2477, -0.1673, 0.9543],

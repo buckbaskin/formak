@@ -1,10 +1,10 @@
 # Hyper-parameter Selection
 
-Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
-Created: 2023-11-08
-Updated: 2023-11-08
-Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
-See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/innovation_filtering.md](../designs/innovation_filtering.md)
+:Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
+:Created: 2023-11-08
+:Updated: 2023-11-08
+:Parent Design: [designs/sklearn-integration.md](../designs/sklearn-integration.md)
+:See Also: [designs/python_library_for_model_evaluation.md](../designs/python_library_for_model_evaluation.md), [designs/innovation_filtering.md](../designs/innovation_filtering.md)
 
 
 ## Overview

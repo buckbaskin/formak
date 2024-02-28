@@ -99,7 +99,6 @@ class BasicBlock:
         ]
 
     def execute(self, *args, **kwargs):
-
         # Note: The list of statements is ordered and can get CSE or reordered within the block because we know it is straight calculation without control flow (a basic block)
         temporary_values = {}
         for name, expr in self._prefix:
