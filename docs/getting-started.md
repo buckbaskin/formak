@@ -1,6 +1,6 @@
 # Getting Started for Users
 
-Check out `demo/src/orbital_model.py` for an example model and use.
+Check out `demo/src/symbolic_model.py` for an example model and use.
 
 Some highlights:
 
@@ -46,6 +46,9 @@ appropriate parameters.
     # Export the refined model. Note: not a state transition
     python_model = manager.export_python()
 ```
+
+Check out `demo/` for additional examples and `featuretests/` for examples of
+specific features.
 
 # Getting Started For Developers
 
