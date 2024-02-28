@@ -182,6 +182,35 @@ def test_superoptimizer_two_op():
     raise AssertionError(f"Elapsed Time {(end - start).total_seconds()} seconds")
 
 
+def test_superoptimizer_two_op_full_pipeline():
+    def make_expr(prefix):
+        a, b, c, d = symbols([f"{prefix}a", f"{prefix}b", f"{prefix}c", f"{prefix}d"])
+        expr = (a + b) * (c + d)
+        return expr
+
+    exprs = [make_expr("one"), make_expr("two"), make_expr("three")]
+    free_symbols = list(set().union(*[e.free_symbols for e in exprs]))
+
+    start = datetime.datetime.now()
+    instruction_seequence, stats = superoptimizer(exprs, free_symbols)
+    end = datetime.datetime.now()
+
+    print("superoptimizer")
+    print("result")
+    print(stats["full"])
+    print("minimized")
+    print(instruction_seequence)
+
+    # Cycle count includes time to pass operations through the full pipeline
+    assert stats["cycle count"] == 9
+
+    # Instruction Sequence strips out Nop, leading to the expected single operation
+    assert len(instruction_seequence) == 3
+    assert instruction_seequence == [Add(a, b), Add(c, d), Mul(a + b, c + d)]
+
+    raise AssertionError(f"Elapsed Time {(end - start).total_seconds()} seconds")
+
+
 def test_superoptimizer_quaternion_multiply():
     a, b, c, d = symbols(["a", "b", "c", "d"])
     w, x, y, z = symbols(["w", "x", "y", "z"])
