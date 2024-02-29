@@ -223,7 +223,11 @@ class CpuState(StateBase):
         if not isinstance(other, type(self)):
             return False
 
-        return (self.pipeline, self.computed_values, self.goal_exprs,) == (
+        return (
+            self.pipeline,
+            self.computed_values,
+            self.goal_exprs,
+        ) == (
             other.pipeline,
             other.computed_values,
             other.goal_exprs,
@@ -240,9 +244,9 @@ class CpuState(StateBase):
         if isinstance(result, Nop):
             newly_computed = set()
         elif isinstance(result, Add):
-            newly_computed = set([result.l + result.r])
+            newly_computed = {result.l + result.r}
         elif isinstance(result, Mul):
-            newly_computed = set([result.l * result.r])
+            newly_computed = {result.l * result.r}
         else:
             raise TypeError(f"Misconfigured Instruction Type {type(result)}")
 
@@ -304,7 +308,6 @@ def available(expr: Expr, computed_values: Iterable[Expr]) -> bool:
 def available_edges(state: CpuState):
     for expr in sorted(list(state.goal_exprs), key=lambda expr: str(expr)):
         if available(expr, state.computed_values):
-
             if expr.func == sympy.core.add.Add:
                 if len(expr.args) != 2:
                     raise ValueError(f"Expression with args {len(expr.args)}: {expr}")
