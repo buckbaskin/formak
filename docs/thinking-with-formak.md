@@ -21,8 +21,10 @@ For an Model, there are 4 inter-related concepts at play:
 
 An EKF adds:
 - Process Model definition (see Model Definition)
+    - A process model indicates how to update estimates about the model through changes in time
 	- Process Noise: How much variability do we expect around our control input?
 - Sensor Models: How does the state relate to incoming sensor data?
+    - A sensor model indicates how to update estimates about the model through feedback
 	- Sensor Noise: How much variability do we expect for the incoming sensor data?
 
 How do these relate to each other?
@@ -42,14 +44,37 @@ state vector or simplifying the state vector.
 
 ### ManagedFilter
 
+FormaK is a... runtime with synchronization tools
+
 If you find yourself manually constructing sensor readings, sensor maps,
 control inputs and then calling the processs model or sensor model, consider if
 your use case could be served by a `ManagedFilter` instead.
 
 If you pass in the sensors and control information, the `ManagedFilter` will
-take care of the rest. This reduces code complexity for you and opens the
-opportunity to adapt additional benefits as well.
+take care of the rest, including synchronizing your sensor readings. This
+reduces code complexity for you and opens the opportunity to adopt additional
+benefits as well.
 
 If `ManagedFilter` isn't serving your use case, please reach out to
-formak.open.source@gmail.com . I'd love to learn more about your use case and
-see if it's something that can be supported by the library.
+formak.open.source@gmail.com or submit an issue via
+[Github](https://github.com/buckbaskin/formak/issues). I'd love to learn more
+about your use case and see if it's something that can be supported by the
+library.
+
+### DesignManager
+
+FormaK is a... optimizer
+
+If you find yourself manually tuning parameters for your model or trying to
+select between model candidates, consider if your use case could be served by
+the `DesignManager` instead for performing hyperparameter tuning.
+
+The `DesignManager` organizes a flow for defining the symbolic model, then
+selecting parameters for it based on data, then compiling to the desired
+implementation.
+
+If `DesignManager` isn't serving your use case, please reach out to
+formak.open.source@gmail.com or submit an issue via
+[Github](https://github.com/buckbaskin/formak/issues). I'd love to learn more
+about your use case and see if it's something that can be supported by the
+library.
