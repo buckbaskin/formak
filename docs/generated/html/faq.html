@@ -55,6 +55,30 @@ first model</p>
 <p>See the <a class="reference external" href="https://github.com/buckbaskin/formak/tree/main/demo">demo/</a> directory
 for introductory examples.</p>
 </section>
+<section id="how-would-you-recommend-to-handle-different-rates-and-possibly-lack-of-exact-synchronization-for-the-models-which-formak-produces">
+<h2>How would you recommend to handle different rates and possibly lack of exact synchronization for the models which FormaK produces?<a class="headerlink" href="#how-would-you-recommend-to-handle-different-rates-and-possibly-lack-of-exact-synchronization-for-the-models-which-formak-produces" title="Permalink to this heading">¶</a></h2>
+<p>If you pass in the sensors and control information, the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> will
+take care of the rest, including synchronizing your sensor readings. This
+reduces code complexity for you and opens the opportunity to adopt additional
+benefits as well.</p>
+<p>In the
+<a class="reference external" href="https://github.com/buckbaskin/formak/commit/f7b5267ae81494b4327d66f3152f915d0fa4c5c9">current version</a>
+of the library, there is manual work required to perform synchronization. The
+outline of the algorithm I’d recommend is:</p>
+<ol class="arabic simple">
+<li><p>Maintain a clock reference for publishing time</p></li>
+<li><p>Queue inputs as they arrive (e.g. as ROS messages from subscribers), sorted by time</p></li>
+<li><p>At the desired output rate, take the front of the message queue that are at or before the desired reference time</p></li>
+<li><p>Pass that list/vector as input to the FormaK <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> <code class="docutils literal notranslate"><span class="pre">.tick</span></code> method (<code class="docutils literal notranslate"><span class="pre">managed.tick(reference_time,</span> <span class="pre">list_of_messages)</span></code>) and the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> will process the messages according to their time stamp using the process model to shift in time and align with the stamped time</p></li>
+<li><p>The output from the <code class="docutils literal notranslate"><span class="pre">tick</span></code> function will be the estimate of the filter for all of the messages up to the reference time</p></li>
+</ol>
+<p><a class="reference external" href="https://github.com/buckbaskin/formak/blob/f7b5267ae81494b4327d66f3152f915d0fa4c5c9/py/test/unit/runtime/ManagedFilter_no_calibration_test.py#L218">Example usage of the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> class</a></p>
+<p>If <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> isn’t serving your use case, please reach out to
+<a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a> or submit an issue via
+<a class="reference external" href="https://github.com/buckbaskin/formak/issues">Github</a>. I’d love to learn more
+about your use case and see if it’s something that can be supported by the
+library.</p>
+</section>
 </section>
 
 
@@ -70,6 +94,7 @@ for introductory examples.</p>
 <li><a class="reference internal" href="#">Frequently Asked Questions</a><ul>
 <li><a class="reference internal" href="#how-do-i-get-started-creating-a-model">How do I get started creating a model?</a></li>
 <li><a class="reference internal" href="#where-can-i-find-introductory-examples">Where can I find introductory examples?</a></li>
+<li><a class="reference internal" href="#how-would-you-recommend-to-handle-different-rates-and-possibly-lack-of-exact-synchronization-for-the-models-which-formak-produces">How would you recommend to handle different rates and possibly lack of exact synchronization for the models which FormaK produces?</a></li>
 </ul>
 </li>
 </ul>

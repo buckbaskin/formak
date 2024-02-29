@@ -68,11 +68,13 @@ taking the model through different stages of development.</p>
 <ul class="simple">
 <li><p>Process Model definition (see Model Definition)</p>
 <ul>
+<li><p>A process model indicates how to update estimates about the model through changes in time</p></li>
 <li><p>Process Noise: How much variability do we expect around our control input?</p></li>
 </ul>
 </li>
 <li><p>Sensor Models: How does the state relate to incoming sensor data?</p>
 <ul>
+<li><p>A sensor model indicates how to update estimates about the model through feedback</p></li>
 <li><p>Sensor Noise: How much variability do we expect for the incoming sensor data?</p></li>
 </ul>
 </li>
@@ -96,15 +98,34 @@ state vector or simplifying the state vector.</p>
 <h2>Patterns and Anti-Patterns<a class="headerlink" href="#patterns-and-anti-patterns" title="Permalink to this heading">¶</a></h2>
 <section id="managedfilter">
 <h3>ManagedFilter<a class="headerlink" href="#managedfilter" title="Permalink to this heading">¶</a></h3>
+<p>FormaK is a… runtime with synchronization tools</p>
 <p>If you find yourself manually constructing sensor readings, sensor maps,
 control inputs and then calling the processs model or sensor model, consider if
 your use case could be served by a <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> instead.</p>
 <p>If you pass in the sensors and control information, the <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> will
-take care of the rest. This reduces code complexity for you and opens the
-opportunity to adapt additional benefits as well.</p>
+take care of the rest, including synchronizing your sensor readings. This
+reduces code complexity for you and opens the opportunity to adopt additional
+benefits as well.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">ManagedFilter</span></code> isn’t serving your use case, please reach out to
-<a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a> . I’d love to learn more about your use case and
-see if it’s something that can be supported by the library.</p>
+<a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a> or submit an issue via
+<a class="reference external" href="https://github.com/buckbaskin/formak/issues">Github</a>. I’d love to learn more
+about your use case and see if it’s something that can be supported by the
+library.</p>
+</section>
+<section id="designmanager">
+<h3>DesignManager<a class="headerlink" href="#designmanager" title="Permalink to this heading">¶</a></h3>
+<p>FormaK is a… optimizer</p>
+<p>If you find yourself manually tuning parameters for your model or trying to
+select between model candidates, consider if your use case could be served by
+the <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> instead for performing hyperparameter tuning.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> organizes a flow for defining the symbolic model, then
+selecting parameters for it based on data, then compiling to the desired
+implementation.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">DesignManager</span></code> isn’t serving your use case, please reach out to
+<a class="reference external" href="mailto:formak&#46;open&#46;source&#37;&#52;&#48;gmail&#46;com">formak<span>&#46;</span>open<span>&#46;</span>source<span>&#64;</span>gmail<span>&#46;</span>com</a> or submit an issue via
+<a class="reference external" href="https://github.com/buckbaskin/formak/issues">Github</a>. I’d love to learn more
+about your use case and see if it’s something that can be supported by the
+library.</p>
 </section>
 </section>
 </section>
@@ -122,6 +143,7 @@ see if it’s something that can be supported by the library.</p>
 <li><a class="reference internal" href="#">Thinking With FormaK</a><ul>
 <li><a class="reference internal" href="#patterns-and-anti-patterns">Patterns and Anti-Patterns</a><ul>
 <li><a class="reference internal" href="#managedfilter">ManagedFilter</a></li>
+<li><a class="reference internal" href="#designmanager">DesignManager</a></li>
 </ul>
 </li>
 </ul>

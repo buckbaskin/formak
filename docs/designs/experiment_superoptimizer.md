@@ -140,7 +140,7 @@ more time testing, but would like to in the future (e.g. make assertions on
 evaluating the minimum number of states for a small-to-medium complexity
 problem).
 
-#### Opportunities for improvements
+#### Opportunities for Improvement
 
 ##### Multi-scale search
 
