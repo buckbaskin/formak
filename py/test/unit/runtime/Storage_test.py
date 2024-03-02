@@ -1,6 +1,19 @@
 from formak.runtime import RollbackOptions, Storage, StorageLayout
+from numpy.testing import assert_allclose
 
 Row = StorageLayout
+
+
+def assert_storage_close(actual, desired):
+    assert len(actual) == len(desired)
+
+    for (left_idx, left_value), (right_idx, right_value) in zip(actual, desired):
+        assert left_idx == right_idx
+
+        assert_allclose(left_value.time, right_value.time)
+        assert left_value.state == right_value.state
+        assert left_value.covariance == right_value.covariance
+        assert left_value.sensors == right_value.sensors
 
 
 def test_constructor():
@@ -121,7 +134,7 @@ def test_exact_match_insert():
 def test_inexact_match_insert_before_first():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -143,17 +156,20 @@ def test_inexact_match_insert_before_first():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time, -state, -covariance, ["A", "B", "C"])),
-        (1, Row(time + 1, state, covariance, ["A"])),
-        (2, Row(time + 2, state, covariance, ["A"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time, -state, -covariance, ["A", "B", "C"])),
+            (1, Row(time + 1, state, covariance, ["A"])),
+            (2, Row(time + 2, state, covariance, ["A"])),
+        ],
+    )
 
 
 def test_inexact_match_insert_after_first():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -175,17 +191,20 @@ def test_inexact_match_insert_after_first():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time, -state, -covariance, ["A", "B", "C"])),
-        (1, Row(time + 1, state, covariance, ["A"])),
-        (2, Row(time + 2, state, covariance, ["A"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time, -state, -covariance, ["A", "B", "C"])),
+            (1, Row(time + 1, state, covariance, ["A"])),
+            (2, Row(time + 2, state, covariance, ["A"])),
+        ],
+    )
 
 
 def test_inexact_match_insert_before_mid():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -207,17 +226,20 @@ def test_inexact_match_insert_before_mid():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time - 1, state, covariance, ["A"])),
-        (1, Row(time, -state, -covariance, ["A", "B", "C"])),
-        (2, Row(time + 1, state, covariance, ["A"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time - 1, state, covariance, ["A"])),
+            (1, Row(time, -state, -covariance, ["A", "B", "C"])),
+            (2, Row(time + 1, state, covariance, ["A"])),
+        ],
+    )
 
 
 def test_inexact_match_insert_after_mid():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -239,17 +261,20 @@ def test_inexact_match_insert_after_mid():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time - 1, state, covariance, ["A"])),
-        (1, Row(time, -state, -covariance, ["A", "B", "C"])),
-        (2, Row(time + 1, state, covariance, ["A"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time - 1, state, covariance, ["A"])),
+            (1, Row(time, -state, -covariance, ["A", "B", "C"])),
+            (2, Row(time + 1, state, covariance, ["A"])),
+        ],
+    )
 
 
 def test_inexact_match_insert_before_end():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -271,17 +296,20 @@ def test_inexact_match_insert_before_end():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time - 2, state, covariance, ["A"])),
-        (1, Row(time - 1, state, covariance, ["A"])),
-        (2, Row(time, -state, -covariance, ["A", "B", "C"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time - 2, state, covariance, ["A"])),
+            (1, Row(time - 1, state, covariance, ["A"])),
+            (2, Row(time, -state, -covariance, ["A", "B", "C"])),
+        ],
+    )
 
 
 def test_inexact_match_insert_after_end():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
-    time = 1.03
+    time = 1.1
     state = 2
     covariance = 3
     sensors = ("A",)
@@ -303,8 +331,11 @@ def test_inexact_match_insert_after_end():
     #   - state overwriten
     #   - covariance overwriten
     #   - sensors extended
-    assert list(data.scan()) == [
-        (0, Row(time - 2, state, covariance, ["A"])),
-        (1, Row(time - 1, state, covariance, ["A"])),
-        (2, Row(time, -state, -covariance, ["A", "B", "C"])),
-    ]
+    assert_storage_close(
+        list(data.scan()),
+        [
+            (0, Row(time - 2, state, covariance, ["A"])),
+            (1, Row(time - 1, state, covariance, ["A"])),
+            (2, Row(time, -state, -covariance, ["A", "B", "C"])),
+        ],
+    )

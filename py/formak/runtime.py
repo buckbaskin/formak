@@ -124,38 +124,28 @@ class Storage:
         covariance: Optional[Any],
         sensors: Optional[List[Any]],
     ):
-        print("Storage.store")
+        time = round(time / self.options.time_resolution) * self.options.time_resolution
+
         insertion_index = bisect_left(self.data, time, key=lambda e: e.time)
-        print("insert", time, "guess", insertion_index, "data")
-        print([e.time for e in self.data])
-        print(
-            f"inserting at {insertion_index} in range {insertion_index-1}:{insertion_index+2}",
-            [e.time for e in self.data[insertion_index - 1 : insertion_index + 2]],
-        )
 
         row = StorageLayout(
-            time=time, state=state, covariance=covariance, sensors=list(sensors)
+            time=round(time / self.options.time_resolution)
+            * self.options.time_resolution,
+            state=state,
+            covariance=covariance,
+            sensors=list(sensors),
         )
 
-        # TODO: testing: insert before range, insert after range, insert middle
-        # of range, insert w/ exact matching time, insert within time
-        # resolution
-
-        # TODO: test the following logic
-        # Instead of blindly inserting, check if there's a time match.
-        # If no match, insert
-        # If match, update state, covariance, append sensors
         if len(self.data) > 0:
             # compare to last element if you would insert at the end of the list
             update_index = min(len(self.data) - 1, insertion_index)
 
-            candidate_time = round(
+            candidate_time_step = round(
                 self.data[update_index].time / self.options.time_resolution
             )
-            insert_time = round(time / self.options.time_resolution)
-            print("resolution match?", candidate_time, insert_time)
+            insert_time_step = round(time / self.options.time_resolution)
 
-            if insert_time == candidate_time:
+            if insert_time_step == candidate_time_step:
                 self._update(update_index, row)
                 return
 
