@@ -7,22 +7,113 @@ Passes if the rollback updates as expected the state
 """
 
 from collections import namedtuple
-from typing import Optional, List
+from typing import Optional, List, Any
 from formak.runtime import ManagedFilter, StampedReading, StateAndVariance
 from formak.python import Config
 from math import floor
+from bisect import bisect_left, bisect_right
+from dataclasses import dataclass
 
 RollbackOptions = namedtuple(
-    "RollbackOptions", ["max_history", "max_memory", "max_time"]
+    "RollbackOptions",
+    ["max_history", "max_memory", "max_time", "time_resolution"],
+    defaults=(None, None, None, 1e-9),
 )
+
+StorageLayout = namedtuple("StorageLayout", ["time", "state", "covariance", "sensors"])
+
+
+class Storage:
+    def __init__(self):
+        self.data = []
+        self.options = RollbackOptions()
+
+    def store(
+        self,
+        time: float,
+        state: Optional[Any],
+        covariance: Optional[Any],
+        sensors: Optional[Any],
+    ):
+        insertion_index = bisect_left(self.data, time, key=lambda e: e.time)
+        print(
+            f"inserting at {insertion_index} in range {insertion_index-1}:{insertion_index+1}",
+            [e.time for e in self.data[insertion_index - 1 : insertion_index + 1]],
+        )
+
+        row = StorageLayout(
+            time=time, state=state, covariance=covariance, sensors=sensors
+        )
+
+        # TODO: testing: insert before range, insert after range, insert middle
+        # of range, insert w/ exact matching time, insert within time
+        # resolution
+
+        # TODO: test the following logic
+        # Instead of blindly inserting, check if there's a time match.
+        # If no match, insert
+        # If match, update state, covariance, append sensors
+        if len(self.data) > 0:
+            candidate_time = round(
+                self.data[insertion_index].time / self.options.time_resolution
+            )
+            insert_time = round(time / self.options.time_resolution)
+            print("resolution match?", candidate_time, insert_time)
+
+            if insert_time == candidate_time:
+                self._update(insertion_index, row)
+                return
+
+        self._insert(insertion_index, row)
+
+    def _insert(self, idx, row):
+        self.data.insert(
+            idx,
+            row,
+        )
+
+    def load(self, time: float):
+        """
+        Load the latest time equal to or before the given time.
+        If there are no entries before the given time, load the first entry.
+        """
+        assert isinstance(time, (float, int))
+        # TODO: this might need to scan forwards or backwards to get a state or a time with a state, covariance?
+        retrieval_index = bisect_left(self.data, time, key=lambda e: e.time)
+        print(
+            "retrieve target",
+            time,
+            "retrieval_index",
+            retrieval_index,
+            "data before insertion",
+            [e.time for e in self.data],
+        )
+        retrieval_index = min(len(self.data) - 1, retrieval_index)
+        return self.data[retrieval_index]
+
+    def scan(self, start_time, end_time):
+        # TODO: check these for off-by-ones
+        start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
+        end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
+
+        yield from enumerate(self.data[start_index:end_index])
 
 
 class ManagedRollback:
-    def __init__(self, ekf, start_time: float, state, covariance, calibration_map=None):
+    def __init__(
+        self,
+        ekf,
+        start_time: float,
+        state,
+        covariance,
+        calibration_map=None,
+        *,
+        storage=None,
+    ):
         self._impl = ekf
-        self.current_time = start_time
-        self.state = state
-        self.covariance = covariance
+        self.storage = storage if storage is not None else Storage()
+
+        self.storage.store(start_time, state, covariance, sensors=[])
         self.calibration_map = calibration_map
 
     def tick(
@@ -35,16 +126,64 @@ class ManagedRollback:
         """
         Returns (state, variance) tuple
         """
-        # error handling (e.g. max time, max states, etc)
+        # TODO: error handling (e.g. max time, max states, etc)
 
-        # sort readings by time
+        if control is None and self._impl.control_size > 0:
+            raise TypeError(
+                "TypeError: tick() missing 1 required positional argument: 'control'"
+            )
+        if readings is None:
+            readings = []
+
+        # if no readings, then just process forward from the last state before the output time
+        start_time = output_time
+        if len(readings) > 0:
+            start_time = min(readings, key=lambda r: r.timestamp).timestamp
+
+        # TODO: test the following
+        # Important: **before** inserting the current readings to process, load
+        # the state at/before the first reading. That way you don't
+        # accidentally load the state that was inserted from the first reading
 
         # load first state before first reading time
+        # ignore sensors, they're already included in the state-covariance
+        self.current_time, self.state, self.covariance, _ = self.storage.load(
+            start_time
+        )
+
+        # implicitly sorts readings by time introducing them into the global state queue
+        for reading in readings:
+            self.storage.store(
+                reading.timestamp, state=None, covariance=None, sensors=[reading]
+            )
 
         # for each reading:
         #   process model to reading time
-        #   sensor update at reading time
+        #   sensor update at reading time for all sensor readings
         #   save state after sensor update at reading time
+        for idx, (sensor_time, _, _, sensors) in self.storage.scan(
+            start_time, output_time
+        ):
+            self.current_time, (self.state, self.covariance) = self._process_model(
+                sensor_time,
+                control=control,
+            )
+
+            for sensor_reading in sensors:
+                (self.state, self.covariance) = self._impl.sensor_model(
+                    state=self.state,
+                    covariance=self.covariance,
+                    sensor_key=sensor_reading.sensor_key,
+                    sensor_reading=sensor_reading._data,
+                )
+
+            # TODO: this line/assignment to overwrite feels like it should be a method in the Storage class
+            self.storage.data[idx] = StorageLayout(
+                time=sensor_time,
+                state=self.state,
+                covariance=self.covariance,
+                sensors=sensors,
+            )
 
         # process model to output time
         _, state_and_variance = self._process_model(output_time, control)
@@ -75,14 +214,22 @@ class ManagedRollback:
         return output_time, StateAndVariance(state, covariance)
 
 
+@dataclass
+class IllustratorState:
+    time: float
+    queue: List[str]
+
+
 class Illustrator:
     config = Config()
+    control_size = 0
 
     def process_model(self, dt, state, covariance, control):
+        state.time += dt
         return state, covariance
 
     def sensor_model(self, state, covariance, sensor_key, sensor_reading):
-        state.append(sensor_reading)
+        state.queue.append(sensor_reading)
         return state, covariance
 
 
@@ -103,7 +250,7 @@ def test_rollback_basic_comparative():
     """
 
     rollback = ManagedRollback(
-        ekf=Illustrator(), start_time=0, state=[], covariance=None
+        ekf=Illustrator(), start_time=0, state=IllustratorState(0, []), covariance=None
     )
 
     rollback.tick(1, readings=[StampedReading(1, "A")])
@@ -113,7 +260,7 @@ def test_rollback_basic_comparative():
         4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
     )
 
-    assert rollback_state == ["A", "B", "C", "D"]
+    assert rollback_state.queue == ["A", "B", "C", "D"]
 
     mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=[], covariance=None)
 
@@ -122,4 +269,4 @@ def test_rollback_basic_comparative():
     mf.tick(3, readings=[StampedReading(3, "C")])
     mf_state, _ = mf.tick(4, readings=[StampedReading(4, "D"), StampedReading(2, "B")])
 
-    assert mf_state != ["A", "B", "C", "D"]
+    assert mf_state.queue != ["A", "B", "C", "D"]
