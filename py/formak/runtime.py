@@ -122,16 +122,19 @@ class Storage:
         time: float,
         state: Optional[Any],
         covariance: Optional[Any],
-        sensors: Optional[Any],
+        sensors: Optional[List[Any]],
     ):
+        print("Storage.store")
         insertion_index = bisect_left(self.data, time, key=lambda e: e.time)
+        print("insert", time, "guess", insertion_index, "data")
+        print([e.time for e in self.data])
         print(
-            f"inserting at {insertion_index} in range {insertion_index-1}:{insertion_index+1}",
-            [e.time for e in self.data[insertion_index - 1 : insertion_index + 1]],
+            f"inserting at {insertion_index} in range {insertion_index-1}:{insertion_index+2}",
+            [e.time for e in self.data[insertion_index - 1 : insertion_index + 2]],
         )
 
         row = StorageLayout(
-            time=time, state=state, covariance=covariance, sensors=sensors
+            time=time, state=state, covariance=covariance, sensors=list(sensors)
         )
 
         # TODO: testing: insert before range, insert after range, insert middle
