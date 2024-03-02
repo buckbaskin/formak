@@ -164,6 +164,18 @@ class Storage:
             row,
         )
 
+    def _update(self, idx, row):
+        existing_time = self.data[idx].time
+        existing_sensors = self.data[idx].sensors
+        existing_sensors.extend(row.sensors)
+
+        self.data[idx] = StorageLayout(
+            time=existing_time,
+            state=row.state,
+            covariance=row.covariance,
+            sensors=existing_sensors,
+        )
+
     def load(self, time: float):
         """
         Load the latest time equal to or before the given time.
