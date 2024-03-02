@@ -110,9 +110,12 @@ StorageLayout = namedtuple("StorageLayout", ["time", "state", "covariance", "sen
 
 
 class Storage:
-    def __init__(self):
+    def __init__(self, options=None):
+        if options is None:
+            options = RollbackOptions()
+
+        self.options = options
         self.data = []
-        self.options = RollbackOptions()
 
     def store(
         self,
@@ -179,7 +182,9 @@ class Storage:
 
     def scan(self, start_time=None, end_time=None):
         if start_time is None != end_time is None:
-            raise TypeError('Storage.scan should be called with either both a start and end time or neither')
+            raise TypeError(
+                "Storage.scan should be called with either both a start and end time or neither"
+            )
         if start_time is None:
             yield from enumerate(self.data)
 
