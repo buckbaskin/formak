@@ -8,7 +8,9 @@ Passes if the rollback updates as expected the state
 
 from collections import namedtuple
 from typing import Optional, List
-from formak.runtime import ManagedFilter, StampedReading
+from formak.runtime import ManagedFilter, StampedReading, StateAndVariance
+from formak.python import Config
+from math import floor
 
 RollbackOptions = namedtuple(
     "RollbackOptions", ["max_history", "max_memory", "max_time"]
@@ -48,8 +50,34 @@ class ManagedRollback:
         _, state_and_variance = self._process_model(output_time, control)
         return state_and_variance
 
+    def _process_model(self, output_time, control):
+        # const
+        max_dt = self._impl.config.max_dt_sec
+        if self.current_time > output_time:
+            max_dt = -0.1
+
+        state = self.state
+        covariance = self.covariance
+
+        expected_iterations = abs(floor((output_time - self.current_time) / max_dt))
+
+        for _ in range(expected_iterations):
+            state, covariance = self._impl.process_model(
+                max_dt, state, covariance, control
+            )
+
+        iter_time = self.current_time + max_dt * expected_iterations
+        if abs(output_time - iter_time) >= 1e-9:
+            state, covariance = self._impl.process_model(
+                output_time - iter_time, state, covariance, control
+            )
+
+        return output_time, StateAndVariance(state, covariance)
+
 
 class Illustrator:
+    config = Config()
+
     def process_model(self, dt, state, covariance, control):
         return state, covariance
 
