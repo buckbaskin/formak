@@ -13,26 +13,45 @@ def test_first_insert():
 
     data.store(time, state, covariance, sensors)
 
-    assert list(data.scan()) == [(time, StorageLayout(time, state, covariance, sensors))]
+    assert list(data.scan()) == [(0, StorageLayout(time, state, covariance, sensors))]
 
 def test_pre_insert():
     data = Storage()
 
+    time = 1
+    state = 2
+    covariance = 3
+    sensors = []
+
     # Setup
-    data.store()
+    data.store(time, state, covariance, sensors)
 
     # Before first time
-    data.store()
+    data.store(time - 1, state, covariance, sensors)
+
+    assert list(data.scan()) == [
+            (0, StorageLayout(time - 1, state, covariance, sensors)),
+            (1, StorageLayout(time, state, covariance, sensors)),
+            ]
 
 def test_post_insert():
     data = Storage()
 
+    time = 1
+    state = 2
+    covariance = 3
+    sensors = []
+
     # Setup
-    data.store()
+    data.store(time, state, covariance, sensors)
 
     # After first time
-    data.store()
+    data.store(time + 1, state, covariance, sensors)
 
+    assert list(data.scan()) == [
+            (0, StorageLayout(time, state, covariance, sensors)),
+            (1, StorageLayout(time + 1, state, covariance, sensors)),
+            ]
 
 def test_mid_insert():
     data = Storage()
