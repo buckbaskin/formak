@@ -4,9 +4,10 @@ Python Runtime.
 A collection of classes and tools for running filters and providing additional functionality around the filter
 """
 
+from bisect import bisect_left, bisect_right
 from collections import namedtuple
 from math import floor
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 class StampedReading:
@@ -98,3 +99,87 @@ class ManagedFilter:
             )
 
         return output_time, StateAndVariance(state, covariance)
+
+
+RollbackOptions = namedtuple(
+    "RollbackOptions",
+    ["max_history", "max_memory", "max_time", "time_resolution"],
+    defaults=(None, None, None, 1e-9),
+)
+StorageLayout = namedtuple("StorageLayout", ["time", "state", "covariance", "sensors"])
+
+
+class Storage:
+    def __init__(self):
+        self.data = []
+        self.options = RollbackOptions()
+
+    def store(
+        self,
+        time: float,
+        state: Optional[Any],
+        covariance: Optional[Any],
+        sensors: Optional[Any],
+    ):
+        insertion_index = bisect_left(self.data, time, key=lambda e: e.time)
+        print(
+            f"inserting at {insertion_index} in range {insertion_index-1}:{insertion_index+1}",
+            [e.time for e in self.data[insertion_index - 1 : insertion_index + 1]],
+        )
+
+        row = StorageLayout(
+            time=time, state=state, covariance=covariance, sensors=sensors
+        )
+
+        # TODO: testing: insert before range, insert after range, insert middle
+        # of range, insert w/ exact matching time, insert within time
+        # resolution
+
+        # TODO: test the following logic
+        # Instead of blindly inserting, check if there's a time match.
+        # If no match, insert
+        # If match, update state, covariance, append sensors
+        if len(self.data) > 0:
+            candidate_time = round(
+                self.data[insertion_index].time / self.options.time_resolution
+            )
+            insert_time = round(time / self.options.time_resolution)
+            print("resolution match?", candidate_time, insert_time)
+
+            if insert_time == candidate_time:
+                self._update(insertion_index, row)
+                return
+
+        self._insert(insertion_index, row)
+
+    def _insert(self, idx, row):
+        self.data.insert(
+            idx,
+            row,
+        )
+
+    def load(self, time: float):
+        """
+        Load the latest time equal to or before the given time.
+        If there are no entries before the given time, load the first entry.
+        """
+        assert isinstance(time, (float, int))
+        # TODO: this might need to scan forwards or backwards to get a state or a time with a state, covariance?
+        retrieval_index = bisect_left(self.data, time, key=lambda e: e.time)
+        print(
+            "retrieve target",
+            time,
+            "retrieval_index",
+            retrieval_index,
+            "data before insertion",
+            [e.time for e in self.data],
+        )
+        retrieval_index = min(len(self.data) - 1, retrieval_index)
+        return self.data[retrieval_index]
+
+    def scan(self, start_time, end_time):
+        # TODO: check these for off-by-ones
+        start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
+        end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
+
+        yield from enumerate(self.data[start_index:end_index])
