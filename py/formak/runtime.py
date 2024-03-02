@@ -177,9 +177,15 @@ class Storage:
         retrieval_index = min(len(self.data) - 1, retrieval_index)
         return self.data[retrieval_index]
 
-    def scan(self, start_time, end_time):
-        # TODO: check these for off-by-ones
-        start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
-        end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
+    def scan(self, start_time=None, end_time=None):
+        if start_time is None != end_time is None:
+            raise TypeError('Storage.scan should be called with either both a start and end time or neither')
+        if start_time is None:
+            yield from enumerate(self.data)
 
-        yield from enumerate(self.data[start_index:end_index])
+        else:
+            # TODO: check these for off-by-ones
+            start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
+            end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
+
+            yield from enumerate(self.data[start_index:end_index])
