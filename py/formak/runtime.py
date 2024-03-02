@@ -143,14 +143,17 @@ class Storage:
         # If no match, insert
         # If match, update state, covariance, append sensors
         if len(self.data) > 0:
+            # compare to last element if you would insert at the end of the list
+            update_index = min(len(self.data) - 1, insertion_index)
+
             candidate_time = round(
-                self.data[insertion_index].time / self.options.time_resolution
+                self.data[update_index].time / self.options.time_resolution
             )
             insert_time = round(time / self.options.time_resolution)
             print("resolution match?", candidate_time, insert_time)
 
             if insert_time == candidate_time:
-                self._update(insertion_index, row)
+                self._update(update_index, row)
                 return
 
         self._insert(insertion_index, row)
