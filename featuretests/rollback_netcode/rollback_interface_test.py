@@ -7,6 +7,8 @@ Passes if the rollback updates as expected the state
 """
 
 from collections import namedtuple
+from typing import Optional, List
+from formak.runtime import ManagedFilter, StampedReading
 
 RollbackOptions = namedtuple(
     "RollbackOptions", ["max_history", "max_memory", "max_time"]
@@ -57,10 +59,10 @@ class Illustrator:
 
 
 def test_rollback_empty():
-    assert False
+    raise NotImplementedError("test_rollback_empty")
 
 
-def test_rollback_basic():
+def test_rollback_basic_comparative():
     """
     Timeline:
     - Recieve A (on time)
@@ -72,13 +74,24 @@ def test_rollback_basic():
     - [A, B, C, D]
     """
 
-    # mf <- managed_filter
-    mf = ManagedRollback(start_time=0)
+    rollback = ManagedRollback(
+        ekf=Illustrator(), start_time=0, state=[], covariance=None
+    )
 
-    # state0p2 = mf.tick(2.2, control=control, readings=[])
-    mf.tick(1, readings=["A"])
+    rollback.tick(1, readings=[StampedReading(1, "A")])
+    rollback.tick(2, readings=[])
+    rollback.tick(3, readings=[StampedReading(3, "C")])
+    rollback_state, _ = rollback.tick(
+        4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
+    )
+
+    assert rollback_state == ["A", "B", "C", "D"]
+
+    mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=[], covariance=None)
+
+    mf.tick(1, readings=[StampedReading(1, "A")])
     mf.tick(2, readings=[])
-    mf.tick(3, readings=["C"])
-    state, _ = mf.tick(4, readings=["D", "B"])
+    mf.tick(3, readings=[StampedReading(3, "C")])
+    mf_state, _ = mf.tick(4, readings=[StampedReading(4, "D"), StampedReading(2, "B")])
 
-    assert state == ["A", "B", "C", "D"]
+    assert mf_state != ["A", "B", "C", "D"]
