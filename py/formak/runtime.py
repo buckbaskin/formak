@@ -135,6 +135,7 @@ class Storage:
             covariance=covariance,
             sensors=list(sensors),
         )
+        print(' - store', row.state.queue if row.state is not None else None, '+', [s.sensor_key for s in row.sensors])
 
         if len(self.data) > 0:
             # compare to last element if you would insert at the end of the list
@@ -177,15 +178,8 @@ class Storage:
         assert isinstance(time, (float, int))
         # TODO: this might need to scan forwards or backwards to get a state or a time with a state, covariance?
         retrieval_index = bisect_left(self.data, time, key=lambda e: e.time) - 1
-        print(
-            "retrieve target",
-            time,
-            "retrieval_index",
-            retrieval_index,
-            "data before insertion",
-            [e.time for e in self.data],
-        )
         retrieval_index = max(0, min(retrieval_index, len(self.data) - 1))
+        print(' - load', self.data[retrieval_index].state.queue)
         return self.data[retrieval_index]
 
     def scan(self, start_time=None, end_time=None):

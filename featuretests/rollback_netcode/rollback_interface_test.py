@@ -30,6 +30,7 @@ class ManagedRollback:
         *,
         storage=None,
     ):
+        print('init')
         self._impl = ekf
         self.storage = storage if storage is not None else Storage()
 
@@ -46,6 +47,7 @@ class ManagedRollback:
         """
         Returns (state, variance) tuple
         """
+        print('tick')
         # TODO: error handling (e.g. max time, max states, etc)
 
         if control is None and self._impl.control_size > 0:
@@ -95,6 +97,7 @@ class ManagedRollback:
                         sensor_reading.sensor_key, **sensor_reading.kwargs
                     )
 
+                print('    - sensor update', sensor_reading.sensor_key)
                 (self.state, self.covariance) = self._impl.sensor_model(
                     state=self.state,
                     covariance=self.covariance,
@@ -106,7 +109,8 @@ class ManagedRollback:
                 time=sensor_time,
                 state=self.state,
                 covariance=self.covariance,
-                sensors=sensors,
+                # sensors already stored, so don't pass new data
+                sensors=[],
             )
 
         # process model to output time
@@ -194,7 +198,7 @@ def test_rollback_basic_comparative():
     )
     assert rollback_state.queue == ("A", "B", "C", "D")
 
-    mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=[], covariance=None)
+    mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=IllustratorState(0, tuple()), covariance=None)
 
     mf.tick(1, readings=[StampedReading(1, "A")])
     mf.tick(2, readings=[])
