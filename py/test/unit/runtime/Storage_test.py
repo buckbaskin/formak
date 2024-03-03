@@ -346,7 +346,7 @@ def test_inexact_match_load_before_first():
     setup()
 
     load_time, _, _, _ = data.load(time - 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time)
 
 
 def test_inexact_match_load_after_first():
@@ -366,7 +366,7 @@ def test_inexact_match_load_after_first():
     setup()
 
     load_time, _, _, _ = data.load(time + 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time)
 
 
 def test_inexact_match_load_between():
@@ -386,7 +386,7 @@ def test_inexact_match_load_between():
     setup()
 
     load_time, _, _, _ = data.load(time - 0.5)
-    assert load_time == time - 1
+    assert_allclose(load_time, time - 1)
 
 
 def test_inexact_match_load_before_mid():
@@ -406,7 +406,7 @@ def test_inexact_match_load_before_mid():
     setup()
 
     load_time, _, _, _ = data.load(time - 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time - 1)
 
 
 def test_inexact_match_load_after_mid():
@@ -426,7 +426,7 @@ def test_inexact_match_load_after_mid():
     setup()
 
     load_time, _, _, _ = data.load(time + 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time)
 
 
 def test_inexact_match_load_before_end():
@@ -446,7 +446,7 @@ def test_inexact_match_load_before_end():
     setup()
 
     load_time, _, _, _ = data.load(time - 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time - 1)
 
 
 def test_inexact_match_load_after_end():
@@ -466,4 +466,4 @@ def test_inexact_match_load_after_end():
     setup()
 
     load_time, _, _, _ = data.load(time + 0.01)
-    assert load_time == time
+    assert_allclose(load_time, time)

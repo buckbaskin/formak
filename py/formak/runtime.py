@@ -176,7 +176,7 @@ class Storage:
         """
         assert isinstance(time, (float, int))
         # TODO: this might need to scan forwards or backwards to get a state or a time with a state, covariance?
-        retrieval_index = bisect_left(self.data, time, key=lambda e: e.time)
+        retrieval_index = bisect_left(self.data, time, key=lambda e: e.time) - 1
         print(
             "retrieve target",
             time,
@@ -185,7 +185,7 @@ class Storage:
             "data before insertion",
             [e.time for e in self.data],
         )
-        retrieval_index = min(len(self.data) - 1, retrieval_index)
+        retrieval_index = max(0, min(retrieval_index, len(self.data) - 1))
         return self.data[retrieval_index]
 
     def scan(self, start_time=None, end_time=None):
