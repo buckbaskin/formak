@@ -20,7 +20,7 @@ def test_constructor():
     Storage()
 
 
-def test_first_insert():
+def test_first_store():
     data = Storage()
 
     time = 1
@@ -34,7 +34,7 @@ def test_first_insert():
     assert list(data.scan()) == [(0, Row(time, state, covariance, sensors))]
 
 
-def test_pre_insert():
+def test_pre_store():
     data = Storage()
 
     time = 1
@@ -57,7 +57,7 @@ def test_pre_insert():
     ]
 
 
-def test_post_insert():
+def test_post_store():
     data = Storage()
 
     time = 1
@@ -80,7 +80,7 @@ def test_post_insert():
     ]
 
 
-def test_mid_insert():
+def test_mid_store():
     data = Storage()
 
     time = 1
@@ -105,7 +105,7 @@ def test_mid_insert():
     ]
 
 
-def test_exact_match_insert():
+def test_exact_match_store():
     data = Storage()
 
     time = 1
@@ -131,7 +131,7 @@ def test_exact_match_insert():
     ]
 
 
-def test_inexact_match_insert_before_first():
+def test_inexact_match_store_before_first():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -149,8 +149,6 @@ def test_inexact_match_insert_before_first():
 
     data.store(time - 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -166,7 +164,7 @@ def test_inexact_match_insert_before_first():
     )
 
 
-def test_inexact_match_insert_after_first():
+def test_inexact_match_store_after_first():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -184,8 +182,6 @@ def test_inexact_match_insert_after_first():
 
     data.store(time + 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -201,7 +197,7 @@ def test_inexact_match_insert_after_first():
     )
 
 
-def test_inexact_match_insert_before_mid():
+def test_inexact_match_store_before_mid():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -219,8 +215,6 @@ def test_inexact_match_insert_before_mid():
 
     data.store(time - 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -236,7 +230,7 @@ def test_inexact_match_insert_before_mid():
     )
 
 
-def test_inexact_match_insert_after_mid():
+def test_inexact_match_store_after_mid():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -254,8 +248,6 @@ def test_inexact_match_insert_after_mid():
 
     data.store(time + 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -271,7 +263,7 @@ def test_inexact_match_insert_after_mid():
     )
 
 
-def test_inexact_match_insert_before_end():
+def test_inexact_match_store_before_end():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -289,8 +281,6 @@ def test_inexact_match_insert_before_end():
 
     data.store(time - 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -306,7 +296,7 @@ def test_inexact_match_insert_before_end():
     )
 
 
-def test_inexact_match_insert_after_end():
+def test_inexact_match_store_after_end():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
     time = 1.1
@@ -324,8 +314,6 @@ def test_inexact_match_insert_after_end():
 
     data.store(time + 0.01, -state, -covariance, ("B", "C"))
 
-    # TODO(buck): should the time resolution affect how the time is stored? e.g. store rounded to the first value in the time window?
-
     # Expect:
     #   - original time preserved
     #   - state overwriten
@@ -339,3 +327,143 @@ def test_inexact_match_insert_after_end():
             (2, Row(time, -state, -covariance, ["A", "B", "C"])),
         ],
     )
+
+
+def test_inexact_match_load_before_first():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        data.store(time + 2, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time - 0.01)
+    assert load_time == time
+
+
+def test_inexact_match_load_after_first():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        data.store(time + 2, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time + 0.01)
+    assert load_time == time
+
+
+def test_inexact_match_load_between():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time - 0.5)
+    assert load_time == time - 1
+
+
+def test_inexact_match_load_before_mid():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time - 0.01)
+    assert load_time == time
+
+
+def test_inexact_match_load_after_mid():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time + 0.01)
+    assert load_time == time
+
+
+def test_inexact_match_load_before_end():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 2, state, covariance, sensors)
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time - 0.01)
+    assert load_time == time
+
+
+def test_inexact_match_load_after_end():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 2, state, covariance, sensors)
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    load_time, _, _, _ = data.load(time + 0.01)
+    assert load_time == time
