@@ -8,7 +8,7 @@ Passes if the rollback updates as expected the state
 
 from dataclasses import dataclass
 from math import floor
-from typing import List, Optional
+from typing import List, Optional, Iterable
 
 from formak.python import Config
 from formak.runtime import (
@@ -16,7 +16,6 @@ from formak.runtime import (
     StampedReading,
     StateAndVariance,
     Storage,
-    StorageLayout,
 )
 
 
@@ -91,6 +90,11 @@ class ManagedRollback:
             )
 
             for sensor_reading in sensors:
+                if sensor_reading._data is None:
+                    sensor_reading._data = self._impl.make_reading(
+                        sensor_reading.sensor_key, **sensor_reading.kwargs
+                    )
+
                 (self.state, self.covariance) = self._impl.sensor_model(
                     state=self.state,
                     covariance=self.covariance,
@@ -98,8 +102,7 @@ class ManagedRollback:
                     sensor_reading=sensor_reading._data,
                 )
 
-            # TODO: this line/assignment to overwrite feels like it should be a method in the Storage class
-            self.storage.data[idx] = StorageLayout(
+            self.storage.store(
                 time=sensor_time,
                 state=self.state,
                 covariance=self.covariance,
@@ -138,7 +141,7 @@ class ManagedRollback:
 @dataclass
 class IllustratorState:
     time: float
-    queue: List[str]
+    queue: Iterable[str]
 
 
 class Illustrator:
@@ -150,8 +153,11 @@ class Illustrator:
         return state, covariance
 
     def sensor_model(self, state, covariance, sensor_key, sensor_reading):
-        state.queue.append(sensor_reading)
-        return state, covariance
+        result = IllustratorState(state.time, state.queue + (sensor_reading,))
+        return result, covariance
+
+    def make_reading(self, sensor_key, **kwargs):
+        return sensor_key
 
 
 def test_rollback_empty():
@@ -171,23 +177,30 @@ def test_rollback_basic_comparative():
     """
 
     rollback = ManagedRollback(
-        ekf=Illustrator(), start_time=0, state=IllustratorState(0, []), covariance=None
+        ekf=Illustrator(), start_time=0, state=IllustratorState(0, tuple()), covariance=None
     )
 
-    rollback.tick(1, readings=[StampedReading(1, "A")])
-    rollback.tick(2, readings=[])
-    rollback.tick(3, readings=[StampedReading(3, "C")])
+    rollback_state, _ = rollback.tick(1, readings=[StampedReading(1, "A")])
+    assert rollback_state.queue == ("A",)
+
+    rollback_state, _ = rollback.tick(2, readings=[])
+    assert rollback_state.queue == ("A",)
+
+    rollback_state, _ = rollback.tick(3, readings=[StampedReading(3, "C")])
+    assert rollback_state.queue == ("A", "C",)
+
     rollback_state, _ = rollback.tick(
         4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
     )
-
-    assert rollback_state.queue == ["A", "B", "C", "D"]
+    assert rollback_state.queue == ("A", "B", "C", "D")
 
     mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=[], covariance=None)
 
     mf.tick(1, readings=[StampedReading(1, "A")])
     mf.tick(2, readings=[])
     mf.tick(3, readings=[StampedReading(3, "C")])
-    mf_state, _ = mf.tick(4, readings=[StampedReading(4, "D"), StampedReading(2, "B")])
+    mf_state, _ = mf.tick(
+        4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
+    )
 
     assert mf_state.queue != ["A", "B", "C", "D"]
