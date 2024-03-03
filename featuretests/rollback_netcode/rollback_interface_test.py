@@ -9,6 +9,7 @@ Passes if the rollback updates as expected the state
 from dataclasses import dataclass
 from math import floor
 from typing import List, Optional, Iterable
+from numpy.testing import assert_allclose
 
 from formak.python import Config
 from formak.runtime import (
@@ -153,8 +154,9 @@ class Illustrator:
     control_size = 0
 
     def process_model(self, dt, state, covariance, control):
-        state.time += dt
-        return state, covariance
+        result = IllustratorState(state.time + dt, state.queue)
+        print('    - process_model', dt, ' -> ', result.time)
+        return result, covariance
 
     def sensor_model(self, state, covariance, sensor_key, sensor_reading):
         result = IllustratorState(state.time, state.queue + (sensor_reading,))
@@ -162,10 +164,6 @@ class Illustrator:
 
     def make_reading(self, sensor_key, **kwargs):
         return sensor_key
-
-
-def test_rollback_empty():
-    raise NotImplementedError("test_rollback_empty")
 
 
 def test_rollback_basic_comparative():
@@ -196,6 +194,7 @@ def test_rollback_basic_comparative():
     rollback_state, _ = rollback.tick(
         4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
     )
+    assert_allclose(rollback_state.time, 4)
     assert rollback_state.queue == ("A", "B", "C", "D")
 
     mf = ManagedFilter(ekf=Illustrator(), start_time=0, state=IllustratorState(0, tuple()), covariance=None)
@@ -207,4 +206,5 @@ def test_rollback_basic_comparative():
         4, readings=[StampedReading(4, "D"), StampedReading(2, "B")]
     )
 
+    assert_allclose(mf_state.time, 4)
     assert mf_state.queue != ["A", "B", "C", "D"]
