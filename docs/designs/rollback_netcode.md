@@ -132,6 +132,26 @@ straghtforward.
 1. Coordination layer for rollback
 2. Rolling back and forth the states and sensor readings for the Kalman Filter
 
+The first level of feature test is a feature with a simplified model where it
+is trivial to inspect that the rollback is working correctly. The model for
+this test will use a float to track the time and then a list of strings to
+track the order in which sensor readings arrive. The true time for sensor
+readings is in 
+[lexigraphical order](https://en.wikipedia.org/wiki/Lexicographic_order), so if
+rollback is working correctly any ordering of the readings should result in a
+sorted string for the state at the end of the test. As a secondary test, the
+time of the internal state should match the expected state. This will ensure
+that state loading is correctly handling times and fully serializing the state.
+
+The second level of feature test is to rerun a Kalman Filter with the rollback
+logic specifically. The base case will be a ManagedFilter of the original kind
+that runs forward in time with the messages perfectly synchronized. The
+rollback filter should successfully update the state with randomly shuffled
+messages such that the end state looks as if it were perfectly synchronized.
+
+Note: The feature tests will not cover the error handling logic for messages
+that arrive so late they violate the time limit, message limit or memory limit.
+
 ## Roadmap and Process
 
 1. Write a design
@@ -146,3 +166,9 @@ straghtforward.
 9. Write up successes, retro of what changed (so I can check for this in future designs)
 
 ## Post Review
+
+### 2024-03-01
+
+Feature tests updated to be much more specific with their coverage. The
+original specification was very vague. See the [Feature Tests](#feature-tests)
+section for the expanded explanation of testing.
