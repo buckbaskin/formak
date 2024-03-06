@@ -82,7 +82,7 @@ py_library(
 
 py_library(
     name = "runtime",
-    srcs = ["formak/runtime.py"],
+    srcs = ["formak/runtime/__init__.py"],
     imports = ["."],
 )
 
