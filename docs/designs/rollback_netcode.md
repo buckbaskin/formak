@@ -2,10 +2,10 @@
 
 :Author: Buck Baskin [@buck@fosstodon.org](https://fosstodon.org/@buck)
 :Created: 2024-02-28
-:Updated: 2024-02-28
+:Updated: 2024-03-05
 :Parent Design: [designs/runtime.md](../designs/runtime.md)
 
-# Overview
+## Overview
 
 Enable rollback to make network latency disappear
 
@@ -72,7 +72,7 @@ replay through multiple states means that each update must be only a small
 fraction of the normal time for updates instead of being able to use 80-100% of
 the time budget. Rollback also stresses the state management logic to ensure
 that all parts of the state are rolled-back and replayed together, so if state
-management isn’t done carefully some aspects can become desynced (e.g. if audio
+management isn't done carefully some aspects can become desynced (e.g. if audio
 tracks are replayed out of time with game visuals during rollback).
 
 These rollback downsides are in fact an upside opportunity for FormaK. With a
@@ -81,7 +81,7 @@ easy to adopt either delay-based or rollback-based netcode for filtering
 applications. Users of FormaK will not be required to implement this themselves
 and instead can jump directly to an efficient sensor management scheme.
 
-## Design Considerations
+### Design Considerations
 
 - Finite horizon (memory based, time based, fixed value?) for rollback history, drop some messages
 - Allow fused delay and rollback if a user wants to configure it
@@ -107,6 +107,15 @@ and instead can jump directly to an efficient sensor management scheme.
     >  written by Tony Cannon. It has a bit more of a technical focus, but may
     >  interest you if you’re a programmer or curious on the exact things GGPO
     >  provides your game. You can also peruse the [[source code](https://github.com/pond3r/ggpo)](https://github.com/pond3r/ggpo) and read [[Tony’s own description](https://github.com/pond3r/ggpo/tree/master/doc)](https://github.com/pond3r/ggpo/tree/master/doc) of the theory behind rollback.
+
+### References
+
+- GGPO
+    - Source Code: https://github.com/pond3r/ggpo
+    - [Author's own description](https://github.com/pond3r/ggpo/tree/master/doc)](https://github.com/pond3r/ggpo/tree/master/doc)
+    - [Magazine Writeup](https://drive.google.com/file/d/1nRa3cRBQmKj0-SEyrT_1VNOkPOJWNhVI/view)
+- [Fightin' Words](https://words.infil.net/w02-netcode.html)
+- Example of a Backtracking Filter https://www.mdpi.com/1424-8220/22/9/3289
  
 ## Solution Approach
 
@@ -116,16 +125,78 @@ This design will split the implementation between two tasks:
 
 This will allow for testing the two separately, and once the coordination is
 working, the storage and rolling of the filter should be relatively
-straghtforward.
+straightforward.
 
-## References
+### Estimator Interface
 
-- GGPO
-    - Source Code: https://github.com/pond3r/ggpo
-    - [Author's own description](https://github.com/pond3r/ggpo/tree/master/doc)](https://github.com/pond3r/ggpo/tree/master/doc)
-    - [Magazine Writeup](https://drive.google.com/file/d/1nRa3cRBQmKj0-SEyrT_1VNOkPOJWNhVI/view)
-- [Fightin' Words](https://words.infil.net/w02-netcode.html)
-- Example of a Backtracking Filter https://www.mdpi.com/1424-8220/22/9/3289
+The Kalman Filter (or other estimator) only needs to provide the process model
+and sensor model (the existing interfaces). 
+
+```cpp
+process_model(max_dt, {state, covariance}, calibration, control) -> {state, covariance}
+
+sensor_model(ekf_impl, {state, covariance}, calibration) -> {state, covariance}
+```
+
+The load and store functionality for rollback shall be implemented separately.
+With this design, the storage and model can be implemented separately and then
+composed. 
+
+As a secondary benefit, this design is also compatible with the existing
+`ManagedFilter` interface and implementation where the `ManagedFilter` manages
+storage (implicitly) and the user provided estimator implements the process
+model and sensor model.
+
+In a previous design iteration, the design required the model to also provide
+load and save functionality; however, this seemed like an unnecessary burden to
+place on the model. As an additional demerit, the previous design iteration
+required re-implementing storage for each model.
+
+### Storage Interface
+
+With the load and save functionality offloaded from the model, a Storage class
+is needed to provide the load and store functionality.
+
+```cpp
+load(time) -> ({state, covariance}, control, sensors)
+
+store(time, {state, covariance}, control, sensors) -> void
+```
+
+Note: the controls and calibration inputs are optional. The sensors will always
+be a list but the list can be empty.
+
+The user can also override the storage class type as long as it provides the
+same interface.
+
+The storage algorithm is unspecified, but the `load` call should return the
+latest state that is before the specified time if any are available. Otherwise,
+return the earliest state (that will be the equal to or later than the given
+time).
+
+The storage algorithm can also provide a time resolution argument. If two times
+are within the time resolution, they can be treated as stored at the same time.
+
+With an in-name-only analogy to 
+[copy elision](https://en.cppreference.com/w/cpp/language/copy_elision), the
+design algorithm has the opportunity to elide loads and stores when it doesn't
+impact the outcome of the calculation. For example, if the first sensor from
+the next update is after the last stored state, then the algorithm can used the
+[memoized](https://en.wikipedia.org/wiki/Memoization) state that's already in
+memory instead of calling load. If load is fast enough or this would place a
+large computational burden on the algorithm implementation it may be skipped in
+the final design.
+
+### Simplification Opportunity
+
+The original `ManagedFilter` behavior is intuitively a subset of the rollback
+behavior. For example, if the maximum history is set to 1, then the state will
+be set by rolling backwards from the current time.
+
+If this works out to be truly the case, then the `ManagedFilter` class can be
+re-implemented as the rollback logic with a default configuration that matches
+the old behavior. This would then only require maintaining a single
+implementation going forward.
 
 ## Feature Tests
 
@@ -137,15 +208,15 @@ is trivial to inspect that the rollback is working correctly. The model for
 this test will use a float to track the time and then a list of strings to
 track the order in which sensor readings arrive. The true time for sensor
 readings is in 
-[lexigraphical order](https://en.wikipedia.org/wiki/Lexicographic_order), so if
-rollback is working correctly any ordering of the readings should result in a
-sorted string for the state at the end of the test. As a secondary test, the
+[lexicographical order](https://en.wikipedia.org/wiki/Lexicographic_order), so
+if rollback is working correctly any ordering of the readings should result in
+a sorted string for the state at the end of the test. As a secondary test, the
 time of the internal state should match the expected state. This will ensure
 that state loading is correctly handling times and fully serializing the state.
 
 The second level of feature test is to rerun a Kalman Filter with the rollback
-logic specifically. The base case will be a ManagedFilter of the original kind
-that runs forward in time with the messages perfectly synchronized. The
+logic specifically. The base case will be a `ManagedFilter` of the original
+kind that runs forward in time with the messages perfectly synchronized. The
 rollback filter should successfully update the state with randomly shuffled
 messages such that the end state looks as if it were perfectly synchronized.
 
@@ -170,5 +241,23 @@ that arrive so late they violate the time limit, message limit or memory limit.
 ### 2024-03-01
 
 Feature tests updated to be much more specific with their coverage. The
-original specification was very vague. See the [Feature Tests](#feature-tests)
+original specification was vague. See the [Feature Tests](#feature-tests)
 section for the expanded explanation of testing.
+
+### 2024-03-02
+
+N.B. The design revisions for today show the benefit of feature testing. It has
+helped identify multiple missing aspects of the design and missing testing.
+
+Updates to the [Solution Approach](#solution-approach) to document the
+[estimator interface](#estimator-interface) and 
+[storage interface](#storage-interface).
+
+This is also the time where I realized that I'd missed the controls inputs.
+The calibration doesn't need to be stored and loaded because it doesn't change
+over time.
+
+As an implementation note, the rollback will be implemented separated from the
+`ManagedFilter` and then merged later. This will ease testing and allow for
+pre-confirming that the equivalent behavior can be maintained by selecting
+rollback options.
