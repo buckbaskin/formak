@@ -8,7 +8,6 @@ from bisect import bisect_left, bisect_right
 from collections import namedtuple
 from typing import Any, List, Optional
 
-
 RollbackOptions = namedtuple(
     "RollbackOptions",
     ["max_history", "max_memory", "max_time", "time_resolution"],

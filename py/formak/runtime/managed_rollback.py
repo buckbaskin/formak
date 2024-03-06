@@ -2,11 +2,11 @@
 ManagedRollback
 
 """
-from formak.runtime.storage import Storage
-from formak.runtime.common import StampedReading, StateAndVariance
-
 from math import floor
 from typing import List, Optional
+
+from formak.runtime.common import StampedReading, StateAndVariance
+from formak.runtime.storage import Storage
 
 
 class ManagedRollback:

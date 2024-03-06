@@ -1,4 +1,4 @@
-from formak.runtime import RollbackOptions, Storage, StorageLayout
+from formak.runtime.storage import RollbackOptions, Storage, StorageLayout
 from numpy.testing import assert_allclose
 
 Row = StorageLayout
