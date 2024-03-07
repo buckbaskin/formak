@@ -81,7 +81,6 @@ class Storage:
         If there are no entries before the given time, load the first entry.
         """
         assert isinstance(time, (float, int))
-        # TODO: this might need to scan forwards or backwards to get a state or a time with a state, covariance?
         retrieval_index = bisect_left(self.data, time, key=lambda e: e.time) - 1
         retrieval_index = max(0, min(retrieval_index, len(self.data) - 1))
         return self.data[retrieval_index]
@@ -91,12 +90,12 @@ class Storage:
             raise TypeError(
                 "Storage.scan should be called with either both a start and end time or neither"
             )
+
         if start_time is None:
-            yield from enumerate(self.data)
+            yield from self.data
 
         else:
-            # TODO: check these for off-by-ones
             start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
             end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
 
-            yield from enumerate(self.data[start_index:end_index])
+            yield from self.data[start_index:end_index]

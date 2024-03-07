@@ -74,9 +74,7 @@ class ManagedRollback:
         #   process model to reading time
         #   sensor update at reading time for all sensor readings
         #   save state after sensor update at reading time
-        for idx, (sensor_time, _, _, sensors) in self.storage.scan(
-            start_time, output_time
-        ):
+        for sensor_time, _, _, sensors in self.storage.scan(start_time, output_time):
             self.current_time, (self.state, self.covariance) = self._process_model(
                 sensor_time,
                 control=control,

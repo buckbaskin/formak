@@ -1,3 +1,4 @@
+import pytest
 from formak.runtime.storage import RollbackOptions, Storage, StorageLayout
 from numpy.testing import assert_allclose
 
@@ -7,9 +8,7 @@ Row = StorageLayout
 def assert_storage_close(actual, desired):
     assert len(actual) == len(desired)
 
-    for (left_idx, left_value), (right_idx, right_value) in zip(actual, desired):
-        assert left_idx == right_idx
-
+    for left_value, right_value in zip(actual, desired):
         assert_allclose(left_value.time, right_value.time)
         assert left_value.state == right_value.state
         assert left_value.covariance == right_value.covariance
@@ -31,7 +30,7 @@ def test_first_store():
     data.store(time, state, covariance, sensors)
 
     assert len(data.data) == 1
-    assert list(data.scan()) == [(0, Row(time, state, covariance, sensors))]
+    assert list(data.scan()) == [Row(time, state, covariance, sensors)]
 
 
 def test_pre_store():
@@ -52,8 +51,8 @@ def test_pre_store():
     data.store(time - 1, state, covariance, sensors)
 
     assert list(data.scan()) == [
-        (0, Row(time - 1, state, covariance, sensors)),
-        (1, Row(time, state, covariance, sensors)),
+        Row(time - 1, state, covariance, sensors),
+        Row(time, state, covariance, sensors),
     ]
 
 
@@ -75,8 +74,8 @@ def test_post_store():
     data.store(time + 1, state, covariance, sensors)
 
     assert list(data.scan()) == [
-        (0, Row(time, state, covariance, sensors)),
-        (1, Row(time + 1, state, covariance, sensors)),
+        Row(time, state, covariance, sensors),
+        Row(time + 1, state, covariance, sensors),
     ]
 
 
@@ -99,9 +98,9 @@ def test_mid_store():
     data.store(time, state, covariance, sensors)
 
     assert list(data.scan()) == [
-        (0, Row(time - 1, state, covariance, sensors)),
-        (1, Row(time, state, covariance, sensors)),
-        (2, Row(time + 1, state, covariance, sensors)),
+        Row(time - 1, state, covariance, sensors),
+        Row(time, state, covariance, sensors),
+        Row(time + 1, state, covariance, sensors),
     ]
 
 
@@ -127,7 +126,7 @@ def test_exact_match_store():
     #   - covariance overwriten
     #   - sensors extended
     assert list(data.scan()) == [
-        (0, Row(time, -state, -covariance, ["A", "B", "C"])),
+        Row(time, -state, -covariance, ["A", "B", "C"]),
     ]
 
 
@@ -157,9 +156,9 @@ def test_inexact_match_store_before_first():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time, -state, -covariance, ["A", "B", "C"])),
-            (1, Row(time + 1, state, covariance, ["A"])),
-            (2, Row(time + 2, state, covariance, ["A"])),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, ["A"]),
+            Row(time + 2, state, covariance, ["A"]),
         ],
     )
 
@@ -190,9 +189,9 @@ def test_inexact_match_store_after_first():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time, -state, -covariance, ["A", "B", "C"])),
-            (1, Row(time + 1, state, covariance, ["A"])),
-            (2, Row(time + 2, state, covariance, ["A"])),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, ["A"]),
+            Row(time + 2, state, covariance, ["A"]),
         ],
     )
 
@@ -223,9 +222,9 @@ def test_inexact_match_store_before_mid():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time - 1, state, covariance, ["A"])),
-            (1, Row(time, -state, -covariance, ["A", "B", "C"])),
-            (2, Row(time + 1, state, covariance, ["A"])),
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, ["A"]),
         ],
     )
 
@@ -256,9 +255,9 @@ def test_inexact_match_store_after_mid():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time - 1, state, covariance, ["A"])),
-            (1, Row(time, -state, -covariance, ["A", "B", "C"])),
-            (2, Row(time + 1, state, covariance, ["A"])),
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, ["A"]),
         ],
     )
 
@@ -289,9 +288,9 @@ def test_inexact_match_store_before_end():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time - 2, state, covariance, ["A"])),
-            (1, Row(time - 1, state, covariance, ["A"])),
-            (2, Row(time, -state, -covariance, ["A", "B", "C"])),
+            Row(time - 2, state, covariance, ["A"]),
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
         ],
     )
 
@@ -322,9 +321,9 @@ def test_inexact_match_store_after_end():
     assert_storage_close(
         list(data.scan()),
         [
-            (0, Row(time - 2, state, covariance, ["A"])),
-            (1, Row(time - 1, state, covariance, ["A"])),
-            (2, Row(time, -state, -covariance, ["A", "B", "C"])),
+            Row(time - 2, state, covariance, ["A"]),
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, -state, -covariance, ["A", "B", "C"]),
         ],
     )
 
@@ -467,3 +466,73 @@ def test_inexact_match_load_after_end():
 
     load_time, _, _, _ = data.load(time + 0.01)
     assert_allclose(load_time, time)
+
+
+def test_scans():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    sensors = ("A",)
+
+    def setup():
+        data.store(time - 1, state, covariance, sensors)
+        data.store(time, state, covariance, sensors)
+        data.store(time + 1, state, covariance, sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    scan_all = list(data.scan(0.0, 3.0))
+    assert_storage_close(
+        scan_all,
+        [
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, state, covariance, ["A"]),
+            Row(time + 1, state, covariance, ["A"]),
+        ],
+    )
+
+    scan_early = list(data.scan(0.0, 1.2))
+    assert_storage_close(
+        scan_early,
+        [
+            Row(time - 1, state, covariance, ["A"]),
+            Row(time, state, covariance, ["A"]),
+        ],
+    )
+
+    scan_late = list(data.scan(0.5, 2.9))
+    assert_storage_close(
+        scan_late,
+        [
+            Row(time, state, covariance, ["A"]),
+            Row(time + 1, state, covariance, ["A"]),
+        ],
+    )
+
+    scan_first = list(data.scan(0.05, 0.15))
+    assert_storage_close(
+        scan_first,
+        [
+            Row(time - 1, state, covariance, ["A"]),
+        ],
+    )
+
+    scan_last = list(data.scan(2.05, 2.15))
+    assert_storage_close(
+        scan_last,
+        [
+            Row(time + 1, state, covariance, ["A"]),
+        ],
+    )
+
+    scan_empty = list(data.scan(4.0, 4.1))
+    assert_storage_close(
+        scan_empty,
+        [],
+    )
+
+    with pytest.raises(TypeError):
+        list(data.scan(5.0))
