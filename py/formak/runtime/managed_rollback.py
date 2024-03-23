@@ -38,7 +38,6 @@ class ManagedRollback:
         Returns (state, variance) tuple
         """
         print("tick")
-        # TODO: error handling (e.g. max time, max states, etc)
 
         if control is None and self._impl.control_size > 0:
             raise TypeError(

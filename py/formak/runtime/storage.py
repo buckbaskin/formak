@@ -13,7 +13,9 @@ RollbackOptions = namedtuple(
     ["max_history", "max_memory", "max_time", "time_resolution"],
     defaults=(None, None, None, 1e-9),
 )
-StorageLayout = namedtuple("StorageLayout", ["time", "state", "covariance", "sensors"])
+StorageLayout = namedtuple(
+    "StorageLayout", ["time", "state", "covariance", "control", "sensors"]
+)
 
 
 class Storage:
@@ -29,7 +31,9 @@ class Storage:
         time: float,
         state: Optional[Any],
         covariance: Optional[Any],
-        sensors: Optional[List[Any]],
+        *,
+        control: Optional[Any] = None,
+        sensors: Optional[List[Any]] = None,
     ):
         time = round(time / self.options.time_resolution) * self.options.time_resolution
 
@@ -39,6 +43,7 @@ class Storage:
             time=time,
             state=state,
             covariance=covariance,
+            control=control,
             sensors=list(sensors),
         )
 
@@ -72,6 +77,7 @@ class Storage:
             time=existing_time,
             state=row.state,
             covariance=row.covariance,
+            control=row.control,
             sensors=existing_sensors,
         )
 
