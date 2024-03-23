@@ -59,21 +59,22 @@ class ManagedRollback:
         # load first state before first reading time
         # ignore sensors, they're already included in the state-covariance
 
-        self.current_time, self.state, self.covariance, _ = self.storage.load(
+        self.current_time, self.state, self.covariance, control, _ = self.storage.load(
             start_time
         )
 
         # implicitly sorts readings by time introducing them into the global state queue
+        # TODO: check if this is doing the correct thing, I don't want to overwrite a previously stored controls for this line
         for reading in readings:
             self.storage.store(
-                reading.timestamp, state=None, covariance=None, sensors=[reading]
+                reading.timestamp, state=None, covariance=None, control=None, sensors=[reading]
             )
 
         # for each reading:
         #   process model to reading time
         #   sensor update at reading time for all sensor readings
         #   save state after sensor update at reading time
-        for sensor_time, _, _, sensors in self.storage.scan(start_time, output_time):
+        for sensor_time, _, _, control, sensors in self.storage.scan(start_time, output_time):
             self.current_time, (self.state, self.covariance) = self._process_model(
                 sensor_time,
                 control=control,
@@ -97,6 +98,7 @@ class ManagedRollback:
                 time=sensor_time,
                 state=self.state,
                 covariance=self.covariance,
+                control=control,
                 # sensors already stored, so don't pass new data
                 sensors=[],
             )
