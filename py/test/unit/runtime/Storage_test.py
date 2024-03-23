@@ -71,6 +71,30 @@ def test_pre_store():
     ]
 
 
+def test_pre_store_with_control():
+    data = Storage()
+
+    time = 1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = []
+
+    def setup():
+        data.store(time, state, covariance, control=control, sensors=sensors)
+        assert len(data.data) == 1
+
+    setup()
+
+    # Before first time
+    data.store(time - 1, state, covariance, control=control, sensors=sensors)
+
+    assert list(data.scan()) == [
+        Row(time - 1, state, covariance, control, sensors),
+        Row(time, state, covariance, control, sensors),
+    ]
+
+
 def test_post_store():
     data = Storage()
 
@@ -91,6 +115,30 @@ def test_post_store():
     assert list(data.scan()) == [
         Row(time, state, covariance, None, sensors),
         Row(time + 1, state, covariance, None, sensors),
+    ]
+
+
+def test_post_store_with_control():
+    data = Storage()
+
+    time = 1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = []
+
+    def setup():
+        data.store(time, state, covariance, control=control, sensors=sensors)
+        assert len(data.data) == 1
+
+    setup()
+
+    # After first time
+    data.store(time + 1, state, covariance, control=control, sensors=sensors)
+
+    assert list(data.scan()) == [
+        Row(time, state, covariance, control, sensors),
+        Row(time + 1, state, covariance, control, sensors),
     ]
 
 
@@ -119,6 +167,32 @@ def test_mid_store():
     ]
 
 
+def test_mid_store_with_control():
+    data = Storage()
+
+    time = 1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = []
+
+    def setup():
+        data.store(time - 1, state, covariance, control=control, sensors=sensors)
+        data.store(time + 1, state, covariance, control=control, sensors=sensors)
+        assert len(data.data) == 2
+
+    setup()
+
+    # Between two times
+    data.store(time, state, covariance, control=control, sensors=sensors)
+
+    assert list(data.scan()) == [
+        Row(time - 1, state, covariance, control, sensors),
+        Row(time, state, covariance, control, sensors),
+        Row(time + 1, state, covariance, control, sensors),
+    ]
+
+
 def test_exact_match_store():
     data = Storage()
 
@@ -142,6 +216,34 @@ def test_exact_match_store():
     #   - sensors extended
     assert list(data.scan()) == [
         Row(time, -state, -covariance, None, ["A", "B", "C"]),
+    ]
+
+
+def test_exact_match_store_with_control():
+    data = Storage()
+
+    time = 1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = ("A",)
+
+    def setup():
+        data.store(time, state, covariance, control=0, sensors=sensors)
+        assert len(data.data) == 1
+
+    setup()
+
+    # Exact match in time
+    data.store(time, -state, -covariance, control=control, sensors=("B", "C"))
+
+    # Expect:
+    #   - state overwriten
+    #   - covariance overwriten
+    #   - control overwriten
+    #   - sensors extended
+    assert list(data.scan()) == [
+        Row(time, -state, -covariance, control, ["A", "B", "C"]),
     ]
 
 
@@ -178,6 +280,40 @@ def test_inexact_match_store_before_first():
     )
 
 
+def test_inexact_match_store_before_first_with_control():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = ("A",)
+
+    def setup():
+        data.store(time, state, covariance, control=0, sensors=sensors)
+        data.store(time + 1, state, covariance, control=0, sensors=sensors)
+        data.store(time + 2, state, covariance, control=0, sensors=sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    data.store(time - 0.01, -state, -covariance, control=control, sensors=("B", "C"))
+
+    # Expect:
+    #   - original time preserved
+    #   - state overwriten
+    #   - covariance overwriten
+    #   - sensors extended
+    assert_storage_close(
+        list(data.scan()),
+        [
+            Row(time, -state, -covariance, control, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, 0, ["A"]),
+            Row(time + 2, state, covariance, 0, ["A"]),
+        ],
+    )
+
+
 def test_inexact_match_store_after_first():
     data = Storage(options=RollbackOptions(time_resolution=0.1))
 
@@ -200,6 +336,7 @@ def test_inexact_match_store_after_first():
     #   - original time preserved
     #   - state overwriten
     #   - covariance overwriten
+    #   - control overwriten
     #   - sensors extended
     assert_storage_close(
         list(data.scan()),
@@ -207,6 +344,41 @@ def test_inexact_match_store_after_first():
             Row(time, -state, -covariance, None, ["A", "B", "C"]),
             Row(time + 1, state, covariance, None, ["A"]),
             Row(time + 2, state, covariance, None, ["A"]),
+        ],
+    )
+
+
+def test_inexact_match_store_after_first_with_control():
+    data = Storage(options=RollbackOptions(time_resolution=0.1))
+
+    time = 1.1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = ("A",)
+
+    def setup():
+        data.store(time, state, covariance, control=0, sensors=sensors)
+        data.store(time + 1, state, covariance, control=0, sensors=sensors)
+        data.store(time + 2, state, covariance, control=0, sensors=sensors)
+        assert len(data.data) == 3
+
+    setup()
+
+    data.store(time + 0.01, -state, -covariance, control=control, sensors=("B", "C"))
+
+    # Expect:
+    #   - original time preserved
+    #   - state overwriten
+    #   - covariance overwriten
+    #   - control overwriten
+    #   - sensors extended
+    assert_storage_close(
+        list(data.scan()),
+        [
+            Row(time, -state, -covariance, control, ["A", "B", "C"]),
+            Row(time + 1, state, covariance, 0, ["A"]),
+            Row(time + 2, state, covariance, 0, ["A"]),
         ],
     )
 
@@ -459,7 +631,7 @@ def test_inexact_match_load_before_end():
 
     setup()
 
-    load_time,_, _, _, _ = data.load(time - 0.01)
+    load_time, _, _, _, _ = data.load(time - 0.01)
     assert_allclose(load_time, time - 1)
 
 
