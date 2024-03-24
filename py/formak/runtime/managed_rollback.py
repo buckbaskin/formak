@@ -25,8 +25,9 @@ class ManagedRollback:
         self.storage = storage if storage is not None else Storage()
 
         print('init', 'state', state)
-        self.storage.store(start_time, state, covariance, sensors=[])
+        self.storage.store(start_time, state, covariance, control=None, sensors=[])
         self.calibration_map = calibration_map
+        self.current_time = start_time
 
     def tick(
         self,
@@ -39,6 +40,7 @@ class ManagedRollback:
         Returns (state, variance) tuple
         """
         print("tick")
+        new_control_info = (control, self.current_time)
 
         if control is None and self._impl.control_size > 0:
             raise TypeError(
@@ -60,11 +62,10 @@ class ManagedRollback:
         # load first state before first reading time
         # ignore sensors, they're already included in the state-covariance
 
-        self.current_time, self.state, self.covariance, control, _ = self.storage.load(
+        self.current_time, self.state, self.covariance, _, _ = self.storage.load(
             start_time
         )
         print('tick', 'state', 'after load', self.state)
-        print('tick', 'control', 'after load', control)
 
         # implicitly sorts readings by time introducing them into the global state queue
         # TODO: check if this is doing the correct thing, I don't want to overwrite a previously stored controls for this line
@@ -72,12 +73,17 @@ class ManagedRollback:
             self.storage.store(
                 reading.timestamp, state=None, covariance=None, control=None, sensors=[reading]
             )
+        if control is not None:
+            self.storage.store(
+                    new_control_info[1], state=None, covariance=None, control=new_control_info[0], sensors=[])
+
 
         # for each reading:
         #   process model to reading time
         #   sensor update at reading time for all sensor readings
         #   save state after sensor update at reading time
         for sensor_time, _, _, control, sensors in self.storage.scan(start_time, output_time):
+            print('tick', 'scan', 'control', control)
             self.current_time, (self.state, self.covariance) = self._process_model(
                 sensor_time,
                 control=control,
