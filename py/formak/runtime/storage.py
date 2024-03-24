@@ -73,11 +73,15 @@ class Storage:
         existing_sensors = self.data[idx].sensors
         existing_sensors.extend(row.sensors)
 
+        new_control = self.data[idx].control
+        if row.control is not None:
+            new_control = row.control
+
         self.data[idx] = StorageLayout(
             time=existing_time,
             state=row.state,
             covariance=row.covariance,
-            control=row.control,
+            control=new_control,
             sensors=existing_sensors,
         )
 
