@@ -106,12 +106,12 @@ def test_tick_no_readings(dt):
     control = ekf.Control(control_velocity=-1.0)
     state0p1 = mr.tick(start_time + dt, control=control)
 
-    print("state")
+    print("test - state")
     print(state0p1.state)
-    print("reading")
+    print("test - reading")
     print(state, dt, control.data[0, 0])
     print(state.data + dt * control.data[0, 0])
-    print("diff")
+    print("test - diff")
     print((state0p1.state.data) - (state.data + dt * control.data[0, 0]))
     assert np.isclose(
         state0p1.state.data, state.data + dt * control.data[0, 0], atol=2.0e-14
@@ -177,16 +177,16 @@ def test_tick_one_reading(output_dt, reading_dt):
 
     dt = output_dt - reading_dt
 
-    print("state")
+    print("test - state")
     print(state.data[0, 0])
-    print("reading")
+    print("test - reading")
     print(reading_v)
-    print("state0p1")
+    print("test - state0p1")
     print(state0p1.state)
-    print("reading")
+    print("test - reading")
     print(reading_v, control.data[0, 0], dt)
     print(reading_v + control.data[0, 0] * dt)
-    print("diff")
+    print("test - diff")
     print((state0p1.state.data) - (reading_v + control.data[0, 0] * dt))
     assert np.isclose(
         state0p1.state.data, reading_v + control.data[0, 0] * dt, atol=2.0e-8

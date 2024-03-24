@@ -56,6 +56,21 @@ def test_first_store_with_control():
     assert len(data.data) == 1
     assert list(data.scan()) == [Row(time, state, covariance, control, sensors)]
 
+def test_overlapping_store_with_control():
+    data = Storage()
+
+    time = 1
+    state = 2
+    covariance = 3
+    control = 4
+    sensors = []
+
+    data.store(time, state, covariance, control=control, sensors=sensors)
+    data.store(time, state, covariance, control=None, sensors=sensors)
+
+    assert len(data.data) == 1
+    # expect that the control is not overwritten when it is None (preserve existing)
+    assert list(data.scan()) == [Row(time, state, covariance, control, sensors)]
 
 def test_pre_store():
     data = Storage()

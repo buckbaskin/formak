@@ -24,6 +24,7 @@ class ManagedRollback:
         self._impl = ekf
         self.storage = storage if storage is not None else Storage()
 
+        print('init', 'state', state)
         self.storage.store(start_time, state, covariance, sensors=[])
         self.calibration_map = calibration_map
 
@@ -62,6 +63,8 @@ class ManagedRollback:
         self.current_time, self.state, self.covariance, control, _ = self.storage.load(
             start_time
         )
+        print('tick', 'state', 'after load', self.state)
+        print('tick', 'control', 'after load', control)
 
         # implicitly sorts readings by time introducing them into the global state queue
         # TODO: check if this is doing the correct thing, I don't want to overwrite a previously stored controls for this line
@@ -103,20 +106,24 @@ class ManagedRollback:
                 sensors=[],
             )
 
-        # process model to output time
+        # process model to output time, don't store
+        print('_process_model to output time', output_time, 'from', self.current_time)
+        print('input: ', self.state)
         _, state_and_variance = self._process_model(output_time, control)
+        print('output: ', state_and_variance.state)
         return state_and_variance
 
     def _process_model(self, output_time, control):
         # const
         max_dt = self._impl.config.max_dt_sec
         if self.current_time > output_time:
-            max_dt = -0.1
+            max_dt = -self._impl.config.max_dt_sec
 
         state = self.state
         covariance = self.covariance
 
         expected_iterations = abs(floor((output_time - self.current_time) / max_dt))
+        print('_process_model', 'expected_iterations', expected_iterations)
 
         for _ in range(expected_iterations):
             state, covariance = self._impl.process_model(
@@ -124,9 +131,13 @@ class ManagedRollback:
             )
 
         iter_time = self.current_time + max_dt * expected_iterations
+        print('_process_model', 'iter_time', iter_time)
         if abs(output_time - iter_time) >= 1e-9:
+            print('_process_model', 'process_model', 'before', state, output_time - iter_time)
+            print('_process_model', 'process_model', 'before', 'control', control)
             state, covariance = self._impl.process_model(
                 output_time - iter_time, state, covariance, control
             )
+            print('_process_model', 'process_model', 'after', state)
 
         return output_time, StateAndVariance(state, covariance)
