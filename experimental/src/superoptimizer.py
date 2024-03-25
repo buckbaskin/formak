@@ -223,11 +223,7 @@ class CpuState(StateBase):
         if not isinstance(other, type(self)):
             return False
 
-        return (
-            self.pipeline,
-            self.computed_values,
-            self.goal_exprs,
-        ) == (
+        return (self.pipeline, self.computed_values, self.goal_exprs,) == (
             other.pipeline,
             other.computed_values,
             other.goal_exprs,

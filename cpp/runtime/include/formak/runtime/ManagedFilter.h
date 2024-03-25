@@ -24,6 +24,15 @@ class ScopeTimer {
   std::chrono::steady_clock::time_point _start;
 };
 
+enum class Synchronization {
+  DEFAULT = 0,
+  ROLLBACK,
+};
+
+struct ManagedFilterOptions {
+  Synchronization synchronization = Synchronization::DEFAULT;
+};
+
 template <typename Impl>
 class ManagedFilter {
  public:
@@ -52,7 +61,8 @@ class ManagedFilter {
             typename = typename std::enable_if<std::is_same_v<
                 typename EnableT::Tag::CalibrationT, std::false_type>>::type>
   ManagedFilter(double initialTimestamp,
-                const typename Impl::Tag::StateAndVarianceT& initialState)
+                const typename Impl::Tag::StateAndVarianceT& initialState,
+                const ManagedFilterOptions& options = {})
       : _impl(),
         _state{.currentTime = initialTimestamp, .state = initialState} {
     static_assert(
@@ -63,7 +73,8 @@ class ManagedFilter {
                 typename EnableT::Tag::CalibrationT, std::false_type>>::type>
   ManagedFilter(double initialTimestamp,
                 const typename Impl::Tag::StateAndVarianceT& initialState,
-                const typename Impl::Tag::CalibrationT& calibration)
+                const typename Impl::Tag::CalibrationT& calibration,
+                const ManagedFilterOptions& options = {})
       : _impl(),
         _calibration(calibration),
         _state{
