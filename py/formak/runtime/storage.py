@@ -102,8 +102,11 @@ class Storage:
             yield from self.data
 
         else:
-            start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
+            controls_times = [(idx, e.time) for idx, e in enumerate(self.data) if e.control is not None]
+            start_index_controls_times = bisect_left(controls_times, start_time, key=lambda e: e[1])
+            start_index = controls_times[start_index_controls_times][0]
             print('scan', 'start bisect result', start_time, '->', start_index, [e.time for e in self.data[start_index-1:start_index+2]])
+
             end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
             if end_index < len(self.data) and abs(self.data[end_index].time - end_time) <= self.options.time_resolution:
                 end_index = end_index + 1
