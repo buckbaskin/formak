@@ -78,11 +78,14 @@ class ManagedRollback:
                     new_control_info[1], state=None, covariance=None, control=new_control_info[0], sensors=[])
 
 
+        # Scan first, so you don't modify while reading
+        stages = list(self.storage.scan(start_time, output_time))
+        print('tick', 'scan', len(stages))
         # for each reading:
         #   process model to reading time
         #   sensor update at reading time for all sensor readings
         #   save state after sensor update at reading time
-        for sensor_time, _, _, control, sensors in self.storage.scan(start_time, output_time):
+        for sensor_time, _, _, control, sensors in stages:
             print('tick', 'scan', 'control', control)
             self.current_time, (self.state, self.covariance) = self._process_model(
                 sensor_time,
