@@ -852,6 +852,15 @@ def test_scans():
         ],
     )
 
+    scan_exact_ending = list(data.scan(0.0, time))
+    assert_storage_close(
+        scan_exact_ending,
+        [
+            Row(time - 1, state, covariance, control, ["A"]),
+            Row(time, state, covariance, control, ["A"]),
+        ],
+    )
+
     scan_early = list(data.scan(0.0, 1.2))
     assert_storage_close(
         scan_early,

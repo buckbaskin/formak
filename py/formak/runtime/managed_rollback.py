@@ -74,6 +74,7 @@ class ManagedRollback:
                 reading.timestamp, state=None, covariance=None, control=None, sensors=[reading]
             )
         if control is not None:
+            print('control store', *new_control_info)
             self.storage.store(
                     new_control_info[1], state=None, covariance=None, control=new_control_info[0], sensors=[])
 

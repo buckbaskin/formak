@@ -183,7 +183,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     print("diff")
     print((state0p1.state.data) - (reading_v + control.data[0, 0] * dt))
     if output_dt >= reading_dt:
-        # Reading should not be included
+        # Reading should be included
         assert np.isclose(
             state0p1.state.data, reading_v + control.data[0, 0] * dt, atol=2.0e-8
         ).all()

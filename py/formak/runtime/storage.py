@@ -8,11 +8,8 @@ from bisect import bisect_left, bisect_right
 from collections import namedtuple
 from typing import Any, List, Optional
 
-RollbackOptions = namedtuple(
-    "RollbackOptions",
-    ["max_history", "max_memory", "max_time", "time_resolution"],
-    defaults=(None, None, None, 1e-9),
-)
+from formak.runtime.common import RollbackOptions
+
 StorageLayout = namedtuple(
     "StorageLayout", ["time", "state", "covariance", "control", "sensors"]
 )
@@ -106,6 +103,10 @@ class Storage:
 
         else:
             start_index = bisect_left(self.data, start_time, key=lambda e: e.time)
+            print('scan', 'start bisect result', start_time, '->', start_index, [e.time for e in self.data[start_index-1:start_index+2]])
             end_index = bisect_right(self.data, end_time, key=lambda e: e.time)
+            if end_index < len(self.data) and abs(self.data[end_index].time - end_time) <= self.options.time_resolution:
+                end_index = end_index + 1
+            print('scan', 'end bisect result', end_time, '->', end_index, [e.time for e in self.data[end_index-1:end_index+2]])
 
             yield from self.data[start_index:end_index]
