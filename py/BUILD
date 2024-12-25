@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 ## Start Selenium-based load
 # https://github.com/SeleniumHQ/selenium/blob/c67d0f1dfc49c7f9f6938ac64ae676a348defebd/py/BUILD.bazel
 load("@rules_python//python:defs.bzl", "py_library")
@@ -109,8 +111,6 @@ py_library(
     name = "exceptions",
     srcs = ["formak/exceptions.py"],
     imports = ["."],
-    deps = [
-    ],
 )
 
 py_library(
@@ -228,12 +228,11 @@ py_library(
         "test/formak/__init__.py",
     ],
     data = [
-        "//common:pytest.ini",
-        "//common:setup.cfg",
+        "//config:pytest.ini",
+        "//config:setup.cfg",
     ],
     imports = ["."],
-    deps = [
-    ],
+    visibility = ["//visibility:public"],
 )
 
 py_test_suite(

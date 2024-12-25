@@ -1,6 +1,16 @@
+load("@pip_deps//:requirements.bzl", "requirement")
+
 load("//py/private:pytest.bzl", _pytest_test = "pytest_test")
 load("//py/private:suite.bzl", _cc_test_suite = "cc_test_suite", _py_test_suite = "py_test_suite")
 load("//py/private:formak_gen.bzl", _cc_formak_model = "cc_formak_model")
+
+PY_TEST_DEPS = [
+    requirement("hypothesis"),
+    # requirement("matplotlib"),
+    # requirement("PyQt5"),
+    requirement("pytest"),
+    requirement("pytest-mock"),
+]
 
 pytest_test = _pytest_test
 py_test_suite = _py_test_suite
