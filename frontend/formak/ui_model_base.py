@@ -96,5 +96,3 @@ def model_validation(
             raise ModelConstructionError(
                 f"Model has solutions in state space where covariance will collapse to zero. Example Solutions:\n -{solution_repr}"
             )
-
-

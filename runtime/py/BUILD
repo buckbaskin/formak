@@ -1,15 +1,19 @@
-load("//py:defs.bzl",  "py_test_suite", "PY_TEST_DEPS")
+load("//py:defs.bzl", "PY_TEST_DEPS", "py_test_suite")
 load("@pip_deps//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:private"])
 
 # Opportunity to split this into more specific classes
 py_library(
-    name = "runtime",
-    srcs = ["formak/runtime.py"],
-    imports = ["."],
+    name = "stamped-reading",
+    srcs = ["formak/runtime/stamped_reading.py"],
 )
 
+py_library(
+    name = "managed-filter",
+    srcs = ["formak/runtime/managed_filter.py"],
+    deps = [":stamped-reading"],
+)
 
 py_test_suite(
     name = "runtime-test",
@@ -22,7 +26,7 @@ py_test_suite(
     ),
     deps = [
         "//py:init-tree",
-        ":runtime",
+        ":managed-filter",
         "//frontend:ui",
     ] + PY_TEST_DEPS,
 )

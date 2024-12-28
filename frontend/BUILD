@@ -20,8 +20,8 @@ py_library(
     visibility = ["//visibility:private"],
     deps = [
         requirement("sympy"),
-        "//py:exceptions",
         ":ui-model-base",
+        "//py:exceptions",
     ],
 )
 
@@ -31,7 +31,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:private"],
     deps = [
-        requirement("scikit-learn"), # this seems like an odd dependency, maybe some indirection could help here
+        requirement("scikit-learn"),  # this seems like an odd dependency, maybe some indirection could help here
     ],
 )
 
@@ -39,10 +39,9 @@ py_library(
     name = "ui",
     srcs = ["formak/ui.py"],
     imports = ["."],
+    visibility = ["//visibility:public"],
     deps = [
         ":ui-model",
         ":ui-state-machine",
     ],
-    visibility = ["//visibility:public"],
 )
-

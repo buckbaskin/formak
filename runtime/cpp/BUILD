@@ -1,6 +1,5 @@
 package(default_visibility = ["//visibility:private"])
 
-
 cc_library(
     name = "managed-filter",
     hdrs = [
