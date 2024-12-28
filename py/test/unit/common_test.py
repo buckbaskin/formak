@@ -1,5 +1,4 @@
 import pytest
-
 from formak.common import named_covariance, named_vector
 
 

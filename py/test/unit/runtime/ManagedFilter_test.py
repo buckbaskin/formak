@@ -2,11 +2,11 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 import numpy as np
-from formak.runtime import ManagedFilter, StampedReading
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
 
 from formak import python, ui
+from formak.runtime import ManagedFilter, StampedReading
 
 
 def samples_dt_sec():
