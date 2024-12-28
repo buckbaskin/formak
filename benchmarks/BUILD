@@ -12,6 +12,6 @@ py_test_suite(
         allow_empty = False,
     ),
     deps = [
-        "//py:formak",
+        "//formak:formak",
     ] + FEATURE_TEST_DEPS,
 )

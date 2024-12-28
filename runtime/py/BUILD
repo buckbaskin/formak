@@ -15,6 +15,13 @@ py_library(
     deps = [":stamped-reading"],
 )
 
+py_library(
+    name = "sklearn",
+    srcs = ["formak/runtime/sklearn.py"],
+    visibility = ["//formak:__pkg__"],
+    deps = [requirement("scikit-learn")],
+)
+
 py_test_suite(
     name = "runtime-test",
     timeout = "moderate",
@@ -27,6 +34,5 @@ py_test_suite(
     deps = [
         "//py:init-tree",
         ":managed-filter",
-        "//frontend:ui",
     ] + PY_TEST_DEPS,
 )

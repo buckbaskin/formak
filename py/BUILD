@@ -94,32 +94,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "reference-models",
-    srcs = glob(
-        ["formak/reference_models/*.py"],
-        allow_empty = False,
-    ),
-    imports = ["."],
-    deps = [
-        "//frontend:ui",
-        requirement("sympy"),
-    ],
-)
-
-py_library(
-    name = "formak",
-    imports = ["."],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":cpp",
-        # ":python",
-        ":reference-models",
-        # runtime":runtime",
-        "//frontend:ui",
-    ],
-)
-
 # TODO(buck): Write up the difference between py_library and py_package
 
 py_package(
@@ -227,7 +201,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         # ":python",
-        "//frontend:ui",
+        # "//frontend:ui",
     ] + PY_TEST_DEPS,
 )
 

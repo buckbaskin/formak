@@ -8,14 +8,14 @@ py_library(
         "__init__.py",
         "common.py",
     ],
-    deps = ["//py:formak"],
+    deps = ["//formak:ui"],
 )
 
 py_test_suite(
     name = "py-test",
     srcs = ["simple_test.py"],
     deps = [
-        "//py:formak",
+        "//formak:formak",
         "//py:microbenchmark",
         ":common",
         requirement("numpy"),

@@ -7,7 +7,7 @@ py_test_suite(
         "simple_test.py",
     ],
     deps = [
-        "//py:formak",
+        "//formak:formak",
     ] + PY_FEATURE_TEST_DEPS,
 )
 
@@ -15,6 +15,6 @@ py_test_suite(
     name = "python-ekf",
     srcs = ["simple_to_ekf_test.py"],
     deps = [
-        "//py:formak",
+        "//formak:formak",
     ] + PY_FEATURE_TEST_DEPS,
 )

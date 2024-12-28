@@ -10,7 +10,7 @@ py_test_suite(
         "ui_test.py",
     ],
     deps = [
-        "//py:formak",
+        "//formak:formak",
         requirement("numpy"),
         requirement("scikit-learn"),
     ] + PY_FEATURE_TEST_DEPS,

@@ -9,7 +9,7 @@ py_test_suite(
     data = [
         "NASA_sample.csv",
     ],
-    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+    deps = ["//formak:formak"] + PY_FEATURE_TEST_DEPS,
 )
 
 py_test_suite(
@@ -18,5 +18,5 @@ py_test_suite(
     data = [
         "NASA_preignition.csv",
     ],
-    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+    deps = ["//formak:formak"] + PY_FEATURE_TEST_DEPS,
 )

@@ -1,6 +1,5 @@
+from formak.ui import Model as UiModel
 from sympy import Symbol, cos, sin, symbols
-
-from formak import ui
 
 
 def combine_nodes(leaves):
@@ -39,6 +38,6 @@ def ui_model():
     }
     control = {}
 
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
     return model

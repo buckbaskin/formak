@@ -6,7 +6,7 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_test_suite(
     name = "nonlinear-test-py",
     srcs = ["nonlinear_test.py"],
-    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+    deps = ["//formak:formak"] + PY_FEATURE_TEST_DEPS,
 )
 
 cc_formak_model(

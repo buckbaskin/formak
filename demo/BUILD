@@ -6,7 +6,7 @@ py_binary(
     srcs = ["src/symbolic_model.py"],
     main = "src/symbolic_model.py",
     deps = [
-        "//py:formak",
+        "//formak",
     ],
 )
 
@@ -15,6 +15,6 @@ py_binary(
     srcs = ["src/ekf.py"],
     main = "src/ekf.py",
     deps = [
-        "//py:formak",
+        "//formak",
     ],
 )

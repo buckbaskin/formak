@@ -7,8 +7,10 @@ from typing import Any, Dict, List, Optional
 from formak.exceptions import ModelFitError
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
-from formak import python
+from formak.compiler.config import Config
 from formak.ui.model import Model as UiModel
+from formak.runtime.sklearn import SklearnEKFAdapter
+from formak.runtime.extended_kalman_filter import ExtendedKalmanFilter
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
@@ -19,11 +21,11 @@ class StateId(Enum):
     Fit_Model = auto()
 
 
-class ConfigView(python.Config):
+class ConfigView(Config):
     def __init__(self, params: Dict[str, Any]):
         self._params = params
 
-        default_config = python.Config()
+        default_config = Config()
         for key, value in dataclasses.asdict(default_config).items():
             if key not in self._params:
                 self._params[key] = value
@@ -119,7 +121,7 @@ class StateMachineState:
 
 
 class NisScore:
-    def __call__(self, estimator: python.SklearnEKFAdapter, X, y=None) -> float:
+    def __call__(self, estimator: SklearnEKFAdapter, X, y=None) -> float:
         score = estimator.score(X=X, y=y)
 
         assert isinstance(score, float)
@@ -182,7 +184,7 @@ class FitModelState(StateMachineState):
     def available_transitions(cls) -> List[str]:
         return []
 
-    def export_python(self) -> python.ExtendedKalmanFilter:
+    def export_python(self) -> ExtendedKalmanFilter:
         return self.fit_estimator.export_python()
 
     def _fit_model_impl(self, debug_print=False):
@@ -215,7 +217,7 @@ class FitModelState(StateMachineState):
 
         X_train, X_test = train_test_split(X, test_size=0.5, random_state=1)
 
-        adapter = python.SklearnEKFAdapter.Create(
+        adapter = SklearnEKFAdapter.Create(
             symbolic_model=self.symbolic_model,
             process_noise=self.parameter_space["process_noise"][0],
             sensor_models=self.parameter_space["sensor_models"][0],

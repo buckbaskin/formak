@@ -1,4 +1,5 @@
-from formak import cpp, ui
+from formak import ui
+from formak.compiler.cpp import compile_ekf
 
 dt = ui.Symbol("dt")
 
@@ -20,7 +21,7 @@ v = ui.Symbol("v")
 
 model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=model,
     process_noise={thrust: 1.0},
     sensor_models={"simple": {v: v}},

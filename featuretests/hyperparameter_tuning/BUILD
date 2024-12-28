@@ -6,14 +6,14 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_library(
     name = "model",
     srcs = ["model.py"],
-    deps = ["//py:formak"],
+    deps = ["//formak"],
 )
 
 py_library(
     name = "data",
     srcs = ["data.py"],
     deps = [
-        "//py:formak",
+        "//formak",
         requirement("numpy"),
     ],
 )
@@ -22,7 +22,7 @@ py_test_suite(
     name = "synthetic-data-test",
     srcs = ["synthetic_data_test.py"],
     deps = [
-        "//py:formak",
+        "//formak:formak",
         ":model",
         ":data",
     ] + PY_FEATURE_TEST_DEPS,

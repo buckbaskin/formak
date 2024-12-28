@@ -6,7 +6,7 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_test_suite(
     name = "tick-interface-py",
     srcs = ["tick_interface_test.py"],
-    deps = ["//py:formak"] + PY_FEATURE_TEST_DEPS,
+    deps = ["//formak:ui"] + PY_FEATURE_TEST_DEPS,
 )
 
 cc_formak_model(
