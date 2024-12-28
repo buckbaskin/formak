@@ -17,6 +17,7 @@ from formak.ast_tools import (
     SourceFile,
 )
 from formak.exceptions import ModelConstructionError
+from formak.compiler.basic_block import BasicBlock
 from sympy import Symbol, ccode, cse, diff, simplify
 
 from formak import ast_fragments as fragments
@@ -26,118 +27,12 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class Config:
-    """
-    Options for generating C++.
-
-    common_subexpression_elimination:
-        Remove common shared computation
-    extra_validation:
-        Catch errors earlier in exchange for increased compute time
-    """
-
-    common_subexpression_elimination: bool = True
-    extra_validation: bool = False
-    max_dt_sec: float = 0.1
-    innovation_filtering: float = 5.0
-
-    def ccode(self):
-        if self.max_dt_sec < 1e-9:
-            raise ValueError(
-                "Please specify Config(max_dt_sec=...) >= 1e-9. Currently {self.max_dt_sec}"
-            )
-
-        return Namespace(
-            name="cpp",
-            body=[
-                ClassDef(
-                    "struct",
-                    "Config",
-                    bases=[],
-                    body=[
-                        MemberDeclaration(
-                            "static constexpr bool",
-                            "common_subexpression_elimination",
-                            (
-                                "true"
-                                if self.common_subexpression_elimination
-                                else "false"
-                            ),
-                        ),
-                        MemberDeclaration(
-                            "static constexpr bool",
-                            "extra_validation",
-                            "true" if self.extra_validation else "false",
-                        ),
-                        MemberDeclaration(
-                            "static constexpr double", "max_dt_sec", self.max_dt_sec
-                        ),
-                        MemberDeclaration(
-                            "static constexpr double",
-                            "innovation_filtering",
-                            (
-                                self.innovation_filtering
-                                if self.innovation_filtering
-                                else 0.0
-                            ),
-                        ),
-                    ],
-                )
-            ],
-        )
-
-
 @dataclass
 class CppCompileResult:
     success: bool
     header_path: Optional[str] = None
     source_path: Optional[str] = None
 
-
-class BasicBlock:
-    """
-    A run of statements without control flow.
-
-    All statements can be reordered or changed to improve performance.
-    """
-
-    def __init__(
-        self, *, statements: List[Tuple[str, Any]], indent: int, config: Config
-    ):
-        # should be Tuple[str, sympy expression]
-        statements = list(statements)
-        self._targets = [k for k, _ in statements]
-        self._exprs = [v for _, v in statements]
-        self._indent = indent
-        self._config = config
-
-    def __len__(self):
-        return len(self._exprs)
-
-    def compile(self):
-        prefix = []
-        body = self._exprs
-
-        if self._config.common_subexpression_elimination:
-            prefix, body = cse(body, symbols=(Symbol(f"_t{i}") for i in count()))
-
-        # Note: The list of statements is ordered and can get CSE or reordered
-        # within the block because we know it is straight calculation without
-        # control flow (a basic block)
-        for target, expr in prefix:
-            assert isinstance(target, Symbol)
-            if self._config.common_subexpression_elimination:
-                expr = simplify(expr)
-            cc_expr = ccode(expr)
-            yield MemberDeclaration("double", target, cc_expr)
-
-        for target, expr in zip(self._targets, body):
-            if self._config.common_subexpression_elimination:
-                expr = simplify(expr)
-            cc_expr = ccode(expr)
-            yield MemberDeclaration("", target, cc_expr)
 
 
 class Model:
