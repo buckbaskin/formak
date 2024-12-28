@@ -4,7 +4,7 @@ from formak.exceptions import ModelDefinitionError
 from sympy import simplify
 from sympy.parsing.sympy_parser import parse_expr
 
-from formak.ui_model_base import UiModelBase
+from formak.ui.model_base import UiModelBase
 
 
 class Model(UiModelBase):

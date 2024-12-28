@@ -39,56 +39,6 @@ filegroup(
 )
 
 py_library(
-    name = "ui-model",
-    srcs = ["formak/ui_model.py"],
-    imports = ["."],
-    visibility = ["//visibility:private"],
-    deps = [
-        requirement("sympy"),
-    ],
-)
-
-py_library(
-    name = "ui-state-machine",
-    srcs = ["formak/ui_state_machine.py"],
-    imports = ["."],
-    visibility = ["//visibility:private"],
-    deps = [
-        requirement("scikit-learn"),
-        ":python",
-    ],
-)
-
-py_library(
-    name = "ui",
-    srcs = ["formak/ui.py"],
-    imports = ["."],
-    deps = [
-        ":ui-model",
-        ":ui-state-machine",
-    ],
-)
-
-py_library(
-    name = "python",
-    srcs = ["formak/python.py"],
-    imports = ["."],
-    deps = [
-        ":common",
-        ":exceptions",
-        requirement("sympy"),
-        requirement("scipy"),
-        requirement("numpy"),
-    ],
-)
-
-py_library(
-    name = "runtime",
-    srcs = ["formak/runtime.py"],
-    imports = ["."],
-)
-
-py_library(
     name = "microbenchmark",
     testonly = True,
     srcs = ["formak/microbenchmark.py"],
@@ -152,8 +102,7 @@ py_library(
     ),
     imports = ["."],
     deps = [
-        ":python",
-        ":ui",
+        "//frontend:ui",
         requirement("sympy"),
     ],
 )
@@ -164,10 +113,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
-        ":python",
+        # ":python",
         ":reference-models",
-        ":runtime",
-        ":ui",
+        # runtime":runtime",
+        "//frontend:ui",
     ],
 )
 
@@ -262,7 +211,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":cpp",
-        ":ui",
+        "//frontend:ui",
     ] + PY_TEST_DEPS,
 )
 
@@ -277,25 +226,8 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":python",
-        ":ui",
-    ] + PY_TEST_DEPS,
-)
-
-py_test_suite(
-    name = "runtime-test",
-    timeout = "moderate",
-    srcs = glob(
-        [
-            "test/unit/runtime/*.py",
-        ],
-        allow_empty = False,
-    ),
-    deps = [
-        ":init-tree",
-        ":runtime",
-        ":ui",
-        ":python",
+        # ":python",
+        "//frontend:ui",
     ] + PY_TEST_DEPS,
 )
 

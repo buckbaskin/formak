@@ -8,9 +8,10 @@ working correctly).
 """
 
 import numpy as np
+from formak.runtime.managed_filter import ManagedFilter
+from formak.runtime.stamped_reading import StampedReading
 
 from formak import python, ui
-from formak.runtime import ManagedFilter, StampedReading
 
 
 def make_ekf():
