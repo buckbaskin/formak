@@ -1,4 +1,6 @@
-from formak import cpp, ui
+from sympy import Symbol
+from formak.compiler.cpp import compile_model
+from formak.ui.model import Model as UiModel
 
 dt = ui.Symbol("dt")
 

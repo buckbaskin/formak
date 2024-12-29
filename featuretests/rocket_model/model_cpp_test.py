@@ -8,7 +8,9 @@ Passes if the C++ implementation is written to disk without an exception
 
 from model_definition import model_definition
 
-from formak import cpp, ui
+from sympy import Symbol
+from formak.compiler.cpp import compile_model
+from formak.ui.model import Model as UiModel
 
 
 def test_cpp_Model():

@@ -1,4 +1,4 @@
-from formak.ui import Model as UiModel
+from formak.ui.model import Model as UiModel
 from sympy import Symbol, cos, sin, symbols
 
 

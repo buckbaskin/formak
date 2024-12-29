@@ -64,24 +64,6 @@ py_library(
 )
 
 py_library(
-    name = "ast-tools",
-    srcs = ["formak/ast_tools.py"],
-    imports = ["."],
-    deps = [
-        requirement("Jinja2"),
-    ],
-)
-
-py_library(
-    name = "ast-fragments",
-    srcs = ["formak/ast_fragments.py"],
-    imports = ["."],
-    deps = [
-        ":ast-tools",
-    ],
-)
-
-py_library(
     name = "cpp",
     srcs = ["formak/cpp.py"],
     imports = ["."],

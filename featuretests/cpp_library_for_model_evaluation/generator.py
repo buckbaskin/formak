@@ -1,10 +1,12 @@
-from formak import cpp, ui
+from sympy import Symbol
+from formak.compiler.cpp import compile_model
+from formak.ui.model import Model as UiModel
 
-dt = ui.Symbol("dt")
+dt = Symbol("dt")
 
-tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-thrust = ui.Symbol("thrust")
+thrust = Symbol("thrust")
 
 state = set(tp.values())
 control = {thrust}
@@ -16,9 +18,9 @@ state_model = {
     tp["a"]: -9.81 * tp["mass"] + thrust,
 }
 
-model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-cpp_implementation = cpp.compile(model)
+cpp_implementation = compile_model(model)
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
 print("Wrote source at path {}".format(cpp_implementation.source_path))
