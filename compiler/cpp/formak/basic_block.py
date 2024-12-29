@@ -1,26 +1,12 @@
-import argparse
-import logging
-from collections import namedtuple
-from dataclasses import dataclass
 from itertools import count
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Any, List, Tuple
 
 from formak.ast_tools import (
-    BaseAst,
-    ClassDef,
-    CompileState,
-    ForwardClassDeclaration,
-    HeaderFile,
     MemberDeclaration,
-    Namespace,
-    Return,
-    SourceFile,
 )
-from formak.exceptions import ModelConstructionError
-from sympy import Symbol, ccode, cse, diff, simplify
+from formak.compiler.comfig import Config
+from sympy import Symbol, ccode, cse, simplify
 
-from formak import ast_fragments as fragments
-from formak import common
 
 class BasicBlock:
     """
@@ -64,4 +50,3 @@ class BasicBlock:
                 expr = simplify(expr)
             cc_expr = ccode(expr)
             yield MemberDeclaration("", target, cc_expr)
-

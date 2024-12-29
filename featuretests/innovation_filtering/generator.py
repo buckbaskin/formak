@@ -11,17 +11,16 @@ working as expected, then the model will flip into the wrong direction.
 
 from math import radians
 
-from sympy import cos, sin
-
-from sympy import Symbol
-from formak.compiler.cpp import compile_model
+from formak.compiler.config import Config
+from formak.compiler.cpp import compile_ekf
 from formak.ui.model import Model as UiModel
+from sympy import Symbol, cos, sin, symbols
 
 TRUE_SCALE = radians(5.0)
 
-dt = ui.Symbol("dt")
+dt = Symbol("dt")
 
-x, y, heading, velocity, _heading_err = ui.symbols(
+x, y, heading, velocity, _heading_err = symbols(
     ["x", "y", "heading", "velocity", "_heading_err"]
 )
 state = {x, y, heading}
@@ -33,11 +32,11 @@ state_model = {
     heading: heading + _heading_err,
 }
 
-model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-config = cpp.Config(innovation_filtering=4)
+config = Config(innovation_filtering=4)
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=model,
     process_noise={velocity: 1.0, _heading_err: 0.1},
     sensor_models={"compass": {heading: heading}},

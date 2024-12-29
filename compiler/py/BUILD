@@ -8,6 +8,13 @@ py_library(
 )
 
 py_library(
+    name = "basic-block",
+    srcs = ["formak/compiler/basic_block.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "compiler",
     srcs = ["formak/compiler/__init__.py"],
     imports = ["."],

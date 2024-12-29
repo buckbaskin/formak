@@ -3,8 +3,9 @@ from __future__ import annotations
 import numpy as np
 from formak.exceptions import ModelConstructionError
 
-from formak import common
 from formak.compiler.basic_block import BasicBlock
+from formak.common.named_vector import named_vector
+from formak.common.named_covariance import named_covariance
 
 
 class SensorModel:
@@ -22,11 +23,11 @@ class SensorModel:
         )
         self.arglist = self.arglist_state + self.arglist_calibration
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
-        self.Reading = common.named_vector("Reading", self.readings)
-        self.ReadingCovariance = common.named_vector("ReadingCovariance", self.readings)
+        self.State = named_vector("State", self.arglist_state)
+        self.Covariance = named_covariance("Covariance", self.arglist_state)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
+        self.Reading = named_vector("Reading", self.readings)
+        self.ReadingCovariance = named_vector("ReadingCovariance", self.readings)
 
         self.calibration_vector = np.array(
             [[calibration_map[k] for k in self.arglist_calibration]]

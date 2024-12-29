@@ -1,12 +1,12 @@
-from sympy import Symbol
-from formak.compiler.cpp import compile_model
+from formak.compiler.cpp import compile_ekf
 from formak.ui.model import Model as UiModel
+from sympy import Symbol
 
-dt = ui.Symbol("dt")
+dt = Symbol("dt")
 
-tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-thrust = ui.Symbol("thrust")
+thrust = Symbol("thrust")
 
 state = set(tp.values())
 control = {thrust}
@@ -18,14 +18,14 @@ state_model = {
     tp["a"]: -9.81 * tp["mass"] + thrust,
 }
 
-model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=model,
     process_noise={thrust: 1.0},
     sensor_models={
-        "simple": {ui.Symbol("v"): ui.Symbol("v")},
-        "accel": {ui.Symbol("a"): ui.Symbol("a")},
+        "simple": {Symbol("v"): Symbol("v")},
+        "accel": {Symbol("a"): Symbol("a")},
     },
     sensor_noises={"simple": {tp["v"]: 1.0}, "accel": {tp["a"]: 1.0}},
     config={"common_subexpression_elimination": True, "max_dt_sec": 0.05},

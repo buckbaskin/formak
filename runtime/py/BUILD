@@ -7,19 +7,36 @@ package(default_visibility = ["//visibility:private"])
 py_library(
     name = "stamped-reading",
     srcs = ["formak/runtime/stamped_reading.py"],
+    imports = ["."],
+)
+
+py_library(
+    name = "sensor-model",
+    srcs = ["formak/runtime/sensor_model.py"],
+    imports = ["."],
+    deps = [
+        "//common:named-covariance",
+        "//common:named-vector",
+        "//compiler/py:basic-block",
+    ],
 )
 
 py_library(
     name = "managed-filter",
     srcs = ["formak/runtime/managed_filter.py"],
+    imports = ["."],
     deps = [":stamped-reading"],
 )
 
 py_library(
     name = "sklearn",
     srcs = ["formak/runtime/sklearn.py"],
+    imports = ["."],
     visibility = ["//formak:__pkg__"],
-    deps = [requirement("scikit-learn")],
+    deps = [
+        requirement("scikit-learn"),
+        ":sensor-model",
+    ],
 )
 
 py_test_suite(

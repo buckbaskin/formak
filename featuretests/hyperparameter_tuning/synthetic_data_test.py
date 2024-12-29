@@ -15,7 +15,6 @@ from model import (
 )
 
 from data import generate_data
-from formak import ui
 
 np.seterr("raise")
 

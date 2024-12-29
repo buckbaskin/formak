@@ -12,11 +12,11 @@ from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
 from sympy import Symbol
 
-from formak import common
 from formak.compiler.config import Config
 from formak.runtime.sensor_model import SensorModel
 from formak.runtime.assertions import assert_valid_covariance
 from formak.runtime.extended_kalman_filter import compile_ekf, ExtendedKalmanFilter
+from formak.ui.model_base import UiModelBase
 
 
 StateAndCovariance = namedtuple("StateAndCovariance", ["state", "covariance"])
@@ -65,7 +65,7 @@ class SklearnEKFAdapter(BaseEstimator):
     @classmethod
     def Create(
         cls,
-        symbolic_model: common.UiModelBase,
+        symbolic_model: UiModelBase,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
@@ -95,7 +95,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
     def __init__(
         self,
-        symbolic_model: common.UiModelBase | None = None,
+        symbolic_model: UiModelBase | None = None,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
         sensor_models: dict[Symbol, sympy.core.expr.Expr] | None = None,
         sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,

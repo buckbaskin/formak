@@ -8,16 +8,14 @@ Passes if the C++ implementation is written to disk without an exception
 
 from itertools import repeat
 
+from formak.compiler.cpp import compile_ekf
 from model_definition import (
     model_definition,
     named_acceleration,
     named_rotation_rate,
     named_translation,
 )
-
 from sympy import Symbol
-from formak.compiler.cpp import compile_model
-from formak.ui.model import Model as UiModel
 
 
 def test_cpp_EKF():

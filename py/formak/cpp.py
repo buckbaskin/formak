@@ -16,8 +16,8 @@ from formak.ast_tools import (
     Return,
     SourceFile,
 )
-from formak.exceptions import ModelConstructionError
 from formak.compiler.basic_block import BasicBlock
+from formak.exceptions import ModelConstructionError
 from sympy import Symbol, ccode, cse, diff, simplify
 
 from formak import ast_fragments as fragments
@@ -27,12 +27,12 @@ DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class CppCompileResult:
     success: bool
     header_path: Optional[str] = None
     source_path: Optional[str] = None
-
 
 
 class Model:

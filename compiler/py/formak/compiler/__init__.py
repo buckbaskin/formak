@@ -1,7 +1,9 @@
+import sympy
 from formak import common
 from sympy import Symbol
 from formak.runtime.extended_kalman_filter import ExtendedKalmanFilter
 from formak.compiler.config import Config
+
 
 def compile_ekf(
     symbolic_model: common.UiModelBase,

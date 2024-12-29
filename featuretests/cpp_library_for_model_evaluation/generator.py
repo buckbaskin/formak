@@ -1,6 +1,6 @@
-from sympy import Symbol
 from formak.compiler.cpp import compile_model
 from formak.ui.model import Model as UiModel
+from sympy import Symbol
 
 dt = Symbol("dt")
 

@@ -357,5 +357,3 @@ class ExtendedKalmanFilter:
         return StateAndCovariance(
             self.State.from_data(next_state), self.Covariance.from_data(next_covariance)
         )
-
-

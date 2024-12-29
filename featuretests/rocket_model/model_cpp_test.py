@@ -6,11 +6,9 @@ Define a C++ implementation of a rocket model
 Passes if the C++ implementation is written to disk without an exception
 """
 
-from model_definition import model_definition
-
-from sympy import Symbol
 from formak.compiler.cpp import compile_model
-from formak.ui.model import Model as UiModel
+from model_definition import model_definition
+from sympy import Symbol
 
 
 def test_cpp_Model():
@@ -27,9 +25,9 @@ def test_cpp_Model():
         "IMU_pos_y": 0.28390,
         "IMU_pos_z": -1.42333,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
-    cpp.compile(
+    compile_model(
         model,
         calibration_map=calibration_map,
     )

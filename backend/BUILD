@@ -5,13 +5,13 @@ load("@pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "backend",
-    srcs = ['formak/backend/__init__.py'],
+    srcs = ["formak/backend/__init__.py"],
     imports = ["."],
-    deps = [
-        ":ast-tools",
-        ":ast-fragments",
-    ],
     visibility = ["//formak:__pkg__"],
+    deps = [
+        ":ast-fragments",
+        ":ast-tools",
+    ],
 )
 
 py_library(
@@ -31,4 +31,3 @@ py_library(
         ":ast-tools",
     ],
 )
-

@@ -1,10 +1,9 @@
 import logging
+import sys
 from itertools import chain
 
-import sys
 print(sys.modules.keys())
 
-from formak.ui.model import Model as UiModel
 from formak.backend.ast_tools import (
     Arg,
     ClassDef,
@@ -21,8 +20,6 @@ from formak.backend.ast_tools import (
     SourceFile,
     UsingDeclaration,
 )
-
-1/0
 
 MEMBERS = [
     "CON_ori_pitch",
