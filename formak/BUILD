@@ -12,7 +12,9 @@ py_library(
         # ":python",
         ":reference-models",
         ":ui",
-        # runtime":runtime",
+        "//compiler",
+        "//backend",
+        # ":runtime",
     ],
 )
 
