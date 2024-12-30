@@ -8,15 +8,17 @@ Passes if the fit model scores better than the unfit model
 
 import numpy as np
 
-from formak import python, ui
+from formak.ui.model import Model as UiModel
+from formak.runtime.sklearn import SklearnEKFAdapter
+from sympy import Symbol
 
 
 def test_like_sklearn_regression():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -29,15 +31,15 @@ def test_like_sklearn_regression():
     }
 
     params = {
-        "process_noise": {ui.Symbol("thrust"): 1.0},
+        "process_noise": {Symbol("thrust"): 1.0},
         "sensor_models": {
-            "z": {ui.Symbol("z"): ui.Symbol("z")},
-            "v": {ui.Symbol("v"): ui.Symbol("v")},
+            "z": {Symbol("z"): Symbol("z")},
+            "v": {Symbol("v"): Symbol("v")},
         },
-        "sensor_noises": {"z": {ui.Symbol("z"): 1.0}, "v": {ui.Symbol("v"): 1.0}},
+        "sensor_noises": {"z": {Symbol("z"): 1.0}, "v": {Symbol("v"): 1.0}},
     }
-    model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+    model = SklearnEKFAdapter(
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [thrust, z, v]
