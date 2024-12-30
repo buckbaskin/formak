@@ -1,12 +1,12 @@
 import sympy
-from formak import common
 from sympy import Symbol
+from formak.ui.model_base import UiModelBase, model_validation
 from formak.runtime.extended_kalman_filter import ExtendedKalmanFilter
 from formak.compiler.config import Config
 
 
 def compile_ekf(
-    symbolic_model: common.UiModelBase,
+    symbolic_model: UiModelBase,
     process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
     sensor_models: dict[str, sympy.core.expr.Expr],
     sensor_noises,
@@ -22,7 +22,7 @@ def compile_ekf(
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(
+    model_validation(
         symbolic_model,
         process_noise,
         sensor_models,
@@ -37,4 +37,26 @@ def compile_ekf(
         sensor_noises=sensor_noises,
         calibration_map=calibration_map,
         config=config,
+    )
+
+
+def compile(symbolic_model, calibration_map=None, *, config=None):
+    if config is None:
+        config = Config()
+    elif isinstance(config, dict):
+        config = Config(**config)
+
+    if calibration_map is None:
+        calibration_map = {}
+
+    model_validation(
+        symbolic_model,
+        {},
+        {},
+        calibration_map=calibration_map,
+        extra_validation=config.extra_validation,
+    )
+
+    return Model(
+        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
     )

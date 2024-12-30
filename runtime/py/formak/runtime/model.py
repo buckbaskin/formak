@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 from formak.exceptions import ModelConstructionError
 
-from formak import common
+from formak.common.named_vector import named_vector
+from formak.ui.model_base import UiModelBase
 from formak.compiler.config import Config
 from formak.compiler.basic_block import BasicBlock
 
@@ -37,9 +38,9 @@ class Model:
             + self.arglist_control
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         self.calibration_vector = np.zeros((0, 0))
         if self.calibration_size > 0:
@@ -109,25 +110,3 @@ class Model:
         )
 
         return next_state
-
-
-def compile(symbolic_model, calibration_map=None, *, config=None):
-    if config is None:
-        config = Config()
-    elif isinstance(config, dict):
-        config = Config(**config)
-
-    if calibration_map is None:
-        calibration_map = {}
-
-    common.model_validation(
-        symbolic_model,
-        {},
-        {},
-        calibration_map=calibration_map,
-        extra_validation=config.extra_validation,
-    )
-
-    return Model(
-        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
-    )

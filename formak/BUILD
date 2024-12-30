@@ -22,7 +22,9 @@ py_library(
     name = "ui-model-base",
     srcs = ["formak/ui/model_base.py"],
     imports = ["."],
-    visibility = ["//visibility:private"],
+    visibility = [
+        "//compiler/py:__pkg__", # TODO antipattern, //compiler should not depend on this, should be vis:private
+    ],
     deps = [
         requirement("sympy"),
         "//py:exceptions",
@@ -33,7 +35,9 @@ py_library(
     name = "ui-model",
     srcs = ["formak/ui/model.py"],
     imports = ["."],
-    visibility = ["//visibility:private"],
+    visibility = [
+        '//featuretests/scikit_learn_integration:__pkg__', # TODO antipattern, should be vis:private
+    ],
     deps = [
         requirement("sympy"),
         ":ui-model-base",

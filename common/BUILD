@@ -16,6 +16,7 @@ py_library(
     srcs = ["formak/common/named_vector.py"],
     imports = ["."],
     deps = [
+        ":named-array-base",
     ],
 )
 

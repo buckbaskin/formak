@@ -8,7 +8,9 @@ import sympy
 from numpy.typing import NDArray
 from sympy import Matrix, Symbol
 
-from formak import common
+from formak.common.named_vector import named_vector
+from formak.ui.model_base import UiModelBase
+from formak.common.named_covariance import named_covariance
 from formak.compiler.config import Config
 from formak.compiler.basic_block import BasicBlock
 from formak.runtime.model import Model
@@ -47,10 +49,10 @@ class ExtendedKalmanFilter:
             list(state_model.calibration), key=lambda x: x.name
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Covariance = named_covariance("Covariance", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         self.calibration_map = calibration_map
 
@@ -135,7 +137,7 @@ class ExtendedKalmanFilter:
 
     def _construct_sensors(
         self,
-        state_model: common.UiModelBase,
+        state_model: UiModelBase,
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
         calibration_map: dict[Symbol, float],

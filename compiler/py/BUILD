@@ -15,8 +15,9 @@ py_library(
 )
 
 py_library(
-    name = "compiler",
+    name = "lib-compiler",
     srcs = ["formak/compiler/__init__.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = ["//formak:ui-model-base"],
 )

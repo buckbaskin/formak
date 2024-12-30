@@ -29,13 +29,42 @@ py_library(
 )
 
 py_library(
+    name = "assertions",
+    srcs = ["formak/runtime/assertions.py"],
+    imports = ["."],
+    deps = [],
+)
+
+py_library(
+    name = "model",
+    srcs = ["formak/runtime/model.py"],
+    imports = ["."],
+    deps = [],
+)
+
+py_library(
+    name = "extended-kalman-filter",
+    srcs = ["formak/runtime/extended_kalman_filter.py"],
+    imports = ["."],
+    deps = [":model"],
+)
+
+py_library(
     name = "sklearn",
     srcs = ["formak/runtime/sklearn.py"],
     imports = ["."],
-    visibility = ["//formak:__pkg__"],
+    visibility = [
+        "//featuretests/scikit_learn_integration:__pkg__",  # TODO: featuretests should use deps indirectly
+        "//formak:__pkg__",
+    ],
     deps = [
         requirement("scikit-learn"),
+        ":assertions",
+        ":extended-kalman-filter",
         ":sensor-model",
+        "//compiler/py:config",
+        "//compiler/py:lib-compiler",
+        "//py:exceptions",
     ],
 )
 

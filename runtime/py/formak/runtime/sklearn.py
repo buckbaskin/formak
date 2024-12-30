@@ -16,7 +16,8 @@ from formak.compiler.config import Config
 from formak.common.named_vector import named_vector
 from formak.runtime.sensor_model import SensorModel
 from formak.runtime.assertions import assert_valid_covariance
-from formak.runtime.extended_kalman_filter import compile_ekf, ExtendedKalmanFilter
+from formak.runtime.extended_kalman_filter import ExtendedKalmanFilter
+from formak.compiler import compile_ekf
 from formak.ui.model_base import UiModelBase
 
 

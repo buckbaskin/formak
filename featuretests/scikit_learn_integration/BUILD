@@ -10,7 +10,9 @@ py_test_suite(
         "ui_test.py",
     ],
     deps = [
-        "//formak:formak",
+        "//runtime/py:sklearn",
+        '//formak:ui-model', # TODO: feature tests should get dependencies indirectly through //formak
+        requirement("sympy"),
         requirement("numpy"),
         requirement("scikit-learn"),
     ] + PY_FEATURE_TEST_DEPS,
