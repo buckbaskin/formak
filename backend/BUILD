@@ -5,9 +5,9 @@ load("@pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "backend",
-    srcs = ["formak/backend/__init__.py"],
+    srcs = [],
     imports = ["."],
-    visibility = ["//formak:__pkg__"],
+    visibility = ["//visibility:public"],
     deps = [
         ":ast-fragments",
         ":ast-tools",
@@ -18,6 +18,7 @@ py_library(
     name = "ast-tools",
     srcs = ["formak/backend/ast_tools.py"],
     imports = ["."],
+    visibility = ["//visibility:public"],
     deps = [
         requirement("Jinja2"),
     ],

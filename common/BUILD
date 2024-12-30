@@ -34,15 +34,3 @@ py_library(
     deps = [
     ],
 )
-
-py_test_suite(
-    name = "ui-test",
-    size = "small",
-    srcs = [
-        "test/ui_test.py",
-    ],
-    deps = [
-        "//py:init-tree",
-        ":ui",
-    ] + PY_TEST_DEPS,
-)

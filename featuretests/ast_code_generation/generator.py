@@ -1,8 +1,5 @@
 import logging
-import sys
 from itertools import chain
-
-print(sys.modules.keys())
 
 from formak.backend.ast_tools import (
     Arg,

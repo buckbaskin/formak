@@ -5,10 +5,10 @@ load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DE
 py_library(
     name = "common",
     srcs = [
-        "__init__.py",
         "common.py",
     ],
-    deps = ["//formak:ui"],
+    imports = ["."],
+    deps = ["//formak"],
 )
 
 py_test_suite(

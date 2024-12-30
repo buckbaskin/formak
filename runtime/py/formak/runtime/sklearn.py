@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator
 from sympy import Symbol
 
 from formak.compiler.config import Config
+from formak.common.named_vector import named_vector
 from formak.runtime.sensor_model import SensorModel
 from formak.runtime.assertions import assert_valid_covariance
 from formak.runtime.extended_kalman_filter import compile_ekf, ExtendedKalmanFilter
@@ -134,7 +135,7 @@ class SklearnEKFAdapter(BaseEstimator):
             assert isinstance(sensor_noises[key], dict)
             assert len(sensor_noises[key]) == len(self.sensor_models[key].keys())
             readings = sorted(list(model.keys()))
-            ReadingCovariance = common.named_vector("ReadingCovariance", readings)
+            ReadingCovariance = named_vector("ReadingCovariance", readings)
 
             assert_valid_covariance(sensor_noises[key], f"Sensor Noise [{key}]")
             matrix_sensor_noises[key] = ReadingCovariance.from_dict(sensor_noises[key])

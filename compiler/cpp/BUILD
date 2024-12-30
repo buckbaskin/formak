@@ -16,7 +16,7 @@ py_library(
 
 py_library(
     name = "compiler",
-    srcs = ["formak/compiler/__init__.py"],
+    srcs = [],
     imports = ["."],
     visibility = ["//visibility:public"],
 )

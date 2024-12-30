@@ -10,8 +10,8 @@ py_library(
     deps = [
         # ":cpp",
         # ":python",
-        ":reference-models",
-        ":ui",
+        # ":reference-models", # including this breaks feature tests?
+        # ":ui", # including this breaks feature tests?
         "//compiler",
         "//backend",
         # ":runtime",
@@ -55,7 +55,7 @@ py_library(
 
 py_library(
     name = "ui",
-    srcs = ["formak/ui/__init__.py"],
+    srcs = [],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
