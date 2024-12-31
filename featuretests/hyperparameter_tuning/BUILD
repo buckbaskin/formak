@@ -25,6 +25,7 @@ py_test_suite(
     srcs = ["synthetic_data_test.py"],
     deps = [
         "//formak:formak",
+        "//formak:ui-state-machine",
         ":model",
         ":data",
     ] + PY_FEATURE_TEST_DEPS,

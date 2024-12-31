@@ -53,7 +53,9 @@ py_library(
     name = "ui-state-machine",
     srcs = ["formak/ui/state_machine.py"],
     imports = ["."],
-    visibility = ["//visibility:private"],
+    visibility = [
+        "//featuretests/hyperparameter_tuning:__pkg__",  # TODO antipattern, should be vis:private
+],
     deps = [
         "//compiler/py:config",
         "//runtime/py:sklearn",
