@@ -24,16 +24,6 @@ CC_TEST_DEPS = [
 ]
 
 py_library(
-    name = "ui-model",
-    srcs = ["formak/ui_model.py"],
-    imports = ["."],
-    visibility = ["//visibility:private"],
-    deps = [
-        requirement("sympy"),
-    ],
-)
-
-py_library(
     name = "ui-state-machine",
     srcs = ["formak/ui_state_machine.py"],
     imports = ["."],
@@ -49,7 +39,7 @@ py_library(
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
-        ":ui-model",
+        "//problemdefinition:model",
         ":ui-state-machine",
     ],
 )
