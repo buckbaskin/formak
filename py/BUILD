@@ -1,3 +1,5 @@
+package(default_visibility = ["//visibility:public"])
+
 ## Start Selenium-based load
 # https://github.com/SeleniumHQ/selenium/blob/c67d0f1dfc49c7f9f6938ac64ae676a348defebd/py/BUILD.bazel
 load("@rules_python//python:defs.bzl", "py_library")
@@ -24,22 +26,11 @@ CC_TEST_DEPS = [
 ]
 
 py_library(
-    name = "ui-state-machine",
-    srcs = ["formak/ui_state_machine.py"],
-    imports = ["."],
-    visibility = ["//visibility:private"],
-    deps = [
-        requirement("scikit-learn"),
-        ":python",
-    ],
-)
-
-py_library(
     name = "ui",
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
-        ":ui-state-machine",
+        "//problemdefinition:design-manager",
         "//problemdefinition:model",
     ],
 )

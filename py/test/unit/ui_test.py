@@ -3,7 +3,7 @@ from enum import Enum
 import numpy as np
 import pytest
 from formak.ui import DesignManager, Model, NisScore, Symbol
-from formak.ui_state_machine import ConfigView, StateId
+from problemdefinition.design_manager import ConfigView, StateId
 
 from formak import python
 

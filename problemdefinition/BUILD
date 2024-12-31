@@ -11,3 +11,14 @@ py_library(
         requirement("sympy"),
     ],
 )
+
+py_library(
+    name = "design-manager",
+    srcs = ["problemdefinition/design_manager.py"],
+    imports = ["."],
+    visibility = ["//py:__pkg__"],
+    deps = [
+        requirement("scikit-learn"),
+        "//py:python",
+    ],
+)
