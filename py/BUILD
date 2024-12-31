@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "cc_formak_model", "py_test_suite")
+load("//py:defs.bzl", "cc_formak_model", "py_test_suite", "PY_TEST_DEPS")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - exporting as a pip package for non-bazel users
@@ -13,18 +13,11 @@ load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 FORMAK_VERSION = "0.0.1-alpha00"
 
-PY_TEST_DEPS = [
-    requirement("hypothesis"),
-    requirement("matplotlib"),
-    requirement("PyQt5"),
-    requirement("pytest"),
-    requirement("pytest-mock"),
-]
-
 CC_TEST_DEPS = [
     "@gtest//:gtest_main",
 ]
 
+# Note: allowed library for external use
 py_library(
     name = "problemdefinition",
     srcs = glob(
@@ -48,13 +41,8 @@ py_library(
         requirement("sympy"),
         requirement("scipy"),
         requirement("numpy"),
+        requirement("scikit-learn"),
     ],
-)
-
-py_library(
-    name = "runtime",
-    srcs = ["formak/runtime.py"],
-    imports = ["."],
 )
 
 py_library(
@@ -115,6 +103,7 @@ py_library(
     ],
 )
 
+# Note: allowed library for external use
 py_library(
     name = "reference-models",
     srcs = glob(
@@ -251,23 +240,6 @@ py_test_suite(
         ":init-tree",
         ":python",
         ":problemdefinition",
-    ] + PY_TEST_DEPS,
-)
-
-py_test_suite(
-    name = "runtime-test",
-    timeout = "moderate",
-    srcs = glob(
-        [
-            "test/unit/runtime/*.py",
-        ],
-        allow_empty = False,
-    ),
-    deps = [
-        ":init-tree",
-        ":runtime",
-        ":problemdefinition",
-        ":python",
     ] + PY_TEST_DEPS,
 )
 

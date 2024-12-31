@@ -2,8 +2,8 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 import numpy as np
-from formak.problemdefinition.model import Model as UiModel
-from formak.runtime import ManagedFilter, StampedReading
+from problemdefinition.model import Model as UiModel
+from runtime_py.runtime import ManagedFilter, StampedReading
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
 from sympy import Symbol
