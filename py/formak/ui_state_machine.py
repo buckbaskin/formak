@@ -5,9 +5,10 @@ from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
 from formak.exceptions import ModelFitError
+from problemdefinition.model import Model as UiModel
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
-from formak import python, ui_model
+from formak import python
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
@@ -134,7 +135,7 @@ class FitModelState(StateMachineState):
         self,
         name: str,
         history: List[StateId],
-        model: ui_model.Model,
+        model: UiModel,
         parameter_space: Dict[str, List[Any]],
         parameter_sampling_strategy,
         data,
@@ -271,7 +272,7 @@ class FitModelState(StateMachineState):
 
 
 class SymbolicModelState(StateMachineState):
-    def __init__(self, name: str, history: List[StateId], model: ui_model.Model):
+    def __init__(self, name: str, history: List[StateId], model: UiModel):
         super().__init__(name=name, history=history + [self.state_id()])
         self.model = model
 
@@ -321,5 +322,5 @@ class DesignManager(StateMachineState):
     def available_transitions(cls) -> List[str]:
         return ["symbolic_model"]
 
-    def symbolic_model(self, model: ui_model.Model) -> SymbolicModelState:
+    def symbolic_model(self, model: UiModel) -> SymbolicModelState:
         return SymbolicModelState(name=self.name, history=self.history(), model=model)

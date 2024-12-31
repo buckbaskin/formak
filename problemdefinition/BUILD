@@ -4,7 +4,7 @@ load("@pip_deps//:requirements.bzl", "requirement")
 
 py_library(
     name = "model",
-    srcs = ["formak/problemdefinition/model.py"],
+    srcs = ["problemdefinition/model.py"],
     imports = ["."],
     visibility = ["//py:__pkg__"],
     deps = [

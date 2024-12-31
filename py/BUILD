@@ -39,8 +39,8 @@ py_library(
     srcs = ["formak/ui.py"],
     imports = ["."],
     deps = [
-        "//problemdefinition:model",
         ":ui-state-machine",
+        "//problemdefinition:model",
     ],
 )
 
