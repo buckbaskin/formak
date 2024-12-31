@@ -9,10 +9,10 @@ scikit-learn interface
 """
 
 import numpy as np
-
-from formak.ui.model import Model as UiModel
 from formak.runtime.sklearn import SklearnEKFAdapter
+from formak.ui.model import Model as UiModel
 from sympy import Symbol
+
 
 def test_UI_like_sklearn():
     dt = Symbol("dt")

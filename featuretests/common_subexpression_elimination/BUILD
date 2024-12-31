@@ -3,21 +3,25 @@ load("//py:defs.bzl", "cc_formak_model", "cc_test_suite", "py_test_suite")
 load("//featuretests:test_deps.bzl", "CC_FEATURE_TEST_DEPS", "PY_FEATURE_TEST_DEPS")
 
 py_library(
-    name = "common",
+    name = "model-builder",
     srcs = [
-        "common.py",
+        "model_builder.py",
     ],
     imports = ["."],
-    deps = ["//formak"],
+    deps = [
+        "//formak:ui-model",
+    ],
 )
 
 py_test_suite(
     name = "py-test",
     srcs = ["simple_test.py"],
     deps = [
-        "//formak:formak",
+        # "//formak:formak",
+        "//compiler/py:lib-compiler",
+        "//compiler/py:config",
         "//py:microbenchmark",
-        ":common",
+        ":model-builder",
         requirement("numpy"),
     ] + PY_FEATURE_TEST_DEPS,
 )
@@ -26,26 +30,20 @@ cc_formak_model(
     name = "cse-model",
     namespace = "cse",
     pydeps = [
-        ":common",
+        ":model-builder",
     ],
     pymain = "gen_cse.py",
-    pysrcs = glob(
-        ["*.py"],
-        allow_empty = False,
-    ),
+    pysrcs = ["gen_cse.py"],
 )
 
 cc_formak_model(
     name = "no-cse-model",
     namespace = "no_cse",
     pydeps = [
-        ":common",
+        ":model-builder",
     ],
     pymain = "gen_no_cse.py",
-    pysrcs = glob(
-        ["*.py"],
-        allow_empty = False,
-    ),
+    pysrcs = ["gen_no_cse.py"],
 )
 
 cc_test(

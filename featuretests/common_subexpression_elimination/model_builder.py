@@ -1,5 +1,13 @@
+import sys
+
 from formak.ui.model import Model as UiModel
 from sympy import Symbol, cos, sin, symbols
+
+# # UI Model dependency not in the path
+# print("model_builder path")
+# for line in sorted(list(sys.path)):
+#     print(line)
+# 1 / 0
 
 
 def combine_nodes(leaves):

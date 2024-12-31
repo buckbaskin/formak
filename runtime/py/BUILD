@@ -46,7 +46,15 @@ py_library(
     name = "extended-kalman-filter",
     srcs = ["formak/runtime/extended_kalman_filter.py"],
     imports = ["."],
-    deps = [":model"],
+    visibility = ["//compiler/py:__pkg__"],  # TODO should the compiler depend on the runtime?
+    deps = [
+        ":assertions",
+        ":model",
+        ":sensor-model",
+        "//common:named-covariance",
+        "//common:named-vector",
+        "//compiler/py:basic-block",
+    ],
 )
 
 py_library(

@@ -1,4 +1,5 @@
-from common import ui_model
+from model_builder import ui_model
+
 from formak import cpp
 
 

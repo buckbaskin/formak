@@ -2,6 +2,7 @@ import sympy
 from sympy import Symbol
 from formak.ui.model_base import UiModelBase, model_validation
 from formak.runtime.extended_kalman_filter import ExtendedKalmanFilter
+from formak.runtime.model import Model
 from formak.compiler.config import Config
 
 
@@ -40,7 +41,7 @@ def compile_ekf(
     )
 
 
-def compile(symbolic_model, calibration_map=None, *, config=None):
+def compile_model(symbolic_model, calibration_map=None, *, config=None):
     if config is None:
         config = Config()
     elif isinstance(config, dict):

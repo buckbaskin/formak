@@ -7,9 +7,8 @@ Passes if the fit model scores better than the unfit model
 """
 
 import numpy as np
-
-from formak.ui.model import Model as UiModel
 from formak.runtime.sklearn import SklearnEKFAdapter
+from formak.ui.model import Model as UiModel
 from sympy import Symbol
 
 

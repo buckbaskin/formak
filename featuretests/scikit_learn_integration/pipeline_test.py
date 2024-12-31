@@ -4,6 +4,13 @@ Feature Test.
 Passes if running a model in a pipeline doesn't raise exceptions
 """
 
+import sys
+
+print("pipeline path")
+for line in sys.path:
+    print(line)
+1 / 0
+
 import numpy as np
 from formak.runtime.sklearn import SklearnEKFAdapter
 from formak.ui.model import Model as UiModel

@@ -9,20 +9,20 @@ Passes if CSE demonstrates a significant outperformance in all examples.
 from functools import partial
 
 import numpy as np
-from common_subexpression_elimination.common import ui_model
+from formak.compiler import compile_model
+from formak.compiler.config import Config
 from formak.microbenchmark import microbenchmark
-
-from formak import python
+from model_builder import ui_model
 
 
 def test_python_CSE():
     model = ui_model()
 
-    cse_implementation = python.compile(
-        model, config=python.Config(common_subexpression_elimination=True)
+    cse_implementation = compile_model(
+        model, config=Config(common_subexpression_elimination=True)
     )
-    no_cse_implementation = python.compile(
-        model, config=python.Config(common_subexpression_elimination=False)
+    no_cse_implementation = compile_model(
+        model, config=Config(common_subexpression_elimination=False)
     )
 
     # random -> random_sample in 1.25

@@ -12,7 +12,9 @@ py_library(
         # ":python",
         # ":reference-models", # including this breaks feature tests?
         # ":ui", # including this breaks feature tests?
-        "//compiler",
+        ":ui-model",
+        "//compiler/py:lib-compiler",
+        "//compiler/cpp:lib-compiler",
         "//backend",
         # ":runtime",
     ],
@@ -23,6 +25,7 @@ py_library(
     srcs = ["formak/ui/model_base.py"],
     imports = ["."],
     visibility = [
+        "//compiler/cpp:__pkg__",  # TODO antipattern, //compiler should not depend on this, should be vis:private
         "//compiler/py:__pkg__",  # TODO antipattern, //compiler should not depend on this, should be vis:private
     ],
     deps = [
@@ -36,6 +39,7 @@ py_library(
     srcs = ["formak/ui/model.py"],
     imports = ["."],
     visibility = [
+        "//featuretests/common_subexpression_elimination:__pkg__",  # TODO antipattern, //featuretests should be indirect
         "//featuretests/scikit_learn_integration:__pkg__",  # TODO antipattern, should be vis:private
     ],
     deps = [
