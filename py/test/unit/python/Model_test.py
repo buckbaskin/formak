@@ -1,95 +1,95 @@
 import warnings
 
+from formak.problemdefinition.model import Model as UiModel
 from numpy.testing import assert_almost_equal
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 warnings.filterwarnings("error")
 
 
 def test_Model_creation_list():
-    dt = ui.Symbol("dt")
-    model = python.Model(ui.Model(dt, [], [], {}), {})
+    dt = Symbol("dt")
+    model = python.Model(UiModel(dt, [], [], {}), {})
 
-    assert model.arglist == ui.symbols(["dt"])
+    assert model.arglist == symbols(["dt"])
 
 
 def test_Model_creation_set():
-    dt = ui.Symbol("dt")
-    model = python.Model(ui.Model(dt, set(), set(), {}), {})
+    dt = Symbol("dt")
+    model = python.Model(UiModel(dt, set(), set(), {}), {})
 
-    assert model.arglist == ui.symbols(["dt"])
+    assert model.arglist == symbols(["dt"])
 
     model = python.Model(
-        ui.Model(dt, set(ui.symbols(["x"])), set(), {ui.Symbol("x"): "x"}), {}
+        UiModel(dt, set(symbols(["x"])), set(), {Symbol("x"): "x"}), {}
     )
 
-    assert model.arglist == ui.symbols(["dt", "x"])
+    assert model.arglist == symbols(["dt", "x"])
 
     model = python.Model(
-        ui.Model(
+        UiModel(
             dt,
-            set(ui.symbols(["x", "y"])),
+            set(symbols(["x", "y"])),
             set(),
-            {ui.Symbol("x"): "x", ui.Symbol("y"): "y"},
+            {Symbol("x"): "x", Symbol("y"): "y"},
         ),
         {},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "y"])
+    assert model.arglist == symbols(["dt", "x", "y"])
 
-    model = python.Model(ui.Model(dt, set(), set(ui.symbols(["a"])), {}), {})
+    model = python.Model(UiModel(dt, set(), set(symbols(["a"])), {}), {})
 
-    assert model.arglist == ui.symbols(["dt", "a"])
+    assert model.arglist == symbols(["dt", "a"])
 
     model = python.Model(
-        ui.Model(
-            dt, set(ui.symbols(["x"])), set(ui.symbols(["a"])), {ui.Symbol("x"): "x"}
-        ),
+        UiModel(dt, set(symbols(["x"])), set(symbols(["a"])), {Symbol("x"): "x"}),
         {},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "a"])
+    assert model.arglist == symbols(["dt", "x", "a"])
 
     model = python.Model(
-        ui.Model(
+        UiModel(
             dt,
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x", ui.Symbol("y"): "y"},
+            set(symbols(["x", "y"])),
+            set(symbols(["a"])),
+            {Symbol("x"): "x", Symbol("y"): "y"},
         ),
         {},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "y", "a"])
+    assert model.arglist == symbols(["dt", "x", "y", "a"])
 
-    model = python.Model(ui.Model(dt, set(), set(ui.symbols(["a", "b"])), {}), {})
+    model = python.Model(UiModel(dt, set(), set(symbols(["a", "b"])), {}), {})
 
-    assert model.arglist == ui.symbols(["dt", "a", "b"])
+    assert model.arglist == symbols(["dt", "a", "b"])
 
     model = python.Model(
-        ui.Model(
+        UiModel(
             dt,
-            set(ui.symbols(["x"])),
-            set(ui.symbols(["a", "b"])),
-            {ui.Symbol("x"): "x"},
+            set(symbols(["x"])),
+            set(symbols(["a", "b"])),
+            {Symbol("x"): "x"},
         ),
         {},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "a", "b"])
+    assert model.arglist == symbols(["dt", "x", "a", "b"])
 
     model = python.Model(
-        ui.Model(
+        UiModel(
             dt,
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a", "b"])),
-            {ui.Symbol("x"): "x", ui.Symbol("y"): "y"},
+            set(symbols(["x", "y"])),
+            set(symbols(["a", "b"])),
+            {Symbol("x"): "x", Symbol("y"): "y"},
         ),
         {},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "y", "a", "b"])
+    assert model.arglist == symbols(["dt", "x", "y", "a", "b"])
 
 
 def test_Model_impl_no_control():
@@ -97,11 +97,11 @@ def test_Model_impl_no_control():
     dt = 0.1
 
     model = python.Model(
-        ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
+        UiModel(
+            Symbol("dt"),
+            set(symbols(["x", "y"])),
             set(),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + 0.1"},
+            {Symbol("x"): "x * y", Symbol("y"): "y + 0.1"},
         ),
         config,
     )
@@ -124,11 +124,11 @@ def test_Model_impl_control():
     dt = 0.1
 
     model = python.Model(
-        ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        UiModel(
+            Symbol("dt"),
+            set(symbols(["x", "y"])),
+            set(symbols(["a"])),
+            {Symbol("x"): "x * y", Symbol("y"): "y + a * dt"},
         ),
         config,
     )

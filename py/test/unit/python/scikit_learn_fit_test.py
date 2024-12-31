@@ -1,18 +1,20 @@
 import numpy as np
 import pytest
+from formak.problemdefinition.model import Model as UiModel
 from numpy.random import default_rng
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 
 def test_fit():
     random = default_rng(1)
 
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v = symbols(["x", "v"])
 
     state = {x}
     control = {v}
@@ -28,7 +30,7 @@ def test_fit():
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     true_variance = 2.0
@@ -48,9 +50,9 @@ def test_fit():
 
 
 def test_clone():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v = symbols(["x", "v"])
 
     state = {x}
     control = {v}
@@ -66,7 +68,7 @@ def test_clone():
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     clone(model)
@@ -74,9 +76,9 @@ def test_clone():
 
 @pytest.mark.xfail(reason="WIP on implementing various checks")
 def test_estimator_against_sklearn_checks():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v = symbols(["x", "v"])
 
     state = {x}
     control = {v}
@@ -92,7 +94,7 @@ def test_estimator_against_sklearn_checks():
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     check_estimator(model)

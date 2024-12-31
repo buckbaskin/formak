@@ -7,8 +7,9 @@ Passes if the C++ implementation is written to disk without an exception
 """
 
 from model_definition import model_definition
+from sympy import Symbol
 
-from formak import cpp, ui
+from formak import cpp
 
 
 def test_cpp_Model():
@@ -25,7 +26,7 @@ def test_cpp_Model():
         "IMU_pos_y": 0.28390,
         "IMU_pos_z": -1.42333,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     cpp.compile(
         model,

@@ -14,17 +14,18 @@ Passes if the model rejects the high innovation updates.
 from math import degrees, radians
 
 import numpy as np
-from sympy import cos, sin
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, cos, sin, symbols
 
-from formak import python, runtime, ui
+from formak import python, runtime
 
 TRUE_SCALE = radians(5.0)
 
 
 def make_ekf():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, y, heading, velocity, _heading_err = ui.symbols(
+    x, y, heading, velocity, _heading_err = symbols(
         ["x", "y", "heading", "velocity", "_heading_err"]
     )
     state = {x, y, heading}
@@ -36,7 +37,7 @@ def make_ekf():
         heading: heading + _heading_err,
     }
 
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
     config = python.Config(innovation_filtering=4)
 

@@ -1,10 +1,13 @@
-from formak import cpp, ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
-dt = ui.Symbol("dt")
+from formak import cpp
 
-tp = trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+dt = Symbol("dt")
 
-thrust = ui.Symbol("thrust")
+tp = trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
+
+thrust = Symbol("thrust")
 
 state = set(tp.values())
 control = {thrust}
@@ -16,9 +19,9 @@ state_model = {
     tp["a"]: -9.81 * tp["mass"] + thrust,
 }
 
-v = ui.Symbol("v")
+v = Symbol("v")
 
-model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
 cpp_implementation = cpp.compile_ekf(
     state_model=model,

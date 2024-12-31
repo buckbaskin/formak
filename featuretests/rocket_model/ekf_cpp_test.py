@@ -14,8 +14,9 @@ from model_definition import (
     named_rotation_rate,
     named_translation,
 )
+from sympy import Symbol
 
-from formak import cpp, ui
+from formak import cpp
 
 
 def test_cpp_EKF():
@@ -32,7 +33,7 @@ def test_cpp_EKF():
         "IMU_pos_y": 0.28390,
         "IMU_pos_z": -1.42333,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     (reading_orientation_rate_states, _) = named_rotation_rate("IMU_reading")
     reading_acceleration_states = sorted(
@@ -51,8 +52,8 @@ def test_cpp_EKF():
         state_model=model,
         process_noise=process_noise,
         sensor_models={
-            "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
+            "altitude": {Symbol("altitude"): CON_position_in_global_frame[2]}
         },
-        sensor_noises={"altitude": {ui.Symbol("altitude"): 1.0}},
+        sensor_noises={"altitude": {Symbol("altitude"): 1.0}},
         calibration_map=calibration_map,
     )

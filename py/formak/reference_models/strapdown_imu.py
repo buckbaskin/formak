@@ -1,8 +1,7 @@
-from sympy import Quaternion, integrate
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Matrix, Quaternion, Symbol, integrate, symbols
 
-from formak import ui
-
-dt = ui.Symbol("dt")
+dt = Symbol("dt")
 
 
 def matrix_print(mat):
@@ -13,15 +12,15 @@ def matrix_print(mat):
 
 
 def axis_set(name):
-    return ui.symbols([f"{name}_{{1}}", f"{name}_{{2}}", f"{name}_{{3}}"])
+    return symbols([f"{name}_{{1}}", f"{name}_{{2}}", f"{name}_{{3}}"])
 
 
 imu_gyro = axis_set(r"\omega")
 
-coriw, corix, coriy, coriz = ui.symbols(["coriw", "corix", "coriy", "coriz"])
+coriw, corix, coriy, coriz = symbols(["coriw", "corix", "coriy", "coriz"])
 calibration_orientation = Quaternion(coriw, corix, coriy, coriz)
 
-oriw, orix, oriy, oriz = ui.symbols(["oriw", "orix", "oriy", "oriz"])
+oriw, orix, oriy, oriz = symbols(["oriw", "orix", "oriy", "oriz"])
 active_orientation = Quaternion(oriw, orix, oriy, oriz)
 
 orientation = active_orientation.mul(calibration_orientation)
@@ -29,7 +28,7 @@ orientation_conjugate = Quaternion(
     orientation.a, -orientation.b, -orientation.c, -orientation.d
 )
 
-yaw_rate, pitch_rate, roll_rate = ui.symbols(
+yaw_rate, pitch_rate, roll_rate = symbols(
     [r"\dot{\psi}", r"\dot{\theta}", r"\dot{\phi}"]
 )
 
@@ -45,13 +44,13 @@ active_imu_accel = [imu_accel[i] - accel_sensor_bias[i] for i in range(3)]
 global_pose = axis_set("x_{A}")
 global_velocity = axis_set(r"\dot{x}_{A}")
 global_accel = axis_set(r"\ddot{x}_{A}")
-g = ui.Symbol("g")  # gravity
+g = Symbol("g")  # gravity
 
-_accel_gravity = ui.Matrix([0, 0, -g])
+_accel_gravity = Matrix([0, 0, -g])
 assert _accel_gravity.shape == (3, 1)
 
 _global_accel_body_rates = (
-    orientation.to_rotation_matrix() * ui.Matrix(active_imu_accel) + _accel_gravity
+    orientation.to_rotation_matrix() * Matrix(active_imu_accel) + _accel_gravity
 )
 
 _next_orientation = (0.5 * active_orientation.mul(Quaternion(0, *imu_gyro)) * dt).add(
@@ -104,7 +103,7 @@ _process_noise = {
     imu_accel[2]: 1.0,
 }
 
-symbolic_model = ui.Model(
+symbolic_model = UiModel(
     dt=dt,
     state=state,
     control=control,

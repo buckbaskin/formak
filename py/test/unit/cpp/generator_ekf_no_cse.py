@@ -1,20 +1,23 @@
-from formak import cpp, ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
+
+from formak import cpp
 
 cpp_implementation = cpp.compile_ekf(
-    state_model=ui.Model(
-        dt=ui.Symbol("dt"),
-        state=set(ui.symbols(["x", "y"])),
-        control=set(ui.symbols(["a"])),
+    state_model=UiModel(
+        dt=Symbol("dt"),
+        state=set(symbols(["x", "y"])),
+        control=set(symbols(["a"])),
         # Add 1e-3 * a to prevent (0, 0) from having no variance
         state_model={
-            ui.Symbol("x"): "x + y * a * dt",
-            ui.Symbol("y"): "y + x * a * dt",
+            Symbol("x"): "x + y * a * dt",
+            Symbol("y"): "y + x * a * dt",
         },
     ),
-    process_noise={ui.Symbol("a"): 0.25},
+    process_noise={Symbol("a"): 0.25},
     sensor_models={
-        "simple": {"reading1": ui.Symbol("x")},
-        "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+        "simple": {"reading1": Symbol("x")},
+        "combined": {"reading2": Symbol("x") + Symbol("y")},
     },
     sensor_noises={"simple": {"reading1": 1.0}, "combined": {"reading2": 4.0}},
     config=cpp.Config(common_subexpression_elimination=False),

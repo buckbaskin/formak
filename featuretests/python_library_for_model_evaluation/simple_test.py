@@ -6,15 +6,18 @@ Create a Python model
 Passes if the Python model runs
 """
 
-from formak import python, ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
+
+from formak import python
 
 
 def test_python_Model_simple():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -26,7 +29,7 @@ def test_python_Model_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
     python_implementation = python.compile(model)
 

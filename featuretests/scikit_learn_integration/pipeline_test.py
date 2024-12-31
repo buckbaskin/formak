@@ -5,17 +5,19 @@ Passes if running a model in a pipeline doesn't raise exceptions
 """
 
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
 from sklearn.pipeline import Pipeline
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def test_like_sklearn_regression():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -28,12 +30,12 @@ def test_like_sklearn_regression():
     }
 
     params = {
-        "process_noise": {ui.Symbol("thrust"): 1.0},
-        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        "sensor_noises": {"simple": {ui.Symbol("v"): 1.0}},
+        "process_noise": {Symbol("thrust"): 1.0},
+        "sensor_models": {"simple": {Symbol("v"): Symbol("v")}},
+        "sensor_noises": {"simple": {Symbol("v"): 1.0}},
     }
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     estimators = [("formak model", model)]

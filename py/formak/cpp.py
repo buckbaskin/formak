@@ -148,7 +148,7 @@ class Model:
     ):
         # TODO(buck): Enable mypy for type checking
         # TODO(buck): Move all type assertions to either __init__ (constructor) or mypy?
-        # assert isinstance(symbolic_model, ui.Model)
+        # assert isinstance(symbolic_model, UiModel)
         if isinstance(config, dict):
             config = Config(**config)
         assert isinstance(config, Config)

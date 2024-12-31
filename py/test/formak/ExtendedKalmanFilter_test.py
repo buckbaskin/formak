@@ -3,12 +3,14 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pytest
+from formak.problemdefinition.model import Model as UiModel
 from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 from scipy.stats import multivariate_normal
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 warnings.filterwarnings("error")
 
@@ -20,18 +22,18 @@ def test_EKF_process_property(state_x, state_y, control_a):
     config = {}
     dt = 0.1
 
-    ui_Model = ui.Model(
-        ui.Symbol("dt"),
-        set(ui.symbols(["x", "y"])),
-        set(ui.symbols(["a"])),
+    ui_Model = UiModel(
+        Symbol("dt"),
+        set(symbols(["x", "y"])),
+        set(symbols(["a"])),
         {
-            ui.Symbol("x"): "x + y * dt",
-            ui.Symbol("y"): "y + a * dt",
+            Symbol("x"): "x + y * dt",
+            Symbol("y"): "y + a * dt",
         },
     )
     ekf = python.compile_ekf(
         symbolic_model=ui_Model,
-        process_noise={ui.Symbol("a"): 1.0},
+        process_noise={Symbol("a"): 1.0},
         sensor_models={},
         sensor_noises={},
         config=config,
@@ -92,20 +94,20 @@ def test_EKF_process_property(state_x, state_y, control_a):
 def test_EKF_sensor_property(x, y, a):
     config = {}
 
-    ui_Model = ui.Model(
-        ui.Symbol("dt"),
-        set(ui.symbols(["x", "y"])),
-        set(ui.symbols(["a"])),
+    ui_Model = UiModel(
+        Symbol("dt"),
+        set(symbols(["x", "y"])),
+        set(symbols(["a"])),
         {
-            ui.Symbol("x"): ui.Symbol("x") * ui.Symbol("y") + ui.Symbol("x"),
-            ui.Symbol("y"): "y + a * dt",
+            Symbol("x"): Symbol("x") * Symbol("y") + Symbol("x"),
+            Symbol("y"): "y + a * dt",
         },
     )
     ekf = python.compile_ekf(
         symbolic_model=ui_Model,
-        process_noise={ui.Symbol("a"): 1.0},
-        sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
-        sensor_noises={"simple": {ui.Symbol("x"): 1.0}},
+        process_noise={Symbol("a"): 1.0},
+        sensor_models={"simple": {Symbol("x"): Symbol("x")}},
+        sensor_noises={"simple": {Symbol("x"): 1.0}},
         config=config,
     )
 
@@ -173,20 +175,20 @@ def test_EKF_sensor_property_failing_example():
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
     config = python.Config()
 
-    ui_Model = ui.Model(
-        ui.Symbol("dt"),
-        set(ui.symbols(["x", "y"])),
-        set(ui.symbols(["a"])),
+    ui_Model = UiModel(
+        Symbol("dt"),
+        set(symbols(["x", "y"])),
+        set(symbols(["a"])),
         {
-            ui.Symbol("x"): ui.Symbol("x") * ui.Symbol("y") + ui.Symbol("x"),
-            ui.Symbol("y"): "y + a * dt",
+            Symbol("x"): Symbol("x") * Symbol("y") + Symbol("x"),
+            Symbol("y"): "y + a * dt",
         },
     )
     ekf = python.ExtendedKalmanFilter(
         state_model=ui_Model,
-        process_noise={ui.Symbol("a"): 1.0},
-        sensor_models={"simple": {ui.Symbol("x"): ui.Symbol("x")}},
-        sensor_noises={"simple": {ui.Symbol("x"): 1.0}},
+        process_noise={Symbol("a"): 1.0},
+        sensor_models={"simple": {Symbol("x"): Symbol("x")}},
+        sensor_noises={"simple": {Symbol("x"): 1.0}},
         config=config,
     )
 

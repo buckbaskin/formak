@@ -6,15 +6,16 @@ Lay out a new model
 Passes if the Model is constructed without exceptions
 """
 
-from formak import ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
 
 def test_UI_simple():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -26,4 +27,4 @@ def test_UI_simple():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    _model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    _model = UiModel(dt=dt, state=state, control=control, state_model=state_model)

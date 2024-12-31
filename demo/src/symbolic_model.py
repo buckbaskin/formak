@@ -10,7 +10,8 @@ See featuretests/python_library_for_model_evaluation/simple_test.py and the
 featuretests/ directory for additional features and examples.
 """
 
-from formak.ui import Model, symbols, Symbol
+from formak.problemdefinition.model import Model
+from sympy import symbols, Symbol
 from formak import python
 
 from collections import defaultdict

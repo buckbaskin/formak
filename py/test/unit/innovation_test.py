@@ -1,22 +1,24 @@
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def make_ekf(calibration_map):
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    state = ui.Symbol("state")
+    state = Symbol("state")
 
-    control_velocity = ui.Symbol("control_velocity")
-    calibration_velocity = ui.Symbol("calibration_velocity")
+    control_velocity = Symbol("control_velocity")
+    calibration_velocity = Symbol("calibration_velocity")
 
     state_model = {state: state + dt * (control_velocity + calibration_velocity)}
 
     state_set = {state}
     control_set = {control_velocity}
 
-    model = ui.Model(
+    model = UiModel(
         dt=dt,
         state=state_set,
         control=control_set,
@@ -36,7 +38,7 @@ def make_ekf(calibration_map):
 
 
 def test_constructor():
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map)
 
     innovation = np.zeros((1, 1))

@@ -1,45 +1,47 @@
 import pytest
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-from formak import exceptions, python, ui
+from formak import exceptions, python
 
 
 def test_Model_creation_calibration_mismatch():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    ui_model = ui.Model(
+    ui_model = UiModel(
         dt=dt,
-        state=set(ui.symbols(["x"])),
+        state=set(symbols(["x"])),
         control=set(),
         calibration=set(),
-        state_model={ui.Symbol("x"): "x + a + b"},
+        state_model={Symbol("x"): "x + a + b"},
     )
 
     with pytest.raises(exceptions.ModelConstructionError):
         python.compile(
             ui_model,
-            calibration_map={ui.Symbol("a"): 0.0, ui.Symbol("b"): 0.0},
+            calibration_map={Symbol("a"): 0.0, Symbol("b"): 0.0},
             config={},
         )
 
 
 def test_Model_creation_calibration():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    ui_model = ui.Model(
+    ui_model = UiModel(
         dt=dt,
-        state=set(ui.symbols(["x"])),
+        state=set(symbols(["x"])),
         control=set(),
-        calibration=set(ui.symbols(["a", "b"])),
-        state_model={ui.Symbol("x"): "x + a + b"},
+        calibration=set(symbols(["a", "b"])),
+        state_model={Symbol("x"): "x + a + b"},
     )
 
     model = python.compile(
         ui_model,
-        calibration_map={ui.Symbol("a"): 0.0, ui.Symbol("b"): 0.0},
+        calibration_map={Symbol("a"): 0.0, Symbol("b"): 0.0},
         config={},
     )
 
-    assert model.arglist == ui.symbols(["dt", "x", "a", "b"])
+    assert model.arglist == symbols(["dt", "x", "a", "b"])
 
     dt = 0.1
 
@@ -48,7 +50,7 @@ def test_Model_creation_calibration():
 
     model = python.compile(
         ui_model,
-        calibration_map={ui.Symbol("a"): 5.0, ui.Symbol("b"): 0.5},
+        calibration_map={Symbol("a"): 5.0, Symbol("b"): 0.5},
         config={},
     )
     state_vector = model.State(x=-1.0)
@@ -56,11 +58,11 @@ def test_Model_creation_calibration():
 
 
 def test_EKF_creation_calibration():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    a, b, x, y = ui.symbols(["a", "b", "x", "y"])
+    a, b, x, y = symbols(["a", "b", "x", "y"])
 
-    ui_model = ui.Model(
+    ui_model = UiModel(
         dt=dt,
         state={x},
         control=set(),

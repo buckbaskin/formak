@@ -1,13 +1,14 @@
 """Define elements of a common model with simple dynamics to demonstrate parameter fitting."""
 
-from formak import ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
-dt = ui.Symbol("dt")
+dt = Symbol("dt")
 
-tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["z", "v", "a"]}
+tp = _trajectory_properties = {k: Symbol(k) for k in ["z", "v", "a"]}
 
-thrust = ui.Symbol("thrust")
-mass = ui.Symbol("mass")
+thrust = Symbol("thrust")
+mass = Symbol("mass")
 
 state = set(tp.values())
 control = {thrust}
@@ -18,7 +19,7 @@ state_model = {
     tp["a"]: -9.81 * mass + thrust,
 }
 
-symbolic_model = ui.Model(
+symbolic_model = UiModel(
     dt=dt,
     state=state,
     control=control,

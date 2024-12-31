@@ -8,17 +8,19 @@ working correctly).
 """
 
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
 from formak.runtime import ManagedFilter, StampedReading
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def make_ekf():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -30,9 +32,9 @@ def make_ekf():
         tp["a"]: -9.81 * tp["mass"] + thrust,
     }
 
-    v = ui.Symbol("v")
+    v = Symbol("v")
 
-    model = ui.Model(dt=dt, state=state, control=control, state_model=state_model)
+    model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
     ekf = python.compile_ekf(
         symbolic_model=model,

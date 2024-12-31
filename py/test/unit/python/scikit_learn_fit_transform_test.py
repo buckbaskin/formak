@@ -1,12 +1,14 @@
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 
 def test_fit_transform():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v = symbols(["x", "v"])
 
     state = {x}
     control = {v}
@@ -22,7 +24,7 @@ def test_fit_transform():
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [v, x]

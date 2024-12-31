@@ -1,12 +1,14 @@
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 
 def test_score():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v = ui.symbols(["x", "v"])
+    x, v = symbols(["x", "v"])
 
     state = {x}
     control = {v}
@@ -22,7 +24,7 @@ def test_score():
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [v, x]
@@ -43,9 +45,9 @@ def test_score():
 
 
 def test_score_two_sensor():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v, a = ui.symbols(["x", "v", "a"])
+    x, v, a = symbols(["x", "v", "a"])
 
     state = {x, v}
     control = {a}
@@ -56,13 +58,13 @@ def test_score_two_sensor():
     }
 
     params = {
-        "process_noise": {ui.Symbol("a"): 1.0},
+        "process_noise": {Symbol("a"): 1.0},
         "sensor_models": {"position": {x: x}, "velocity": {v: v}},
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [v, x]
@@ -85,9 +87,9 @@ def test_score_two_sensor():
 
 
 def test_score_two_sensor_explained():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    x, v, a = ui.symbols(["x", "v", "a"])
+    x, v, a = symbols(["x", "v", "a"])
 
     state = {x, v}
     control = {a}
@@ -98,13 +100,13 @@ def test_score_two_sensor_explained():
     }
 
     params = {
-        "process_noise": {ui.Symbol("a"): 1.0},
+        "process_noise": {Symbol("a"): 1.0},
         "sensor_models": {"position": {x: x}, "velocity": {v: v}},
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [v, x]

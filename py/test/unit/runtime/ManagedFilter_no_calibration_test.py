@@ -2,11 +2,13 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
 from formak.runtime import ManagedFilter, StampedReading
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def samples_dt_sec():
@@ -48,18 +50,18 @@ def parse_options(
 
 
 def make_ekf():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    state = ui.Symbol("state")
+    state = Symbol("state")
 
-    control_velocity = ui.Symbol("control_velocity")
+    control_velocity = Symbol("control_velocity")
 
     state_model = {state: state + dt * (control_velocity)}
 
     state_set = {state}
     control_set = {control_velocity}
 
-    model = ui.Model(
+    model = UiModel(
         dt=dt,
         state=state_set,
         control=control_set,

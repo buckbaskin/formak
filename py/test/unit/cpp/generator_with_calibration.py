@@ -1,8 +1,11 @@
-from formak import cpp, ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-dt, a, b, x = ui.symbols(["dt", "a", "b", "x"])
+from formak import cpp
 
-ui_model = ui.Model(
+dt, a, b, x = symbols(["dt", "a", "b", "x"])
+
+ui_model = UiModel(
     dt=dt,
     state={x},
     control=set(),
@@ -11,7 +14,7 @@ ui_model = ui.Model(
 )
 
 cpp_implementation = cpp.compile(
-    ui_model, calibration_map={ui.Symbol("a"): 5.0, ui.Symbol("b"): 0.5}, config={}
+    ui_model, calibration_map={Symbol("a"): 5.0, Symbol("b"): 0.5}, config={}
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))

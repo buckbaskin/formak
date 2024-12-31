@@ -26,8 +26,11 @@ CC_TEST_DEPS = [
 ]
 
 py_library(
-    name = "ui",
-    srcs = ["formak/ui.py"],
+    name = "problemdefinition",
+    srcs = glob(
+        ["formak/problemdefinition/*.py"],
+        allow_empty = False,
+    ),
     imports = ["."],
     deps = [
         "//problemdefinition:design-manager",
@@ -120,8 +123,8 @@ py_library(
     ),
     imports = ["."],
     deps = [
+        ":problemdefinition",
         ":python",
-        ":ui",
         requirement("sympy"),
     ],
 )
@@ -132,10 +135,10 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
+        ":problemdefinition",
         ":python",
         ":reference-models",
         ":runtime",
-        ":ui",
     ],
 )
 
@@ -231,7 +234,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":cpp",
-        ":ui",
+        ":problemdefinition",
     ] + PY_TEST_DEPS,
 )
 
@@ -247,7 +250,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":python",
-        ":ui",
+        ":problemdefinition",
     ] + PY_TEST_DEPS,
 )
 
@@ -263,7 +266,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":runtime",
-        ":ui",
+        ":problemdefinition",
         ":python",
     ] + PY_TEST_DEPS,
 )

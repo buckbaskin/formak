@@ -6,8 +6,9 @@ from model_definition import (
     named_rotation_rate,
     named_translation,
 )
+from sympy import Symbol
 
-from formak import cpp, ui
+from formak import cpp
 
 definition = model_definition()
 ui_model = definition["model"]
@@ -22,7 +23,7 @@ calibration = {
     "IMU_pos_y": 0.28390,
     "IMU_pos_z": -1.42333,
 }
-calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
 (reading_orientation_rate_states, _) = named_rotation_rate("IMU_reading")
 reading_acceleration_states = sorted(
@@ -40,9 +41,7 @@ CON_position_in_global_frame = named_translation("CON_pos")
 cpp_implementation = cpp.compile_ekf(
     state_model=ui_model,
     process_noise={k: 1.0 for k in ui_model.control},
-    sensor_models={
-        "altitude": {ui.Symbol("altitude"): CON_position_in_global_frame[2]}
-    },
+    sensor_models={"altitude": {Symbol("altitude"): CON_position_in_global_frame[2]}},
     sensor_noises={"altitude": {"altitude": 1.0}},
     calibration_map=calibration_map,
     config=cpp.Config(common_subexpression_elimination=True),

@@ -2,11 +2,13 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
 from formak.runtime import ManagedFilter, StampedReading
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def samples_dt_sec():
@@ -48,19 +50,19 @@ def parse_options(
 
 
 def make_ekf(calibration_map):
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    state = ui.Symbol("state")
+    state = Symbol("state")
 
-    control_velocity = ui.Symbol("control_velocity")
-    calibration_velocity = ui.Symbol("calibration_velocity")
+    control_velocity = Symbol("control_velocity")
+    calibration_velocity = Symbol("calibration_velocity")
 
     state_model = {state: state + dt * (control_velocity + calibration_velocity)}
 
     state_set = {state}
     control_set = {control_velocity}
 
-    model = ui.Model(
+    model = UiModel(
         dt=dt,
         state=state_set,
         control=control_set,
@@ -80,7 +82,7 @@ def make_ekf(calibration_map):
 
 
 def test_constructor():
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map)
     state = ekf.State(state=4.0)
     covariance = ekf.Covariance(state=1.0)
@@ -91,7 +93,7 @@ def test_constructor():
 @given(sampled_from(samples_dt_sec()))
 def test_tick_no_readings(dt):
     start_time = 10.0
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
     state = ekf.State(state=4.0)
     covariance = ekf.Covariance(state=1.0)
@@ -126,7 +128,7 @@ def test_tick_no_readings(dt):
 @given(sampled_from(samples_dt_sec()))
 def test_tick_empty_readings(dt):
     start_time = 10.0
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
     state = ekf.State(state=4.0)
     covariance = ekf.Covariance(state=1.0)
@@ -157,7 +159,7 @@ def test_tick_one_reading(output_dt, reading_dt):
     reading_dt = 0.0
 
     start_time = 10.0
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
     state = ekf.State(state=4.0)
     covariance = ekf.Covariance(state=1.0)
@@ -210,7 +212,7 @@ def test_tick_one_reading(output_dt, reading_dt):
 def test_tick_multi_reading(output_dt, shuffle_order):
     output_dt, options = parse_options(output_dt, shuffle_order)
     start_time = 10.0
-    calibration_map = {ui.Symbol("calibration_velocity"): 0.0}
+    calibration_map = {Symbol("calibration_velocity"): 0.0}
     ekf = make_ekf(calibration_map=calibration_map)
     state = ekf.State(state=4.0)
     covariance = ekf.Covariance(state=1.0)

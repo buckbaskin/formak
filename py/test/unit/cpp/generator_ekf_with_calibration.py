@@ -1,8 +1,11 @@
-from formak import cpp, ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-dt, a, b, x, y = ui.symbols(["dt", "a", "b", "x", "y"])
+from formak import cpp
 
-ui_model = ui.Model(
+dt, a, b, x, y = symbols(["dt", "a", "b", "x", "y"])
+
+ui_model = UiModel(
     dt=dt,
     state={x},
     control=set(),
@@ -15,7 +18,7 @@ cpp_implementation = cpp.compile_ekf(
     process_noise={},
     sensor_models={"y": {y: x + b}},
     sensor_noises={"y": {y: 1}},
-    calibration_map={ui.Symbol("a"): 5.0, ui.Symbol("b"): 0.5},
+    calibration_map={Symbol("a"): 5.0, Symbol("b"): 0.5},
     config={},
 )
 

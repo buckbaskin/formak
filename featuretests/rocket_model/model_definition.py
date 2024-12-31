@@ -1,39 +1,36 @@
 from datetime import datetime
 from functools import reduce
 
-from sympy import cos, sin
-
-from formak import ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Matrix, Symbol, cos, sin, symbols
 
 
 def rotation(roll, pitch, yaw):
-    m_roll = ui.Matrix(
-        [[1, 0, 0], [0, cos(roll), -sin(roll)], [0, sin(roll), cos(roll)]]
-    )
-    m_pitch = ui.Matrix(
+    m_roll = Matrix([[1, 0, 0], [0, cos(roll), -sin(roll)], [0, sin(roll), cos(roll)]])
+    m_pitch = Matrix(
         [[cos(pitch), 0, sin(pitch)], [0, 1, 0], [-sin(pitch), 0, cos(pitch)]]
     )
-    m_yaw = ui.Matrix([[cos(yaw), sin(yaw), 0], [-sin(yaw), cos(yaw), 0], [0, 0, 1]])
+    m_yaw = Matrix([[cos(yaw), sin(yaw), 0], [-sin(yaw), cos(yaw), 0], [0, 0, 1]])
 
     return m_roll * m_pitch * m_yaw
 
 
 def named_rotation(name):
-    s = ui.symbols([f"{name}_roll", f"{name}_pitch", f"{name}_yaw"])
-    return ui.Matrix(s), rotation(*s)
+    s = symbols([f"{name}_roll", f"{name}_pitch", f"{name}_yaw"])
+    return Matrix(s), rotation(*s)
 
 
 def rotation_rate(roll, pitch, yaw):
-    return ui.Matrix([roll, pitch, yaw])
+    return Matrix([roll, pitch, yaw])
 
 
 def named_rotation_rate(name):
-    s = ui.symbols([f"{name}_roll_rate", f"{name}_pitch_rate", f"{name}_yaw_rate"])
-    return ui.Matrix(s), rotation_rate(*s)
+    s = symbols([f"{name}_roll_rate", f"{name}_pitch_rate", f"{name}_yaw_rate"])
+    return Matrix(s), rotation_rate(*s)
 
 
 def translation(x, y, z):
-    return ui.Matrix([[x], [y], [z]])
+    return Matrix([[x], [y], [z]])
 
 
 def named_translation(name):
@@ -41,7 +38,7 @@ def named_translation(name):
 
 
 def velocity(x, y, z):
-    return ui.Matrix([[x], [y], [z]])
+    return Matrix([[x], [y], [z]])
 
 
 def named_velocity(name):
@@ -49,7 +46,7 @@ def named_velocity(name):
 
 
 def acceleration(x, y, z):
-    return ui.Matrix([[x], [y], [z]])
+    return Matrix([[x], [y], [z]])
 
 
 def named_acceleration(name):
@@ -61,7 +58,7 @@ def model_definition(*, debug=False):
 
     ## Define Model
 
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
     # CON: Center Of Navigation
     CON_position_in_global_frame = named_translation("CON_pos")
@@ -191,15 +188,15 @@ def model_definition(*, debug=False):
 
     state_model = {k: v.subs(simplifications) for k, v in state_model.items()}
 
-    print(f"pre ui.Model: {datetime.now() - start_time}")
-    model = ui.Model(
+    print(f"pre UiModel: {datetime.now() - start_time}")
+    model = UiModel(
         dt=dt,
         state=state,
         calibration=calibration,
         control=control,
         state_model=state_model,
     )
-    print(f"post ui.Model: {datetime.now() - start_time}")
+    print(f"post UiModel: {datetime.now() - start_time}")
     return {
         "model": model,
         "state": state,

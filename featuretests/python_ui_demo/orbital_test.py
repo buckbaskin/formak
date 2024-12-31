@@ -8,9 +8,10 @@ Passes if the Model is constructed without exceptions
 
 from collections import defaultdict
 
-from formak import ui
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
-dt = ui.symbols("dt")  # change in time
+dt = symbols("dt")  # change in time
 
 G = gravitational_constant = 6.674e-11  # m^3 / kg / s**2
 Earth_Mass = 5.9722e24  # kg
@@ -68,8 +69,8 @@ def gravitational_force(m_1, m_2, r):
 
 
 def test_orbital_example():
-    vp = vehicle_properties = {k: ui.Symbol(k) for k in ["m", "x", "v", "a"]}
-    fuel_burn_rate = ui.Symbol("fuel_burn_rate")
+    vp = vehicle_properties = {k: Symbol(k) for k in ["m", "x", "v", "a"]}
+    fuel_burn_rate = Symbol("fuel_burn_rate")
 
     state = set(vehicle_properties.values())
 
@@ -89,7 +90,7 @@ def test_orbital_example():
         vp["a"]: (F - (fuel_burn_rate * vp["v"])) / vp["m"],
     }
 
-    _orbital_model = ui.Model(
+    _orbital_model = UiModel(
         dt=dt, state=state, control=control, state_model=state_model
     )
 

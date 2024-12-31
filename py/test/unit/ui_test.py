@@ -2,8 +2,14 @@ from enum import Enum
 
 import numpy as np
 import pytest
-from formak.ui import DesignManager, Model, NisScore, Symbol
-from problemdefinition.design_manager import ConfigView, StateId
+from formak.problemdefinition.design_manager import (
+    ConfigView,
+    DesignManager,
+    NisScore,
+    StateId,
+)
+from formak.problemdefinition.model import Model
+from sympy import Symbol
 
 from formak import python
 

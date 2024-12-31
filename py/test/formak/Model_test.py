@@ -3,11 +3,13 @@ from datetime import timedelta
 
 import numpy as np
 import pytest
+from formak.problemdefinition.model import Model as UiModel
 from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 warnings.filterwarnings("error")
 
@@ -19,11 +21,11 @@ def test_Model_impl_property(x, y, a):
     config = {}
     dt = 0.1
 
-    ui_Model = ui.Model(
-        ui.Symbol("dt"),
-        set(ui.symbols(["x", "y"])),
-        set(ui.symbols(["a"])),
-        {ui.Symbol("x"): ui.Symbol("x") * ui.Symbol("y"), ui.Symbol("y"): "y + a * dt"},
+    ui_Model = UiModel(
+        Symbol("dt"),
+        set(symbols(["x", "y"])),
+        set(symbols(["a"])),
+        {Symbol("x"): Symbol("x") * Symbol("y"), Symbol("y"): "y + a * dt"},
     )
     model = python.Model(
         ui_Model,

@@ -3,9 +3,11 @@ import warnings
 import numpy as np
 import pytest
 from formak.exceptions import ModelConstructionError
+from formak.problemdefinition.model import Model as UiModel
 from numpy.testing import assert_almost_equal
+from sympy import Symbol, symbols
 
-from formak import python, ui
+from formak import python
 
 warnings.filterwarnings("error")
 
@@ -17,13 +19,13 @@ def test_EKF_model_collapse():
 
     with pytest.raises(ModelConstructionError):
         python.compile_ekf(
-            symbolic_model=ui.Model(
-                ui.Symbol("dt"),
-                set(ui.symbols(["x", "y"])),
-                set(ui.symbols(["a"])),
-                {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+            symbolic_model=UiModel(
+                Symbol("dt"),
+                set(symbols(["x", "y"])),
+                set(symbols(["a"])),
+                {Symbol("x"): "x * y", Symbol("y"): "y + a * dt"},
             ),
-            process_noise={ui.Symbol("a"): 1.0},
+            process_noise={Symbol("a"): 1.0},
             sensor_models={},
             sensor_noises={},
             config=config,
@@ -35,13 +37,13 @@ def test_EKF_process_with_control():
     dt = 0.1
 
     ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        state_model=UiModel(
+            Symbol("dt"),
+            set(symbols(["x", "y"])),
+            set(symbols(["a"])),
+            {Symbol("x"): "x * y", Symbol("y"): "y + a * dt"},
         ),
-        process_noise={ui.Symbol("a"): 1.0},
+        process_noise={Symbol("a"): 1.0},
         sensor_models={},
         sensor_noises={},
         config=config,
@@ -87,16 +89,16 @@ def test_EKF_sensor():
     config = python.Config()
 
     ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        state_model=UiModel(
+            Symbol("dt"),
+            set(symbols(["x", "y"])),
+            set(symbols(["a"])),
+            {Symbol("x"): "x * y", Symbol("y"): "y + a * dt"},
         ),
-        process_noise={ui.Symbol("a"): 1.0},
+        process_noise={Symbol("a"): 1.0},
         sensor_models={
-            "simple": {"reading1": ui.Symbol("x")},
-            "combined": {"reading2": ui.Symbol("x") + ui.Symbol("y")},
+            "simple": {"reading1": Symbol("x")},
+            "combined": {"reading2": Symbol("x") + Symbol("y")},
         },
         sensor_noises={"simple": {"reading1": 1.0}, "combined": {"reading2": 1.0}},
         config=config,
@@ -129,13 +131,13 @@ def test_EKF_process_jacobian():
     dt = 0.1
 
     ekf = python.ExtendedKalmanFilter(
-        state_model=ui.Model(
-            ui.Symbol("dt"),
-            set(ui.symbols(["x", "y"])),
-            set(ui.symbols(["a"])),
-            {ui.Symbol("x"): "x * y", ui.Symbol("y"): "y + a * dt"},
+        state_model=UiModel(
+            Symbol("dt"),
+            set(symbols(["x", "y"])),
+            set(symbols(["a"])),
+            {Symbol("x"): "x * y", Symbol("y"): "y + a * dt"},
         ),
-        process_noise={ui.Symbol("a"): 1.0},
+        process_noise={Symbol("a"): 1.0},
         sensor_models={},
         sensor_noises={},
         config=config,
@@ -173,15 +175,15 @@ def test_SensorModel_calibration():
 
     def read_once(calibration_map):
         model = python.SensorModel(
-            state_model=ui.Model(
-                ui.Symbol("dt"),
-                set(ui.symbols(["x"])),
+            state_model=UiModel(
+                Symbol("dt"),
+                set(symbols(["x"])),
                 set(),
-                {ui.Symbol("x"): "x"},
-                calibration=set(ui.symbols(["a"])),
+                {Symbol("x"): "x"},
+                calibration=set(symbols(["a"])),
             ),
             calibration_map=calibration_map,
-            sensor_model={"reading": ui.Symbol("a") + ui.Symbol("x")},
+            sensor_model={"reading": Symbol("a") + Symbol("x")},
             config=config,
         )
 
@@ -190,14 +192,14 @@ def test_SensorModel_calibration():
     calibration = {
         "a": -1.4,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     assert read_once(calibration_map).data == -1.4
 
     calibration = {
         "a": 1.2,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     assert read_once(calibration_map).data == 1.2
 
@@ -207,16 +209,16 @@ def test_EKF_sensor_jacobian_calibration():
 
     def read_once(calibration_map):
         ekf = python.ExtendedKalmanFilter(
-            state_model=ui.Model(
-                ui.Symbol("dt"),
-                set(ui.symbols(["x"])),
+            state_model=UiModel(
+                Symbol("dt"),
+                set(symbols(["x"])),
                 set(),
-                {ui.Symbol("x"): "x"},
-                calibration=set(ui.symbols(["a"])),
+                {Symbol("x"): "x"},
+                calibration=set(symbols(["a"])),
             ),
             process_noise={},
             calibration_map=calibration_map,
-            sensor_models={"key": {"reading": ui.Symbol("a") * ui.Symbol("x")}},
+            sensor_models={"key": {"reading": Symbol("a") * Symbol("x")}},
             sensor_noises={"key": {"reading": 1}},
             config=config,
         )
@@ -226,29 +228,29 @@ def test_EKF_sensor_jacobian_calibration():
     calibration = {
         "a": -1.4,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     assert read_once(calibration_map) == -1.4
 
     calibration = {
         "a": 1.2,
     }
-    calibration_map = {ui.Symbol(k): v for k, v in calibration.items()}
+    calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
     assert read_once(calibration_map) == 1.2
 
 
 def test_nearest_positive_definite_diagonal():
     cov = {
-        ui.Symbol("diagonalA"): -1.0,
-        ui.Symbol("diagonalB"): 1.0,
-        (ui.Symbol("diagonalA"), ui.Symbol("diagonalB")): -10.0,
+        Symbol("diagonalA"): -1.0,
+        Symbol("diagonalB"): 1.0,
+        (Symbol("diagonalA"), Symbol("diagonalB")): -10.0,
     }
 
     result = python.nearest_positive_definite(cov)
 
-    assert result[ui.Symbol("diagonalA")] > 0.0
-    assert result[ui.Symbol("diagonalB")] > 0.0
+    assert result[Symbol("diagonalA")] > 0.0
+    assert result[Symbol("diagonalB")] > 0.0
 
     # ok for off diagonal terms to be negative
-    assert result[(ui.Symbol("diagonalA"), ui.Symbol("diagonalB"))] < 0.0
+    assert result[(Symbol("diagonalA"), Symbol("diagonalB"))] < 0.0

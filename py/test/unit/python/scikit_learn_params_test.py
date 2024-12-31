@@ -1,14 +1,16 @@
 import numpy as np
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
-from formak import python, ui
+from formak import python
 
 
 def test_get_params():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -22,12 +24,12 @@ def test_get_params():
 
     params = {
         "process_noise": {thrust: 1.0},
-        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        "sensor_noises": {"simple": {ui.Symbol("v"): 1}},
+        "sensor_models": {"simple": {Symbol("v"): Symbol("v")}},
+        "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [thrust, z, v]
@@ -41,11 +43,11 @@ def test_get_params():
 
 
 def test_set_params():
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -59,12 +61,12 @@ def test_set_params():
 
     params = {
         "process_noise": {thrust: 1.0},
-        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        "sensor_noises": {"simple": {ui.Symbol("v"): 1}},
+        "sensor_models": {"simple": {Symbol("v"): Symbol("v")}},
+        "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     # reading = [thrust, z, v]
@@ -77,11 +79,11 @@ def test_set_params():
 
 def test_scoring_params_round_trip():
     # _flatten_scoring_params
-    dt = ui.Symbol("dt")
+    dt = Symbol("dt")
 
-    tp = _trajectory_properties = {k: ui.Symbol(k) for k in ["mass", "z", "v", "a"]}
+    tp = _trajectory_properties = {k: Symbol(k) for k in ["mass", "z", "v", "a"]}
 
-    thrust = ui.Symbol("thrust")
+    thrust = Symbol("thrust")
 
     state = set(tp.values())
     control = {thrust}
@@ -95,12 +97,12 @@ def test_scoring_params_round_trip():
 
     params = {
         "process_noise": {thrust: 1.0},
-        "sensor_models": {"simple": {ui.Symbol("v"): ui.Symbol("v")}},
-        "sensor_noises": {"simple": {ui.Symbol("v"): 1}},
+        "sensor_models": {"simple": {Symbol("v"): Symbol("v")}},
+        "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
     model = python.SklearnEKFAdapter(
-        ui.Model(dt=dt, state=state, control=control, state_model=state_model), **params
+        UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
     original = params
