@@ -23,19 +23,6 @@ CC_TEST_DEPS = [
     "@gtest//:gtest_main",
 ]
 
-filegroup(
-    name = "templates",
-    srcs = glob(
-        [
-            "formak/templates/*.hpp",
-            "formak/templates/*.cpp",
-            "formak/templates/test/*.cpp",
-        ],
-        allow_empty = False,
-    ),
-    visibility = ["//visibility:public"],
-)
-
 py_library(
     name = "ui-model",
     srcs = ["formak/ui_model.py"],

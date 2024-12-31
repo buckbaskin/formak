@@ -33,7 +33,7 @@ def cc_formak_model(namespace, name, pymain, pysrcs, pydeps = None, python_versi
         visibility = ["//visibility:private"],
     )
 
-    MODEL_TEMPLATES = "//py:templates"
+    MODEL_TEMPLATES = "//backend_cpp:templates"
 
     # TODO(buck): Use name to give these better names, maybe namespace too
     OUTPUT_HEADER = "generated/%s/%s.h" % (namespace, name)
@@ -49,7 +49,7 @@ def cc_formak_model(namespace, name, pymain, pysrcs, pydeps = None, python_versi
         tool = PY_BINARY_NAME,
         args = ["--header", "$(location generated/%s/%s.h)" % (namespace, name), "--source", "$(location generated/%s/%s.cpp)" % (namespace, name), "--namespace", namespace],
         outs = OUTPUT_FILES,
-        srcs = ["//py:templates"],
+        srcs = ["//backend_cpp:templates"],
     )
 
     native.cc_library(

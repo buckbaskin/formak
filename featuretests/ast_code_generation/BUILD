@@ -12,7 +12,7 @@ py_binary(
 
 run_binary(
     name = "ast-generate-cpp",
-    srcs = ["//py:templates"],
+    srcs = ["//backend_cpp:templates"],
     outs = [
         "generated/example.cpp",
         "generated/example.h",
