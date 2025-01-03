@@ -19,6 +19,7 @@ from formak.ast_tools import (
     SourceFile,
 )
 from formak.exceptions import ModelConstructionError
+from frontend.model_validation import model_validation
 from sympy import Symbol, ccode, cse, diff, simplify
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
@@ -872,7 +873,7 @@ def compile_ekf(
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(
+    model_validation(
         state_model,
         process_noise,
         sensor_models,

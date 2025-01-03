@@ -32,6 +32,7 @@ py_library(
     ],
 )
 
+# Note: allowed library for external use
 py_library(
     name = "runtime_py",
     srcs = glob(
@@ -45,6 +46,19 @@ py_library(
     ],
 )
 
+# Note: allowed library for external use
+py_library(
+    name = "frontend",
+    srcs = glob(
+        ["formak/frontend/*.py"],
+        allow_empty = False,
+    ),
+    imports = ["."],
+    deps = [
+        "//frontend:model-validation",
+    ],
+)
+
 py_library(
     name = "python",
     srcs = ["formak/python.py"],
@@ -52,6 +66,7 @@ py_library(
     deps = [
         ":common",
         ":exceptions",
+        "//frontend:model-validation",
         "//problemdefinition:ui-model-base",
         requirement("sympy"),
         requirement("scipy"),
@@ -114,6 +129,7 @@ py_library(
         ":ast-tools",
         ":common",
         ":exceptions",
+        "//frontend:model-validation",
         requirement("sympy"),
     ],
 )
@@ -139,6 +155,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cpp",
+        ":frontend",
         ":problemdefinition",
         ":python",
         ":reference-models",

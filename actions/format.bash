@@ -19,6 +19,7 @@ isort --settings-path=common/ --profile black \
 backend_cpp/ \
 cpp/ \
 featuretests/ \
+frontend/ \
 languagesupport/ \
 problemdefinition/ \
 py/ \

@@ -15,6 +15,7 @@ from sklearn.base import BaseEstimator
 import sympy
 from formak import common
 from formak.exceptions import MinimizationFailure, ModelConstructionError
+from frontend.model_validation import model_validation
 from problemdefinition.ui_model_base import UiModelBase
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
@@ -668,7 +669,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(
+    model_validation(
         symbolic_model,
         {},
         {},
@@ -698,7 +699,7 @@ def compile_ekf(
     if calibration_map is None:
         calibration_map = {}
 
-    common.model_validation(
+    model_validation(
         symbolic_model,
         process_noise,
         sensor_models,
