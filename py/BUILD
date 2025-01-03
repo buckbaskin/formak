@@ -39,7 +39,8 @@ py_library(
     ),
     imports = ["."],
     deps = [
-        "//runtime_py:runtime",
+        "//runtime_py:managed-filter",
+        "//runtime_py:stamped-reading",
     ],
 )
 

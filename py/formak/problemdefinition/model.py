@@ -1,1 +1,1 @@
-from problemdefinition.model import *
+from problemdefinition.model import *  # noqa: F401

@@ -3,10 +3,16 @@ package(default_visibility = ["//visibility:private"])
 load("@pip_deps//:requirements.bzl", "requirement")
 load("//py:defs.bzl", "PY_TEST_DEPS", "py_test_suite")
 
-# TODO: split this into sub-packages
 py_library(
-    name = "runtime",
-    srcs = ["runtime_py/runtime.py"],
+    name = "stamped-reading",
+    srcs = ["runtime_py/stamped_reading.py"],
+    imports = ["."],
+    visibility = ["//py:__pkg__"],
+)
+
+py_library(
+    name = "managed-filter",
+    srcs = ["runtime_py/managed_filter.py"],
     imports = ["."],
     visibility = ["//py:__pkg__"],
 )
@@ -21,8 +27,8 @@ py_test_suite(
         allow_empty = False,
     ),
     deps = [
-        # ":init-tree",
-        ":runtime",
+        ":managed-filter",
+        ":stamped-reading",
         "//problemdefinition:model",
         "//py:python",
     ] + PY_TEST_DEPS,

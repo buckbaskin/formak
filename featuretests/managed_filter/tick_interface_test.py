@@ -9,7 +9,8 @@ working correctly).
 
 import numpy as np
 from formak.problemdefinition.model import Model as UiModel
-from formak.runtime_py.runtime import ManagedFilter, StampedReading
+from formak.runtime_py.managed_filter import ManagedFilter
+from formak.runtime_py.stamped_reading import StampedReading
 from sympy import Symbol
 
 from formak import python

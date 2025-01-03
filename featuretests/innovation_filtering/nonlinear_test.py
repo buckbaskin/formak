@@ -15,7 +15,8 @@ from math import degrees, radians
 
 import numpy as np
 from formak.problemdefinition.model import Model as UiModel
-from formak.runtime_py.runtime import ManagedFilter, StampedReading
+from formak.runtime_py.managed_filter import ManagedFilter
+from formak.runtime_py.stamped_reading import StampedReading
 from sympy import Symbol, cos, sin, symbols
 
 from formak import python
