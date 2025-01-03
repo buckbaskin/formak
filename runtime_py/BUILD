@@ -33,3 +33,14 @@ py_test_suite(
         "//py:python",
     ] + PY_TEST_DEPS,
 )
+
+py_library(
+    name = "plotting",
+    srcs = ["runtime_py/plotting.py"],
+    imports = ["."],
+    visibility = ["//py:__pkg__"],
+    deps = [
+        requirement("sympy"),
+        requirement("matplotlib"),
+    ],
+)

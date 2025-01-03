@@ -14,8 +14,8 @@ import os
 import numpy as np
 
 from formak import python
-from formak.common import plot_pair, plot_quaternion_timeseries
 from formak.reference_models import strapdown_imu
+from formak.runtime_py.plotting import plot_pair, plot_quaternion_timeseries
 from sympy import Matrix, Quaternion, Symbol
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000

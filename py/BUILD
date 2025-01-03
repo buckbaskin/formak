@@ -42,6 +42,7 @@ py_library(
     imports = ["."],
     deps = [
         "//runtime_py:managed-filter",
+        "//runtime_py:plotting",
         "//runtime_py:stamped-reading",
     ],
 )
@@ -64,7 +65,6 @@ py_library(
     srcs = ["formak/python.py"],
     imports = ["."],
     deps = [
-        ":common",
         ":exceptions",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
@@ -83,17 +83,6 @@ py_library(
     srcs = ["formak/microbenchmark.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
-)
-
-py_library(
-    name = "common",
-    srcs = ["formak/common.py"],
-    imports = ["."],
-    deps = [
-        ":exceptions",
-        requirement("sympy"),
-        requirement("matplotlib"),
-    ],
 )
 
 py_library(
@@ -129,7 +118,6 @@ py_library(
     deps = [
         ":ast-fragments",
         ":ast-tools",
-        ":common",
         ":exceptions",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
@@ -292,6 +280,7 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":reference-models",
+        "//runtime_py:plotting",
     ] + PY_TEST_DEPS,
 )
 
