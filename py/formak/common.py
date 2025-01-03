@@ -12,10 +12,6 @@ from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 
 
-class UiModelBase:
-    """Use as a base class for UiModel, but in a separate file from UiModel so that formak.python doesn't directly depend on problem definition just for typing."""
-
-
 def model_validation(
     state_model,
     process_noise: Dict[Union[Symbol, Tuple[Symbol, Symbol]], float],

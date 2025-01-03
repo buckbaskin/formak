@@ -15,6 +15,7 @@ from sklearn.base import BaseEstimator
 import sympy
 from formak import common
 from formak.exceptions import MinimizationFailure, ModelConstructionError
+from problemdefinition.ui_model_base import UiModelBase
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
 
@@ -434,7 +435,7 @@ class ExtendedKalmanFilter:
 
     def _construct_sensors(
         self,
-        state_model: common.UiModelBase,
+        state_model: UiModelBase,
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
         calibration_map: dict[Symbol, float],
@@ -681,7 +682,7 @@ def compile(symbolic_model, calibration_map=None, *, config=None):
 
 
 def compile_ekf(
-    symbolic_model: common.UiModelBase,
+    symbolic_model: UiModelBase,
     process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
     sensor_models: dict[str, sympy.core.expr.Expr],
     sensor_noises,
@@ -742,7 +743,7 @@ class SklearnEKFAdapter(BaseEstimator):
     @classmethod
     def Create(
         cls,
-        symbolic_model: common.UiModelBase,
+        symbolic_model: UiModelBase,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float],
         sensor_models: dict[str, sympy.core.expr.Expr],
         sensor_noises: dict[str, dict[Symbol | tuple[Symbol, Symbol], float]],
@@ -772,7 +773,7 @@ class SklearnEKFAdapter(BaseEstimator):
 
     def __init__(
         self,
-        symbolic_model: common.UiModelBase | None = None,
+        symbolic_model: UiModelBase | None = None,
         process_noise: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,
         sensor_models: dict[Symbol, sympy.core.expr.Expr] | None = None,
         sensor_noises: dict[Symbol | tuple[Symbol, Symbol], float] | None = None,

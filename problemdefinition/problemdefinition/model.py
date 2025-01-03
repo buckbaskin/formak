@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from formak.common import UiModelBase
 from formak.exceptions import ModelDefinitionError
+from problemdefinition.ui_model_base import UiModelBase
 from sympy import simplify
 from sympy.parsing.sympy_parser import parse_expr
 

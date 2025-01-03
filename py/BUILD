@@ -28,6 +28,7 @@ py_library(
     deps = [
         "//problemdefinition:design-manager",
         "//problemdefinition:model",
+        "//problemdefinition:ui-model-base",
     ],
 )
 
@@ -51,6 +52,7 @@ py_library(
     deps = [
         ":common",
         ":exceptions",
+        "//problemdefinition:ui-model-base",
         requirement("sympy"),
         requirement("scipy"),
         requirement("numpy"),
