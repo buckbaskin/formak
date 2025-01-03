@@ -1,8 +1,8 @@
 import numpy as np
-from formak.problemdefinition.model import Model as UiModel
-from sympy import Symbol, symbols
 
 from formak import python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
 
 def test_fit_transform():

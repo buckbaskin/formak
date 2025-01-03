@@ -12,10 +12,10 @@ import csv
 import os
 
 import numpy as np
-from formak.reference_models import strapdown_imu
-from sympy import Matrix, Quaternion
 
 from formak import python
+from formak.reference_models import strapdown_imu
+from sympy import Matrix, Quaternion
 
 REFERENCE_TIME_ZERO_NS = 1602596210210000000
 

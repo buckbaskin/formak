@@ -2,6 +2,8 @@ from enum import Enum
 
 import numpy as np
 import pytest
+
+from formak import python
 from formak.problemdefinition.design_manager import (
     ConfigView,
     DesignManager,
@@ -10,8 +12,6 @@ from formak.problemdefinition.design_manager import (
 )
 from formak.problemdefinition.model import Model
 from sympy import Symbol
-
-from formak import python
 
 
 def test_model_simplification():

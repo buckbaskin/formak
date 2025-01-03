@@ -4,9 +4,10 @@ from itertools import product
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
-from formak.exceptions import ModelConstructionError
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
+
+from formak.exceptions import ModelConstructionError
 from sympy import Symbol, diff
 from sympy.solvers.solveset import nonlinsolve
 

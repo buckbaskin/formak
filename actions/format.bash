@@ -15,7 +15,15 @@ echo "black"
 black $DEFAULT ;
 
 echo "isort"
-isort --profile black py/ featuretests/ languagesupport/
+isort --settings-path=common/ --profile black \
+backend_cpp/ \
+cpp/ \
+featuretests/ \
+languagesupport/ \
+problemdefinition/ \
+py/ \
+runtime_py/ \
+; echo "done isort"
 
 # echo "codespell"
 # codespell py/ featuretests/ languagesupport/

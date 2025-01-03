@@ -7,10 +7,9 @@ some performance limitations for the Python generation with a bigger model.
 Passes if the Python implementation is created and runs without an exception
 """
 
+from formak import python
 from model_definition import model_definition
 from sympy import Symbol
-
-from formak import python
 
 
 def test_python_Model():

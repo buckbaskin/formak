@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
-from formak.problemdefinition.model import Model as UiModel
 from numpy.random import default_rng
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
-from sympy import Symbol, symbols
 
 from formak import python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
 
 def test_fit():

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Iterable, List, Optional, Tuple
 
+from formak import ast_fragments as fragments
+from formak import common
 from formak.ast_tools import (
     BaseAst,
     ClassDef,
@@ -18,9 +20,6 @@ from formak.ast_tools import (
 )
 from formak.exceptions import ModelConstructionError
 from sympy import Symbol, ccode, cse, diff, simplify
-
-from formak import ast_fragments as fragments
-from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 

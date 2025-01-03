@@ -3,13 +3,13 @@ from datetime import timedelta
 
 import numpy as np
 import pytest
-from formak.problemdefinition.model import Model as UiModel
 from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
-from sympy import Symbol, symbols
 
 from formak import python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
 warnings.filterwarnings("error")
 

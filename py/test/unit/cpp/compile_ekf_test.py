@@ -1,9 +1,9 @@
 import pytest
+
+from formak import cpp
 from formak.exceptions import ModelConstructionError
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
-
-from formak import cpp
 
 
 @pytest.mark.xfail(reason="Unsure on what changed with the extra_validation")

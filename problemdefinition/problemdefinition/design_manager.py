@@ -4,11 +4,11 @@ from collections import namedtuple
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
-from formak.exceptions import ModelFitError
-from problemdefinition.model import Model as UiModel
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
 from formak import python
+from formak.exceptions import ModelFitError
+from problemdefinition.model import Model as UiModel
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 

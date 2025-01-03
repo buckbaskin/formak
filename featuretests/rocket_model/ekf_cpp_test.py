@@ -8,6 +8,7 @@ Passes if the C++ implementation is written to disk without an exception
 
 from itertools import repeat
 
+from formak import cpp
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -15,8 +16,6 @@ from model_definition import (
     named_translation,
 )
 from sympy import Symbol
-
-from formak import cpp
 
 
 def test_cpp_EKF():

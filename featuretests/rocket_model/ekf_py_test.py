@@ -9,6 +9,7 @@ Passes if the Python implementation is created and runs without an exception
 
 from itertools import repeat
 
+from formak import python
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -16,8 +17,6 @@ from model_definition import (
     named_translation,
 )
 from sympy import Symbol
-
-from formak import python
 
 
 def test_python_EKF():

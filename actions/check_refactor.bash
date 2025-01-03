@@ -1,7 +1,7 @@
 make format ;
 
 flake8 --config=common/setup.cfg  \
-backend_cpp \
+backend_cpp/ \
 cpp/ \
 featuretests/ \
 languagesupport/ \

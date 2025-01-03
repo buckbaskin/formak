@@ -1,10 +1,10 @@
 import warnings
 
-from formak.problemdefinition.model import Model as UiModel
 from numpy.testing import assert_almost_equal
-from sympy import Symbol, symbols
 
 from formak import python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
 warnings.filterwarnings("error")
 

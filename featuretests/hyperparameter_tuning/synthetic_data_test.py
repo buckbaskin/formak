@@ -5,7 +5,6 @@ Demonstrate tuning a model for two different innovation filtering hyper-paramete
 """
 
 import numpy as np
-from formak.problemdefinition.design_manager import DesignManager, StateId
 from model import (
     calibration_map,
     process_noise,
@@ -15,6 +14,7 @@ from model import (
 )
 
 from data import generate_data
+from formak.problemdefinition.design_manager import DesignManager, StateId
 
 np.seterr("raise")
 

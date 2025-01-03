@@ -1,8 +1,8 @@
 import pytest
-from formak.problemdefinition.model import Model as UiModel
-from sympy import Symbol, symbols
 
 from formak import exceptions, python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol, symbols
 
 
 def test_Model_creation_calibration_mismatch():

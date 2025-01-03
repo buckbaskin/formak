@@ -2,14 +2,14 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 import numpy as np
-from problemdefinition.model import Model as UiModel
-from runtime_py.stamped_reading import StampedReading
-from runtime_py.managed_filter import ManagedFilter
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
-from sympy import Symbol
 
 from formak import python
+from problemdefinition.model import Model as UiModel
+from runtime_py.managed_filter import ManagedFilter
+from runtime_py.stamped_reading import StampedReading
+from sympy import Symbol
 
 
 def samples_dt_sec():

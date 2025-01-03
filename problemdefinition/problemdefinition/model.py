@@ -1,10 +1,9 @@
 from datetime import datetime
 
+from formak.common import UiModelBase
 from formak.exceptions import ModelDefinitionError
 from sympy import simplify
 from sympy.parsing.sympy_parser import parse_expr
-
-from formak.common import UiModelBase
 
 
 class Model(UiModelBase):

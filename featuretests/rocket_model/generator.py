@@ -1,5 +1,6 @@
 from itertools import repeat
 
+from formak import cpp
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -7,8 +8,6 @@ from model_definition import (
     named_translation,
 )
 from sympy import Symbol
-
-from formak import cpp
 
 definition = model_definition()
 ui_model = definition["model"]

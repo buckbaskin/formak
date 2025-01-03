@@ -9,10 +9,10 @@ Passes if CSE demonstrates a significant outperformance in all examples.
 from functools import partial
 
 import numpy as np
-from common_subexpression_elimination.common import ui_model
-from formak.microbenchmark import microbenchmark
 
+from common_subexpression_elimination.common import ui_model
 from formak import python
+from formak.microbenchmark import microbenchmark
 
 
 def test_python_CSE():

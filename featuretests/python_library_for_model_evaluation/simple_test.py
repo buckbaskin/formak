@@ -6,10 +6,9 @@ Create a Python model
 Passes if the Python model runs
 """
 
+from formak import python
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
-
-from formak import python
 
 
 def test_python_Model_simple():

@@ -6,10 +6,9 @@ Create a Python implementation of an EKF.
 Passes if the EKF runs without exceptions
 """
 
+from formak import python
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
-
-from formak import python
 
 
 def test_ekf_simple():

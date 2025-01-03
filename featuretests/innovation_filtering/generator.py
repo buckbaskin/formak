@@ -11,10 +11,9 @@ working as expected, then the model will flip into the wrong direction.
 
 from math import radians
 
+from formak import cpp
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, cos, sin, symbols
-
-from formak import cpp
 
 TRUE_SCALE = radians(5.0)
 

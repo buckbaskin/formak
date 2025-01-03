@@ -7,10 +7,10 @@ Passes if the fit model scores better than the unfit model
 """
 
 import numpy as np
-from formak.problemdefinition.model import Model as UiModel
-from sympy import Symbol
 
 from formak import python
+from formak.problemdefinition.model import Model as UiModel
+from sympy import Symbol
 
 
 def test_like_sklearn_regression():

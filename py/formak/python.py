@@ -8,15 +8,15 @@ from math import sqrt
 from typing import Any, Iterator
 
 import numpy as np
-import sympy
-from formak.exceptions import MinimizationFailure, ModelConstructionError
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
+
+import sympy
+from formak import common
+from formak.exceptions import MinimizationFailure, ModelConstructionError
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
-
-from formak import common
 
 DEFAULT_MODULES = ("scipy", "numpy", "math", {"sec": lambda v: 1.0 / np.cos(v)})
 
