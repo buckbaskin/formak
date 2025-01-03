@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "cc_formak_model", "py_test_suite", "PY_TEST_DEPS")
+load("//py:defs.bzl", "PY_TEST_DEPS", "cc_formak_model", "py_test_suite")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - exporting as a pip package for non-bazel users
@@ -28,6 +28,18 @@ py_library(
     deps = [
         "//problemdefinition:design-manager",
         "//problemdefinition:model",
+    ],
+)
+
+py_library(
+    name = "runtime_py",
+    srcs = glob(
+        ["formak/runtime_py/*.py"],
+        allow_empty = False,
+    ),
+    imports = ["."],
+    deps = [
+        "//runtime_py:runtime",
     ],
 )
 
@@ -127,7 +139,7 @@ py_library(
         ":problemdefinition",
         ":python",
         ":reference-models",
-        ":runtime",
+        ":runtime_py",
     ],
 )
 

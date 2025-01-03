@@ -15,9 +15,10 @@ from math import degrees, radians
 
 import numpy as np
 from formak.problemdefinition.model import Model as UiModel
+from formak.runtime_py.runtime import ManagedFilter, StampedReading
 from sympy import Symbol, cos, sin, symbols
 
-from formak import python, runtime
+from formak import python
 
 TRUE_SCALE = radians(5.0)
 
@@ -60,9 +61,7 @@ def test_obvious_innovation_rejections():
     covariance = ekf.Covariance(x=1.0, y=1.0, heading=1.0)
     control = ekf.Control(velocity=1.0)
 
-    mf = runtime.ManagedFilter(
-        ekf=ekf, start_time=0.0, state=state, covariance=covariance
-    )
+    mf = ManagedFilter(ekf=ekf, start_time=0.0, state=state, covariance=covariance)
 
     readings = np.random.default_rng(seed=3).normal(
         loc=0.0, scale=TRUE_SCALE / 2.0, size=(100,)
@@ -76,7 +75,7 @@ def test_obvious_innovation_rejections():
         s = mf.tick(
             0.1 * idx,
             control=control,
-            readings=[runtime.StampedReading(0.1 * idx - 0.05, "compass", heading=r)],
+            readings=[StampedReading(0.1 * idx - 0.05, "compass", heading=r)],
         )
 
         if abs(compass_model(s.state).data) >= TRUE_SCALE * 4:

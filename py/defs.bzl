@@ -15,4 +15,3 @@ PY_TEST_DEPS = [
     requirement("pytest"),
     requirement("pytest-mock"),
 ]
-

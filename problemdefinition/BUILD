@@ -6,7 +6,10 @@ py_library(
     name = "model",
     srcs = ["problemdefinition/model.py"],
     imports = ["."],
-    visibility = ["//py:__pkg__", "//runtime_py:__pkg__"],
+    visibility = [
+        "//py:__pkg__",
+        "//runtime_py:__pkg__",
+    ],
     deps = [
         requirement("sympy"),
     ],
