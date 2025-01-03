@@ -17,6 +17,7 @@ black $DEFAULT ;
 echo "isort"
 isort --settings-path=common/ --profile black \
 backend_cpp/ \
+backend_py/ \
 cpp/ \
 featuretests/ \
 frontend/ \

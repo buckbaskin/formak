@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Iterable, List, Optional, Tuple
 
+from backend_py.named_covariance import named_covariance
+from backend_py.named_vector import named_vector
+
 from formak import ast_fragments as fragments
-from formak import common
 from formak.ast_tools import (
     BaseAst,
     ClassDef,
@@ -178,9 +180,9 @@ class Model:
             + self.arglist_control
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -317,10 +319,10 @@ class ExtendedKalmanFilter:
             + self.arglist_control
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Covariance = named_covariance("Covariance", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         if self.calibration_size > 0:
             if len(calibration_map) == 0:
@@ -573,9 +575,7 @@ class ExtendedKalmanFilter:
             )
             SensorModel_model_body = list(body.compile()) + [return_]
 
-            SensorCovariance = common.named_covariance(
-                f"{name}Covariance", arglist_sensor
-            )
+            SensorCovariance = named_covariance(f"{name}Covariance", arglist_sensor)
 
             SensorModel_covariance_body = self._translate_sensor_covariance(
                 typename, SensorCovariance.from_dict(sensor_noise)

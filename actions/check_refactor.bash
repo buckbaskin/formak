@@ -3,6 +3,7 @@ make format ;
 echo ">>> flake8" ;
 flake8 --config=common/setup.cfg  \
 backend_cpp/ \
+backend_py/ \
 cpp/ \
 featuretests/ \
 frontend/ \
@@ -16,6 +17,7 @@ echo "<<< flake8" ;
 echo ">>> test" ;
 bazel test  \
 //backend_cpp/... \
+//backend_py/... \
 //cpp/... \
 //featuretests/... \
 //frontend/... \

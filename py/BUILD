@@ -66,6 +66,8 @@ py_library(
     deps = [
         ":common",
         ":exceptions",
+        "//backend_py:named-covariance",
+        "//backend_py:named-vector",
         "//frontend:model-validation",
         "//problemdefinition:ui-model-base",
         requirement("sympy"),
@@ -129,6 +131,8 @@ py_library(
         ":ast-tools",
         ":common",
         ":exceptions",
+        "//backend_py:named-covariance",
+        "//backend_py:named-vector",
         "//frontend:model-validation",
         requirement("sympy"),
     ],
@@ -149,6 +153,7 @@ py_library(
     ],
 )
 
+# TODO: remove deps here that aren't intended for general use, measured by deps not used in feature tests or demos
 py_library(
     name = "formak",
     imports = ["."],

@@ -8,12 +8,13 @@ from math import sqrt
 from typing import Any, Iterator
 
 import numpy as np
+from backend_py.named_covariance import named_covariance
+from backend_py.named_vector import named_vector
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
 
 import sympy
-from formak import common
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from frontend.model_validation import model_validation
 from problemdefinition.ui_model_base import UiModelBase
@@ -139,9 +140,9 @@ class Model:
             + self.arglist_control
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         self.calibration_vector = np.zeros((0, 0))
         if self.calibration_size > 0:
@@ -228,11 +229,11 @@ class SensorModel:
         )
         self.arglist = self.arglist_state + self.arglist_calibration
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
-        self.Reading = common.named_vector("Reading", self.readings)
-        self.ReadingCovariance = common.named_vector("ReadingCovariance", self.readings)
+        self.State = named_vector("State", self.arglist_state)
+        self.Covariance = named_covariance("Covariance", self.arglist_state)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
+        self.Reading = named_vector("Reading", self.readings)
+        self.ReadingCovariance = named_vector("ReadingCovariance", self.readings)
 
         self.calibration_vector = np.array(
             [[calibration_map[k] for k in self.arglist_calibration]]
@@ -348,10 +349,10 @@ class ExtendedKalmanFilter:
             list(state_model.calibration), key=lambda x: x.name
         )
 
-        self.State = common.named_vector("State", self.arglist_state)
-        self.Covariance = common.named_covariance("Covariance", self.arglist_state)
-        self.Control = common.named_vector("Control", self.arglist_control)
-        self.Calibration = common.named_vector("Calibration", self.arglist_calibration)
+        self.State = named_vector("State", self.arglist_state)
+        self.Covariance = named_covariance("Covariance", self.arglist_state)
+        self.Control = named_vector("Control", self.arglist_control)
+        self.Calibration = named_vector("Calibration", self.arglist_calibration)
 
         self.calibration_map = calibration_map
 
@@ -813,7 +814,7 @@ class SklearnEKFAdapter(BaseEstimator):
             assert isinstance(sensor_noises[key], dict)
             assert len(sensor_noises[key]) == len(self.sensor_models[key].keys())
             readings = sorted(list(model.keys()))
-            ReadingCovariance = common.named_vector("ReadingCovariance", readings)
+            ReadingCovariance = named_vector("ReadingCovariance", readings)
 
             assert_valid_covariance(sensor_noises[key], f"Sensor Noise [{key}]")
             matrix_sensor_noises[key] = ReadingCovariance.from_dict(sensor_noises[key])
