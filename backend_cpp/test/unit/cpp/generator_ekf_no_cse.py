@@ -1,4 +1,5 @@
 from backend_cpp import cpp
+from backend_cpp.config import Config
 
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
@@ -20,7 +21,7 @@ cpp_implementation = cpp.compile_ekf(
         "combined": {"reading2": Symbol("x") + Symbol("y")},
     },
     sensor_noises={"simple": {"reading1": 1.0}, "combined": {"reading2": 4.0}},
-    config=cpp.Config(common_subexpression_elimination=False),
+    config=Config(common_subexpression_elimination=False),
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))

@@ -48,6 +48,16 @@ py_library(
 )
 
 py_library(
+    name = "config",
+    srcs = ["backend_cpp/config.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
+
+# TODO split this
+py_library(
     name = "cpp",
     srcs = ["backend_cpp/cpp.py"],
     imports = ["."],
@@ -57,6 +67,7 @@ py_library(
     deps = [
         ":ast",
         ":ast-fragments",
+        ":config",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",

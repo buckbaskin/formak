@@ -12,6 +12,7 @@ working as expected, then the model will flip into the wrong direction.
 from math import radians
 
 from formak.backend_cpp import cpp
+from formak.backend_cpp.config import Config
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, cos, sin, symbols
 
@@ -33,7 +34,7 @@ state_model = {
 
 model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-config = cpp.Config(innovation_filtering=4)
+config = Config(innovation_filtering=4)
 
 cpp_implementation = cpp.compile_ekf(
     state_model=model,

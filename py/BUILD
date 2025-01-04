@@ -56,12 +56,15 @@ py_library(
     ],
 )
 
-# TODO: this should be split
 py_library(
     name = "backend_cpp",
-    srcs = ["formak/backend_cpp/cpp.py"],
+    srcs = glob(
+        ["formak/backend_cpp/*.py"],
+        allow_empty = False,
+    ),
     imports = ["."],
     deps = [
+        "//backend_cpp:config",
         "//backend_cpp:cpp",
     ],
 )

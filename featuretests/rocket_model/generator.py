@@ -1,6 +1,7 @@
 from itertools import repeat
 
 from formak.backend_cpp import cpp
+from formak.backend_cpp.config import Config
 from model_definition import (
     model_definition,
     named_acceleration,
@@ -43,7 +44,7 @@ cpp_implementation = cpp.compile_ekf(
     sensor_models={"altitude": {Symbol("altitude"): CON_position_in_global_frame[2]}},
     sensor_noises={"altitude": {"altitude": 1.0}},
     calibration_map=calibration_map,
-    config=cpp.Config(common_subexpression_elimination=True),
+    config=Config(common_subexpression_elimination=True),
 )
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
