@@ -1,6 +1,6 @@
 from itertools import repeat
 
-from formak import cpp
+from formak.backend_cpp import cpp
 from model_definition import (
     model_definition,
     named_acceleration,

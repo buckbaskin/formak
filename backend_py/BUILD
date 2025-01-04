@@ -7,9 +7,6 @@ py_library(
     name = "named-array-base",
     srcs = ["backend_py/named_array_base.py"],
     imports = ["."],
-    visibility = [
-        "//py:__pkg__",
-    ],
 )
 
 py_library(
@@ -17,6 +14,7 @@ py_library(
     srcs = ["backend_py/named_vector.py"],
     imports = ["."],
     visibility = [
+        "//backend_cpp:__pkg__",
         "//py:__pkg__",
     ],
     deps = [":named-array-base"],
@@ -36,6 +34,7 @@ py_library(
     srcs = ["backend_py/named_covariance.py"],
     imports = ["."],
     visibility = [
+        "//backend_cpp:__pkg__",
         "//py:__pkg__",
     ],
     deps = [":named-array-base"],

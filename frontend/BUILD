@@ -7,6 +7,7 @@ py_library(
     srcs = ["frontend/model_validation.py"],
     imports = ["."],
     visibility = [
+        "//backend_cpp:__pkg__",
         "//py:__pkg__",
     ],
 )

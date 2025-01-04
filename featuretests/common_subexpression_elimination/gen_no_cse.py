@@ -1,5 +1,5 @@
 from common import ui_model
-from formak import cpp
+from formak.backend_cpp import cpp
 
 
 def main():

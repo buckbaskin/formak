@@ -22,7 +22,6 @@ py_library(
     imports = ["."],
     visibility = [
         "//featuretests/ast_code_generation:__pkg__",
-        "//py:__pkg__",
     ],
     deps = [
         requirement("Jinja2"),
@@ -43,11 +42,26 @@ py_library(
     name = "ast-fragments",
     srcs = ["backend_cpp/ast_fragments.py"],
     imports = ["."],
+    deps = [
+        ":ast",
+    ],
+)
+
+py_library(
+    name = "cpp",
+    srcs = ["backend_cpp/cpp.py"],
+    imports = ["."],
     visibility = [
         "//py:__pkg__",
     ],
     deps = [
         ":ast",
+        ":ast-fragments",
+        "//backend_py:named-covariance",
+        "//backend_py:named-vector",
+        "//frontend:model-validation",
+        "//py:exceptions",
+        requirement("sympy"),
     ],
 )
 
@@ -62,7 +76,7 @@ py_test_suite(
     ),
     deps = [
         "//py:init-tree",
-        "//py:cpp",
+        ":cpp",
         "//py:problemdefinition",
     ] + PY_TEST_DEPS,
 )

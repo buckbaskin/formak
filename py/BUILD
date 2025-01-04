@@ -56,6 +56,16 @@ py_library(
     ],
 )
 
+# TODO: this should be split
+py_library(
+    name = "backend_cpp",
+    srcs = ["formak/backend_cpp/cpp.py"],
+    imports = ["."],
+    deps = [
+        "//backend_cpp:cpp",
+    ],
+)
+
 py_library(
     name = "python",
     srcs = ["formak/python.py"],
@@ -82,21 +92,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "cpp",
-    srcs = ["formak/cpp.py"],
-    imports = ["."],
-    deps = [
-        ":exceptions",
-        "//backend_cpp:ast",
-        "//backend_cpp:ast-fragments",
-        "//backend_py:named-covariance",
-        "//backend_py:named-vector",
-        "//frontend:model-validation",
-        requirement("sympy"),
-    ],
-)
-
 # Note: allowed library for external use
 py_library(
     name = "reference-models",
@@ -118,7 +113,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        ":cpp",
+        ":backend_cpp",
         ":frontend",
         ":problemdefinition",
         ":python",
