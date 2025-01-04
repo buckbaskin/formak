@@ -78,14 +78,6 @@ py_library(
 )
 
 py_library(
-    name = "microbenchmark",
-    testonly = True,
-    srcs = ["formak/microbenchmark.py"],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-)
-
-py_library(
     name = "exceptions",
     srcs = ["formak/exceptions.py"],
     imports = ["."],

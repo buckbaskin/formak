@@ -44,3 +44,11 @@ py_library(
         requirement("matplotlib"),
     ],
 )
+
+py_library(
+    name = "microbenchmark",
+    testonly = True,
+    srcs = ["runtime_py/microbenchmark.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
