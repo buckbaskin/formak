@@ -86,20 +86,11 @@ py_library(
 )
 
 py_library(
-    name = "ast-tools",
-    srcs = ["formak/ast_tools.py"],
-    imports = ["."],
-    deps = [
-        requirement("Jinja2"),
-    ],
-)
-
-py_library(
     name = "ast-fragments",
     srcs = ["formak/ast_fragments.py"],
     imports = ["."],
     deps = [
-        ":ast-tools",
+        "//backend_cpp:ast",
     ],
 )
 
@@ -109,8 +100,8 @@ py_library(
     imports = ["."],
     deps = [
         ":ast-fragments",
-        ":ast-tools",
         ":exceptions",
+        "//backend_cpp:ast",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",

@@ -7,7 +7,10 @@ py_binary(
     name = "ast-generate-cpp-tool",
     srcs = ["generator.py"],
     main = "generator.py",
-    deps = ["//py:formak"],
+    deps = [
+        "//backend_cpp:ast",
+        "//py:formak",
+    ],
 )
 
 run_binary(

@@ -1,7 +1,7 @@
 import logging
 from itertools import chain
 
-from formak.ast_tools import (
+from backend_cpp.ast import (
     Arg,
     ClassDef,
     CompileState,

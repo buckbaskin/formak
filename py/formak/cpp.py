@@ -5,11 +5,7 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Iterable, List, Optional, Tuple
 
-from backend_py.named_covariance import named_covariance
-from backend_py.named_vector import named_vector
-
-from formak import ast_fragments as fragments
-from formak.ast_tools import (
+from backend_cpp.ast import (
     BaseAst,
     ClassDef,
     CompileState,
@@ -20,6 +16,10 @@ from formak.ast_tools import (
     Return,
     SourceFile,
 )
+from backend_py.named_covariance import named_covariance
+from backend_py.named_vector import named_vector
+
+from formak import ast_fragments as fragments
 from formak.exceptions import ModelConstructionError
 from frontend.model_validation import model_validation
 from sympy import Symbol, ccode, cse, diff, simplify
