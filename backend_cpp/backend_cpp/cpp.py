@@ -16,6 +16,7 @@ from backend_cpp.ast import (
     Return,
     SourceFile,
 )
+from backend_cpp.compile_result import CppCompileResult
 from backend_cpp.config import Config
 from backend_py.named_covariance import named_covariance
 from backend_py.named_vector import named_vector
@@ -26,13 +27,6 @@ from sympy import Symbol, ccode, cse, diff, simplify
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class CppCompileResult:
-    success: bool
-    header_path: Optional[str] = None
-    source_path: Optional[str] = None
 
 
 class BasicBlock:

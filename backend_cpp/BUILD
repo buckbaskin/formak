@@ -56,6 +56,15 @@ py_library(
     ],
 )
 
+py_library(
+    name = "compile-result",
+    srcs = ["backend_cpp/compile_result.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
+
 # TODO split this
 py_library(
     name = "cpp",
@@ -67,6 +76,7 @@ py_library(
     deps = [
         ":ast",
         ":ast-fragments",
+        ":compile-result",
         ":config",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
