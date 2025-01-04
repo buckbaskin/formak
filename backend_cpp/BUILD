@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:private"])
 
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "PY_TEST_DEPS", "py_test_suite")
+load("//py:defs.bzl", "CC_TEST_DEPS", "PY_TEST_DEPS", "cc_formak_model", "py_test_suite")
 
 filegroup(
     name = "templates",
@@ -49,4 +49,153 @@ py_library(
     deps = [
         ":ast",
     ],
+)
+
+py_test_suite(
+    name = "cpp-generation-py",
+    size = "small",
+    srcs = glob(
+        [
+            "test/unit/cpp/*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        "//py:init-tree",
+        "//py:cpp",
+        "//py:problemdefinition",
+    ] + PY_TEST_DEPS,
+)
+
+cc_formak_model(
+    name = "simple-model",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "simple-ekf",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "ekf-cse",
+    namespace = "cse",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf_cse.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "ekf-no-cse",
+    namespace = "no_cse",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf_no_cse.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "calibration-model",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_with_calibration.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_formak_model(
+    name = "calibration-ekf",
+    namespace = "unit",
+    pydeps = [],
+    pymain = "test/unit/cpp/generator_ekf_with_calibration.py",
+    pysrcs = glob(
+        ["test/unit/cpp/*.py"],
+        allow_empty = False,
+    ),
+)
+
+cc_test(
+    name = "unit-cpp-extended-kalman-filter-test",
+    srcs = ["test/unit/cpp/ExtendedKalmanFilter_test.cpp"],
+    deps = [
+        ":simple-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-basic-block",
+    srcs = ["test/unit/cpp/BasicBlock_test.cpp"],
+    deps = [
+        ":ekf-cse",
+        ":ekf-no-cse",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-model-test",
+    srcs = [
+        "test/unit/cpp/Model_test.cpp",
+    ],
+    deps = [
+        ":simple-model",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-calibration-model-test",
+    srcs = [
+        "test/unit/cpp/ModelWithCalibration_test.cpp",
+    ],
+    deps = [
+        ":calibration-model",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "unit-cpp-calibration-ekf-test",
+    srcs = [
+        "test/unit/cpp/ExtendedKalmanFilterWithCalibration_test.cpp",
+    ],
+    deps = [
+        ":calibration-ekf",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "integration-cpp-model-test",
+    srcs = ["test/integration/Model_test.cpp"],
+    deps = [
+        ":simple-model",
+        "//cpp:utils-stats",
+        "@rapidcheck",
+    ] + CC_TEST_DEPS,
+)
+
+cc_test(
+    name = "integration-cpp-extended-kalman-filter-test",
+    srcs = ["test/integration/ExtendedKalmanFilter_test.cpp"],
+    deps = [
+        ":simple-ekf",
+        "//cpp:utils-stats",
+        "@rapidcheck",
+    ] + CC_TEST_DEPS,
 )

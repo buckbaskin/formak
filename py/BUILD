@@ -5,17 +5,13 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 load("@pip_deps//:requirements.bzl", "requirement")
-load("//py:defs.bzl", "PY_TEST_DEPS", "cc_formak_model", "py_test_suite")
+load("//py:defs.bzl", "PY_TEST_DEPS", "py_test_suite")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 # TODOs
 # - exporting as a pip package for non-bazel users
 ## End Selenium-based load
 
 FORMAK_VERSION = "0.0.1-alpha00"
-
-CC_TEST_DEPS = [
-    "@gtest//:gtest_main",
-]
 
 # Note: allowed library for external use
 py_library(
@@ -77,6 +73,7 @@ py_library(
     ],
 )
 
+# Note: allowed library for external use (for now)
 py_library(
     name = "exceptions",
     srcs = ["formak/exceptions.py"],
@@ -211,22 +208,6 @@ py_test_suite(
 )
 
 py_test_suite(
-    name = "cpp-generation-py",
-    size = "small",
-    srcs = glob(
-        [
-            "test/unit/cpp/*.py",
-        ],
-        allow_empty = False,
-    ),
-    deps = [
-        ":init-tree",
-        ":cpp",
-        ":problemdefinition",
-    ] + PY_TEST_DEPS,
-)
-
-py_test_suite(
     name = "python-generation-py",
     size = "small",
     srcs = glob(
@@ -268,139 +249,4 @@ py_test_suite(
         ":init-tree",
         ":formak",
     ] + PY_TEST_DEPS,
-)
-
-cc_formak_model(
-    name = "simple-model",
-    namespace = "unit",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "simple-ekf",
-    namespace = "unit",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator_ekf.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "ekf-cse",
-    namespace = "cse",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator_ekf_cse.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "ekf-no-cse",
-    namespace = "no_cse",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator_ekf_no_cse.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "calibration-model",
-    namespace = "unit",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator_with_calibration.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_formak_model(
-    name = "calibration-ekf",
-    namespace = "unit",
-    pydeps = [],
-    pymain = "test/unit/cpp/generator_ekf_with_calibration.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
-)
-
-cc_test(
-    name = "unit-cpp-extended-kalman-filter-test",
-    srcs = ["test/unit/cpp/ExtendedKalmanFilter_test.cpp"],
-    deps = [
-        ":simple-ekf",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "unit-cpp-basic-block",
-    srcs = ["test/unit/cpp/BasicBlock_test.cpp"],
-    deps = [
-        ":ekf-cse",
-        ":ekf-no-cse",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "unit-cpp-model-test",
-    srcs = [
-        "test/unit/cpp/Model_test.cpp",
-    ],
-    deps = [
-        ":simple-model",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "unit-cpp-calibration-model-test",
-    srcs = [
-        "test/unit/cpp/ModelWithCalibration_test.cpp",
-    ],
-    deps = [
-        ":calibration-model",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "unit-cpp-calibration-ekf-test",
-    srcs = [
-        "test/unit/cpp/ExtendedKalmanFilterWithCalibration_test.cpp",
-    ],
-    deps = [
-        ":calibration-ekf",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "integration-cpp-model-test",
-    srcs = ["test/formak/Model_test.cpp"],
-    deps = [
-        ":simple-model",
-        ":simple-ekf",
-        "//cpp:utils-stats",
-        "@rapidcheck",
-    ] + CC_TEST_DEPS,
-)
-
-cc_test(
-    name = "integration-cpp-extended-kalman-filter-test",
-    srcs = ["test/formak/ExtendedKalmanFilter_test.cpp"],
-    deps = [
-        ":simple-model",
-        ":simple-ekf",
-        "//cpp:utils-stats",
-        "@rapidcheck",
-    ] + CC_TEST_DEPS,
 )

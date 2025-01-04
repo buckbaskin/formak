@@ -15,3 +15,7 @@ PY_TEST_DEPS = [
     requirement("pytest"),
     requirement("pytest-mock"),
 ]
+
+CC_TEST_DEPS = [
+    "@gtest//:gtest_main",
+]
