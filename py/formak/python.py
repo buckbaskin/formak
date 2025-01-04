@@ -8,13 +8,13 @@ from math import sqrt
 from typing import Any, Iterator
 
 import numpy as np
-from backend_py.named_covariance import named_covariance
-from backend_py.named_vector import named_vector
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
 
 import sympy
+from backend_py.named_covariance import named_covariance
+from backend_py.named_vector import named_vector
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from frontend.model_validation import model_validation
 from problemdefinition.ui_model_base import UiModelBase

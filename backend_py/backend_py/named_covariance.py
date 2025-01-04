@@ -1,6 +1,7 @@
 import types
 
 import numpy as np
+
 from backend_py.named_array_base import _NamedArrayBase
 
 

@@ -19,7 +19,6 @@ from backend_cpp.ast import (
 from backend_cpp.config import Config
 from backend_py.named_covariance import named_covariance
 from backend_py.named_vector import named_vector
-
 from formak.exceptions import ModelConstructionError
 from frontend.model_validation import model_validation
 from sympy import Symbol, ccode, cse, diff, simplify

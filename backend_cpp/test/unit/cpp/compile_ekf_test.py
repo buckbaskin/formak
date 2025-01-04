@@ -1,7 +1,7 @@
 import pytest
+
 from backend_cpp import cpp
 from backend_cpp.config import Config
-
 from formak.exceptions import ModelConstructionError
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols

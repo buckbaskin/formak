@@ -1,4 +1,5 @@
 import pytest
+
 from backend_py.named_vector import named_vector
 
 
