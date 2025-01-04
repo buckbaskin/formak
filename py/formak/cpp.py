@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Iterable, List, Optional, Tuple
 
+from backend_cpp import ast_fragments as fragments
 from backend_cpp.ast import (
     BaseAst,
     ClassDef,
@@ -19,7 +20,6 @@ from backend_cpp.ast import (
 from backend_py.named_covariance import named_covariance
 from backend_py.named_vector import named_vector
 
-from formak import ast_fragments as fragments
 from formak.exceptions import ModelConstructionError
 from frontend.model_validation import model_validation
 from sympy import Symbol, ccode, cse, diff, simplify

@@ -86,22 +86,13 @@ py_library(
 )
 
 py_library(
-    name = "ast-fragments",
-    srcs = ["formak/ast_fragments.py"],
-    imports = ["."],
-    deps = [
-        "//backend_cpp:ast",
-    ],
-)
-
-py_library(
     name = "cpp",
     srcs = ["formak/cpp.py"],
     imports = ["."],
     deps = [
-        ":ast-fragments",
         ":exceptions",
         "//backend_cpp:ast",
+        "//backend_cpp:ast-fragments",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",

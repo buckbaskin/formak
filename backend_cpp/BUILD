@@ -38,3 +38,15 @@ py_test_suite(
         ":ast",
     ] + PY_TEST_DEPS,
 )
+
+py_library(
+    name = "ast-fragments",
+    srcs = ["backend_cpp/ast_fragments.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+    deps = [
+        ":ast",
+    ],
+)
