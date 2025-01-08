@@ -25,6 +25,19 @@ py_library(
     ],
 )
 
+# Allow Model for use in testing in other packages
+py_library(
+    name = "model-for-testing",
+    testonly = True,
+    imports = ["."],
+    visibility = [
+        "//backend_cpp:__pkg__",
+    ],
+    deps = [
+        ":model",
+    ],
+)
+
 py_library(
     name = "design-manager",
     srcs = ["problemdefinition/design_manager.py"],

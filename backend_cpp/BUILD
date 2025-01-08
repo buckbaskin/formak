@@ -66,6 +66,16 @@ py_library(
 )
 
 py_library(
+    name = "model",
+    srcs = ["backend_cpp/model.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+    deps = [":basic-block"],
+)
+
+py_library(
     name = "compile-result",
     srcs = ["backend_cpp/compile_result.py"],
     imports = ["."],
@@ -88,6 +98,7 @@ py_library(
         ":basic-block",
         ":compile-result",
         ":config",
+        ":model",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",
@@ -97,18 +108,16 @@ py_library(
 )
 
 py_test_suite(
-    name = "cpp-generation-py",
-    size = "small",
-    srcs = glob(
-        [
-            "test/unit/cpp/*.py",
-        ],
-        allow_empty = False,
-    ),
+    name = "compile-ekf-test",
+    srcs = [
+        "test/unit/cpp/compile_ekf_test.py",
+    ],
     deps = [
-        "//py:init-tree",
         ":cpp",
-        "//py:problemdefinition",
+        ":config",
+        "//py:exceptions",
+        "//problemdefinition:model-for-testing",
+        requirement("sympy"),
     ] + PY_TEST_DEPS,
 )
 
