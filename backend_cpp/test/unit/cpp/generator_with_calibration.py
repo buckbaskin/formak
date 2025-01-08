@@ -1,4 +1,4 @@
-from backend_cpp import cpp
+from backend_cpp.compile_model import compile_model
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -12,7 +12,7 @@ ui_model = UiModel(
     state_model={x: x + a + b},
 )
 
-cpp_implementation = cpp.compile(
+cpp_implementation = compile_model(
     ui_model, calibration_map={Symbol("a"): 5.0, Symbol("b"): 0.5}, config={}
 )
 

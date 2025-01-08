@@ -103,6 +103,16 @@ py_library(
     ],
 )
 
+py_library(
+    name = "compile-model",
+    srcs = ["backend_cpp/compile_model.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+    deps = [":compile-shared"],
+)
+
 # TODO split this
 py_library(
     name = "cpp",
@@ -145,12 +155,9 @@ py_test_suite(
 cc_formak_model(
     name = "simple-model",
     namespace = "unit",
-    pydeps = [],
+    pydeps = [":compile-model"],
     pymain = "test/unit/cpp/generator.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
+    pysrcs = ["test/unit/cpp/generator.py"],
 )
 
 cc_formak_model(
@@ -189,12 +196,9 @@ cc_formak_model(
 cc_formak_model(
     name = "calibration-model",
     namespace = "unit",
-    pydeps = [],
+    pydeps = [":compile-model"],
     pymain = "test/unit/cpp/generator_with_calibration.py",
-    pysrcs = glob(
-        ["test/unit/cpp/*.py"],
-        allow_empty = False,
-    ),
+    pysrcs = ["test/unit/cpp/generator_with_calibration.py"],
 )
 
 cc_formak_model(

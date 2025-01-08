@@ -1,4 +1,4 @@
-from formak.backend_cpp import cpp
+from formak.backend_cpp.compile_model import compile_model
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -20,7 +20,7 @@ state_model = {
 
 model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-cpp_implementation = cpp.compile(model)
+cpp_implementation = compile_model(model)
 
 print("Wrote header at path {}".format(cpp_implementation.header_path))
 print("Wrote source at path {}".format(cpp_implementation.source_path))

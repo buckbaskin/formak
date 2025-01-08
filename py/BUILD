@@ -64,6 +64,7 @@ py_library(
     ),
     imports = ["."],
     deps = [
+        "//backend_cpp:compile-model",
         "//backend_cpp:config",
         "//backend_cpp:cpp",
     ],

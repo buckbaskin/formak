@@ -6,7 +6,7 @@ Define a C++ implementation of a rocket model
 Passes if the C++ implementation is written to disk without an exception
 """
 
-from formak.backend_cpp import cpp
+from formak.backend_cpp.compile_model import compile_model
 from model_definition import model_definition
 from sympy import Symbol
 
@@ -27,7 +27,7 @@ def test_cpp_Model():
     }
     calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
-    cpp.compile(
+    compile_model(
         model,
         calibration_map=calibration_map,
     )
