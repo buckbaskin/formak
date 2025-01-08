@@ -76,6 +76,16 @@ py_library(
 )
 
 py_library(
+    name = "extended-kalman-filter",
+    srcs = ["backend_cpp/extended_kalman_filter.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+    deps = [":basic-block"],
+)
+
+py_library(
     name = "compile-result",
     srcs = ["backend_cpp/compile_result.py"],
     imports = ["."],
@@ -98,6 +108,7 @@ py_library(
         ":basic-block",
         ":compile-result",
         ":config",
+        ":extended-kalman-filter",
         ":model",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
