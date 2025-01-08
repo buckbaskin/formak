@@ -57,6 +57,15 @@ py_library(
 )
 
 py_library(
+    name = "basic-block",
+    srcs = ["backend_cpp/basic_block.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
+
+py_library(
     name = "compile-result",
     srcs = ["backend_cpp/compile_result.py"],
     imports = ["."],
@@ -76,6 +85,7 @@ py_library(
     deps = [
         ":ast",
         ":ast-fragments",
+        ":basic-block",
         ":compile-result",
         ":config",
         "//backend_py:named-covariance",
