@@ -72,7 +72,14 @@ py_library(
     visibility = [
         "//py:__pkg__",
     ],
-    deps = [":basic-block"],
+    deps = [
+        ":ast",
+        ":basic-block",
+        ":config",
+        "//backend_py:named-vector",
+        "//py:exceptions",
+        requirement("sympy"),
+    ],
 )
 
 py_library(
@@ -82,7 +89,15 @@ py_library(
     visibility = [
         "//py:__pkg__",
     ],
-    deps = [":basic-block"],
+    deps = [
+        ":ast",
+        ":basic-block",
+        ":config",
+        "//backend_py:named-covariance",
+        "//backend_py:named-vector",
+        "//py:exceptions",
+        requirement("sympy"),
+    ],
 )
 
 py_library(
@@ -91,6 +106,10 @@ py_library(
     imports = ["."],
     visibility = [
         "//py:__pkg__",
+    ],
+    deps = [
+        ":ast-fragments",
+        ":compile-result",
     ],
 )
 
@@ -110,32 +129,40 @@ py_library(
     visibility = [
         "//py:__pkg__",
     ],
-    deps = [":compile-shared"],
+    deps = [
+        ":compile-shared",
+        ":config",
+        ":model",
+    ],
 )
 
-# TODO split this
 py_library(
-    name = "cpp",
-    srcs = ["backend_cpp/cpp.py"],
+    name = "compile-ekf",
+    srcs = ["backend_cpp/compile_ekf.py"],
     imports = ["."],
     visibility = [
         "//py:__pkg__",
     ],
     deps = [
-        ":ast",
-        ":ast-fragments",
-        ":basic-block",
-        ":compile-result",
         ":compile-shared",
         ":config",
         ":extended-kalman-filter",
-        ":model",
-        "//backend_py:named-covariance",
-        "//backend_py:named-vector",
         "//frontend:model-validation",
-        "//py:exceptions",
-        requirement("sympy"),
     ],
+)
+
+py_test_suite(
+    name = "compile-model-test",
+    srcs = [
+        "test/unit/cpp/compile_model_test.py",
+    ],
+    deps = [
+        ":compile-model",
+        ":config",
+        "//py:exceptions",
+        "//problemdefinition:model-for-testing",
+        requirement("sympy"),
+    ] + PY_TEST_DEPS,
 )
 
 py_test_suite(
@@ -144,7 +171,7 @@ py_test_suite(
         "test/unit/cpp/compile_ekf_test.py",
     ],
     deps = [
-        ":cpp",
+        ":compile-ekf",
         ":config",
         "//py:exceptions",
         "//problemdefinition:model-for-testing",

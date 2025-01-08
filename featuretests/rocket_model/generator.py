@@ -1,13 +1,14 @@
 from itertools import repeat
 
-from formak.backend_cpp import cpp
-from formak.backend_cpp.config import Config
 from model_definition import (
     model_definition,
     named_acceleration,
     named_rotation_rate,
     named_translation,
 )
+
+from formak.backend_cpp.compile_ekf import compile_ekf
+from formak.backend_cpp.config import Config
 from sympy import Symbol
 
 definition = model_definition()
@@ -38,7 +39,7 @@ process_noise = {
 
 CON_position_in_global_frame = named_translation("CON_pos")
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=ui_model,
     process_noise={k: 1.0 for k in ui_model.control},
     sensor_models={"altitude": {Symbol("altitude"): CON_position_in_global_frame[2]}},

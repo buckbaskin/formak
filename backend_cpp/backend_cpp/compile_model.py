@@ -3,7 +3,6 @@ import logging
 from backend_cpp.compile_shared import _compile_argparse, _compile_impl
 from backend_cpp.config import Config
 from backend_cpp.model import Model
-from frontend.model_validation import model_validation
 
 DEFAULT_MODULES = ("scipy", "numpy", "math")
 

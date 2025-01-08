@@ -1,4 +1,4 @@
-from formak.backend_cpp import cpp
+from formak.backend_cpp.compile_ekf import compile_ekf
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -22,7 +22,7 @@ v = Symbol("v")
 
 model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=model,
     process_noise={thrust: 1.0},
     sensor_models={"simple": {v: v}},

@@ -1,4 +1,4 @@
-from backend_cpp import cpp
+from backend_cpp.compile_ekf import compile_ekf
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -12,7 +12,7 @@ ui_model = UiModel(
     state_model={x: x + a + b},
 )
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=ui_model,
     process_noise={},
     sensor_models={"y": {y: x + b}},

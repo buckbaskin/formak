@@ -6,8 +6,9 @@ Define a C++ implementation of a rocket model
 Passes if the C++ implementation is written to disk without an exception
 """
 
-from formak.backend_cpp.compile_model import compile_model
 from model_definition import model_definition
+
+from formak.backend_cpp.compile_model import compile_model
 from sympy import Symbol
 
 

@@ -1,9 +1,9 @@
-from backend_cpp import cpp
+from backend_cpp.compile_ekf import compile_ekf
 from backend_cpp.config import Config
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
-cpp_implementation = cpp.compile_ekf(
+cpp_implementation = compile_ekf(
     state_model=UiModel(
         dt=Symbol("dt"),
         state=set(symbols(["x", "y"])),

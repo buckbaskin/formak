@@ -8,13 +8,14 @@ Passes if the C++ implementation is written to disk without an exception
 
 from itertools import repeat
 
-from formak.backend_cpp import cpp
 from model_definition import (
     model_definition,
     named_acceleration,
     named_rotation_rate,
     named_translation,
 )
+
+from formak.backend_cpp.compile_ekf import compile_ekf
 from sympy import Symbol
 
 
@@ -47,7 +48,7 @@ def test_cpp_EKF():
 
     CON_position_in_global_frame = named_translation("CON_pos")
 
-    cpp.compile_ekf(
+    compile_ekf(
         state_model=model,
         process_noise=process_noise,
         sensor_models={

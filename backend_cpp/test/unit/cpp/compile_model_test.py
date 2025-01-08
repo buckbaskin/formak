@@ -1,6 +1,6 @@
 import pytest
 
-from backend_cpp.compile_ekf import compile_ekf
+from backend_cpp.compile_model import compile_model
 from backend_cpp.config import Config
 from formak.exceptions import ModelConstructionError
 from problemdefinition.model import Model as UiModel
@@ -13,7 +13,7 @@ def test_EKF_model_collapse():
     config.extra_validation = True
 
     with pytest.raises(ModelConstructionError):
-        compile_ekf(
+        compile_model(
             state_model=UiModel(
                 Symbol("dt"),
                 set(symbols(["x", "y"])),

@@ -9,13 +9,14 @@ Passes if the Python implementation is created and runs without an exception
 
 from itertools import repeat
 
-from formak import python
 from model_definition import (
     model_definition,
     named_acceleration,
     named_rotation_rate,
     named_translation,
 )
+
+from formak import python
 from sympy import Symbol
 
 
