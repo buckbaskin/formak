@@ -86,6 +86,15 @@ py_library(
 )
 
 py_library(
+    name = "compile-shared",
+    srcs = ["backend_cpp/compile_shared.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
+
+py_library(
     name = "compile-result",
     srcs = ["backend_cpp/compile_result.py"],
     imports = ["."],
@@ -107,6 +116,7 @@ py_library(
         ":ast-fragments",
         ":basic-block",
         ":compile-result",
+        ":compile-shared",
         ":config",
         ":extended-kalman-filter",
         ":model",
