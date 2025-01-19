@@ -57,3 +57,12 @@ py_library(
         "//py:__pkg__",
     ],
 )
+
+py_library(
+    name = "basic-block",
+    srcs = ["backend_py/basic_block.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
