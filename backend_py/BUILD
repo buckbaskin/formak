@@ -147,3 +147,14 @@ py_library(
         requirement("scikit-learn"),
     ],
 )
+
+py_test_suite(
+    name = "innovation-test",
+    srcs = [
+        "test/innovation_test.py",
+    ],
+    deps = [
+        ":compile-ekf",
+        "//problemdefinition:model",
+    ] + PY_TEST_DEPS,
+)

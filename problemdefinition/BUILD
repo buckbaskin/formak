@@ -18,6 +18,7 @@ py_library(
     srcs = ["problemdefinition/model.py"],
     imports = ["."],
     visibility = [
+        "//backend_py:__pkg__",
         "//py:__pkg__",
         "//runtime_py:__pkg__",
     ],
