@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:private"])
 
 load("@pip_deps//:requirements.bzl", "requirement")
+load("//py:defs.bzl", "PY_TEST_DEPS", "py_test_suite")
 
 py_library(
     name = "ui-model-base",
@@ -47,4 +48,15 @@ py_library(
         requirement("scikit-learn"),
         "//backend_py:sklearn",
     ],
+)
+
+py_test_suite(
+    name = "ui-test",
+    srcs =         [
+            "test/ui_test.py",
+        ],
+    deps = [
+        ":model",
+        ":design-manager",
+    ] + PY_TEST_DEPS,
 )
