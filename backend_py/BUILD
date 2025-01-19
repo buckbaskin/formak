@@ -116,3 +116,17 @@ py_library(
     ],
     deps = ["//frontend:model-validation"],
 )
+
+# TODO: this should be runtime
+py_library(
+    name = "sklearn",
+    srcs = ["backend_py/sklearn.py"],
+    imports = ["."],
+    visibility = [
+        "//problemdefinition:__pkg__",
+        "//py:__pkg__",
+    ],
+    deps = [
+        requirement("scikit-learn"),
+    ],
+)

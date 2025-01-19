@@ -1,6 +1,6 @@
 import numpy as np
 
-from formak import python
+from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -23,7 +23,7 @@ def test_score():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -63,7 +63,7 @@ def test_score_two_sensor():
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -105,7 +105,7 @@ def test_score_two_sensor_explained():
         "sensor_noises": {"position": {x: 1}, "velocity": {v: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

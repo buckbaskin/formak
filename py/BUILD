@@ -78,8 +78,12 @@ py_library(
     ),
     imports = ["."],
     deps = [
+        "//backend_py:compile-ekf",
         "//backend_py:compile-model",
+        "//backend_py:config",
         "//backend_py:model",
+        "//backend_py:sensor-model",
+        "//backend_py:sklearn",
     ],
 )
 
@@ -238,6 +242,7 @@ py_test_suite(
         ":python",
         "//problemdefinition:model",
         "//backend_py:compile-model",
+        "//backend_py:sklearn",
     ] + PY_TEST_DEPS,
 )
 

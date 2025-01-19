@@ -45,6 +45,7 @@ py_library(
     visibility = ["//py:__pkg__"],
     deps = [
         requirement("scikit-learn"),
+        "//backend_py:sklearn",
         "//py:python",
     ],
 )

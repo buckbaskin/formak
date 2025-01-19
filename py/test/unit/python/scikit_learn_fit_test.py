@@ -4,7 +4,7 @@ from numpy.random import default_rng
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
 
-from formak import python
+from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -29,7 +29,7 @@ def test_fit():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -42,7 +42,7 @@ def test_fit():
 
     # Fit the model to data
     result = model.fit(readings)
-    assert isinstance(result, python.SklearnEKFAdapter)
+    assert isinstance(result, SklearnEKFAdapter)
 
     post_score = model.score(readings)
 
@@ -67,7 +67,7 @@ def test_clone():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -93,7 +93,7 @@ def test_estimator_against_sklearn_checks():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

@@ -10,7 +10,7 @@ scikit-learn interface
 
 import numpy as np
 
-from formak import python
+from formak.backend_py.sklearn import SklearnEKFAdapter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -38,7 +38,7 @@ def test_UI_like_sklearn():
         "sensor_noises": {"simple": {Symbol("v"): 1.0}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -65,7 +65,7 @@ def test_UI_like_sklearn():
     assert n_features == n_control + n_readings
 
     # Fit the model to data
-    assert isinstance(model.fit(readings), python.SklearnEKFAdapter)
+    assert isinstance(model.fit(readings), SklearnEKFAdapter)
 
     # Interface based on:
     #   - sklearn.covariance.EmpiricalCovariance https://scikit-learn.org/stable/modules/generated/sklearn.covariance.EmpiricalCovariance.html#sklearn.covariance.EmpiricalCovariance.fit
@@ -86,4 +86,4 @@ def test_UI_like_sklearn():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
+    assert isinstance(model.set_params(**params), SklearnEKFAdapter)

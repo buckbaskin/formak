@@ -15,7 +15,9 @@ from math import degrees, radians
 
 import numpy as np
 
-from formak import python
+from formak.backend_py.compile_ekf import compile_ekf
+from formak.backend_py.config import Config
+from formak.backend_py.sensor_model import SensorModel
 from formak.problemdefinition.model import Model as UiModel
 from formak.runtime_py.managed_filter import ManagedFilter
 from formak.runtime_py.stamped_reading import StampedReading
@@ -41,16 +43,16 @@ def make_ekf():
 
     model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-    config = python.Config(innovation_filtering=4)
+    config = Config(innovation_filtering=4)
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         symbolic_model=model,
         process_noise={velocity: 1.0, _heading_err: 0.1},
         sensor_models={"compass": {heading: heading}},
         sensor_noises={"compass": {heading: 1.0}},
         config=config,
     )
-    compass_model = python.SensorModel(model, {heading: heading}, {}, config)
+    compass_model = SensorModel(model, {heading: heading}, {}, config)
 
     return ekf, compass_model.model
 

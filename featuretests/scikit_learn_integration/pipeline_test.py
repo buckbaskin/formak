@@ -7,7 +7,7 @@ Passes if running a model in a pipeline doesn't raise exceptions
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-from formak import python
+from formak.backend_py.sklearn import SklearnEKFAdapter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -34,7 +34,7 @@ def test_like_sklearn_regression():
         "sensor_models": {"simple": {Symbol("v"): Symbol("v")}},
         "sensor_noises": {"simple": {Symbol("v"): 1.0}},
     }
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

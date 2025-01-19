@@ -1,5 +1,6 @@
 import numpy as np
 
+from backend_py.sklearn import SklearnEKFAdapter
 from formak import python
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
@@ -23,7 +24,7 @@ def test_transform():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -56,7 +57,7 @@ def test_transform_kalman_filter_args():
         "sensor_noises": {"simple": {x: 1}},
     }
 
-    adapter = python.SklearnEKFAdapter(
+    adapter = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

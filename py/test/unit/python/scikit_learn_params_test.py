@@ -1,6 +1,6 @@
 import numpy as np
 
-from formak import python
+from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -28,7 +28,7 @@ def test_get_params():
         "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -39,7 +39,7 @@ def test_get_params():
     # Get parameters for this estimator.
     assert isinstance(model.get_params(deep=True), dict)
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
+    assert isinstance(model.set_params(**params), SklearnEKFAdapter)
 
 
 def test_set_params():
@@ -65,7 +65,7 @@ def test_set_params():
         "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 
@@ -74,7 +74,7 @@ def test_set_params():
     n_samples, n_features = readings.shape
 
     # Set the parameters of this estimator.
-    assert isinstance(model.set_params(**params), python.SklearnEKFAdapter)
+    assert isinstance(model.set_params(**params), SklearnEKFAdapter)
 
 
 def test_scoring_params_round_trip():
@@ -101,7 +101,7 @@ def test_scoring_params_round_trip():
         "sensor_noises": {"simple": {Symbol("v"): 1}},
     }
 
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

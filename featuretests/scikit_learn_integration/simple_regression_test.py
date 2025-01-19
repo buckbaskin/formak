@@ -8,7 +8,7 @@ Passes if the fit model scores better than the unfit model
 
 import numpy as np
 
-from formak import python
+from formak.backend_py.sklearn import SklearnEKFAdapter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -38,7 +38,7 @@ def test_like_sklearn_regression():
         },
         "sensor_noises": {"z": {Symbol("z"): 1.0}, "v": {Symbol("v"): 1.0}},
     }
-    model = python.SklearnEKFAdapter(
+    model = SklearnEKFAdapter(
         UiModel(dt=dt, state=state, control=control, state_model=state_model), **params
     )
 

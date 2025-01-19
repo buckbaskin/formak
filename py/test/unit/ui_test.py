@@ -3,14 +3,14 @@ from enum import Enum
 import numpy as np
 import pytest
 
-from formak import python
-from formak.problemdefinition.design_manager import (
+from backend_py.sklearn import SklearnEKFAdapter
+from problemdefinition.design_manager import (
     ConfigView,
     DesignManager,
     NisScore,
     StateId,
 )
-from formak.problemdefinition.model import Model
+from problemdefinition.model import Model
 from sympy import Symbol
 
 
@@ -81,7 +81,7 @@ def test_non_zero_nis_score():
     }
 
     symbolic_model = Model(dt=dt, state=state, control=control, state_model=state_model)
-    adapter = python.SklearnEKFAdapter.Create(
+    adapter = SklearnEKFAdapter.Create(
         symbolic_model=symbolic_model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {tp["v"]: tp["v"]}},

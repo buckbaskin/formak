@@ -8,7 +8,7 @@ from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 from scipy.stats import multivariate_normal
 
-from formak import python
+from formak.backend_py.config import Config
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -173,7 +173,7 @@ def test_EKF_sensor_property(x, y, a):
 def test_EKF_sensor_property_failing_example():
     start_time = datetime.now()
     x, y, a = (-538778789133922.0, -538778789133922.0, -2.6221616798653463e-203)
-    config = python.Config()
+    config = Config()
 
     ui_Model = UiModel(
         Symbol("dt"),
