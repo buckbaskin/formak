@@ -75,3 +75,12 @@ py_library(
         "//py:__pkg__",
     ],
 )
+
+py_library(
+    name = "sensor-model",
+    srcs = ["backend_py/sensor_model.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)

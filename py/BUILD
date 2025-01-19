@@ -81,6 +81,7 @@ py_library(
         "//backend_py:model",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
+        "//backend_py:sensor-model",
         "//frontend:model-validation",
         "//problemdefinition:ui-model-base",
         requirement("sympy"),
