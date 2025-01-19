@@ -5,6 +5,10 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 from backend_py.config import Config
+from backend_py.extended_kalman_filter import (
+    ExtendedKalmanFilter,
+    nearest_positive_definite,
+)
 from backend_py.sensor_model import SensorModel
 from formak import python
 from formak.exceptions import ModelConstructionError
@@ -38,7 +42,7 @@ def test_EKF_process_with_control():
     config = Config()
     dt = 0.1
 
-    ekf = python.ExtendedKalmanFilter(
+    ekf = ExtendedKalmanFilter(
         state_model=UiModel(
             Symbol("dt"),
             set(symbols(["x", "y"])),
@@ -90,7 +94,7 @@ def test_EKF_process_with_control():
 def test_EKF_sensor():
     config = Config()
 
-    ekf = python.ExtendedKalmanFilter(
+    ekf = ExtendedKalmanFilter(
         state_model=UiModel(
             Symbol("dt"),
             set(symbols(["x", "y"])),
@@ -132,7 +136,7 @@ def test_EKF_process_jacobian():
     config = Config()
     dt = 0.1
 
-    ekf = python.ExtendedKalmanFilter(
+    ekf = ExtendedKalmanFilter(
         state_model=UiModel(
             Symbol("dt"),
             set(symbols(["x", "y"])),
@@ -210,7 +214,7 @@ def test_EKF_sensor_jacobian_calibration():
     config = Config()
 
     def read_once(calibration_map):
-        ekf = python.ExtendedKalmanFilter(
+        ekf = ExtendedKalmanFilter(
             state_model=UiModel(
                 Symbol("dt"),
                 set(symbols(["x"])),
@@ -249,7 +253,7 @@ def test_nearest_positive_definite_diagonal():
         (Symbol("diagonalA"), Symbol("diagonalB")): -10.0,
     }
 
-    result = python.nearest_positive_definite(cov)
+    result = nearest_positive_definite(cov)
 
     assert result[Symbol("diagonalA")] > 0.0
     assert result[Symbol("diagonalB")] > 0.0
