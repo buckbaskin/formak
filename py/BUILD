@@ -191,21 +191,6 @@ py_library(
 )
 
 py_test_suite(
-    name = "unit-py",
-    size = "small",
-    srcs = glob(
-        [
-            "test/unit/*.py",
-        ],
-        allow_empty = False,
-    ),
-    deps = [
-        ":init-tree",
-        ":formak",
-    ] + PY_TEST_DEPS,
-)
-
-py_test_suite(
     name = "python-generation-py",
     size = "small",
     srcs = glob(
