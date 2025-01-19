@@ -84,3 +84,12 @@ py_library(
         "//py:__pkg__",
     ],
 )
+
+py_library(
+    name = "extended-kalman-filter",
+    srcs = ["backend_py/extended_kalman_filter.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
