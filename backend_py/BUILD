@@ -105,6 +105,7 @@ py_library(
         ":model",
         ":named-covariance",
         ":sensor-model",
+        "//problemdefinition:ui-model-base",
     ],
 )
 

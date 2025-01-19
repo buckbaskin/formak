@@ -8,6 +8,7 @@ py_library(
     srcs = ["problemdefinition/ui_model_base.py"],
     imports = ["."],
     visibility = [
+        "//backend_py:__pkg__",
         "//py:__pkg__",
     ],
 )
@@ -46,17 +47,46 @@ py_library(
     visibility = ["//py:__pkg__"],
     deps = [
         requirement("scikit-learn"),
+        ":config-view",
+        ":model",
+        ":nis-score",
         "//backend_py:sklearn",
     ],
 )
 
+py_library(
+    name = "config-view",
+    srcs = ["problemdefinition/config_view.py"],
+    imports = ["."],
+    visibility = ["//py:__pkg__"],
+)
+
+py_library(
+    name = "nis-score",
+    srcs = ["problemdefinition/nis_score.py"],
+    imports = ["."],
+    visibility = ["//py:__pkg__"],
+)
+
 py_test_suite(
     name = "ui-test",
-    srcs =         [
-            "test/ui_test.py",
-        ],
+    srcs = [
+        "test/ui_test.py",
+    ],
     deps = [
         ":model",
+        ":config-view",
+        ":nis-score",
+        "//backend_py:sklearn",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "design-manager-test",
+    srcs = [
+        "test/design_manager_test.py",
+    ],
+    deps = [
         ":design-manager",
     ] + PY_TEST_DEPS,
 )

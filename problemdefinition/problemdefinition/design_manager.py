@@ -1,16 +1,16 @@
-import dataclasses
 import inspect
 from collections import namedtuple
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
-from backend_py.config import Config
 from backend_py.extended_kalman_filter import ExtendedKalmanFilter
 from backend_py.sklearn import SklearnEKFAdapter
 from formak.exceptions import ModelFitError
+from problemdefinition.config_view import ConfigView
 from problemdefinition.model import Model as UiModel
+from problemdefinition.nis_score import NisScore
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 
@@ -19,36 +19,6 @@ class StateId(Enum):
     Start = 0
     Symbolic_Model = auto()
     Fit_Model = auto()
-
-
-class ConfigView(Config):
-    def __init__(self, params: Dict[str, Any]):
-        self._params = params
-
-        default_config = Config()
-        for key, value in dataclasses.asdict(default_config).items():
-            if key not in self._params:
-                self._params[key] = value
-
-    @property
-    def common_subexpression_elimination(self) -> bool:
-        return self._params["common_subexpression_elimination"]
-
-    @property
-    def python_modules(self):
-        return self._params["python_modules"]
-
-    @property
-    def extra_validation(self) -> bool:
-        return self._params["extra_validation"]
-
-    @property
-    def max_dt_sec(self) -> float:
-        return self._params["max_dt_sec"]
-
-    @property
-    def innovation_filtering(self) -> Optional[float]:
-        return self._params["innovation_filtering"]
 
 
 class StateMachineState:
@@ -118,15 +88,6 @@ class StateMachineState:
         raise ValueError(
             f"Could not find a path from state {self.state_id()} to desired state '{end_state}' in {i} iterations"
         )
-
-
-class NisScore:
-    def __call__(self, estimator: SklearnEKFAdapter, X, y=None) -> float:
-        score = estimator.score(X=X, y=y)
-
-        assert isinstance(score, float)
-
-        return score
 
 
 PIPELINE_STAGE_NAME = "kalman"
