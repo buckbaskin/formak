@@ -158,3 +158,15 @@ py_test_suite(
         "//problemdefinition:model",
     ] + PY_TEST_DEPS,
 )
+
+py_test_suite(
+    name = "calibration-test",
+    srcs = [
+        "test/calibration_test.py",
+    ],
+    deps = [
+        ":compile-ekf",
+        ":compile-model",
+        "//problemdefinition:model",
+    ] + PY_TEST_DEPS,
+)
