@@ -76,6 +76,7 @@ py_library(
     imports = ["."],
     deps = [
         ":exceptions",
+        "//backend_py:config",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",

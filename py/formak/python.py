@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 from collections import namedtuple
-from dataclasses import dataclass
 from itertools import count
 from math import sqrt
 from typing import Any, Iterator
@@ -13,6 +12,7 @@ from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
 
 import sympy
+from backend_py.config import Config
 from backend_py.named_covariance import named_covariance
 from backend_py.named_vector import named_vector
 from formak.exceptions import MinimizationFailure, ModelConstructionError
@@ -20,28 +20,6 @@ from frontend.model_validation import model_validation
 from problemdefinition.ui_model_base import UiModelBase
 from sympy import Matrix, Symbol, cse, simplify
 from sympy.utilities.lambdify import lambdify
-
-DEFAULT_MODULES = ("scipy", "numpy", "math", {"sec": lambda v: 1.0 / np.cos(v)})
-
-
-@dataclass(frozen=True)
-class Config:
-    """
-    Options for generating C++.
-
-    common_subexpression_elimination:
-        Remove common shared computation
-    python_modules:
-        Allow dependencies. Math is the Python standard library
-    extra_validation:
-        Catch errors earlier in exchange for increased compute time
-    """
-
-    common_subexpression_elimination: bool = True
-    python_modules: tuple[Any, Any, Any, Any] = DEFAULT_MODULES
-    extra_validation: bool = False
-    max_dt_sec: float = 0.1
-    innovation_filtering: float | None = 5.0
 
 
 class BasicBlock:

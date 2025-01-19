@@ -48,3 +48,12 @@ py_test_suite(
         ":named-covariance",
     ] + PY_TEST_DEPS,
 )
+
+py_library(
+    name = "config",
+    srcs = ["backend_py/config.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)
