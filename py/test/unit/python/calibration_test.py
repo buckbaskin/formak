@@ -2,7 +2,7 @@ import pytest
 
 from backend_py.compile_ekf import compile_ekf
 from backend_py.compile_model import compile_model
-from formak import exceptions, python
+from formak import exceptions
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 

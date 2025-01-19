@@ -13,7 +13,7 @@ the featuretests/ directory for additional features and examples.
 from formak.problemdefinition.model import Model
 from formak.backend_py.compile_ekf import compile_ekf
 from sympy import symbols, Symbol
-from formak import python
+
 
 from collections import defaultdict
 

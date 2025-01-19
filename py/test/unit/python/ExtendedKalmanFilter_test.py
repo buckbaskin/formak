@@ -11,7 +11,6 @@ from backend_py.extended_kalman_filter import (
     nearest_positive_definite,
 )
 from backend_py.sensor_model import SensorModel
-from formak import python
 from formak.exceptions import ModelConstructionError
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols

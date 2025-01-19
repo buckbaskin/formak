@@ -1,7 +1,6 @@
 import numpy as np
 
 from backend_py.compile_ekf import compile_ekf
-from formak import python
 from problemdefinition.model import Model as UiModel
 from sympy import Symbol
 

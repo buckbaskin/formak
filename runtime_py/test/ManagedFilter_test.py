@@ -6,7 +6,6 @@ from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
 
 from backend_py.compile_ekf import compile_ekf
-from formak import python
 from problemdefinition.model import Model as UiModel
 from runtime_py.managed_filter import ManagedFilter
 from runtime_py.stamped_reading import StampedReading

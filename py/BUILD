@@ -87,27 +87,6 @@ py_library(
     ],
 )
 
-py_library(
-    name = "python",
-    srcs = ["formak/python.py"],
-    imports = ["."],
-    deps = [
-        ":exceptions",
-        "//backend_py:basic-block",
-        "//backend_py:compile-ekf",
-        "//backend_py:config",
-        "//backend_py:extended-kalman-filter",
-        "//backend_py:named-covariance",
-        "//backend_py:named-vector",
-        "//backend_py:sensor-model",
-        "//problemdefinition:ui-model-base",
-        requirement("sympy"),
-        requirement("scipy"),
-        requirement("numpy"),
-        requirement("scikit-learn"),
-    ],
-)
-
 # Note: allowed library for external use (for now)
 py_library(
     name = "exceptions",
@@ -127,7 +106,6 @@ py_library(
     imports = ["."],
     deps = [
         ":problemdefinition",
-        ":python",
         requirement("sympy"),
     ],
 )
@@ -142,7 +120,6 @@ py_library(
         ":backend_py",
         ":frontend",
         ":problemdefinition",
-        ":python",
         ":reference-models",
         ":runtime_py",
     ],
@@ -239,7 +216,6 @@ py_test_suite(
     ),
     deps = [
         ":init-tree",
-        ":python",
         "//problemdefinition:model",
         "//backend_py:compile-model",
         "//backend_py:sklearn",

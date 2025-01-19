@@ -6,7 +6,6 @@ Create a Python implementation of an EKF.
 Passes if the EKF runs without exceptions
 """
 
-from formak import python
 from formak.backend_py.compile_ekf import compile_ekf
 from formak.backend_py.extended_kalman_filter import ExtendedKalmanFilter
 from formak.problemdefinition.model import Model as UiModel

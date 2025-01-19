@@ -16,7 +16,6 @@ from model_definition import (
     named_translation,
 )
 
-from formak import python
 from formak.backend_py.compile_ekf import compile_ekf
 from sympy import Symbol
 

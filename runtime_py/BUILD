@@ -29,8 +29,8 @@ py_test_suite(
     deps = [
         ":managed-filter",
         ":stamped-reading",
+        "//backend_py:compile-ekf",
         "//problemdefinition:model",
-        "//py:python",
     ] + PY_TEST_DEPS,
 )
 

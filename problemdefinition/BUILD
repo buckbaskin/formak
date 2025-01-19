@@ -46,6 +46,5 @@ py_library(
     deps = [
         requirement("scikit-learn"),
         "//backend_py:sklearn",
-        "//py:python",
     ],
 )

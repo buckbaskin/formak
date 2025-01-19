@@ -9,7 +9,6 @@ working correctly).
 
 import numpy as np
 
-from formak import python
 from formak.backend_py.compile_ekf import compile_ekf
 from formak.problemdefinition.model import Model as UiModel
 from formak.runtime_py.managed_filter import ManagedFilter

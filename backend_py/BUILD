@@ -65,6 +65,10 @@ py_library(
     visibility = [
         "//py:__pkg__",
     ],
+    deps = [
+        requirement("sympy"),
+        requirement("scipy"),
+    ],
 )
 
 py_library(
@@ -73,6 +77,10 @@ py_library(
     imports = ["."],
     visibility = [
         "//py:__pkg__",
+    ],
+    deps = [
+        ":named-vector",
+        "//py:exceptions",
     ],
 )
 
@@ -93,7 +101,9 @@ py_library(
         "//py:__pkg__",
     ],
     deps = [
+        ":basic-block",
         ":model",
+        ":named-covariance",
         ":sensor-model",
     ],
 )
@@ -113,8 +123,13 @@ py_library(
     imports = ["."],
     visibility = [
         "//py:__pkg__",
+        "//runtime_py:__pkg__",
     ],
-    deps = ["//frontend:model-validation"],
+    deps = [
+        ":config",
+        ":extended-kalman-filter",
+        "//frontend:model-validation",
+    ],
 )
 
 # TODO: this should be runtime
@@ -127,6 +142,7 @@ py_library(
         "//py:__pkg__",
     ],
     deps = [
+        ":compile-ekf",
         requirement("scikit-learn"),
     ],
 )
