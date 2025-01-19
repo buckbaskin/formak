@@ -90,12 +90,12 @@ py_library(
     deps = [
         ":exceptions",
         "//backend_py:basic-block",
+        "//backend_py:compile-ekf",
         "//backend_py:config",
         "//backend_py:extended-kalman-filter",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//backend_py:sensor-model",
-        "//frontend:model-validation",
         "//problemdefinition:ui-model-base",
         requirement("sympy"),
         requirement("scipy"),

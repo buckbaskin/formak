@@ -106,3 +106,13 @@ py_library(
         "//py:__pkg__",
     ],
 )
+
+py_library(
+    name = "compile-ekf",
+    srcs = ["backend_py/compile_ekf.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+    deps = ["//frontend:model-validation"],
+)

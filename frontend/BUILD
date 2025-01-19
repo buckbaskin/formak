@@ -8,6 +8,7 @@ py_library(
     imports = ["."],
     visibility = [
         "//backend_cpp:__pkg__",
+        "//backend_py:__pkg__",
         "//py:__pkg__",
     ],
 )
