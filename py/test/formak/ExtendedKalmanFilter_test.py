@@ -9,6 +9,7 @@ from numpy.testing import assert_almost_equal
 from scipy.stats import multivariate_normal
 
 from formak.backend_py.config import Config
+from formak.backend_py.extended_kalman_filter import ExtendedKalmanFilter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -184,7 +185,7 @@ def test_EKF_sensor_property_failing_example():
             Symbol("y"): "y + a * dt",
         },
     )
-    ekf = python.ExtendedKalmanFilter(
+    ekf = ExtendedKalmanFilter(
         state_model=ui_Model,
         process_noise={Symbol("a"): 1.0},
         sensor_models={"simple": {Symbol("x"): Symbol("x")}},

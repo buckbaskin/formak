@@ -7,6 +7,7 @@ Passes if the EKF runs without exceptions
 """
 
 from formak import python
+from formak.backend_py.extended_kalman_filter import ExtendedKalmanFilter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -38,7 +39,7 @@ def test_ekf_simple():
         sensor_models={"simple": {v: v}},
         sensor_noises={"simple": {v: 1.0}},
     )
-    assert isinstance(python_ekf, python.ExtendedKalmanFilter)
+    assert isinstance(python_ekf, ExtendedKalmanFilter)
 
     state_vector = python_ekf.State()
     state_variance = python_ekf.Covariance()
