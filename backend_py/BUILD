@@ -170,3 +170,15 @@ py_test_suite(
         "//problemdefinition:model",
     ] + PY_TEST_DEPS,
 )
+
+py_test_suite(
+    name = "extended-kalman-filter-test",
+    srcs = [
+        "test/ExtendedKalmanFilter_test.py",
+    ],
+    deps = [
+        ":extended-kalman-filter",
+        ":compile-ekf",
+        "//problemdefinition:model",
+    ] + PY_TEST_DEPS,
+)
