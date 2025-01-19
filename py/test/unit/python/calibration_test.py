@@ -1,7 +1,8 @@
 import pytest
 
+from backend_py.compile_model import compile_model
 from formak import exceptions, python
-from formak.problemdefinition.model import Model as UiModel
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
 
@@ -17,7 +18,7 @@ def test_Model_creation_calibration_mismatch():
     )
 
     with pytest.raises(exceptions.ModelConstructionError):
-        python.compile(
+        compile_model(
             ui_model,
             calibration_map={Symbol("a"): 0.0, Symbol("b"): 0.0},
             config={},
@@ -35,7 +36,7 @@ def test_Model_creation_calibration():
         state_model={Symbol("x"): "x + a + b"},
     )
 
-    model = python.compile(
+    model = compile_model(
         ui_model,
         calibration_map={Symbol("a"): 0.0, Symbol("b"): 0.0},
         config={},
@@ -48,7 +49,7 @@ def test_Model_creation_calibration():
     state_vector = model.State(x=0.0)
     assert (model.model(dt=dt, state=state_vector).data.transpose() == [0.0]).all()
 
-    model = python.compile(
+    model = compile_model(
         ui_model,
         calibration_map={Symbol("a"): 5.0, Symbol("b"): 0.5},
         config={},

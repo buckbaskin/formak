@@ -12,16 +12,17 @@ import numpy as np
 
 from common_subexpression_elimination.common import ui_model
 from formak import python
+from formak.backend_py.compile_model import compile_model
 from runtime_py.microbenchmark import microbenchmark
 
 
 def test_python_CSE():
     model = ui_model()
 
-    cse_implementation = python.compile(
+    cse_implementation = compile_model(
         model, config=python.Config(common_subexpression_elimination=True)
     )
-    no_cse_implementation = python.compile(
+    no_cse_implementation = compile_model(
         model, config=python.Config(common_subexpression_elimination=False)
     )
 

@@ -13,7 +13,7 @@ import os
 
 import numpy as np
 
-from formak import python
+from formak.backend_py.compile_model import compile_model
 from formak.reference_models import strapdown_imu
 from sympy import Matrix, Quaternion
 
@@ -102,7 +102,7 @@ def starting_rotation():
 
 def test_example_usage_of_reference_model():
     orientation = starting_rotation()
-    imu = python.compile(
+    imu = compile_model(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={
             strapdown_imu.g: 9.81,

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from formak.ui import *
 
-from formak import python
+from formak.backend_py.compile_model import compile_model
 
 
 # TODO(buck): move this to a test utils library file
@@ -39,8 +39,8 @@ def test_python_Model_compiler_performance():
 
     model = Model(dt=dt, state=state, control=control, state_model=state_model)
 
-    pure_implementation = python.compile(model, config={"compile": False})
-    compiled_implementation = python.compile(
+    pure_implementation = compile_model(model, config={"compile": False})
+    compiled_implementation = compile_model(
         model, config={"compile": True, "warm_jit": False}
     )
 

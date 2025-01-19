@@ -12,7 +12,7 @@ featuretests/ directory for additional features and examples.
 
 from formak.problemdefinition.model import Model
 from sympy import symbols, Symbol
-from formak import python
+from formak.backend_py.compile_model import compile_model
 
 from collections import defaultdict
 
@@ -138,7 +138,7 @@ def main():
     }
 
     # 6. Compiling from the symbolic class to a Python model implementation
-    python_model = python.compile(symbolic_model=symbolic_model)
+    python_model = compile_model(symbolic_model=symbolic_model)
 
     # 7. Running a model update with the Python model
     state_vector = python_model.State.from_dict(initial_state)

@@ -2,8 +2,8 @@ import warnings
 
 from numpy.testing import assert_almost_equal
 
-from formak import python
-from formak.problemdefinition.model import Model as UiModel
+from backend_py.model import Model
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
 warnings.filterwarnings("error")
@@ -11,24 +11,22 @@ warnings.filterwarnings("error")
 
 def test_Model_creation_list():
     dt = Symbol("dt")
-    model = python.Model(UiModel(dt, [], [], {}), {})
+    model = Model(UiModel(dt, [], [], {}), {})
 
     assert model.arglist == symbols(["dt"])
 
 
 def test_Model_creation_set():
     dt = Symbol("dt")
-    model = python.Model(UiModel(dt, set(), set(), {}), {})
+    model = Model(UiModel(dt, set(), set(), {}), {})
 
     assert model.arglist == symbols(["dt"])
 
-    model = python.Model(
-        UiModel(dt, set(symbols(["x"])), set(), {Symbol("x"): "x"}), {}
-    )
+    model = Model(UiModel(dt, set(symbols(["x"])), set(), {Symbol("x"): "x"}), {})
 
     assert model.arglist == symbols(["dt", "x"])
 
-    model = python.Model(
+    model = Model(
         UiModel(
             dt,
             set(symbols(["x", "y"])),
@@ -40,18 +38,18 @@ def test_Model_creation_set():
 
     assert model.arglist == symbols(["dt", "x", "y"])
 
-    model = python.Model(UiModel(dt, set(), set(symbols(["a"])), {}), {})
+    model = Model(UiModel(dt, set(), set(symbols(["a"])), {}), {})
 
     assert model.arglist == symbols(["dt", "a"])
 
-    model = python.Model(
+    model = Model(
         UiModel(dt, set(symbols(["x"])), set(symbols(["a"])), {Symbol("x"): "x"}),
         {},
     )
 
     assert model.arglist == symbols(["dt", "x", "a"])
 
-    model = python.Model(
+    model = Model(
         UiModel(
             dt,
             set(symbols(["x", "y"])),
@@ -63,11 +61,11 @@ def test_Model_creation_set():
 
     assert model.arglist == symbols(["dt", "x", "y", "a"])
 
-    model = python.Model(UiModel(dt, set(), set(symbols(["a", "b"])), {}), {})
+    model = Model(UiModel(dt, set(), set(symbols(["a", "b"])), {}), {})
 
     assert model.arglist == symbols(["dt", "a", "b"])
 
-    model = python.Model(
+    model = Model(
         UiModel(
             dt,
             set(symbols(["x"])),
@@ -79,7 +77,7 @@ def test_Model_creation_set():
 
     assert model.arglist == symbols(["dt", "x", "a", "b"])
 
-    model = python.Model(
+    model = Model(
         UiModel(
             dt,
             set(symbols(["x", "y"])),
@@ -96,7 +94,7 @@ def test_Model_impl_no_control():
     config = {}
     dt = 0.1
 
-    model = python.Model(
+    model = Model(
         UiModel(
             Symbol("dt"),
             set(symbols(["x", "y"])),
@@ -123,7 +121,7 @@ def test_Model_impl_control():
     config = {}
     dt = 0.1
 
-    model = python.Model(
+    model = Model(
         UiModel(
             Symbol("dt"),
             set(symbols(["x", "y"])),

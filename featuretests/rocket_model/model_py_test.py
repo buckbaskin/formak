@@ -9,7 +9,7 @@ Passes if the Python implementation is created and runs without an exception
 
 from model_definition import model_definition
 
-from formak import python
+from formak.backend_py.compile_model import compile_model
 from sympy import Symbol
 
 
@@ -29,7 +29,7 @@ def test_python_Model():
     }
     calibration_map = {Symbol(k): v for k, v in calibration.items()}
 
-    python_implementation = python.compile(
+    python_implementation = compile_model(
         model,
         calibration_map=calibration_map,
     )

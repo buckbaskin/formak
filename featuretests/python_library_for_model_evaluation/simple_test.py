@@ -6,7 +6,7 @@ Create a Python model
 Passes if the Python model runs
 """
 
-from formak import python
+from formak.backend_py.compile_model import compile_model
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
@@ -30,7 +30,7 @@ def test_python_Model_simple():
 
     model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-    python_implementation = python.compile(model)
+    python_implementation = compile_model(model)
 
     state_vector = python_implementation.State()
     control_vector = python_implementation.Control()

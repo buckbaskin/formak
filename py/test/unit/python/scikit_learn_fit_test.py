@@ -5,7 +5,7 @@ from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
 
 from formak import python
-from formak.problemdefinition.model import Model as UiModel
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
 

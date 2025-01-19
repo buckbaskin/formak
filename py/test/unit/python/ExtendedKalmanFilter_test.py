@@ -6,7 +6,7 @@ from numpy.testing import assert_almost_equal
 
 from formak import python
 from formak.exceptions import ModelConstructionError
-from formak.problemdefinition.model import Model as UiModel
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
 warnings.filterwarnings("error")

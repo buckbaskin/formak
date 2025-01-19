@@ -7,7 +7,7 @@ from hypothesis import given, reject, settings
 from hypothesis.strategies import floats
 from numpy.testing import assert_almost_equal
 
-from formak import python
+from formak.backend_py.model import Model
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
@@ -27,7 +27,7 @@ def test_Model_impl_property(x, y, a):
         set(symbols(["a"])),
         {Symbol("x"): Symbol("x") * Symbol("y"), Symbol("y"): "y + a * dt"},
     )
-    model = python.Model(
+    model = Model(
         ui_Model,
         config,
     )

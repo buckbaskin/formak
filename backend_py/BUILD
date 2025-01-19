@@ -92,4 +92,17 @@ py_library(
     visibility = [
         "//py:__pkg__",
     ],
+    deps = [
+        ":model",
+        ":sensor-model",
+    ],
+)
+
+py_library(
+    name = "compile-model",
+    srcs = ["backend_py/compile_model.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
 )

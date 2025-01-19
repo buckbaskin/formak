@@ -71,6 +71,19 @@ py_library(
 )
 
 py_library(
+    name = "backend_py",
+    srcs = glob(
+        ["formak/backend_py/*.py"],
+        allow_empty = False,
+    ),
+    imports = ["."],
+    deps = [
+        "//backend_py:compile-model",
+        "//backend_py:model",
+    ],
+)
+
+py_library(
     name = "python",
     srcs = ["formak/python.py"],
     imports = ["."],
@@ -79,7 +92,6 @@ py_library(
         "//backend_py:basic-block",
         "//backend_py:config",
         "//backend_py:extended-kalman-filter",
-        "//backend_py:model",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//backend_py:sensor-model",
@@ -123,6 +135,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":backend_cpp",
+        ":backend_py",
         ":frontend",
         ":problemdefinition",
         ":python",
@@ -223,7 +236,8 @@ py_test_suite(
     deps = [
         ":init-tree",
         ":python",
-        ":problemdefinition",
+        "//problemdefinition:model",
+        "//backend_py:compile-model",
     ] + PY_TEST_DEPS,
 )
 
@@ -240,6 +254,7 @@ py_test_suite(
         ":init-tree",
         ":reference-models",
         "//runtime_py:plotting",
+        "//backend_py:compile-model",
     ] + PY_TEST_DEPS,
 )
 

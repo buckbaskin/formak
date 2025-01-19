@@ -2,7 +2,7 @@ from math import cos, pi, radians, sin
 
 import numpy as np
 
-from formak import python
+from backend_py.compile_model import compile_model
 from formak.reference_models import strapdown_imu
 from runtime_py.plotting import plot_pair, plot_quaternion_timeseries
 from sympy import Quaternion
@@ -16,7 +16,7 @@ def test_stationary():
     for k in sorted(list(strapdown_imu.state_model.keys()), key=lambda k: str(k)):
         v = strapdown_imu.state_model[k]
         print("key", k, "value", v)
-    imu = python.compile(
+    imu = compile_model(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={
             strapdown_imu.g: -9.81,
@@ -103,7 +103,7 @@ def test_circular_motion_xy_plane():
     for k in sorted(list(strapdown_imu.state_model.keys()), key=lambda k: str(k)):
         v = strapdown_imu.state_model[k]
         print("key", k, "value", v)
-    imu = python.compile(
+    imu = compile_model(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={
             strapdown_imu.g: -9.81,
@@ -283,7 +283,7 @@ def test_circular_motion_xz_plane():
     for k in sorted(list(strapdown_imu.state_model.keys()), key=lambda k: str(k)):
         v = strapdown_imu.state_model[k]
         print("key", k, "value", v)
-    imu = python.compile(
+    imu = compile_model(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={
             strapdown_imu.g: -9.81,

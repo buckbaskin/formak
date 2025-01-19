@@ -1,7 +1,7 @@
 import numpy as np
 
 from formak import python
-from formak.problemdefinition.model import Model as UiModel
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol, symbols
 
 

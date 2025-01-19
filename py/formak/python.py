@@ -15,35 +15,12 @@ from backend_py.extended_kalman_filter import (
     assert_valid_covariance,
     nearest_positive_definite,
 )
-from backend_py.model import Model
 from backend_py.named_vector import named_vector
 from backend_py.sensor_model import SensorModel
 from formak.exceptions import MinimizationFailure, ModelConstructionError
 from frontend.model_validation import model_validation
 from problemdefinition.ui_model_base import UiModelBase
 from sympy import Symbol
-
-
-def compile(symbolic_model, calibration_map=None, *, config=None):
-    if config is None:
-        config = Config()
-    elif isinstance(config, dict):
-        config = Config(**config)
-
-    if calibration_map is None:
-        calibration_map = {}
-
-    model_validation(
-        symbolic_model,
-        {},
-        {},
-        calibration_map=calibration_map,
-        extra_validation=config.extra_validation,
-    )
-
-    return Model(
-        symbolic_model=symbolic_model, calibration_map=calibration_map, config=config
-    )
 
 
 def compile_ekf(

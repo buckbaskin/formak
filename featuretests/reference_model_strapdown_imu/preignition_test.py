@@ -13,7 +13,7 @@ import os
 
 import numpy as np
 
-from formak import python
+from formak.backend_py.compile_model import compile_model
 from formak.reference_models import strapdown_imu
 from formak.runtime_py.plotting import plot_pair, plot_quaternion_timeseries
 from sympy import Matrix, Quaternion, Symbol
@@ -118,7 +118,7 @@ def test_example_usage_of_reference_model_preignition():
     bias_in_sensor = orientation.to_rotation_matrix().transpose() @ bias
     assert bias_in_sensor.shape == (3, 1)
 
-    imu = python.compile(
+    imu = compile_model(
         symbolic_model=strapdown_imu.symbolic_model,
         calibration_map={
             strapdown_imu.g: 9.81,
