@@ -66,3 +66,12 @@ py_library(
         "//py:__pkg__",
     ],
 )
+
+py_library(
+    name = "model",
+    srcs = ["backend_py/model.py"],
+    imports = ["."],
+    visibility = [
+        "//py:__pkg__",
+    ],
+)

@@ -78,6 +78,7 @@ py_library(
         ":exceptions",
         "//backend_py:basic-block",
         "//backend_py:config",
+        "//backend_py:model",
         "//backend_py:named-covariance",
         "//backend_py:named-vector",
         "//frontend:model-validation",
