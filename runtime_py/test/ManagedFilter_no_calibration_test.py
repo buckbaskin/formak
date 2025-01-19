@@ -5,6 +5,7 @@ import numpy as np
 from hypothesis import given, settings
 from hypothesis.strategies import permutations, sampled_from
 
+from backend_py.compile_ekf import compile_ekf
 from formak import python
 from problemdefinition.model import Model as UiModel
 from runtime_py.managed_filter import ManagedFilter
@@ -69,7 +70,7 @@ def make_ekf():
         state_model=state_model,
     )
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         symbolic_model=model,
         process_noise={control_velocity: 1.0},
         sensor_models={"simple": {state: state}},

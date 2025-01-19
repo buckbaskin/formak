@@ -1,5 +1,6 @@
 import pytest
 
+from backend_py.compile_ekf import compile_ekf
 from backend_py.compile_model import compile_model
 from formak import exceptions, python
 from problemdefinition.model import Model as UiModel
@@ -71,7 +72,7 @@ def test_EKF_creation_calibration():
         state_model={x: x + a + b},
     )
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         symbolic_model=ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},
@@ -91,7 +92,7 @@ def test_EKF_creation_calibration():
         == [0.0]
     ).all()
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         ui_model,
         process_noise={},
         sensor_models={y: {y: x + b}},

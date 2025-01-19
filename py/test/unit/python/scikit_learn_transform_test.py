@@ -1,5 +1,6 @@
 import numpy as np
 
+from backend_py.compile_ekf import compile_ekf
 from backend_py.sklearn import SklearnEKFAdapter
 from formak import python
 from problemdefinition.model import Model as UiModel
@@ -66,7 +67,7 @@ def test_transform_kalman_filter_args():
     n_samples, n_features = readings.shape
     innovations, states, covariances = adapter.transform(X, include_states=True)
 
-    model = python.compile_ekf(**adapter.get_params())
+    model = compile_ekf(**adapter.get_params())
 
     assert innovations.shape == (n_samples, n_features - len(control))
     assert states.shape == (n_samples + 1,)

@@ -17,6 +17,7 @@ from model_definition import (
 )
 
 from formak import python
+from formak.backend_py.compile_ekf import compile_ekf
 from sympy import Symbol
 
 
@@ -49,7 +50,7 @@ def test_python_EKF():
 
     CON_position_in_global_frame = named_translation("CON_pos")
 
-    python_implementation = python.compile_ekf(
+    python_implementation = compile_ekf(
         symbolic_model=model,
         process_noise=process_noise,
         sensor_models={

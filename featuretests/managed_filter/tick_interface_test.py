@@ -10,6 +10,7 @@ working correctly).
 import numpy as np
 
 from formak import python
+from formak.backend_py.compile_ekf import compile_ekf
 from formak.problemdefinition.model import Model as UiModel
 from formak.runtime_py.managed_filter import ManagedFilter
 from formak.runtime_py.stamped_reading import StampedReading
@@ -37,7 +38,7 @@ def make_ekf():
 
     model = UiModel(dt=dt, state=state, control=control, state_model=state_model)
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         symbolic_model=model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {v: v}},

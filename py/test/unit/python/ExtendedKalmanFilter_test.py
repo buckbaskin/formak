@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_almost_equal
 
+from backend_py.compile_ekf import compile_ekf
 from backend_py.config import Config
 from backend_py.extended_kalman_filter import (
     ExtendedKalmanFilter,
@@ -24,7 +25,7 @@ def test_EKF_model_collapse():
     config.extra_validation = True
 
     with pytest.raises(ModelConstructionError):
-        python.compile_ekf(
+        compile_ekf(
             symbolic_model=UiModel(
                 Symbol("dt"),
                 set(symbols(["x", "y"])),

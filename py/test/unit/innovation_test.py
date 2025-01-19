@@ -1,7 +1,8 @@
 import numpy as np
 
+from backend_py.compile_ekf import compile_ekf
 from formak import python
-from formak.problemdefinition.model import Model as UiModel
+from problemdefinition.model import Model as UiModel
 from sympy import Symbol
 
 
@@ -26,7 +27,7 @@ def make_ekf(calibration_map):
         calibration={calibration_velocity},
     )
 
-    ekf = python.compile_ekf(
+    ekf = compile_ekf(
         symbolic_model=model,
         process_noise={control_velocity: 1.0},
         sensor_models={"simple": {state: state}},

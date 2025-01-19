@@ -7,6 +7,7 @@ Passes if the EKF runs without exceptions
 """
 
 from formak import python
+from formak.backend_py.compile_ekf import compile_ekf
 from formak.backend_py.extended_kalman_filter import ExtendedKalmanFilter
 from formak.problemdefinition.model import Model as UiModel
 from sympy import Symbol
@@ -33,7 +34,7 @@ def test_ekf_simple():
 
     v = Symbol("v")
 
-    python_ekf = python.compile_ekf(
+    python_ekf = compile_ekf(
         symbolic_model=model,
         process_noise={thrust: 1.0},
         sensor_models={"simple": {v: v}},
