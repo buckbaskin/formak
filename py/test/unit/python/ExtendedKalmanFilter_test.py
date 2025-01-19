@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 from backend_py.config import Config
+from backend_py.sensor_model import SensorModel
 from formak import python
 from formak.exceptions import ModelConstructionError
 from problemdefinition.model import Model as UiModel
@@ -175,7 +176,7 @@ def test_SensorModel_calibration():
     config = Config()
 
     def read_once(calibration_map):
-        model = python.SensorModel(
+        model = SensorModel(
             state_model=UiModel(
                 Symbol("dt"),
                 set(symbols(["x"])),

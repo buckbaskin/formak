@@ -4,4 +4,3 @@ from backend_py.extended_kalman_filter import (
     assert_valid_covariance,
     nearest_positive_definite,
 )
-from backend_py.sensor_model import SensorModel
