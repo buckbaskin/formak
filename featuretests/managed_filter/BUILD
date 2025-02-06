@@ -36,7 +36,7 @@ cc_test(
     deps =
         [
             "//cpp/runtime:managed-filter",
-            "//cpp:utils-microbenchmark",
+            "//runtime_cpp:utils-microbenchmark",
             ":example",
         ] + CC_FEATURE_TEST_DEPS,
 )

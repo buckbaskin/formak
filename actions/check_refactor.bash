@@ -10,6 +10,7 @@ frontend/ \
 languagesupport/ \
 problemdefinition/ \
 py/ \
+runtime_cpp/ \
 runtime_py/ \
 | grep -v "ui.py.*unused" | grep "unused";
 echo "<<< flake8" ;
@@ -24,6 +25,7 @@ bazel test  \
 //languagesupport/... \
 //problemdefinition/... \
 //py/... \
+//runtime_cpp/... \
 //runtime_py/... \
 --test_keep_going ;
 echo "<<< test" ;

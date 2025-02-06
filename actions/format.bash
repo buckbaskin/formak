@@ -24,6 +24,7 @@ frontend/ \
 languagesupport/ \
 problemdefinition/ \
 py/ \
+runtime_cpp/ \
 runtime_py/ \
 ; echo "done isort"
 
