@@ -1,8 +1,8 @@
 import numpy as np
 
 from backend_py.compile_ekf import compile_ekf
-from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.model import Model as UiModel
+from runtime_py.sklearn import SklearnEKFAdapter
 from sympy import Symbol, symbols
 
 

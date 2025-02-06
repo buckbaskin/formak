@@ -4,8 +4,8 @@ from numpy.random import default_rng
 from sklearn.base import clone
 from sklearn.utils.estimator_checks import check_estimator
 
-from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.model import Model as UiModel
+from runtime_py.sklearn import SklearnEKFAdapter
 from sympy import Symbol, symbols
 
 

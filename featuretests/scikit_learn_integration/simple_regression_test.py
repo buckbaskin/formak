@@ -8,8 +8,8 @@ Passes if the fit model scores better than the unfit model
 
 import numpy as np
 
-from formak.backend_py.sklearn import SklearnEKFAdapter
 from formak.problemdefinition.model import Model as UiModel
+from formak.runtime_py.sklearn import SklearnEKFAdapter
 from sympy import Symbol
 
 

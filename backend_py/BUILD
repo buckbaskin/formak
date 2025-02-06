@@ -135,21 +135,6 @@ py_library(
     ],
 )
 
-# TODO: this should be runtime
-py_library(
-    name = "sklearn",
-    srcs = ["backend_py/sklearn.py"],
-    imports = ["."],
-    visibility = [
-        "//problemdefinition:__pkg__",
-        "//py:__pkg__",
-    ],
-    deps = [
-        ":compile-ekf",
-        requirement("scikit-learn"),
-    ],
-)
-
 py_test_suite(
     name = "innovation-test",
     srcs = [

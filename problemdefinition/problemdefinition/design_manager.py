@@ -6,11 +6,11 @@ from typing import Any, Dict, List
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit, train_test_split
 
 from backend_py.extended_kalman_filter import ExtendedKalmanFilter
-from backend_py.sklearn import SklearnEKFAdapter
 from formak.exceptions import ModelFitError
 from problemdefinition.config_view import ConfigView
 from problemdefinition.model import Model as UiModel
 from problemdefinition.nis_score import NisScore
+from runtime_py.sklearn import SklearnEKFAdapter
 
 SearchState = namedtuple("SearchState", ["state", "transition_path"])
 

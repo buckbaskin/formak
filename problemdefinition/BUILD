@@ -51,7 +51,7 @@ py_library(
         ":config-view",
         ":model",
         ":nis-score",
-        "//backend_py:sklearn",
+        "//runtime_py:sklearn",
     ],
 )
 
@@ -78,7 +78,7 @@ py_test_suite(
         ":model",
         ":config-view",
         ":nis-score",
-        "//backend_py:sklearn",
+        "//runtime_py:sklearn",
     ] + PY_TEST_DEPS,
 )
 

@@ -1,9 +1,9 @@
 import numpy as np
 
-from backend_py.sklearn import SklearnEKFAdapter
 from problemdefinition.config_view import ConfigView
 from problemdefinition.model import Model
 from problemdefinition.nis_score import NisScore
+from runtime_py.sklearn import SklearnEKFAdapter
 from sympy import Symbol
 
 

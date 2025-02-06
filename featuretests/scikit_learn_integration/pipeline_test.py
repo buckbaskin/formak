@@ -7,8 +7,8 @@ Passes if running a model in a pipeline doesn't raise exceptions
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-from formak.backend_py.sklearn import SklearnEKFAdapter
 from formak.problemdefinition.model import Model as UiModel
+from formak.runtime_py.sklearn import SklearnEKFAdapter
 from sympy import Symbol
 
 

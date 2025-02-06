@@ -39,6 +39,7 @@ py_library(
     deps = [
         "//runtime_py:managed-filter",
         "//runtime_py:plotting",
+        "//runtime_py:sklearn",
         "//runtime_py:stamped-reading",
     ],
 )
@@ -83,7 +84,6 @@ py_library(
         "//backend_py:config",
         "//backend_py:model",
         "//backend_py:sensor-model",
-        "//backend_py:sklearn",
     ],
 )
 
@@ -203,7 +203,7 @@ py_test_suite(
         ":init-tree",
         "//problemdefinition:model",
         "//backend_py:compile-model",
-        "//backend_py:sklearn",
+        "//runtime_py:sklearn",
     ] + PY_TEST_DEPS,
 )
 

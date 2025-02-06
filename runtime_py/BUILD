@@ -52,3 +52,17 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
 )
+
+py_library(
+    name = "sklearn",
+    srcs = ["runtime_py/sklearn.py"],
+    imports = ["."],
+    visibility = [
+        "//problemdefinition:__pkg__",
+        "//py:__pkg__",
+    ],
+    deps = [
+        "//backend_py:compile-ekf",
+        requirement("scikit-learn"),
+    ],
+)

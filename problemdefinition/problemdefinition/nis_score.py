@@ -1,4 +1,4 @@
-from backend_py.sklearn import SklearnEKFAdapter
+from runtime_py.sklearn import SklearnEKFAdapter
 
 
 class NisScore:
