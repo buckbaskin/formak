@@ -291,7 +291,7 @@ cc_test(
     srcs = ["test/integration/Model_test.cpp"],
     deps = [
         ":simple-model",
-        "//cpp:utils-stats",
+        ":utils-stats",
         "@rapidcheck",
     ] + CC_TEST_DEPS,
 )
@@ -301,7 +301,26 @@ cc_test(
     srcs = ["test/integration/ExtendedKalmanFilter_test.cpp"],
     deps = [
         ":simple-ekf",
-        "//cpp:utils-stats",
+        ":utils-stats",
         "@rapidcheck",
     ] + CC_TEST_DEPS,
+)
+
+cc_library(
+    name = "utils-stats",
+    hdrs = [
+        "include/formak/utils/stats.h",
+    ],
+    strip_include_prefix = "include",
+    visibility = ["//visibility:public"],
+    deps = ["@eigen"],
+)
+
+cc_test(
+    name = "utils-stats-test",
+    srcs = ["test/utils/stats_test.cpp"],
+    deps = [
+        ":utils-stats",
+        "@gtest//:gtest_main",
+    ],
 )
