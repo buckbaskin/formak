@@ -18,11 +18,11 @@ py_library(
 )
 
 py_test_suite(
-    name = "runtime-test",
+    name = "managed-filter-test",
     timeout = "moderate",
     srcs = glob(
         [
-            "test/*.py",
+            "test/ManagedFilter*.py",
         ],
         allow_empty = False,
     ),
@@ -65,4 +65,18 @@ py_library(
         "//backend_py:compile-ekf",
         requirement("scikit-learn"),
     ],
+)
+
+py_test_suite(
+    name = "scikit-learn-test",
+    srcs = glob(
+        [
+            "test/scikit_learn_*.py",
+        ],
+        allow_empty = False,
+    ),
+    deps = [
+        ":sklearn",
+        "//problemdefinition:model",
+    ] + PY_TEST_DEPS,
 )

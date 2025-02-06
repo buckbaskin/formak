@@ -191,23 +191,6 @@ py_library(
 )
 
 py_test_suite(
-    name = "python-generation-py",
-    size = "small",
-    srcs = glob(
-        [
-            "test/unit/python/*.py",
-        ],
-        allow_empty = False,
-    ),
-    deps = [
-        ":init-tree",
-        "//problemdefinition:model",
-        "//backend_py:compile-model",
-        "//runtime_py:sklearn",
-    ] + PY_TEST_DEPS,
-)
-
-py_test_suite(
     name = "reference-models-test",
     timeout = "moderate",
     srcs = glob(
