@@ -110,7 +110,6 @@ py_library(
     ],
 )
 
-# TODO: remove deps here that aren't intended for general use, measured by deps not used in feature tests or demos
 py_library(
     name = "formak",
     imports = ["."],
@@ -174,12 +173,10 @@ py_wheel(
 )
 
 py_library(
-    name = "init-tree",
+    name = "conf-data",
     testonly = True,
     srcs = [
         "conftest.py",
-        "test/__init__.py",
-        "test/formak/__init__.py",
     ],
     data = [
         "//common:pytest.ini",
@@ -200,7 +197,6 @@ py_test_suite(
         allow_empty = False,
     ),
     deps = [
-        ":init-tree",
         ":reference-models",
         "//runtime_py:plotting",
         "//backend_py:compile-model",
@@ -211,10 +207,11 @@ py_test_suite(
     name = "integration-py",
     size = "medium",
     srcs = glob([
+        "test/__init__.py",
         "test/formak/**/*.py",
     ]),
     deps = [
-        ":init-tree",
+        ":conf-data",
         ":formak",
     ] + PY_TEST_DEPS,
 )
