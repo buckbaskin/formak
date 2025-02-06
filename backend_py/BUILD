@@ -66,6 +66,7 @@ py_library(
         "//py:__pkg__",
     ],
     deps = [
+        ":config",
         requirement("sympy"),
         requirement("scipy"),
     ],
@@ -79,6 +80,7 @@ py_library(
         "//py:__pkg__",
     ],
     deps = [
+        ":basic-block",
         ":named-vector",
         "//py:exceptions",
     ],
@@ -179,6 +181,18 @@ py_test_suite(
     deps = [
         ":extended-kalman-filter",
         ":compile-ekf",
+        "//problemdefinition:model",
+    ] + PY_TEST_DEPS,
+)
+
+py_test_suite(
+    name = "model-test",
+    srcs = [
+        "test/Model_test.py",
+    ],
+    deps = [
+        ":model",
+        ":compile-model",
         "//problemdefinition:model",
     ] + PY_TEST_DEPS,
 )
